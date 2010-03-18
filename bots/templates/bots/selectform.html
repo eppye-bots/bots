@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+
+<form action="{{ form.action }}" method="post">
+    <input type="submit" name="fromselect" value="Show selection" />
+    <table>
+        {{ form.as_table }}
+    </table>
+</form>
+
+{% endblock %}

@@ -1,0 +1,95 @@
+div#logo {
+	position:	absolute;
+	left:		0%;
+	width:		51em;
+	top:		0em;
+	height:		3.9em;
+	}
+div#logo>img {
+	position:	absolute;
+	left:		0%;
+	width:		100%;
+	top:		0%;
+	height:		100%;
+	}
+div#menu {
+	position:	absolute;
+	top:		4.0em;
+	height:		1.5em;
+    z-index:	4;
+	}
+div#container {
+	position:	absolute;
+	top:		5.5em;
+	}
+/***********************************************************************/
+/**MENU*****************************************************************/
+div#menu a {
+	color:      #000000;
+	text-decoration:none;
+	}
+div#menu ul {
+	width:      8em;
+	float:      left;
+	margin:     0;
+	padding:    0;
+    }
+div#menu ul li {
+	list-style: none;
+    }
+div#menu ul li.sub {
+	display:    none;
+	}
+div#menu ul:hover li.sub, 
+div#menu ul:hover li.sub a {
+	display:    block;
+	width:      20em;
+	background: #FFFFFF;
+	padding:    0;
+	margin:     0;
+	text-transform:		capitalize;
+	}
+div#menu ul:hover li.sub a:hover, 
+div#menu ul:hover a {
+	background: #BCCCE3;
+    }
+div#menu ul:hover li.sub a:hover, 
+div#menu ul:hover li.top a:hover {
+    cursor:     pointer;
+    }
+/***********************************************************************/
+/**FILTER***************************************************************/
+.change-list .filtered {
+    background: none !important;
+    }
+.change-list .filtered .paginator,
+.filtered .actions {
+    margin-right:0 !important;
+    }
+div#changelist-filter h3, 
+div#changelist-filter ul {
+    display: none;
+    }
+div#changelist-filter:hover h3, 
+div#changelist-filter:hover ul {
+    display: block;
+    }
+/***********************************************************************/
+/**other ***************************************************************/
+.botsheader	{
+	border-style:		none;
+	margin:				0em;
+	padding:		    0em;
+	cursor:				pointer;
+	white-space:		nowrap;
+	color: 				#000000;
+	}
+a.botslink	{
+	cursor:				pointer;
+	white-space:		nowrap;
+	text-decoration:	none;
+	color: 				#000000;
+	}
+.nowrap	{
+	white-space:		nowrap;
+	}

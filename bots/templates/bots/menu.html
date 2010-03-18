@@ -1,0 +1,75 @@
+<div id="menu">
+{% if user.is_authenticated %}
+	<ul>
+		<li class="top"><a href="/home">Home</a></li>
+		<li class="sub"><a href="/home">Home</a></li>
+		<li class="sub"><a href="/about/">About Bots</a></li>
+		<li class="sub"><a href="/help/">Help</a></li>
+		<li class="sub"><a href="/logout/">Log out</a></li>
+		<li class="sub"><a href="/admin/password_change/">Change password</a></li>
+		<li class="sub">Current user: {{ user.username }}</li>
+		<li class="sub">Last login: {{ user.last_login|date:"Y-m-d G:i" }}</li>
+	</ul>
+	<ul>
+		<li><a>Last run</a></li>
+		<li class="sub"><a href="/reports/?all" >Reports</a></li>
+		<li class="sub"><a href="/incoming/?last" >Incoming</a></li>
+		<li class="sub"><a href="/outgoing/?last" >Outgoing</a></li>
+		<li class="sub"><a href="/processes/?last" >Process Errors</a></li>
+	</ul>
+	<ul>
+		<li><a>All runs</a></li>
+		<li class="sub"><a href="/reports/?all" >Reports</a></li>
+        <li class="sub"><a href="/incoming/?all" >Incoming</a></li>
+		<li class="sub"><a href="/outgoing/?all" >Outgoing</a></li>
+		<li class="sub"><a href="/processes/?all" >Process Errors</a></li>
+		<li class="sub"><a href="/confirm/?all" >Confirmations</a></li>
+	</ul>
+	<ul>
+		<li><a>Select</a></li>
+		<li class="sub"><a href="/reports/?select" >Reports</a></li>
+        <li class="sub"><a href="/incoming/?select" >Incoming</a></li>
+		<li class="sub"><a href="/outgoing/?select" >Outgoing</a></li>
+		<li class="sub"><a href="/processes/?select" >Process Errors</a></li>
+		<li class="sub"><a href="/confirm/?select" >Confirmations</a></li>
+	</ul>
+	{% if user.is_staff %}
+	<ul>
+		<li><a>Configuration</a></li>
+		<li class="sub"><a href="/admin/bin/routes/" >Routes</a></li>
+		<li class="sub"><a href="/admin/bin/channel/" >Channels</a></li>
+		<li class="sub"><a href="/admin/bin/translate/" >Translations</a></li>
+		<li class="sub"><a href="/admin/bin/edipartner/" >Partners</a></li>
+		<li class="sub"><a href="/admin/bin/edigroup/" >PartnerGroups</a></li>
+		<li class="sub"><a href="/admin/bin/confirmrule/" >Confirmrules</a></li>
+		<li class="sub"><a href="/admin/bin/ccode/" >User Codes as list</a></li>
+		<li class="sub"><a href="/admin/bin/ccodetrigger/" >User Codes by type</a></li>
+	</ul>
+    {% endif %}
+    {% if user.is_superuser %}
+	<ul>
+		<li><a>System tasks</a></li>
+			<li class="sub"><a href="/admin/auth/user/" >Users</a></li>
+			<li class="sub"><a href="/admin/auth/user/" >UserGroups</a></li>
+			<li class="sub"><a href="/plugin/" >Read plugin</a></li>
+			<li class="sub"><a href="/plugout/" >Make configuration plugin</a></li>
+			<li class="sub"><a href="/plugout/?snapshot" >Make snapshot plugin</a></li>
+			<li class="sub"><a href="/delete/?transactions" OnClick = "return confirm('Are you sure you want to delete all transactions?\nThis action can not be undone!');" >Delete transactions</a></li>
+			<li class="sub"><a href="/delete/?configuration" OnClick = "return confirm('Are you sure you want to delete all configuration?\nThis action can not be undone!');">Delete configuration</a></li>
+			<li class="sub"><a href="/delete/?codelists" OnClick = "return confirm('Are you sure you want to delete all user maintained codes?\nThis action can not be undone!');">Delete code lists</a></li>
+			<li class="sub"><a href="/admin/bin/uniek/" >View/edit counters</a></li>
+	</ul>
+    {% endif %}
+	<ul>
+		<li><a>Run engine</a></li>
+		<li class="sub"><a href="/runengine/?clparameter=--new" >Run only new</a></li>
+		<li class="sub"><a href="/runengine/?clparameter=--retry" >Run only retry</a></li>
+		<li class="sub"><a href="/runengine/?clparameter=--retransmit" >Run only retransmit</a></li>
+		<li class="sub"><a href="/runengine" >Run all</a></li>
+	</ul>
+{% else %}
+	<ul>
+			<li class="top"><a href="/login/">Log in</a></li>
+	</ul>
+{% endif %}
+</div>

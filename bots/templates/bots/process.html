@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% load botsfilters %}
+
+{% block content %}
+<div id="content-main">
+<form action="{{ form.action }}" method="post">
+    <input onClick="history.back()" type="button" value="Back" />
+    <input type="submit" name="2select" value="Change selection" />
+    <input type="submit" name="2incoming" value="Incoming (same selection)" />
+    <input type="submit" name="2outgoing" value="Outgoing (same selection)" />
+    {% include "bots/paginator.html" %}
+
+    <table cellspacing="0">
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        <thead>
+            <tr>
+                <th><button class="botsheader" type="submit" name="order" value="status" />State</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="status" />Action</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="fromchannel" />FromChannel</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="tochannel" />ToChannel</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="idroute" />Route</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="filename" />Process</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" />Date/time</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="errortext" />Error</button></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in queryset.object_list %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td>{{row.statust}}</td>
+                <td>{{row.statust}}</td>
+                <td>{{row.fromchannel}}</td>
+                <td>{{row.tochannel}}</td>
+                <td>{{row.idroute}}</td>
+                <td>{{row.filename}}</td>
+                <td class="nowrap">{{row.ts}}</td>
+                <td>{{row.errortext}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</form>
+</div>
+</div>
+
+{% endblock %}
+

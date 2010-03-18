@@ -1,0 +1,14 @@
+syntax: glob
+*.orig
+*.rej
+*~
+*.pyo
+*.pyc
+tests/*.err
+
+syntax: regexp
+^bots/botssys.*
+^bots/djangolink.*
+^bots/usersys.*
+^bots/media/img.*
+^bots/media/js.*
