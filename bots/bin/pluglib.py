@@ -22,6 +22,7 @@ exeptions:
 
 
 def mycmp(key1,key2):
+    print key1,key2
     #this list is used for sorting the plugin. 
     lijst = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','partnergroup','chanpar','translate','routes','confirmrule']
     return lijst.index(key1) - lijst.index(key2)
@@ -32,6 +33,7 @@ def writetodatabase(pluglist):
     #check list of database plugings
     if not isinstance(pluglist,list):   #has to be a list!!
         raise Exception('plugins should be list of dicts. Nothing is written.')
+    copypluglist = []
     for plug in pluglist:
         if not isinstance(plug,dict):
             raise botslib.PluginError('plugins should be list of dicts. Nothing is written.')
@@ -40,6 +42,9 @@ def writetodatabase(pluglist):
                 raise botslib.PluginError('key of dict is not a string: "%s". Nothing is written.'%(plug))
         if 'plugintype' not in plug:
             raise botslib.PluginError('"plugintype" missing in: "%s". Nothing is written.'%(plug))
+        if plug['plugintype'] not in ['user']:
+            copypluglist.append(plug)
+    pluglist = copypluglist
     #end check list of database plugings
  
     pluglist.sort(cmp=mycmp,key=operator.itemgetter('plugintype'))  #sort pluglist
@@ -166,7 +171,7 @@ def load(pathzipfile,orgnamezipfile):
         if (orgtargetpath[-1:] in (os.path.sep, os.path.altsep) and len(os.path.splitdrive(orgtargetpath)[1]) > 1):
             orgtargetpath = orgtargetpath[:-1]
         for f in z.infolist():
-            if f.filename not in ['botsindex.py','README'] and os.path.splitext(f.filename)[1] not in ['.pyo','.pyc']:
+            if f.filename not in ['botsindex.py','README','botssys/sqlitedb/botsdb','config/bots.ini'] and os.path.splitext(f.filename)[1] not in ['.pyo','.pyc']:
                 #~ botsglobal.logger.info(u'filename in zip "%s".',f.filename)                
                 if f.filename[0] == '/':
                     targetpath = f.filename[1:]

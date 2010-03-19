@@ -1,14 +1,15 @@
 syntax: glob
-*.orig
-*.rej
-*~
 *.pyo
 *.pyc
-tests/*.err
+test*
 
 syntax: regexp
-^bots/botssys.*
+#^bots/botssys.*
+^bots/botssys/data.*
+^bots/botssys/infile.*
+^bots/botssys/logging.*
+^bots/botssys/pluginsuploaded.*
 ^bots/djangolink.*
 ^bots/usersys.*
-^bots/media/img.*
-^bots/media/js.*
+#^bots/media/img.*
+#^bots/media/js.*
