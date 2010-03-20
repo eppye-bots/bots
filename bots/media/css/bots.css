@@ -22,11 +22,20 @@ div#container {
 	position:	absolute;
 	top:		5.5em;
 	}
+div#content {
+	margin: 0;
+	}
+table#about {
+	position:	absolute;
+	left:		10%;
+	top:		7em;
+	}
 /***********************************************************************/
 /**MENU*****************************************************************/
 div#menu a {
 	color:      #000000;
 	text-decoration:none;
+	white-space:		nowrap;
 	}
 div#menu ul {
 	width:      8em;
@@ -57,6 +66,34 @@ div#menu ul:hover li.sub a:hover,
 div#menu ul:hover li.top a:hover {
     cursor:     pointer;
     }
+/***********************************************************************/
+/**ACTION**************************************************************/
+div.dropdown {
+	position:relative;
+	float:left;
+	}
+div.dropdown  ul {
+	list-style-type:none;
+	margin:0;
+	padding:0;
+	position:absolute;
+	visibility:hidden;
+	z-index:598;
+	left:99%;
+	top:1px;
+	background-color: 	#FFFFFF;
+	}
+div.dropdown:hover  ul {
+	visibility:visible;
+	}
+div.dropdown  ul  li {
+	list-style: none;
+    }
+div.dropdown:hover >button,
+div.dropdown  ul li:hover,
+div.dropdown  ul li button:hover{
+	background: #BCCCE3;
+	}
 /***********************************************************************/
 /**FILTER***************************************************************/
 .change-list .filtered {
@@ -92,4 +129,14 @@ a.botslink	{
 	}
 .nowrap	{
 	white-space:		nowrap;
+	}
+table#botstable {
+	border-collapse: collapse;
+	border-width: 0;
+	}
+img.action {
+	width: 1em;
+	}
+table#botstable td {
+	line-height: 1em;
 	}

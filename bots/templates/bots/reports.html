@@ -2,12 +2,12 @@
 
 
 {% block content %}
-<div id="content-main">
 <form action="{{ form.action }}" method="post">
+    <input onClick="history.back()" type="button" value="Back" />
     <input type="submit" name="toselect" value="Change selection" />
     {% include "bots/paginator.html" %}
 
-    <table cellspacing="0">
+    <table id="botstable">
         {% for hidden in form.hidden_fields %}
             {{ hidden }}
         {% endfor %}
@@ -34,14 +34,23 @@
                 <td>{{row.lastreceived}}</td>
                 <td>{{row.send}}</td>
                 <td class="nowrap">{{row.ts}}</td>
-                <td>{{row.errortext}}</td>
+                <td>
+                    {% if row.lasterror %}
+                        {{row.lasterror}} files with errors; 
+                    {% endif %}
+                    {% if row.lastok %}
+                        {{row.lastok}} files got stuck; 
+                    {% endif %}
+                    {% if row.lastopen %}
+                        {{row.lastopen}} system errors; 
+                    {% endif %}
+                    {% if row.processerrors %}
+                        {{row.processerrors}} errors in processes; 
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
 </form>
-</div>
-</div>
-
 {% endblock %}
-

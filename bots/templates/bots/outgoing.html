@@ -2,7 +2,6 @@
 
 
 {% block content %}
-<div id="content-main">
 <form action="{{ form.action }}" method="post">
     <input onClick="history.back()" type="button" value="Back" />
     <input type="submit" name="2select" value="Change selection" />
@@ -11,13 +10,13 @@
     <input type="submit" name="2confirm" value="Confirm (same selection)" />
     {% include "bots/paginator.html" %}
 
-    <table cellspacing="0">
+    <table id="botstable">
         {% for hidden in form.hidden_fields %}
             {{ hidden }}
         {% endfor %}
         <thead>
             <tr>
-                <th><button class="botsheader" />Action</button></th>
+                <th></th>
                 <th><button class="botsheader" type="submit" name="order" value="retransmit" title="Resend">Re*</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="ts" >Received</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="nrmessages" >#messages</button></th>
@@ -39,9 +38,13 @@
         <tbody>
         {% for row in queryset.object_list %}
             <tr class="{% cycle 'row1' 'row2' %}">
-                <td class="nowrap">
-                    <a href="/detail/?outidta={{row.idta}}" class="botslink">View</a>
-                    <button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}" />Resend</button>
+                <td>
+                    <div class="dropdown"><img class="action" src="/media/images/star.png" />
+                        <ul>
+                            <li><a href="/detail/?outidta={{row.idta}}" class="botslink">View</a></li>
+                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}" />Resend</button></li>
+                        </ul>
+                    </div>
                 </td>
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
                 <td class="nowrap">{{row.ts}}</td>
@@ -64,8 +67,5 @@
         </tbody>
     </table>
 </form>
-</div>
-</div>
-
 {% endblock %}
 

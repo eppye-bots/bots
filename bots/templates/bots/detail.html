@@ -1,75 +1,58 @@
 {% extends "admin/base.html" %}
 {% load botsfilters %}
 
-{% block extrastyle %}
-  {{ block.super }}
-    <script type="text/javascript" src="/media/js/core.js"></script>
-    <script type="text/javascript" src="/media/js/admin/RelatedObjectLookups.js"></script>
-    <script type="text/javascript" src="/media/js/getElementsBySelector.js"></script>
-    <script type="text/javascript" src="/media/js/actions.js"></script>
-{% endblock %}
-
-{% block bodyclass %}change-list{% endblock %}
-
-{% block coltype %}flex{% endblock %}
-
 {% block content %}
-<div id="content-main">
-<div id="changelist" class="module filtered">
-<table cellspacing="0">
-    <thead>
-        <tr>
-            <th><button class="botsheader" />Ind</button></th>
-            <th><button class="botsheader" />Phase</button></th>
-            <th><button class="botsheader" />State</button></th>
-            <th><button class="botsheader" />Channel</button></th>
-            <th><button class="botsheader" />Editype</button></th>
-            <th><button class="botsheader" />Messagetype</button></th>
-            <th><button class="botsheader" />FromPartner</button></th>
-            <th><button class="botsheader" />ToPartner</button></th>
-            <th><button class="botsheader" />Reference</button></th>
-            <th><button class="botsheader" />Test</button></th>
-            <th><button class="botsheader" />File</button></th>
-            <th><button class="botsheader" />#mes</button></th>
-            <th><button class="botsheader" />Date/time</button></th>
-            <th><button class="botsheader" />Error</button></th>
-            <th><button class="botsheader" />FromMail</button></th>
-            <th><button class="botsheader" />ToMail</button></th>
-            <th><button class="botsheader" />Charset</button></th>
-            <th><button class="botsheader" />Contenttype</button></th>
-            <th><button class="botsheader" />Alt</button></th>
-            <th><button class="botsheader" />Mapping</button></th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for row in detaillist %}
-        <tr class="row1">
-            <td>{{row.ind}}</td>
-            <td>{{row.status|convert:"status"}}</td>
-            <td>{{row.statust|convert:"statust"}}</td>
-            <td>{{row.channel}}</td>
-            <td>{{row.editype}}</td>
-            <td>{{row.messagetype}}</td>
-            <td>{{row.frompartner}}</td>
-            <td>{{row.topartner}}</td>
-            <td>{{row.reference}}</td>
-            <td>{{row.testindicator}}</td>
-            <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.filename}}</a></td>
-            <td>{{row.nrmessages}}</td>
-            <td class="nowrap">{{row.ts}}</td>
-            <td>{{row.errortext}}</td>
-            <td>{{row.frommail}}</td>
-            <td>{{row.tomail}}</td>
-            <td>{{row.charset}}</td>
-            <td>{{row.contenttype}}</td>
-            <td>{{row.alt}}</td>
-            <td>{{row.divtext}}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
-</div>
-
+    <table id="botstable">
+        <thead>
+            <tr>
+                <th></th>
+                <th><button class="botsheader" />Phase</button></th>
+                <th><button class="botsheader" />State</button></th>
+                <th><button class="botsheader" />Channel</button></th>
+                <th><button class="botsheader" />Editype</button></th>
+                <th><button class="botsheader" />Messagetype</button></th>
+                <th><button class="botsheader" />FromPartner</button></th>
+                <th><button class="botsheader" />ToPartner</button></th>
+                <th><button class="botsheader" />Reference</button></th>
+                <th><button class="botsheader" />Test</button></th>
+                <th><button class="botsheader" />File</button></th>
+                <th><button class="botsheader" />#mes</button></th>
+                <th><button class="botsheader" />Date/time</button></th>
+                <th><button class="botsheader" />Error</button></th>
+                <th><button class="botsheader" />FromMail</button></th>
+                <th><button class="botsheader" />ToMail</button></th>
+                <th><button class="botsheader" />Charset</button></th>
+                <th><button class="botsheader" />Contenttype</button></th>
+                <th><button class="botsheader" />Alt</button></th>
+                <th><button class="botsheader" />Mapping</button></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in detaillist %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td>{{row.ind}}</td>
+                <td>{{row.status|convert:"status"}}</td>
+                <td>{{row.statust|convert:"statust"}}</td>
+                <td>{{row.channel}}</td>
+                <td>{{row.editype}}</td>
+                <td>{{row.messagetype}}</td>
+                <td>{{row.frompartner}}</td>
+                <td>{{row.topartner}}</td>
+                <td>{{row.reference}}</td>
+                <td>{{row.testindicator}}</td>
+                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.filename}}</a></td>
+                <td>{{row.nrmessages}}</td>
+                <td class="nowrap">{{row.ts}}</td>
+                <td>{{row.errortext}}</td>
+                <td>{{row.frommail}}</td>
+                <td>{{row.tomail}}</td>
+                <td>{{row.charset}}</td>
+                <td>{{row.contenttype}}</td>
+                <td>{{row.alt}}</td>
+                <td>{{row.divtext}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
 
