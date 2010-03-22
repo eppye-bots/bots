@@ -42,6 +42,8 @@ def writetodatabase(pluglist):
                 raise botslib.PluginError('key of dict is not a string: "%s". Nothing is written.'%(plug))
         if 'plugintype' not in plug:
             raise botslib.PluginError('"plugintype" missing in: "%s". Nothing is written.'%(plug))
+        if plug['plugintype'] == 'ccode':
+            copypluglist.append({'plugintype':'ccodetrigger','ccodeid':plug['ccodeid']})
         if plug['plugintype'] not in ['user']:
             copypluglist.append(plug)
     pluglist = copypluglist
@@ -209,35 +211,34 @@ def load(pathzipfile,orgnamezipfile):
         botsglobal.logger.info(u'Writing files to filesystem is OK.')
         return warnrenamed
 
-def dump(filename,snapshot):    #filename is without extension!
-    database2indexfile(filename,snapshot)
+def dump(filename,function):    #filename is without extension!
+    database2indexfile(filename,function)
     pluginzipfilehandler = zipfile.ZipFile(filename+'.zip', 'w')
     pluginzipfilehandler.write(filename+'.py','botsindex.py')   #write index file to pluginfile
     os.remove(filename+'.py')
-    files2plugin(pluginzipfilehandler,snapshot)
+    files2plugin(pluginzipfilehandler,function)
     pluginzipfilehandler.close()
 
-def database2indexfile(filename,snapshot):
+def database2indexfile(filename,function):
     db_objects = \
-            list(models.ccodetrigger.objects.all()) +   \
-            list(models.ccode.objects.all()) +   \
+            list(models.ccodetrigger.objects.all()) + \
+            list(models.ccode.objects.all())
+    if function in ['configuration','snapshot']:
+        db_objects += \
             list(models.channel.objects.all()) + \
             list(models.partner.objects.all()) + \
             list(models.chanpar.objects.all()) + \
             list(models.translate.objects.all()) +  \
             list(models.routes.objects.all()) +  \
             list(models.confirmrule.objects.all())
-            #~ list(models.partnergroup.objects.all()) + \
-    if snapshot:
-        db_objects += \
-            list(models.uniek.objects.all()) + \
-            list(models.persist.objects.all()) + \
-            list(models.mutex.objects.all()) + \
-            list(models.ta.objects.all()) + \
-            list(models.ta.objects.all()) + \
-            list(models.filereport.objects.all()) + \
-            list(models.report.objects.all())
-        #~ db_objects += snapshot_objects
+        if function=='snapshot':
+            db_objects += \
+                list(models.uniek.objects.all()) + \
+                list(models.persist.objects.all()) + \
+                list(models.mutex.objects.all()) + \
+                list(models.ta.objects.all()) + \
+                list(models.filereport.objects.all()) + \
+                list(models.report.objects.all())
     orgplugs = serializers.serialize("python", db_objects)
     #~ print orgpluglist
     convertedplugs = []
@@ -252,34 +253,35 @@ def database2indexfile(filename,snapshot):
         botsglobal.logger.info(u'    write in index: %s',plug['fields'])
         #check confirmrule: id is non-artificla key?
     f = open(filename + '.py','wb')
+    f.write('import datetime\n')
     f.write('version = 2\n')
     f.write('plugins = ')
     f.write(repr(convertedplugs))
     f.close()
 
-def files2plugin(pluginzipfilehandler,snapshot):
+def files2plugin(pluginzipfilehandler,function):
     #get usersys files
     usersys = botsglobal.ini.get('directories','usersysabspath')
-    files2pluginbydir(snapshot,pluginzipfilehandler,usersys,'usersys')
+    files2pluginbydir(function,pluginzipfilehandler,usersys,'usersys')
     
     botssys = botsglobal.ini.get('directories','botssys')
-    if snapshot:
+    if function=='snapshot':
         #get config files
         config = botsglobal.ini.get('directories','config')
-        files2pluginbydir(snapshot,pluginzipfilehandler,config,'config')
+        files2pluginbydir(function,pluginzipfilehandler,config,'config')
         #get data files
         data = botsglobal.ini.get('directories','data')
-        files2pluginbydir(snapshot,pluginzipfilehandler,data,'botssys/data')
+        files2pluginbydir(function,pluginzipfilehandler,data,'botssys/data')
         #get log files
-        log_file = botsglobal.ini.get('directories','log_file')
-        files2pluginbydir(snapshot,pluginzipfilehandler,os.path.dirname(log_file),'botssys/logging')
+        log_file = botsglobal.ini.get('directories','config')
+        files2pluginbydir(function,pluginzipfilehandler,os.path.dirname(log_file),'botssys/logging')
         #get sqlite database
-        files2pluginbydir(snapshot,pluginzipfilehandler,os.path.join(botssys,'sqlitedb'),'botssys/sqlitedb')
+        files2pluginbydir(function,pluginzipfilehandler,os.path.join(botssys,'sqlitedb'),'botssys/sqlitedb.copy')
     else:
-        files2pluginbydir(snapshot,pluginzipfilehandler,os.path.join(botssys,'infile'),'botssys/infile')
+        files2pluginbydir(function,pluginzipfilehandler,os.path.join(botssys,'infile'),'botssys/infile')
 
 
-def files2pluginbydir(snapshot,pluginzipfilehandler,dirname,defaultdirname):
+def files2pluginbydir(function,pluginzipfilehandler,dirname,defaultdirname):
     onlysnapshotdirs = [os.path.normpath(x) for x in ['usersys/charsets']]
     for root, dirs, files in os.walk(dirname):
         head, tail = os.path.split(root)
@@ -287,7 +289,7 @@ def files2pluginbydir(snapshot,pluginzipfilehandler,dirname,defaultdirname):
             del dirs[:]     #os.walk will not look in subdirecties 
             continue        #skip this .svn directory
         rootinplugin = root.replace(dirname,defaultdirname,1)
-        if not snapshot:
+        if function != 'snapshot':
             if rootinplugin in onlysnapshotdirs:    #do not use charsets in configuration plugin
                 del dirs[:]
                 continue

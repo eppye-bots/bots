@@ -2,6 +2,12 @@
 {% load botsfilters %}
 
 {% block content %}
+    <input onClick="history.back()" type="button" value="Back" />
+    <table>
+        <tr><td>Date/time</td><td class="nowrap">{{rootta.ts}}</td></tr>
+        <tr><td>State</td><td>{{rootta.statust|convert:"statust"}}</td></tr>
+        <tr><td>Route</td><td>{{rootta.idroute}}</td></tr>
+</table>
     <table id="botstable">
         <thead>
             <tr>

@@ -54,18 +54,17 @@ def reports(request,*kw,**kwargs):
                 #~ request.POST = copyrequestpost
                 return incoming(request)
             elif "report2outgoing" in request.POST:         #coming from ViewIncoming, go to incoming
-                #have: idta of run; loopup next run-idta
-                #then lookup the ts for both: datefrom, dateuntil
-                thisrun = models.report.objects.get(idta=int(request.POST['report2outgoing']))
-                datefrom = thisrun.ts
-                query = models.report.objects.filter(idta__gt=int(request.POST['report2outgoing'])).all()
-                dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
-                if dateuntil is None:
-                    dateuntil = viewlib.datetimeuntil()
-                copyrequestpost = request.POST.copy()
-                copyrequestpost['datefrom'] = datefrom
-                copyrequestpost['dateuntil'] = dateuntil
-                request.POST = copyrequestpost
+                request.POST = viewlib.preparereport2view(request.POST,type='report2outgoing')
+                #~ thisrun = models.report.objects.get(idta=int(request.POST['report2outgoing']))
+                #~ datefrom = thisrun.ts
+                #~ query = models.report.objects.filter(idta__gt=int(request.POST['report2outgoing'])).all()
+                #~ dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
+                #~ if dateuntil is None:
+                    #~ dateuntil = viewlib.datetimeuntil()
+                #~ copyrequestpost = request.POST.copy()
+                #~ copyrequestpost['datefrom'] = datefrom
+                #~ copyrequestpost['dateuntil'] = dateuntil
+                #~ request.POST = copyrequestpost
                 return outgoing(request)
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
@@ -339,16 +338,11 @@ def plugin(request,*kw,**kwargs):
     
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
-        filename = botslib.join(botsglobal.ini.get('directories','botssys'),'snapshot')
+        filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function'])
+        filename = os.path.abspath(request.GET['function'])
         botsglobal.logger.info(u'Start writing plugin "%s".',filename)
-        if 'snapshot' in request.GET:
-            snapshot = True
-            botsglobal.logger.info(u'    Generate snapshot plugin (full system in plugin).')
-        else:
-            snapshot = False
-            botsglobal.logger.info(u'    Generate configuration plugin.')
         try:
-            pluglib.dump(filename,snapshot)
+            pluglib.dump(filename,request.GET['function'])
         except botslib.PluginError as txt:
             botsglobal.logger.info(u'%s',str(txt))
             request.user.message_set.create(message="%s"%txt)
@@ -361,22 +355,21 @@ def delete(request,*kw,**kwargs):
     #~ print 'delete received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'transactions' in request.GET:
-            #~ models.ta.objects.delete()
-            #~ models.filereport.objects.delete()
-            #~ models.report.objects.delete()
+            models.ta.objects.all().delete()
+            models.filereport.objects.all().delete()
+            models.report.objects.all().delete()
             request.user.message_set.create(message='All transactions are deleted.')
         elif 'configuration' in request.GET:
-            #~ models.confirmrule.objects.delete()
-            #~ models.channel.objects.delete()
-            #~ models.chanpar.objects.delete()
-            #~ models.partner.objects.delete()
-            #~ models.filereport.objects.delete()
-            #~ models.filereport.objects.delete()
-            #~ models.filereport.objects.delete()
+            models.confirmrule.objects.all().delete()
+            models.channel.objects.all().delete()
+            models.chanpar.objects.all().delete()
+            models.partner.objects.all().delete()
+            models.translate.objects.all().delete()
+            models.routes.objects.all().delete()
             request.user.message_set.create(message='All configuration is deleted.')
         elif 'codelists' in request.GET:
-            #~ models.ccode.objects.delete()
-            #~ models.ccodetrigger.objects.delete()
+            models.ccode.objects.all().delete()
+            models.ccodetrigger.objects.all().delete()
             request.user.message_set.create(message='All user code lists are deleted.')
     return django.shortcuts.redirect('/home')
 

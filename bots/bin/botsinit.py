@@ -17,7 +17,7 @@ class BotsConfig(ConfigParser.SafeConfigParser):
             return ConfigParser.SafeConfigParser.get(self,section,option)
         except: #if there is no such section,option
             if default == '':
-                raise BotsError(u'No entry "$entry" in section "$section" in "bots.ini".',entry=option,section=section)
+                raise botslib.BotsError(u'No entry "$entry" in section "$section" in "bots.ini".',entry=option,section=section)
             return default
     #~ def getornone(self,section, option):
         #~ try:
