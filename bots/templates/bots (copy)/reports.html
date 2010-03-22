@@ -13,7 +13,6 @@
         {% endfor %}
         <thead>
             <tr>
-                <th></th>
                 <th><button class="botsheader" type="submit" name="order" value="status" />State</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="type" />Type</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="lastreceived" />#in</button></th>
@@ -25,14 +24,6 @@
         <tbody>
         {% for row in queryset.object_list %}
             <tr  class="{% cycle 'row1' 'row2' %}">
-                <td>
-                    <div class="dropdown"><img class="action" src="/media/images/star.png" />
-                        <ul>
-                            <li><button class="botsheader" type="submit" name="report2incoming" value="{{row.idta}}" />View incoming</button></li>
-                            <li><button class="botsheader" type="submit" name="report2outgoing" value="{{row.idta}}" />View outgoing</button></li>
-                        </ul>
-                    </div>
-                </td>
                 <td>{% if row.status %}
                         <img src="/media/images/error.png" style="width: 1em;"/>
                     {% else %}

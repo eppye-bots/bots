@@ -21,6 +21,7 @@ def help(request,*kw,**kwargs):
     return django.shortcuts.render_to_response('bots/help.html', {},context_instance=django.template.RequestContext(request))
 
 def reports(request,*kw,**kwargs):
+    print 'reports received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectReports()
@@ -28,20 +29,32 @@ def reports(request,*kw,**kwargs):
         else:                              #via menu, go to view form
             cleaned_data = {'page':1,'sortedby':'ts','sortedasc':False}
     else:                                  # request.method == 'POST'
-        if "2select" in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
-            formin = forms.ViewReports(request.POST)
-            formin.is_valid()
-            formout = forms.SelectReports(formin.cleaned_data)
-            return viewlib.render(request,formout)
         if "fromselect" in request.POST:        #coming from select criteria screen
             formin = forms.SelectReports(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
-        else:                                    #coming from ViewIncoming
+        else:
             formin = forms.ViewReports(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
-            viewlib.handlepagination(request.POST,formin.cleaned_data)
+            if "2select" in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
+                formout = forms.SelectReports(formin.cleaned_data)
+                return viewlib.render(request,formout)
+            elif "report2incoming" in request.POST:         #coming from ViewIncoming, go to incoming
+                #have: idta of run; loopup next run-idta
+                #then lookup the ts for both: datefrom, dateuntil
+                print int(request.POST['report2incoming'])
+                thisrun = models.report.objects.get(idta=int(request.POST['report2incoming']))
+                formin.cleaned_data['datefrom'] = thisrun.ts
+                query = models.report.objects.filter(idta__gt=int(request.POST['report2incoming'])).all()
+                formin.cleaned_data['dateuntil'] = query.aggregate(django.db.models.Min('ts'))['ts__min']
+                #~ return models.filereport.objects.all().aggregate(django.db.models.Max('reportidta'))['reportidta__max']
+                copyrequestpost = request.POST.copy()
+                request.POST = copyrequestpost
+                print formin.cleaned_data['datefrom'],formin.cleaned_data['dateuntil']
+                return incoming(request)
+            else:                                    #coming from ViewIncoming
+                viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
                 
     query = models.report.objects.all()

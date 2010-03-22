@@ -47,11 +47,11 @@ def generalinit(configdir):
     #Set Configdir 
     #Configdir MUST be importable. So configdir is relative to PYTHONPATH. Try several options for this import.
     try:                        #configdir outside bots-directory: import configdir.settings.py
-        importnameforsettings = os.path.normpath(os.path.join(configdir,'settings')).replace('/','.')
+        importnameforsettings = os.path.normpath(os.path.join(configdir,'settings')).replace(os.sep,'.')
         settings = botslib.botsbaseimport(importnameforsettings)
     except ImportError:         #configdir is in bots directory: import bots.configdir.settings.py
         try:
-            importnameforsettings = os.path.normpath(os.path.join('bots',configdir,'settings')).replace('/','.')
+            importnameforsettings = os.path.normpath(os.path.join('bots',configdir,'settings')).replace(os.sep,'.')
             settings = botslib.botsbaseimport(importnameforsettings)
         except ImportError:     #set pythonpath to config directory first
             if not os.path.exists(configdir):    #check if configdir exists.
@@ -60,7 +60,7 @@ def generalinit(configdir):
             print 'add pythonpath for usersys',addtopythonpath
             moduletoimport = os.path.basename(configdir)
             sys.path.append(addtopythonpath)
-            importnameforsettings = os.path.normpath(os.path.join(moduletoimport,'settings')).replace('/','.')
+            importnameforsettings = os.path.normpath(os.path.join(moduletoimport,'settings')).replace(os.sep,'.')
             settings = botslib.botsbaseimport(importnameforsettings)
     #Find pathname configdir using imported settings.py.
     configdirectory = os.path.abspath(os.path.dirname(settings.__file__))
@@ -75,11 +75,11 @@ def generalinit(configdir):
     #usersys MUST be importable. So usersys is relative to PYTHONPATH. Try several options for this import.
     usersys = botsglobal.ini.get('directories','usersys','usersys')
     try:                        #usersys outside bots-directory: import usersys
-        importnameforusersys = os.path.normpath(usersys).replace('/','.')
+        importnameforusersys = os.path.normpath(usersys).replace(os.sep,'.')
         importedusersys = botslib.botsbaseimport(importnameforusersys)
     except ImportError:         #usersys is in bots directory: import bots.usersys
         try:
-            importnameforusersys = os.path.normpath(os.path.join('bots',usersys)).replace('/','.')
+            importnameforusersys = os.path.normpath(os.path.join('bots',usersys)).replace(os.sep,'.')
             importedusersys = botslib.botsbaseimport(importnameforusersys)
         except ImportError:     #set pythonpath to usersys directory first
             if not os.path.exists(usersys):    #check if configdir exists.
@@ -88,7 +88,7 @@ def generalinit(configdir):
             moduletoimport = os.path.basename(usersys)
             print 'add pythonpath for usersys',addtopythonpath
             sys.path.append(addtopythonpath)
-            importnameforusersys = os.path.normpath(usersys).replace('/','.')
+            importnameforusersys = os.path.normpath(usersys).replace(os.sep,'.')
             importedusersys = botslib.botsbaseimport(importnameforusersys)
             
     #set directory settings in bots.ini************************************************************

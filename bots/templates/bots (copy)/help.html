@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+
+
+{% block content %}
+    <br />
+    <br />
+    <br />
+<p>Main menu: (only administrator sees all menus.)</p>
+<ul>
+    <li>Home:</li>
+    <ul>
+        <li>Login.</li>
+        <li>Logout.</li>
+    </ul>
+    <li>Last run:</li>
+    <ul>
+        <li>Reports of all runs.</li>
+        <li>Incoming EDI files of last run.</li>
+        <li>Outgoing outgoing EDI files of last run.</li>
+        <li>Process errors of last run.</li>
+    </ul>
+    <li>Select:</li>
+    <ul>
+        <li>Reports using selection criteria.</li>
+        <li>Incoming using selection criteria.</li>
+        <li>Outgoing using selection criteria.</li>
+        <li>Process errors: using selection criteria.</li>
+        <li>Confirmations: view if confirmations are received or generated.</li>
+    </ul>
+    <li>Maintainance: set up configuration.</li>
+    <ul>
+        <li>Routes: where to get edi files, how to translate, where to put results.</li>
+        <li>Channels: configure comunication channels in and out.</li>
+        <li>Translations: translate what to what using mapping script.</li>
+        <li>Partners: maintain partners.</li>
+        <li>EmailAddresses: maintain channel specific email addresses.</li>
+        <li>Partnergroups: partners can be in a partnergroup.</li>
+        <li>Codelists: maintain codelists used in translations.</li>
+        <li>Confirmations rules: when should a confirmation be asked or generated.</li>
+    </ul>
+    <li>System Tasks: administrator tasks.</li>
+    <ul>
+        <li>Users: maintain bots system users.</li>
+        <li>Read a plugin: load a predefined edi configuration from a plugin.</li>
+        <li>Make snapshot plugin: generate a plugin of current configuration and data.</li>
+        <li>Make configuration plugin: generate a plugin of current configuration.</li>
+        <li>Delete all transactions.</li>
+        <li>Delete all configuration.</li>
+        <li>Delete all user maintained codes.</li>
+        <li>View/edit counters: for automatic counters in edi messages.</li>
+    </ul>
+    <li>Run: receive, translate and send EDI messages.</li>
+    <ul>
+        <li>Run only new: receive new EDI files only.</li>
+        <li>Run only retry: retry files with errors, eg communication errors.</li>
+        <li>Run only retransmit: retransmit/rerecieve edi files marked by user.</li>
+        <li>Run all: run new, retries and retransmits.</li>
+    </ul>
+</ul>
+{% endblock %}
+
