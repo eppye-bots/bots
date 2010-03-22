@@ -41,18 +41,32 @@ def reports(request,*kw,**kwargs):
                 formout = forms.SelectReports(formin.cleaned_data)
                 return viewlib.render(request,formout)
             elif "report2incoming" in request.POST:         #coming from ViewIncoming, go to incoming
+                request.POST = viewlib.preparereport2view(request.POST,type='report2incoming')
+                #~ thisrun = models.report.objects.get(idta=int(request.POST['report2incoming']))
+                #~ datefrom = thisrun.ts
+                #~ query = models.report.objects.filter(idta__gt=int(request.POST['report2incoming'])).all()
+                #~ dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
+                #~ if dateuntil is None:
+                    #~ dateuntil = viewlib.datetimeuntil()
+                #~ copyrequestpost = request.POST.copy()
+                #~ copyrequestpost['datefrom'] = datefrom
+                #~ copyrequestpost['dateuntil'] = dateuntil
+                #~ request.POST = copyrequestpost
+                return incoming(request)
+            elif "report2outgoing" in request.POST:         #coming from ViewIncoming, go to incoming
                 #have: idta of run; loopup next run-idta
                 #then lookup the ts for both: datefrom, dateuntil
-                print int(request.POST['report2incoming'])
-                thisrun = models.report.objects.get(idta=int(request.POST['report2incoming']))
-                formin.cleaned_data['datefrom'] = thisrun.ts
-                query = models.report.objects.filter(idta__gt=int(request.POST['report2incoming'])).all()
-                formin.cleaned_data['dateuntil'] = query.aggregate(django.db.models.Min('ts'))['ts__min']
-                #~ return models.filereport.objects.all().aggregate(django.db.models.Max('reportidta'))['reportidta__max']
+                thisrun = models.report.objects.get(idta=int(request.POST['report2outgoing']))
+                datefrom = thisrun.ts
+                query = models.report.objects.filter(idta__gt=int(request.POST['report2outgoing'])).all()
+                dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
+                if dateuntil is None:
+                    dateuntil = viewlib.datetimeuntil()
                 copyrequestpost = request.POST.copy()
+                copyrequestpost['datefrom'] = datefrom
+                copyrequestpost['dateuntil'] = dateuntil
                 request.POST = copyrequestpost
-                print formin.cleaned_data['datefrom'],formin.cleaned_data['dateuntil']
-                return incoming(request)
+                return outgoing(request)
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data

@@ -4,8 +4,22 @@ import datetime
 import django
 from django.core.paginator import Paginator,EmptyPage, InvalidPage
 import models
-import botsglobal   
+import botsglobal
 from botsconfig import *
+
+def preparereport2view(post,type=None):
+    terugpost = post.copy()
+    #have: idta of run; loopup next run-idta
+    #then lookup the ts for both: datefrom, dateuntil
+    thisrun = models.report.objects.get(idta=int(post[type]))
+    datefrom = thisrun.ts
+    query = models.report.objects.filter(idta__gt=int(post[type])).all()
+    dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
+    if dateuntil is None:
+        dateuntil = datetimeuntil()
+    terugpost['datefrom'] = datefrom
+    terugpost['dateuntil'] = dateuntil
+    return terugpost
 
 def changepostparameters(post,type=None):
     terugpost = post.copy()
