@@ -6,6 +6,30 @@ from datetime import datetime
 - some unique 
 - codelists for values
 '''
+STATUST = [
+    (0, 'Open'),
+    (1, 'Error'),
+    (2, 'OK'),
+    (3, 'Done'),
+    (4,'Retransmit'),
+    ]
+STATUS = [
+    (1,'process'),
+    (200,'FileRecieve'),
+    (210,'RawInfile'),
+    (215,'Mimein'),
+    (220,'Infile'),
+    (280,'Mailbag'),
+    (290,'Mailbagparsed'),
+    (300,'Translate'),
+    (310,'Parsed'),
+    (320,'Splitup'),
+    (330,'Translated'),
+    (400,'Merged'),
+    (500,'Outfile'),
+    (510,'RawOutfile'),
+    (520,'FileSend'),
+    ]
 EDITYPES = [
     ('edifact', 'edifact'),
     ('x12', 'x12'),
@@ -74,6 +98,7 @@ class confirmrule(models.Model):
         verbose_name = 'confirm rule'
 class ccodetrigger(models.Model):
     ccodeid = models.CharField(primary_key=True,max_length=35,verbose_name='type code')
+    ccodeid_desc = models.CharField(max_length=35,null=True,blank=True)
     def __unicode__(self):
         return self.ccodeid
     class Meta:
@@ -169,7 +194,7 @@ class translate(models.Model):
     alt = models.CharField(max_length=35,null=False,blank=True)
     frompartner = models.ForeignKey(partner,related_name='tfrompartner',null=True,blank=True)
     topartner = models.ForeignKey(partner,related_name='ttopartner',null=True,blank=True)
-    tscript = models.CharField(max_length=35,verbose_name='translation script')
+    tscript = models.CharField(max_length=35)
     toeditype = models.CharField(max_length=35,choices=EDITYPES)
     tomessagetype = models.CharField(max_length=35)
     class Meta:
@@ -192,7 +217,7 @@ class routes(models.Model):
     frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,blank=True)
     topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,blank=True)
     testindicator = models.CharField(max_length=1,blank=True)
-    translateind = models.BooleanField(default=True,blank=True)
+    translateind = models.BooleanField(default=True,blank=True,verbose_name='translate')
     notindefaultrun = models.BooleanField(default=False,blank=True)
     class Meta:
         db_table = 'routes'
@@ -208,7 +233,7 @@ class filereport(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idta = models.IntegerField(db_index=True)
     reportidta = models.IntegerField(db_index=True)
-    statust = models.IntegerField()
+    statust = models.IntegerField(choices=STATUST)
     retransmit = models.BooleanField()
     idroute = models.CharField(max_length=35)
     fromchannel = models.CharField(max_length=35)
@@ -271,8 +296,8 @@ class report(models.Model):
      #~ END
 class ta(models.Model):
     idta = models.IntegerField(primary_key=True)
-    statust = models.IntegerField()
-    status = models.IntegerField()
+    statust = models.IntegerField(choices=STATUST)
+    status = models.IntegerField(choices=STATUS)
     parent = models.IntegerField(db_index=True)
     child = models.IntegerField()
     script = models.IntegerField(db_index=True)

@@ -2,7 +2,7 @@ from django.conf.urls.defaults import *
 from django.contrib import admin,auth
 from django.views.generic.simple import redirect_to
 from django.contrib.auth.decorators import login_required,user_passes_test
-from bots.bin import views
+from bots import views
 
 admin.autodiscover()
 staff_required = user_passes_test(lambda u: u.is_staff)
@@ -10,8 +10,8 @@ superuser_required = user_passes_test(lambda u: u.is_superuser)
 
 urlpatterns = patterns('',
     #~ (r'^admin/$', 'bots.bin.views.index'),  #do not show django admin root page
-    (r'^admin/bin/$', 'bots.bin.views.index'),  #do not show django admin root page
-    (r'^admin/bin/uniek/.+$', redirect_to, {'url': '/admin/bin/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages. 
+    (r'^admin/$', 'bots.views.index'),  #do not show django admin root page
+    (r'^admin/uniek/.+$', redirect_to, {'url': '/admin/bots/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages. 
     (r'^login.*', 'django.contrib.auth.views.login'),
     (r'^logout.*', 'django.contrib.auth.views.logout',{'next_page': '/home/'}),
     #login required
@@ -31,6 +31,7 @@ urlpatterns = patterns('',
     (r'^delete.*', superuser_required(views.delete)),
     (r'^plugin.*', superuser_required(views.plugin)),
     (r'^plugout.*', superuser_required(views.plugout)),
+    (r'^unlock.*', superuser_required(views.unlock)),
     #catch-all
-    (r'^.*', 'bots.bin.views.index'), 
+    (r'^.*', 'bots.views.index'), 
     )

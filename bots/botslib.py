@@ -16,34 +16,23 @@ from botsconfig import *
 import botsglobal #as botsglobal
 
 def botsinfo():
-    # driver://username:password@host:port/database
-
-    database_info = botsglobal.ini.get('database','DATABASE_ENGINE','sqlite3') + '://' 
-    if botsglobal.ini.get('database','DATABASE_USER',None):
-        database_info += botsglobal.ini.get('database','DATABASE_USER',None) 
-        if botsglobal.ini.get('database','DATABASE_PASSWORD',None):
-            database_info += ':' + botsglobal.ini.get('database','DATABASE_PASSWORD',None)
-    if botsglobal.ini.get('database','DATABASE_HOST',None):
-        database_info += '@' + botsglobal.ini.get('database','DATABASE_HOST',None)
-        if hbotsglobal.ini.get('database','DATABASE_PORT',None):
-            database_info += ':' + botsglobal.ini.get('database','DATABASE_PORT',None)
-    database_info += '/' + botsglobal.ini.get('database','DATABASE_NAME')
-    if botsglobal.ini.get('database','DATABASE_OPTIONS',None):
-        database_info += '?' + botsglobal.ini.get('database','DATABASE_OPTIONS',None)
-
-    return {'python':sys.version,
-            'django':django.VERSION,
-            'bots':botsglobal.version,
-            'botsinstallationdir':botsglobal.ini.get('directories','botspath'),
-            'configdir':botsglobal.ini.get('directories','config'),
-            'botssys':botsglobal.ini.get('directories','botssys'),
-            'usersys':botsglobal.ini.get('directories','usersysabspath'),
-            'database':database_info,
-            'platform1':platform.system(),
-            'platform2':platform.platform(),
-            'machine':platform.machine(),
-            }
-
+    return [('python version',sys.version),
+            ('django version',django.VERSION),
+            ('bots version',botsglobal.version),
+            ('bots installation path',botsglobal.ini.get('directories','botspath')),
+            ('config path',botsglobal.ini.get('directories','config')),
+            ('botssys path',botsglobal.ini.get('directories','botssys')),
+            ('usersys path',botsglobal.ini.get('directories','usersysabs')),
+            ('platform',platform.system()),
+            ('platform extended',platform.platform()),
+            ('machine',platform.machine()),
+            ('DATABASE_ENGINE',botsglobal.settings.DATABASE_ENGINE),
+            ('DATABASE_NAME',botsglobal.settings.DATABASE_NAME),
+            ('DATABASE_USER',botsglobal.settings.DATABASE_USER),
+            ('DATABASE_HOST',botsglobal.settings.DATABASE_HOST),
+            ('DATABASE_PORT',botsglobal.settings.DATABASE_PORT),
+            ('DATABASE_OPTIONS',botsglobal.settings.DATABASE_OPTIONS),
+            ]
 
 #**********************************************************/**
 #**************getters/setters for some globals***********************/**
@@ -86,7 +75,7 @@ class _Transaction(object):
         setstring = ','.join([key+'=%('+key+')s' for key in ta_info if key in _Transaction.filterlist])
         if not setstring:   #nothing to update
             return
-        ta_info['selfid'] = self.idta   #always set this...I'm not sure if this is needed...take no changes
+        ta_info['selfid'] = self.idta   #always set this...I'm not sure if this is needed...take no chances
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''UPDATE ta
                             SET '''+setstring+ '''
@@ -110,9 +99,9 @@ class _Transaction(object):
         cursor.execute(u'''SELECT idta FROM ta
                            WHERE parent=%(selfid)s''',
                             {'selfid':self.idta})
-        results = cursor.fetchall()
-        for result in results:
-            ta=OldTransaction(result[0])
+        rows = cursor.fetchall()
+        for row in rows:
+            ta=OldTransaction(row['idta'])
             ta.failure()
         cursor.execute(u'''DELETE FROM ta
                             WHERE parent=%(selfid)s''',
@@ -126,9 +115,9 @@ class _Transaction(object):
         cursor.execute(u'''SELECT idta FROM ta
                            WHERE parent=%(selfid)s''',
                             {'selfid':self.idta})
-        results = cursor.fetchall()
-        for result in results:
-            ta=OldTransaction(result[0])
+        rows = cursor.fetchall()
+        for row in rows:
+            ta=OldTransaction(row['idta'])
             ta.update(status=status)
             #~ ta.succes()
         botsglobal.db.commit()
@@ -154,8 +143,8 @@ class _Transaction(object):
                             WHERE idta=%(selfid)s''',
                             {'selfid':self.idta})
         result = cursor.fetchone()
-        for attribute,value in zip(ta_vars,result):
-            setattr(self,attribute,value)
+        for key in result.keys():
+            setattr(self,key,result[key])
         cursor.close()
 
     def synall(self):
@@ -167,8 +156,8 @@ class _Transaction(object):
                             WHERE idta=%(selfid)s''',
                             {'selfid':self.idta})
         result = cursor.fetchone()
-        for attribute,value in zip(self.filterlist,result):
-            setattr(self,attribute,value)
+        for key in result.keys():
+            setattr(self,key,result[key])
         cursor.close()
 
     def copyta(self,status,**ta_info):
@@ -194,7 +183,7 @@ class _Transaction(object):
                    WHERE idta=%(selfid)s''',
                     {'selfid':self.script}):
             break
-        return row[0]
+        return row['filename']
 
 
 class OldTransaction(_Transaction):
@@ -202,8 +191,8 @@ class OldTransaction(_Transaction):
         '''Use old transaction '''
         self.idta = idta
         self.talijst=[]
-        for key,value in ta_info.items():   #only used by trace
-            setattr(self,key,value)
+        for key in ta_info.keys():   #only used by trace
+            setattr(self,key,ta_info[key])  #could be done better, but SQLite does not support .items()
 
 
 class NewTransaction(_Transaction):
@@ -262,9 +251,9 @@ def trace_origin(ta,where=None):
                              FROM  ta
                              WHERE child=%(idta)s''',
                             {'idta':ta.idta}):
-            if row[0] in donelijst:
+            if row['idta'] in donelijst:
                 continue
-            yield row[0]
+            yield row['idta']
         if ta.parent != 0 and ta.parent not in donelijst:
             yield ta.parent
         
@@ -291,7 +280,7 @@ def addinfocore(change,where,wherestring):
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
         counter += 1
-        ta_from = OldTransaction(row[0])
+        ta_from = OldTransaction(row['idta'])
         ta_from.copyta(**change)     #make new ta from ta_from, using parameters from change
         ta_from.update(statust=DONE)    #update 'old' ta
     return counter
@@ -379,7 +368,7 @@ def updateinfo(change,where):
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
         counter += 1
-        ta_from = OldTransaction(row[0])
+        ta_from = OldTransaction(row['idta'])
         ta_from.synall()
         defchange = {}
         for key,value in change.items():
@@ -404,7 +393,7 @@ def changestatustinfo(change,where):
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
         counter += 1
-        ta_from = OldTransaction(row[0])
+        ta_from = OldTransaction(row['idta'])
         ta_from.update(statust = change)
     return counter
 
@@ -415,34 +404,41 @@ def changestatustinfo(change,where):
 def connect():
     try:
         #different connect code per tyoe of database
-        if parsedurl.drivername == 'sqlite':
+        if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
             #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
             import botssqlite
-            botsglobal.db = botssqlite.connect(database = parsedurl.database)
-        if parsedurl.drivername == 'mssql':
-            import botsmssql
-            botsglobal.db = botsmssql.connect(host=parsedurl.host, port=parsedurl.port, db=parsedurl.database, user=parsedurl.username, passwd=parsedurl.password, **parsedurl.query)
-        elif parsedurl.drivername == 'mysql':
+            botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASE_NAME)
+        elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
             import MySQLdb
-            botsglobal.db = MySQLdb.connect(host=parsedurl.host, port=parsedurl.port, db=parsedurl.database, user=parsedurl.username, passwd=parsedurl.password, **parsedurl.query)
-        elif parsedurl.drivername == 'postgres':
+            from MySQLdb import cursors
+            botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASE_HOST, 
+                                            port=int(botsglobal.settings.DATABASE_PORT), 
+                                            db=botsglobal.settings.DATABASE_NAME, 
+                                            user=botsglobal.settings.DATABASE_USER, 
+                                            passwd=botsglobal.settings.DATABASE_PASSWORD,
+                                            cursorclass=cursors.DictCursor,
+                                            **botsglobal.settings.DATABASE_OPTIONS)
+        elif botsglobal.settings.DATABASE_ENGINE == 'postgresql_psycopg2':
             import psycopg2
             import psycopg2.extensions
+            import psycopg2.extras
             psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-            botsglobal.db = psycopg2.connect( 'host=%s dbname=%s user=%s password=%s'%(parsedurl.host,parsedurl.database,parsedurl.username,parsedurl.password))
+            botsglobal.db = psycopg2.connect( 'host=%s dbname=%s user=%s password=%s'%( botsglobal.settings.DATABASE_HOST,
+                                                                                        botsglobal.settings.DATABASE_NAME,
+                                                                                        botsglobal.settings.DATABASE_USER,
+                                                                                        botsglobal.settings.DATABASE_PASSWORD),connection_factory=psycopg2.extras.DictConnection)
             botsglobal.db.set_client_encoding('UNICODE')
-        botsglobal.dbinfo = parsedurl
     except:
-        botsglobal.logger.error(u'Could not connect to database: "%s".',dburi)
+        botsglobal.logger.error(u'Could not connect to database: "%s" (is set in settings.py).',botsglobal.settings.DATABASE_ENGINE)
         raise
-    botsglobal.logger.info(u'Database: "%s".',dburi)
+    botsglobal.logger.info(u'Database: "%s".',botsglobal.settings.DATABASE_ENGINE)
 
 def mutexon():
     cursor = botsglobal.db.cursor()
     cursor.execute('''UPDATE mutex SET mutexer = mutexer+1 WHERE mutexk=0''')
     cursor.execute('''SELECT mutexer FROM mutex WHERE mutexk=0''')
     try:
-        mutex=cursor.fetchone()[0]
+        mutex=cursor.fetchone()['mutexer']
     except TypeError:
         cursor.execute(u'''INSERT INTO mutex (mutexk,mutexer) VALUES (0,1)''')
         mutex = 1
@@ -461,20 +457,20 @@ def mutexoff():
 #**********************************************************/**
 #*************************Database***********************/**
 #**********************************************************/**
-def query(querystring,parameters=None):
+def query(querystring,*args):
     ''' general query. yields rows from query '''
     cursor = botsglobal.db.cursor()
-    cursor.execute(querystring,parameters)
+    cursor.execute(querystring,*args)
     results =  cursor.fetchall()
     cursor.close()
     for result in results:
-        yield result\
+        yield result
     
-def change(querystring,parameters=None):
+def change(querystring,*args):
     '''general inset/update. no return'''
     cursor = botsglobal.db.cursor()
     try:
-        cursor.execute(querystring,parameters)
+        cursor.execute(querystring,*args)
     except: #IntegrityError from postgresql
         botsglobal.db.rollback()
         raise
@@ -490,7 +486,7 @@ def unique(domein):
     try:
         cursor.execute(u'''UPDATE uniek SET nummer=nummer+1 WHERE domein=%(domein)s''',{'domein':domein})
         cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
-        nummer = cursor.fetchone()[0]
+        nummer = cursor.fetchone()['nummer']
     except: # ???.DatabaseError; domein does not exist
         cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
         nummer = 1
@@ -558,10 +554,13 @@ def txtexc():
             limit=0
     else:
         limit=0
+    #~ if botsglobal.ini.getboolean('settings','debug',False):
+        #~ limit = None
+    #~ else:
+        #~ limit=0
     #problems with char set for some input data that are reported in traces....so always decode this; 
     terug = traceback.format_exc(limit).decode('utf-8','ignore')
-    if hasattr(botsglobal,'logger'):
-        botsglobal.logger.debug(u'exception %s',terug)
+    #~ botsglobal.logger.debug(u'exception %s',terug)
     if hasattr(botsglobal,'dbinfo') and botsglobal.dbinfo.drivername != 'sqlite':    #sqlite does not enforce strict lengths
         return terug[-2047:]
     else:
@@ -585,6 +584,7 @@ def botsbaseimport(modulename):
         for comp in components[1:]:
             module = getattr(module, comp)
     except ImportError: #if module not found; often this is caught later on
+        #~ print txtexc()
         raise
     except:             #other errors
         txt=txtexc()
@@ -593,27 +593,33 @@ def botsbaseimport(modulename):
         return module
 
 def botsimport(soort,modulename):
-    ''' return imported module; if could not be found or error in module: raise'''
+    ''' to import modules from usersys.
+        return: imported module, filename imported module; 
+        if could not be found or error in module: raise
+    '''
     try:    #__import__ is picky on the charset used. Might be different for different OS'es. So: test if charset is us-ascii
         modulename.encode('ascii')
     except UnicodeEncodeError:  #if not us-ascii, convert to punycode
         modulename = modulename.encode('punycode')
     modulepath = '.'.join((botsglobal.usersysimportpath,soort,modulename))  #assemble import string
     modulefile = join(botsglobal.usersysimportpath,soort,modulename)   #assemble abs filename for errortexts
-    if hasattr(botsglobal,'logger'):
-        botsglobal.logger.debug(u'import file "%s".',modulefile)
+    botsglobal.logger.debug(u'import file "%s".',modulefile)
     try:
+        #~ print 'modulepath',modulepath
         module = botsbaseimport(modulepath)
     except ImportError: #if module not found
-        if hasattr(botsglobal,'logger'):
-            botsglobal.logger.debug(u'no import of file "%s".',modulefile)
+        botsglobal.logger.debug(u'no import of file "%s".',modulefile)
+        #~ print 'error import modulepath',modulepath
         raise
     else:
         return module,modulefile
 
-def join(path,*paths):
-    ''' join,normalise paths. return always an absolute path'''
-    return os.path.abspath(os.path.join(path,*paths))
+def join(*paths):
+    '''Does does more as join.....
+        - join the paths (compare os.path.join) 
+        - if path is not absolute, interpretate this as relative from bots directory.
+        - normalize'''
+    return os.path.normpath(os.path.join(botsglobal.ini.get('directories','botspath'),*paths))
 
 def dirshouldbethere(path):
     if path and not os.path.exists(path):
@@ -677,8 +683,7 @@ def runscript(module,modulefile,functioninscript,**argv):
     ''' Execute user script. Functioninscript is supposed to be there; if not AttributeError is raised.
         Often is checked in advance if Functioninscript does exist.
     '''
-    if hasattr(botsglobal,'logger'):
-        botsglobal.logger.debug(u'run user script "%s" in "%s".',functioninscript,modulefile)
+    botsglobal.logger.debug(u'run user script "%s" in "%s".',functioninscript,modulefile)
     functiontorun = getattr(module, functioninscript)
     try:
         return functiontorun(**argv)
@@ -722,17 +727,17 @@ def runexternprogramold(program,parameters=''):
 #***************###############  mdn   #############
 #**********************************************************/**
 def checkconfirmrules(confirmtype,**kwargs):
-    confirmlist = ['ruletype','idroute','idchannel','frompartner','topartner','editype','messagetype','negativerule']
+    #~ confirmlist = ['ruletype','idroute','idchannel','frompartner','topartner','editype','messagetype','negativerule']
     terug = False       #boolean to return: ask a confirm of not?
     #~ print 'kwargs',kwargs
-    for row in query(u'''SELECT ''' + ','.join(confirmlist) + '''
+    for confirmdict in query(u'''SELECT ruletype,idroute,idchannel,frompartner,topartner,editype,messagetype,negativerule
                         FROM    confirmrule
                         WHERE   active=%(active)s
                         AND     confirmtype=%(confirmtype)s
                         ORDER BY negativerule ASC
                         ''',
                         {'active':True,'confirmtype':confirmtype}):
-        confirmdict = dict(zip(confirmlist,row))    #put the values of row in a dict
+        #~ confirmdict = dict(zip(confirmlist,row))    #put the values of row in a dict
         #~ print 'confirmdict',confirmdict
         if confirmdict['ruletype']=='all':
             terug = not confirmdict['negativerule']

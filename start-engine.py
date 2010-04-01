@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from bots import webserver
+from bots import engine
 
 if __name__ == '__main__':
-    webserver.start()
+    engine.start()

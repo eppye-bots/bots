@@ -7,21 +7,18 @@ import models
 import botsglobal
 from botsconfig import *
 
-def preparereport2view(post,type=None):
+def preparereport2view(post,runidta):
     terugpost = post.copy()
-    #have: idta of run; loopup next run-idta
-    #then lookup the ts for both: datefrom, dateuntil
-    thisrun = models.report.objects.get(idta=int(post[type]))
-    datefrom = thisrun.ts
-    query = models.report.objects.filter(idta__gt=int(post[type])).all()
-    dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
-    if dateuntil is None:
-        dateuntil = datetimeuntil()
-    terugpost['datefrom'] = datefrom
-    terugpost['dateuntil'] = dateuntil
+    thisrun = models.report.objects.get(idta=runidta)
+    terugpost['datefrom'] = thisrun.ts
+    try:
+        nextrun = thisrun.get_next_by_ts()
+        terugpost['dateuntil'] = nextrun.ts
+    except:
+        terugpost['dateuntil'] = datetimeuntil()
     return terugpost
 
-def changepostparameters(post,type=None):
+def changepostparameters(post,type):
     terugpost = post.copy()
     if type == 'confirm2in':
         for key in ['confirmtype','confirmed','fromchannel','tochannel']:
@@ -189,10 +186,12 @@ def filterquery(query , org_cleaned_data, incoming=False):
         query = query.order_by({True:'',False:'-'}[cleaned_data.pop('sortedasc')] + cleaned_data.pop('sortedby'))
     if 'lastrun' in cleaned_data:
         if cleaned_data.pop('lastrun'):
-            if incoming:    #detect if incoming; do other selection
-                query = query.filter(reportidta=getidtalastrun())
-            else:
-                query = query.filter(idta__gt=getidtalastrun())
+            idtalastrun = getidtalastrun()
+            if idtalastrun:     #if no result (=None): there are no filereports.
+                if incoming:    #detect if incoming; do other selection
+                    query = query.filter(reportidta=idtalastrun)
+                else:
+                    query = query.filter(idta__gt=idtalastrun)
     for key,value in cleaned_data.items():
         if not value:
             del cleaned_data[key]

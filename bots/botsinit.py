@@ -62,12 +62,14 @@ def generalinit(configdir):
             sys.path.append(addtopythonpath)
             importnameforsettings = os.path.normpath(os.path.join(moduletoimport,'settings')).replace(os.sep,'.')
             settings = botslib.botsbaseimport(importnameforsettings)
+    #settings are accessed using botsglobal
+    botsglobal.settings = settings  
     #Find pathname configdir using imported settings.py.
     configdirectory = os.path.abspath(os.path.dirname(settings.__file__))
             
     #Read configuration-file bots.ini.
     botsglobal.ini = BotsConfig()
-    cfgfile = open(botslib.join(configdirectory,'bots.ini'), 'r')
+    cfgfile = open(os.path.join(configdirectory,'bots.ini'), 'r')
     botsglobal.ini.readfp(cfgfile)
     cfgfile.close()
     
@@ -84,7 +86,7 @@ def generalinit(configdir):
         except ImportError:     #set pythonpath to usersys directory first
             if not os.path.exists(usersys):    #check if configdir exists.
                 raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "$path".',path=usersys)
-            addtopythonpath = os.path.abspath(os.path.dirname(usersys))
+            addtopythonpath = os.path.abspath(os.path.dirname(usersys))     #????
             moduletoimport = os.path.basename(usersys)
             print 'add pythonpath for usersys',addtopythonpath
             sys.path.append(addtopythonpath)
@@ -92,18 +94,19 @@ def generalinit(configdir):
             importedusersys = botslib.botsbaseimport(importnameforusersys)
             
     #set directory settings in bots.ini************************************************************
-    botsglobal.ini.set('directories','botspath',os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+    botsglobal.ini.set('directories','botspath',botsglobal.settings.PROJECT_PATH)
     botsglobal.ini.set('directories','config',configdirectory)
-    botsglobal.ini.set('directories','usersysabspath',os.path.abspath(os.path.dirname(importedusersys.__file__)))    #Find pathname usersys using imported usersys
+    botsglobal.ini.set('directories','usersysabs',os.path.abspath(os.path.dirname(importedusersys.__file__)))    #???Find pathname usersys using imported usersys
     
+    botsglobal.usersysimportpath = importnameforusersys
+    print 'botsglobal.usersysimportpath', botsglobal.usersysimportpath 
     botssys = botsglobal.ini.get('directories','botssys','botssys')
-    if not os.path.isabs(botssys):
-        botsglobal.ini.set('directories','botssys',os.path.join(botsglobal.ini.get('directories','botspath'),botssys))
+    botsglobal.ini.set('directories','botssys',botslib.join(botssys))
     
-    botsglobal.ini.set('directories','data','%(botssys)s/data')
+    botsglobal.ini.set('directories','data',botslib.join(botssys,'data'))
     botslib.dirshouldbethere(botsglobal.ini.get('directories','data'))
     
-    botsglobal.ini.set('directories','logging','%(botssys)s/logging')
+    botsglobal.ini.set('directories','logging',botslib.join(botssys,'logging'))
     botslib.dirshouldbethere(botsglobal.ini.get('directories','logging'))
     
     #set values in setting.py**********************************************************************
@@ -112,38 +115,15 @@ def generalinit(configdir):
     else:
         settings.DEBUG = False
     settings.TEMPLATE_DEBUG = settings.DEBUG
-    #set database in settings.py*******************************************************************
-    settings.DATABASE_ENGINE = botsglobal.ini.get('database','DATABASE_ENGINE')
-    DATABASE_NAME = botsglobal.ini.get('database','DATABASE_NAME')
-    if settings.DATABASE_ENGINE == 'sqlite3' and not os.path.isabs(DATABASE_NAME):
-        settings.DATABASE_NAME = os.path.join(botsglobal.ini.get('directories','botspath'), DATABASE_NAME)
-    else:
-        settings.DATABASE_NAME = DATABASE_NAME
-    DATABASE_USER = botsglobal.ini.get('database','DATABASE_USER',None)
-    if DATABASE_USER:
-        settings.DATABASE_USER = DATABASE_USER
-    DATABASE_PASSWORD = botsglobal.ini.get('database','DATABASE_PASSWORD',None)
-    if DATABASE_PASSWORD:
-        settings.DATABASE_PASSWORD = DATABASE_PASSWORD
-    DATABASE_HOST = botsglobal.ini.get('database','DATABASE_HOST',None)
-    if DATABASE_HOST:
-        settings.DATABASE_HOST = DATABASE_HOST
-    DATABASE_PORT = botsglobal.ini.get('database','DATABASE_PORT',None)
-    if DATABASE_PORT:
-        settings.DATABASE_PORT = DATABASE_PORT
-    DATABASE_OPTIONS = botsglobal.ini.get('database','DATABASE_OPTIONS',None)
-    if DATABASE_OPTIONS:
-        settings.DATABASE_OPTIONS = DATABASE_OPTIONS
     #set paths in settings.py:
-    settings.PROJECT_PATH = botsglobal.ini.get('directories','botspath')
-    settings.MEDIA_ROOT =  settings.PROJECT_PATH + '/'
     settings.FILE_UPLOAD_TEMP_DIR = os.path.join(settings.PROJECT_PATH, 'botssys/pluginsuploaded')
-    settings.TEMPLATE_DIRS = ( os.path.join(settings.PROJECT_PATH, 'templates'),)
 
     #start initializing bots charsets
     initbotscharsets()
     #set environemnt for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
+    initbotscharsets()
+
 
 
 def initbotscharsets():
@@ -156,7 +136,7 @@ def initbotscharsets():
 
 def codec_search_function(encoding):
     try:
-        module,filename = botsimport('charsets',encoding)
+        module,filename = botslib.botsimport('charsets',encoding)
     except:
         return None
     else:
@@ -180,8 +160,7 @@ def initenginelogging():
     botsglobal.logger.setLevel(logging.DEBUG)
 
     # create rotating file handler
-    log_file = botsglobal.ini.get('directories','log_file','botssys/logging/bots.log')
-    botslib.dirshouldbethere(os.path.dirname(log_file))
+    log_file = botslib.join(botsglobal.ini.get('directories','logging'),'engine.log')
     rotatingfile = logging.handlers.RotatingFileHandler(log_file,backupCount=botsglobal.ini.getint('settings','log_file_number',10))
     rotatingfile.setLevel(convertini2logger[botsglobal.ini.get('settings','log_file_level','ERROR')])
     fileformat = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s : %(message)s",'%Y%m%d %H:%M:%S')

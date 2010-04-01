@@ -5,7 +5,6 @@ import models
 import botsglobal
 
 screen_limit = botsglobal.ini.getint('settings','limit',30)
-#~ screen_limit = 30
 
 def activate(ding, request, queryset):
     ''' admin action for several models.'''
@@ -29,7 +28,7 @@ class CcodeInline(admin.TabularInline):
     ordering = ('leftcode',)
 
 class CcodetriggerAdmin(admin.ModelAdmin):
-    list_display = ('ccodeid',)
+    list_display = ('ccodeid','ccodeid_desc',)
     list_display_links = ('ccodeid',)
     list_per_page = screen_limit
     inlines = (CcodeInline,)

@@ -41,31 +41,19 @@ def reports(request,*kw,**kwargs):
                 formout = forms.SelectReports(formin.cleaned_data)
                 return viewlib.render(request,formout)
             elif "report2incoming" in request.POST:         #coming from ViewIncoming, go to incoming
-                request.POST = viewlib.preparereport2view(request.POST,type='report2incoming')
-                #~ thisrun = models.report.objects.get(idta=int(request.POST['report2incoming']))
-                #~ datefrom = thisrun.ts
-                #~ query = models.report.objects.filter(idta__gt=int(request.POST['report2incoming'])).all()
-                #~ dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
-                #~ if dateuntil is None:
-                    #~ dateuntil = viewlib.datetimeuntil()
-                #~ copyrequestpost = request.POST.copy()
-                #~ copyrequestpost['datefrom'] = datefrom
-                #~ copyrequestpost['dateuntil'] = dateuntil
-                #~ request.POST = copyrequestpost
+                request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2incoming']))
                 return incoming(request)
             elif "report2outgoing" in request.POST:         #coming from ViewIncoming, go to incoming
-                request.POST = viewlib.preparereport2view(request.POST,type='report2outgoing')
-                #~ thisrun = models.report.objects.get(idta=int(request.POST['report2outgoing']))
-                #~ datefrom = thisrun.ts
-                #~ query = models.report.objects.filter(idta__gt=int(request.POST['report2outgoing'])).all()
-                #~ dateuntil = query.aggregate(django.db.models.Min('ts'))['ts__min']
-                #~ if dateuntil is None:
-                    #~ dateuntil = viewlib.datetimeuntil()
-                #~ copyrequestpost = request.POST.copy()
-                #~ copyrequestpost['datefrom'] = datefrom
-                #~ copyrequestpost['dateuntil'] = dateuntil
-                #~ request.POST = copyrequestpost
+                request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2outgoing']))
                 return outgoing(request)
+            elif "report2process" in request.POST:         #coming from ViewIncoming, go to incoming
+                request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2process']))
+                return process(request)
+            elif "report2errors" in request.POST:         #coming from ViewIncoming, go to incoming
+                newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2errors']))
+                newpost['statust'] = ERROR
+                request.POST = newpost
+                return incoming(request)
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
@@ -269,45 +257,48 @@ def filer(request,*kw,**kwargs):
         if idta == 0: #for the 'starred' file names (eg multiple output)
             return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': 'No such file.'},context_instance=django.template.RequestContext(request))
         try:
-            currentta = models.ta.objects.filter(idta=idta).values()[0]
+            currentta = list(models.ta.objects.filter(idta=idta))[0]
             if request.GET['action']=='downl':
-                absfilename = botslib.abspathdata(currentta.filename)
-                return cherrypy.lib.cptools.serveFile(absfilename, currentta.contenttype,'attachment',currentta.filename)
+                response = django.http.HttpResponse(mimetype=currentta.contenttype)
+                response['Content-Disposition'] = "attachment; filename=" + currentta.filename + '.txt'
+                #~ absfilename = botslib.abspathdata(currentta.filename)
+                #~ response['Content-Length'] = os.path.getsize(absfilename)
+                response.write(botslib.readdata(currentta.filename,charset=currentta.charset,errors='ignore'))
+                return response
             elif request.GET['action']=='previous':
-                if currentta['parent']:  #has a explicit parent
-                    talijst = models.ta.objects.filter(idta=currentta['parent']).values()
+                if currentta.parent:  #has a explicit parent
+                    talijst = list(models.ta.objects.filter(idta=currentta.parent))
                 else:   #get list of ta's referring to this idta as child
-                    talijst = models.ta.objects.filter(child=currentta['idta']).values()
+                    talijst = list(models.ta.objects.filter(child=currentta.idta))
             elif request.GET['action']=='this':
-                if currentta['status'] == EXTERNIN:     #jump strait to next file, as EXTERNIN can not be displayed.
-                    talijst = models.ta.objects.filter(parent=currentta['idta']).values()
-                elif currentta['status'] == EXTERNOUT:
-                    talijst = models.ta.objects.filter(idta=currentta['parent']).values()
+                if currentta.status == EXTERNIN:     #jump strait to next file, as EXTERNIN can not be displayed.
+                    talijst = list(models.ta.objects.filter(parent=currentta.idta))
+                elif currentta.status == EXTERNOUT:
+                    talijst = list(models.ta.objects.filter(idta=currentta.parent))
                 else:
                     talijst = [currentta]
             elif request.GET['action']=='next':
-                if currentta['child']: #has a explicit child
-                    talijst = models.ta.objects.filter(idta=currentta['child']).values()
+                if currentta.child: #has a explicit child
+                    talijst = list(models.ta.objects.filter(idta=currentta.child))
                 else:
-                    talijst = models.ta.objects.filter(parent=currentta['idta']).values()
+                    talijst = list(models.ta.objects.filter(parent=currentta.idta))
             for ta in talijst:
-                ta['has_next'] = True
-                if ta['status'] == EXTERNIN:
-                    ta['content'] = '(External file. Can not be displayed. Use "next".)'
-                elif ta['status'] == EXTERNOUT:
-                    ta['content'] = '(External file. Can not be displayed. Use "previous".)'
-                    ta['has_next'] = False
-                elif ta['statust'] in [OPEN,ERROR]:
-                    ta['content'] = '(File has error status and does not exist. Use "previous".)'
-                    ta['has_next'] = False
-                elif not ta['filename']:
-                    ta['content'] = '(File can not be displayed.)'
+                ta.has_next = True
+                if ta.status == EXTERNIN:
+                    ta.content = '(External file. Can not be displayed. Use "next".)'
+                elif ta.status == EXTERNOUT:
+                    ta.content = '(External file. Can not be displayed. Use "previous".)'
+                    ta.has_next = False
+                elif ta.statust in [OPEN,ERROR]:
+                    ta.content = '(File has error status and does not exist. Use "previous".)'
+                    ta.has_next = False
+                elif not ta.filename:
+                    ta.content = '(File can not be displayed.)'
                 else:
-                    ta['content'] = '(Should be able to display this!.)'
-                    #~ if ta['charset']:  #guess charset; uft-8 is reasonable
-                        #~ ta['content'] = botslib.readdata(ta['filename'],charset=ta.charset,errors='ignore')
-                    #~ else:
-                        #~ ta['content'] = botslib.readdata(ta['filename'],charset='utf-8',errors='ignore')
+                    if ta.charset:  #guess charset; uft-8 is reasonable
+                        ta.content = botslib.readdata(ta.filename,charset=ta.charset,errors='ignore')
+                    else:
+                        ta.content = botslib.readdata(ta.filename,charset='utf-8',errors='ignore')
             return  django.shortcuts.render_to_response('bots/filer.html', {'idtas': talijst},context_instance=django.template.RequestContext(request))
         except:
             print botslib.txtexc()
@@ -338,12 +329,12 @@ def plugin(request,*kw,**kwargs):
     
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
-        filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function'])
+        #~ filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function'])
         filename = os.path.abspath(request.GET['function'])
         botsglobal.logger.info(u'Start writing plugin "%s".',filename)
         try:
             pluglib.dump(filename,request.GET['function'])
-        except botslib.PluginError as txt:
+        except botslib.PluginError, txt:
             botsglobal.logger.info(u'%s',str(txt))
             request.user.message_set.create(message="%s"%txt)
         else:
@@ -373,6 +364,16 @@ def delete(request,*kw,**kwargs):
             request.user.message_set.create(message='All user code lists are deleted.')
     return django.shortcuts.redirect('/home')
 
+def my_custom_sql():
+    from django.db import connection, transaction
+    cursor = connection.cursor()
+
+    # Data modifying operation - commit required
+    cursor.execute("DELETE FROM ta")
+    transaction.commit_unless_managed()
+
+
+
 def runengine(request,*kw,**kwargs):
     #~ print 'runengine received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
@@ -399,5 +400,14 @@ def runengine(request,*kw,**kwargs):
         except:
             request.user.message_set.create(message='Errors while trying to run bots-engine.')
             #~ logger.info('Errors while trying to run bots-engine.')
+    return django.shortcuts.redirect('/home')
+
+def unlock(request,*kw,**kwargs):
+    #~ print 'unlock received',kw,kwargs,request.POST,request.GET
+    if request.method == 'GET':
+        mutex = models.mutex.objects.get(mutexk=0)
+        mutex.mutexer = 0
+        mutex.save()
+        request.user.message_set.create(message="Unlocked database.")
     return django.shortcuts.redirect('/home')
 

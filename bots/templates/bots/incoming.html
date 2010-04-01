@@ -1,5 +1,4 @@
 {% extends "admin/base.html" %}
-{% load botsfilters %}
 
 {% block content %}
 <form action="{{ form.action }}" method="post">
@@ -49,7 +48,7 @@
                         </ul>
                     </div>
                 </td>
-                <td>{{ row.statust|convert:"statust"}}</td>
+                <td>{{ row.get_statust_display}}</td>
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
                 <td>{{row.idroute}}</td>
                 <td class="nowrap">{{row.ts}}</td>
@@ -64,7 +63,7 @@
                 <td>{{row.outmessagetype}}</td>
                 <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.infilename}}</a></td>
                 <td><a href="/filer/?action=this&amp;idta={{row.outidta}}" target="_blank" class="botslink">{{row.outfilename}}</a></td>
-                <td>{{row.errortext}}</td>
+                <td style="white-space: pre;">{{row.errortext}}</td>
                 <td>{{row.divtext}}</td>
                 <td>{{row.frommail}}</td>
                 <td>{{row.tomail}}</td>

@@ -6,6 +6,7 @@ import django
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.servers.basehttp import AdminMediaHandler     
 import cherrypy
+import botslib
 import botsglobal
 import botsinit
 
@@ -59,7 +60,7 @@ def start():
     myappl = cherrypy.tree.mount(myroot, '/media', conf)    #myappl is needed to set logging 
 
     # Make RotatingFileHandler for the error log.
-    h = logging.handlers.TimedRotatingFileHandler(os.path.normpath(os.path.join(botsglobal.ini.get('directories','botspath'), botsglobal.ini.get('directories','logging'),'webserver.log')),when='midnight', backupCount=10)
+    h = logging.handlers.TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'),when='midnight', backupCount=10)
     #~ fileformat = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s : %(message)s",'%Y%m%d %H:%M:%S')
     h.setLevel(logging.INFO)
     #~ h.setFormatter(fileformat)

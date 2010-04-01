@@ -45,12 +45,10 @@ div#menu ul {
     }
 div#menu ul li {
 	list-style: none;
-    }
-div#menu ul li.sub {
 	display:    none;
 	}
-div#menu ul:hover li.sub, 
-div#menu ul:hover li.sub a {
+div#menu ul:hover li, 
+div#menu ul:hover li a {
 	display:    block;
 	width:      20em;
 	background: #FFFFFF;
@@ -58,12 +56,12 @@ div#menu ul:hover li.sub a {
 	margin:     0;
 	text-transform:		capitalize;
 	}
-div#menu ul:hover li.sub a:hover, 
+div#menu ul:hover li a:hover, 
 div#menu ul:hover a {
 	background: #BCCCE3;
     }
-div#menu ul:hover li.sub a:hover, 
-div#menu ul:hover li.top a:hover {
+div#menu ul:hover li a:hover, 
+div#menu ul:hover li a:hover {
     cursor:     pointer;
     }
 /***********************************************************************/

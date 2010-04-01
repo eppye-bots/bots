@@ -1,5 +1,3 @@
-{% load botsfilters %}
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -12,22 +10,22 @@
 	{% else %}
 		<div">
 			{% for ta in idtas %}
-			<table border="1" cellpadding="3" cellspacing="0" width="100%">
-			<tr>
-			<td width="90px" align="center">{% ifnotequal ta.status 200 %}<a href="/filer/?action=previous&amp;idta={{ta.idta}}">Previous</a>{% endifnotequal %}</td>
-			<td width="90px" align="center">{% if ta.has_next %}<a href="/filer/?action=next&amp;idta={{ta.idta}}">Next</a>{% endif %}</td>
-			<td width="90px" align="center">{% if ta.filename %}<a href="/filer/?action=downl&amp;idta={{ta.idta}}">Download</a>{% endif %}</td>
-			<td width="*" align="left">Route &quot;{{ ta.idroute }}&quot;.
-										Phase &quot;{{ ta.status|convert:"status" }}&quot;.
-										Status &quot;{{ ta.statust|convert:"statust" }}&quot;.
-										Editype &quot;{{ ta.editype }}&quot;.
-										Messagetype &quot;{{ ta.messagetype }}&quot;.
-										Date &quot;{{ ta.ts }}&quot;. 
-										File &quot;{{ ta.filename }}&quot;.</td>
-			</tr>
-			</table>
-			<pre>{{ ta.content }}</pre>
-			<hr/>
+				<table border="1" cellpadding="3" cellspacing="0" width="100%">
+				<tr>
+				<td width="90px" align="center">{% ifnotequal ta.status 200 %}<a href="/filer/?action=previous&amp;idta={{ta.idta}}">Previous</a>{% endifnotequal %}</td>
+				<td width="90px" align="center">{% if ta.has_next %}<a href="/filer/?action=next&amp;idta={{ta.idta}}">Next</a>{% endif %}</td>
+				<td width="90px" align="center">{% if ta.filename %}<a href="/filer/?action=downl&amp;idta={{ta.idta}}">Download</a>{% endif %}</td>
+				<td width="*" align="left">Route &quot;{{ ta.idroute }}&quot;.
+											Phase &quot;{{ ta.get_status_display }}&quot;.
+											Status &quot;{{ ta.get_statust_display }}&quot;.
+											Editype &quot;{{ ta.editype }}&quot;.
+											Messagetype &quot;{{ ta.messagetype }}&quot;.
+											Date &quot;{{ ta.ts }}&quot;. 
+											File &quot;{{ ta.filename }}&quot;.</td>
+				</tr>
+				</table>
+				<pre>{{ ta.content }}</pre>
+				<hr/>
 			{% endfor %}
 		</div>
 	{% endif %}

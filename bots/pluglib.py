@@ -22,7 +22,7 @@ exeptions:
 
 
 def mycmp(key1,key2):
-    print key1,key2
+    #~ print key1,key2
     #this list is used for sorting the plugin. 
     lijst = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','partnergroup','chanpar','translate','routes','confirmrule']
     return lijst.index(key1) - lijst.index(key2)
@@ -50,6 +50,7 @@ def writetodatabase(pluglist):
     #end check list of database plugings
  
     pluglist.sort(cmp=mycmp,key=operator.itemgetter('plugintype'))  #sort pluglist
+    
     for plug in pluglist:
         botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
         print '\nstart plug', plug
@@ -64,15 +65,18 @@ def writetodatabase(pluglist):
         if plug['plugintype'] == 'confirmrule':
             continue
             plug.pop('id', None)       #artificial key, from bots 1.*
-            
         if plug['plugintype'] == 'translate':
             if not plug['frompartner']:
                 plug['frompartner'] = None
             if not plug['topartner']:
                 plug['topartner'] = None
+        if plug['plugintype'] == 'ta':
+            plug['errortext'] = plug['errortext'][:2047]
+        if plug['plugintype'] == 'filereport':
+            plug['errortext'] = plug['errortext'][:2047]
         
-        table = django.db.models.get_model('bin',plug['plugintype'])
-        print '1>>>',table,type(table)
+        table = django.db.models.get_model('bots',plug['plugintype'])
+        #~ print '1>>>',table,type(table)
         
         #delete fields not in model (create compatibility plugin-version)
         loopdictionary = plug.keys()
@@ -130,6 +134,8 @@ def writetodatabase(pluglist):
             botsglobal.logger.info(u'        Existing entry in database is deleted.')
             
         dbobject = table(**sleutel)   #create db-object
+        if 'idpartner'in sleutel:   #for partners, first te partner needs to be saved before groups can be made
+            dbobject.save()
         for key,value in plug.items():
             setattr(dbobject,key,value)
         dbobject.save()
@@ -179,10 +185,9 @@ def load(pathzipfile,orgnamezipfile):
                     targetpath = f.filename[1:]
                 else:
                     targetpath = f.filename
-                targetpath = targetpath.replace('usersys',botsglobal.ini.get('directories','usersysabspath'),1)
+                targetpath = targetpath.replace('usersys',botsglobal.ini.get('directories','usersysabs'),1)
                 targetpath = targetpath.replace('botssys',botsglobal.ini.get('directories','botssys'),1)
-                targetpath = os.path.join(orgtargetpath, targetpath)
-                targetpath = os.path.normpath(targetpath)
+                targetpath = botslib.join(orgtargetpath, targetpath)
                 #targetpath is OK now.
                 botsglobal.logger.info(u'    Start writing file: "%s".',targetpath)
                 
@@ -261,7 +266,7 @@ def database2indexfile(filename,function):
 
 def files2plugin(pluginzipfilehandler,function):
     #get usersys files
-    usersys = botsglobal.ini.get('directories','usersysabspath')
+    usersys = botsglobal.ini.get('directories','usersysabs')
     files2pluginbydir(function,pluginzipfilehandler,usersys,'usersys')
     
     botssys = botsglobal.ini.get('directories','botssys')

@@ -3,50 +3,20 @@
 
 {% block content %}
 <table id="about">
-    <tbody>
-        <tr>    
-            <td>
-            <h1>Bots Open Source EDI software</h1>
-            <a target="_blank" href="http://bots.sourceforge.net">Bots web site and documentation</a>.<br/>
-            <a target="_blank" href="http://groups.google.com/group/botsmail">Bot mailing list</a>.<br/>
-            <a href="mailto:hjebbers@gmail.com?SUBJECT=Commercial%20support%20for%20Bots%20Open%20Source%20EDI%20Software">Commercial support by EbbersConsult</a>.
-            </td>
-        </tr>
-        <tr></tr>
+    <tr>
+        <td>
+        <h1>Bots Open Source EDI software</h1>
+        <a target="_blank" href="http://bots.sourceforge.net">Bots web site and documentation</a>.<br/>
+        <a target="_blank" href="http://groups.google.com/group/botsmail">Bots mailing list</a>.<br/>
+        <a href="mailto:hjebbers@gmail.com?SUBJECT=Commercial%20support%20for%20Bots%20Open%20Source%20EDI%20Software">Commercial support by EbbersConsult</a>.
+        </td>
+    </tr>
+    <tr></tr>
+    {% for key, value in botsinfo %}
         <tr>
-            <td>Bots version</td><td>{{ botsinfo.bots }}</td>
+            <td>{{ key }}</td><td>{{ value }}</td>
         </tr>
-        <tr>
-            <td>Database configuration</td><td>{{ botsinfo.database }}</td>
-        </tr>
-        <tr>
-            <td>Bots installation directory</td><td>{{ botsinfo.botsinstallationdir }}</td>
-        </tr>
-        <tr>
-            <td>Config directory (etc)</td><td>{{ botsinfo.configdir }}</td>
-        </tr>
-        <tr>
-            <td>Usersys directory - grammars, mappings etc</td><td>{{ botsinfo.usersys }}</td>
-        </tr>
-        <tr>
-            <td>Botssys directory - edi files, tmp data, database, etc. (spool)</td><td>{{ botsinfo.botssys }}</td>
-        </tr>
-        <tr>
-            <td>Python version</td><td>{{ botsinfo.python }}</td>
-        </tr>
-        <tr>
-            <td>Django version</td><td>{{ botsinfo.django }}</td>
-        </tr>
-        <tr>
-            <td>Platform global</td><td>{{ botsinfo.platform1 }}</td>
-        </tr>
-        <tr>
-            <td>Platform detail</td><td>{{ botsinfo.platform2 }}</td>
-        </tr>
-        <tr>
-            <td>Machine</td><td>{{ botsinfo.machine }}</td>
-        </tr>
-    </tbody>
+    {% endfor %}
 </table>
 {% endblock %}
 

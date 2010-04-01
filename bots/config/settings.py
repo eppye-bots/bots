@@ -17,17 +17,34 @@ ADMINS = (
 MANAGERS = ADMINS
 
 #set in bots.ini
-#~ PROJECT_PATH = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
+import bots
+PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 #*********database*************************
-#set in bots.ini
-#~ DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#~ DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')
-#~ DATABASE_USER = ''
-#~ DATABASE_PASSWORD = ''
-#~ DATABASE_HOST = ''
-#~ DATABASE_PORT = ''
-#~ DATABASE_OPTIONS
-
+#django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
+#for sqlite3: path to database; if relative path: interpreted relative to bots root directory
+DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')
+DATABASE_USER = ''
+DATABASE_PASSWORD = ''
+DATABASE_HOST = ''
+DATABASE_PORT = ''
+DATABASE_OPTIONS = {}
+#example for MySQL
+#~ DATABASE_ENGINE = 'mysql'
+#~ DATABASE_NAME = 'botsdb'
+#~ DATABASE_USER = 'bots'
+#~ DATABASE_PASSWORD = 'botsbots'
+#~ DATABASE_HOST = '192.168.0.7'
+#~ DATABASE_PORT = '3306'
+#~ DATABASE_OPTIONS = {'use_unicode':0,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
+#example for PostgeSQL
+#~ DATABASE_ENGINE = 'postgresql_psycopg2'
+#~ DATABASE_NAME = 'botsdb'
+#~ DATABASE_USER = 'bots'
+#~ DATABASE_PASSWORD = 'botsbots'
+#~ DATABASE_HOST = '192.168.0.7'
+#~ DATABASE_PORT = '5432'
+#~ DATABASE_OPTIONS = {}
 
 #*********localization*************************
 # Local time zone for this installation. Choices can be found here:
@@ -49,8 +66,7 @@ USE_I18N = False
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-#set in bots.ini
-#~ MEDIA_ROOT = PROJECT_PATH + '/'
+MEDIA_ROOT = PROJECT_PATH + '/'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
@@ -79,7 +95,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
-ROOT_URLCONF = 'bots.bin.urls'
+ROOT_URLCONF = 'bots.urls'
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/home/'
@@ -88,13 +104,12 @@ LOGOUT_URL = '/logout/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed
 SESSION_COOKIE_AGE = 3600                   #seconds a user needs to login when no activity
 SESSION_SAVE_EVERY_REQUEST = True           #if True: SESSION_COOKIE_AGE is interpreted as: since last activity
-#set in bots.ini
-#~ TEMPLATE_DIRS = (
-    #~ os.path.join(PROJECT_PATH, 'templates'),
-    #~ # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    #~ # Always use forward slashes, even on Windows.
-    #~ # Don't forget to use absolute paths, not relative paths.
-#~ )
+TEMPLATE_DIRS = (
+    os.path.join(PROJECT_PATH, 'templates'),
+    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -102,5 +117,5 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     #~ 'django.contrib.sites',
     'django.contrib.admin',
-    'bots.bin',
+    'bots',
 )

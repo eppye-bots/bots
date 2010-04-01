@@ -1,5 +1,4 @@
 {% extends "admin/base.html" %}
-{% load botsfilters %}
 
 {% block content %}
 <form action="{{ form.action }}" method="post">
@@ -27,13 +26,13 @@
         <tbody>
         {% for row in queryset.object_list %}
             <tr class="{% cycle 'row1' 'row2' %}">
-                <td>{{ row.statust|convert:"statust"}}</td>
+                <td>{{row.get_statust_display}}</td>
                 <td>{{row.idroute}}</td>
                 <td class="nowrap">{{row.ts}}</td>
                 <td>{{row.fromchannel}}</td>
                 <td>{{row.tochannel}}</td>
                 <td>{{row.filename}}</td>
-                <td>{{row.errortext}}</td>
+                <td style="white-space: pre;">{{row.errortext}}</td>
             </tr>
         {% endfor %}
         </tbody>

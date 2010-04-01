@@ -1,6 +1,7 @@
 import django
 import models
 import viewlib
+django.contrib.admin.widgets.AdminSplitDateTime
 HiddenInput = django.forms.widgets.HiddenInput
 DEFAULT_ENTRY = ('',"---------")
 editypelist=[DEFAULT_ENTRY] + models.EDITYPES
@@ -26,6 +27,8 @@ def getallmessagetypes():
 class Select(django.forms.Form):
     datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom)
     dateuntil = django.forms.DateTimeField(initial=viewlib.datetimeuntil)
+    #~ datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom,widget=django.contrib.admin.widgets.AdminSplitDateTime)
+    #~ dateuntil = django.forms.DateTimeField(initial=viewlib.datetimeuntil,widget=django.contrib.admin.widgets.AdminSplitDateTime)
     page = django.forms.IntegerField(required=False,initial=1,widget=HiddenInput())
     sortedby = django.forms.CharField(initial='ts',widget=HiddenInput())
     sortedasc = django.forms.BooleanField(initial=False,required=False,widget=HiddenInput())
@@ -50,7 +53,7 @@ class ViewReports(View):
 class SelectIncoming(Select):
     template = 'bots/selectform.html'
     action = '/incoming/'
-    statust = django.forms.ChoiceField([DEFAULT_ENTRY,('0',"Error"),('3',"Done")],required=False,initial='')
+    statust = django.forms.ChoiceField([DEFAULT_ENTRY,('1',"Error"),('3',"Done")],required=False,initial='')
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ModelChoiceField(models.partner.objects.filter(isgroup=False).all(),required=False)
     topartner = django.forms.ModelChoiceField(models.partner.objects.filter(isgroup=False).all(),required=False)
