@@ -14,6 +14,7 @@ import django
 #Bots-modules
 from botsconfig import *
 import botsglobal #as botsglobal
+#~ import communication
 
 def botsinfo():
     return [('python version',sys.version),
@@ -163,13 +164,14 @@ class _Transaction(object):
     def copyta(self,status,**ta_info):
         ''' copy: make a new transaction, copy '''
         script = _Transaction.processlist[-1]
-        newidta = unique('OID')
+        #~ newidta = unique('OID')
         cursor = botsglobal.db.cursor()
-        cursor.execute(u'''INSERT INTO ta (idta,     script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey)
-                                SELECT %(newidta)s,%(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey
+        cursor.execute(u'''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey)
+                                SELECT   %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey
                                 FROM  ta
                                 WHERE idta=%(selfid)s''',
-                                {'newidta':newidta, 'selfid':self.idta,'script':script,'newstatus':status})
+                                {'selfid':self.idta,'script':script,'newstatus':status})
+        newidta = cursor.lastrowid
         botsglobal.db.commit()
         cursor.close()
         newdbta = OldTransaction(newidta)
@@ -200,13 +202,14 @@ class NewTransaction(_Transaction):
         '''Generates new transaction, returns key of transaction '''
         updatedict = dict([(key,value) for key,value in ta_info.items() if key in _Transaction.filterlist])
         updatedict['script'] = _Transaction.processlist[-1]
-        updatedict['idta'] = self.idta = unique('OID')     #add later, idta would be filterd out
+        #~ updatedict['idta'] = self.idta = unique('OID')     #add later, idta would be filterd out
         namesstring = ','.join([key for key in updatedict])
         varsstring = ','.join(['%('+key+')s' for key in updatedict])
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''INSERT INTO ta (''' + namesstring + ''')
                                  VALUES   (''' + varsstring + ''')''',
                                 updatedict)
+        self.idta = cursor.lastrowid
         botsglobal.db.commit()
         cursor.close()
 
@@ -285,68 +288,6 @@ def addinfocore(change,where,wherestring):
         ta_from.update(statust=DONE)    #update 'old' ta
     return counter
 
-def addinfocorenew(change,where,wherestring):
-    #made a new function for performance reason; but not much difference... Initial query takes 95% of time. So not used...
-    ''' core function for add/changes information in db-ta's.
-        where-dict selects db-ta's, change-dict sets values;
-        returns the number of db-ta that have been changed/copied.
-    '''
-    script = _Transaction.processlist[-1]
-    if 'rootidta' not in where:
-        where['rootidta']=getactiverun()
-        wherestring += ' AND idta > %(rootidta)s '
-    if 'statust' not in where:
-        where['statust']=OK
-        wherestring += ' AND statust = %(statust)s '
-
-    #select the dbta to copy
-    cursor = botsglobal.db.cursor()
-    cursor.execute(u'''SELECT idta FROM ta WHERE '''+wherestring,where)
-    results =  cursor.fetchall()
-    cursor.close()
-
-    #generate a bunch of idta's for new status
-    nridta = len(results)
-    newidtalist =[]
-    for offset in range(nridta):
-        newidtalist.append(unique('OID'))
-
-    #copy old dbta to new idta;
-    newstatus = change.pop('status')
-    cursor = botsglobal.db.cursor()
-    for offset in range(nridta):
-        cursor.execute(u'''INSERT INTO ta (idta,     script,  status,     parent,statust,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey)
-                                SELECT %(newidta)s,%(script)s,%(newstatus)s,idta,statust,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey
-                                FROM  ta
-                                WHERE idta=%(oldidta)s''',
-                                {'newidta':newidtalist[offset], 'oldidta':results[offset][0],'script':script,'newstatus':newstatus})
-    botsglobal.db.commit()
-    cursor.close()
-
-    #if needed, change attributes of new dbta
-    if change:
-        setstring = ','.join([key+'=%('+key+')s' for key in change])
-        cursor = botsglobal.db.cursor()
-        for offset in range(nridta):
-            change['idta']=newidtalist[offset]
-            cursor.execute(u'''UPDATE ta
-                                SET '''+setstring+ '''
-                                WHERE idta=%(idta)s''',
-                                change)
-        botsglobal.db.commit()
-        cursor.close()
-
-    #set statust of old dbta to DONE
-    cursor = botsglobal.db.cursor()
-    for offset in range(nridta):
-        cursor.execute(u'''UPDATE ta
-                            SET statust = %(statust)s
-                            WHERE idta=%(idta)s''',
-                            {'idta':results[offset][0],'statust':DONE})
-    botsglobal.db.commit()
-    cursor.close()
-
-    return nridta
 
 def addinfo(change,where):
     ''' add/changes information in db-ta's by coping the ta's; the status is updated.
@@ -398,65 +339,19 @@ def changestatustinfo(change,where):
     return counter
 
 #**********************************************************/**
-#**********************************************************/**
 #*************************Database***********************/**
 #**********************************************************/**
-def connect():
+def set_database_lock():
     try:
-        #different connect code per tyoe of database
-        if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
-            #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
-            import botssqlite
-            botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASE_NAME)
-        elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
-            import MySQLdb
-            from MySQLdb import cursors
-            botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASE_HOST, 
-                                            port=int(botsglobal.settings.DATABASE_PORT), 
-                                            db=botsglobal.settings.DATABASE_NAME, 
-                                            user=botsglobal.settings.DATABASE_USER, 
-                                            passwd=botsglobal.settings.DATABASE_PASSWORD,
-                                            cursorclass=cursors.DictCursor,
-                                            **botsglobal.settings.DATABASE_OPTIONS)
-        elif botsglobal.settings.DATABASE_ENGINE == 'postgresql_psycopg2':
-            import psycopg2
-            import psycopg2.extensions
-            import psycopg2.extras
-            psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-            botsglobal.db = psycopg2.connect( 'host=%s dbname=%s user=%s password=%s'%( botsglobal.settings.DATABASE_HOST,
-                                                                                        botsglobal.settings.DATABASE_NAME,
-                                                                                        botsglobal.settings.DATABASE_USER,
-                                                                                        botsglobal.settings.DATABASE_PASSWORD),connection_factory=psycopg2.extras.DictConnection)
-            botsglobal.db.set_client_encoding('UNICODE')
-    except:
-        botsglobal.logger.error(u'Could not connect to database: "%s" (is set in settings.py).',botsglobal.settings.DATABASE_ENGINE)
-        raise
-    botsglobal.logger.info(u'Database: "%s".',botsglobal.settings.DATABASE_ENGINE)
-
-def mutexon():
-    cursor = botsglobal.db.cursor()
-    cursor.execute('''UPDATE mutex SET mutexer = mutexer+1 WHERE mutexk=0''')
-    cursor.execute('''SELECT mutexer FROM mutex WHERE mutexk=0''')
-    try:
-        mutex=cursor.fetchone()['mutexer']
-    except TypeError:
-        cursor.execute(u'''INSERT INTO mutex (mutexk,mutexer) VALUES (0,1)''')
-        mutex = 1
-    if mutex==1:
-        botsglobal.db.commit()
-        cursor.close()
-        return True
-    else:
-        botsglobal.db.rollback()
-        cursor.close()
+        change(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
+    except Exception, e: 
+        print 'mutex on',e
         return False
+    return True
 
-def mutexoff():
-    change('''UPDATE mutex SET mutexer = mutexer-1 WHERE mutexk=0''')
+def remove_database_lock():
+    change('''DELETE FROM mutex WHERE mutexk=1''')
 
-#**********************************************************/**
-#*************************Database***********************/**
-#**********************************************************/**
 def query(querystring,*args):
     ''' general query. yields rows from query '''
     cursor = botsglobal.db.cursor()
@@ -504,7 +399,7 @@ def checkunique(domein, receivednumber):
     cursor = botsglobal.db.cursor()
     try:
         cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
-        expectednumber = cursor.fetchone()[0] + 1
+        expectednumber = cursor.fetchone()['nummer'] + 1
     except: # ???.DatabaseError; domein does not exist
         cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
         expectednumber = 1
@@ -522,6 +417,14 @@ def checkunique(domein, receivednumber):
 #**********************************************************/**
 #*************************Logging, Error handling********************/**
 #**********************************************************/**
+def sendbotserrorreport(subject,reporttext):
+    if botsglobal.ini.getboolean('settings','sendreportiferror',False):
+        from django.core.mail import mail_managers
+        try:
+            mail_managers(subject, reporttext)
+        except:
+            botsglobal.logger.debug(u'Error in sending error report: %s',txtexc())
+
 def log_session(f):
     ''' used as decorator.
         The decorated functions are logged as processes.
@@ -715,14 +618,6 @@ def runexternprogram(*args):
         txt=txtexc()
         raise OSError(u'error running extern program "$program": $txt',program=args,txt=txt)
 
-def runexternprogramold(program,parameters=''):
-    path = os.path.dirname(program)
-    try:
-        subprocess.call([program, parameters],cwd=path)
-    except:
-        txt=txtexc()
-        raise OSError(u'error running extern program "$program $param": $txt',program=program,param=parameters,txt=txt)
-
 #**********************************************************/**
 #***************###############  mdn   #############
 #**********************************************************/**
@@ -797,35 +692,35 @@ class BotsError(Exception):
     def __str__(self):
         s = string.Template(self.msg).safe_substitute(self.kwargs)
         return s.encode(u'utf-8',u'ignore')
-class PanicError(BotsError):
+class AuthorizeError(BotsError):    #for incoming and outgoing mime
     pass
-class TraceError(BotsError):
+class CodeConversionError(BotsError):
     pass
-class TraceNotPickedUpError(BotsError):
-    pass
-class BotsCodecNotFoundError(BotsError):
-    pass
-class BotsCodecError(BotsError):
-    pass
-class PluginError(BotsError):
-    pass
-class EanError(BotsError):
-    pass
-class CommunicationStartupError(BotsError):
+class CommunicationError(BotsError):
     pass
 class CommunicationSMTPError(BotsError):
     pass
-class CommunicationParameterError(BotsError):
-    pass
-class AuthorizeError(BotsError):    #for incoming and outgoing mime
-    pass
-class InCommunicationMime(BotsError):
-    pass
 class CommunicationOutCharsetError(BotsError):
     pass
-class LockedFileError(BotsError):
+class EanError(BotsError):
     pass
-class MessageError(BotsError):
+class EnvelopeNotFoundError(BotsError): #calling a not existing envelope-class
+    pass
+class EnvelopeTemplateKidError(BotsError):
+    pass
+class EnvelopeTemplateError(BotsError):
+    pass
+class GrammarEdiTypeNotKnownError(BotsError):#Errors in table format; mostly in grammar.py during checking
+    pass
+class GrammarError(BotsError):            #grammar.py
+    pass
+class GrammarNotFoundError(BotsError):            #grammar.py
+    pass
+class GrammarSyntaxError(BotsError):            #grammar.py
+    pass
+class GrammarFieldError(BotsError):       #grammar.py
+    pass
+class GrammarEnhancedGetError(BotsError): #generated by node.enhancedget while looking for QUERIES or SUBTRANSLATION
     pass
 class InMessageEdiTypeNotKnownError(BotsError):
     pass
@@ -841,6 +736,14 @@ class InMessageParseError(BotsError):
     pass
 class InMessageEnvelopeError(BotsError):  #error in envelope of incoming edifile
     pass
+class LockedFileError(BotsError):
+    pass
+class MessageError(BotsError):
+    pass
+class MpathRootError(BotsError):   #can not find script; not for errors in a script
+    pass
+class MpathError(BotsError):            #mpath is not valid; mapth will mostly come from mapping-script
+    pass
 class OutMessageEdiTypeNotKnownError(BotsError):
     pass
 class OutMessageError(BotsError):
@@ -855,35 +758,19 @@ class OutMessageTemplateError(BotsError):
     pass
 class OutmessageWriteError(BotsError):
     pass
+class PanicError(BotsError):
+    pass
 class PersistError(BotsError):
+    pass
+class PluginError(BotsError):
     pass
 class ScriptImportError(BotsError):   #can not find script; not for errors in a script
     pass
 class ScriptError(BotsError):   #runtime errors in a script
     pass
-class MpathRootError(BotsError):   #can not find script; not for errors in a script
+class TraceError(BotsError):
     pass
-class MpathError(BotsError):            #mpath is not valid; mapth will mostly come from mapping-script
+class TraceNotPickedUpError(BotsError):
     pass
 class TranslationNotFoundError(BotsError):
-    pass
-class EnvelopeNotFoundError(BotsError): #calling a not existing envelope-class
-    pass
-class EnvelopeTemplateKidError(BotsError):
-    pass
-class EnvelopeTemplateError(BotsError):
-    pass
-class CodeConversionError(BotsError):
-    pass
-class GrammarEdiTypeNotKnownError(BotsError):#Errors in table format; mostly in grammar.py during checking
-    pass
-class GrammarError(BotsError):            #grammar.py
-    pass
-class GrammarNotFoundError(BotsError):            #grammar.py
-    pass
-class GrammarSyntaxError(BotsError):            #grammar.py
-    pass
-class GrammarFieldError(BotsError):       #grammar.py
-    pass
-class GrammarEnhancedGetError(BotsError): #generated by node.enhancedget while looking for QUERIES or SUBTRANSLATION
     pass

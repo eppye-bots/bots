@@ -1,7 +1,7 @@
 import sys
 import os
-import bots.botslib as botslib
-import bots.grammar as grammar
+import botslib
+import grammar
 
 def showusage():
     print

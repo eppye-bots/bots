@@ -98,26 +98,22 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
 
 def envelope(ta_info,ta_list):
     ''' despatch function for class Envelope and subclasses.
-        editype, edimessage are of the message(s) to envelope
+        editype, edimessage and envelope essential for enveloping.
         
-        envelope: can be used in 3 ways:
-        1. empty string: no enveloping (class noenvelope); file(s) is/are just copied
-        2. envelope is a class in this module. Bots checks first if this class exists.
-        3. envelope is user defined. Bots looks if in usersys/envelope/<editype>/envelope class <envelope> exists
-        Always check if user envelope script. user exits entend this: 
-        -  main() - user does everything, recieve all arguments
-        -  init: initialise
-        -  run.envelope:
-        -  header
-        -  for message in list:
-        -       before message
-        -       message
-        -       after message
-        -  trailer
+        determine the class for enveloping:
+        1. empty string: no enveloping (class noenvelope); file(s) is/are just copied. No user scripting for envelope.
+        2. if envelope is a class in this module, use it
+        3. if editype is a class in this module, use it
+        4. if user defined enveloping in usersys/envelope/<editype>/<envelope>.<envelope>, use it (user defined scripting overrides)
+        
+        Always check if user envelope script. user exits extends/replaces default enveloping. 
     '''
+    #determine which class to use for enveloping
     userscript = scriptname = None
-    if ta_info['envelope']: 
-        try:
+    if not ta_info['envelope']: 
+        classtocall = noenvelope
+    else:
+        try:    #see if the is user scripted enveloping
             botsglobal.logger.debug(u'(try) to read user envelopescript editype "%s", envelope "%s".',ta_info['editype'],ta_info['envelope'])
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'] + '.' + ta_info['envelope'])
         except ImportError: #other errors, eg syntax errors are just passed
@@ -125,13 +121,12 @@ def envelope(ta_info,ta_list):
         try:
             classtocall = globals()[ta_info['envelope']]
         except KeyError:
-            if userscript and hasattr(userscript,ta_info['envelope']):
-                classtocall = getattr(userscript,ta_info['envelope'])
-            else:   #no class in use
-                raise botslib.EnvelopeNotFoundError(u'not found envelope "$envelope".',envelope=ta_info['envelope'])
-    else:   #if envelope is empty string:
-        classtocall = noenvelope
-    #~ ta_info.update(defmessage.syntax)   #info in message syntax overrules info from ta's; message syntax contains more parameters than ta_info
+            try:
+                classtocall = globals()[ta_info['editype']]
+            except KeyError:
+                raise botslib.EnvelopeNotFoundError(u'not found envelope "$envelope".',envelope=ta_info['editype'])
+        if userscript and hasattr(userscript,ta_info['envelope']):
+            classtocall = getattr(userscript,ta_info['envelope'])
     env = classtocall(ta_info,ta_list,userscript,scriptname)
     env.run()
 
@@ -169,7 +164,13 @@ class noenvelope(Envelope):
         self.writefilelist(tofile)
         tofile.close()
 
-class csvheader(noenvelope):
+class fixed(noenvelope):
+    pass
+    
+class csv(noenvelope):
+    pass
+    
+class csvheader(Envelope):
     def run(self):
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -184,20 +185,38 @@ class csvheader(noenvelope):
         tofile.close()
 
 class edifact(Envelope):
-    ''' Generate UNB and UNZ segment; fill with approrioriate data, write to interchange-file.'''
+    ''' Generate UNB and UNZ segment; fill with data, write to interchange-file.'''
     def run(self):
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
-        #prepare data for envelope
+        
+        #version dependent enveloping
+        writeUNA = False
         if self.ta_info['version']<'4':
             date = time.strftime('%y%m%d')
+            reserve = ' '
+            if self.ta_info['charset'] != 'UNOA':
+                writeUNA = True
         else:
             date = time.strftime('%Y%m%d')
+            reserve = self.ta_info['reserve']
+            if self.ta_info['charset'] not in ['UNOA','UNOB']:
+                writeUNA = True
+        
+        #UNB counter is per sender or receiver
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
             self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['topartner']))
         else:
             self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['frompartner']))
+        
+        #testindicator is more complex:
+        if self.ta_info['testindicator'] and self.ta_info['testindicator']!='0':    #first check value from ta; do not use default
+            testindicator = '1'
+        elif self.ta_info['UNB.0035'] != '0':   #than check values from grammar
+            testindicator = '1'
+        else:
+            testindicator = ''
         #build the envelope segments (that is, the tree from which the segments will be generated)
         self.out.put({'BOTSID':'UNB',
                         'S001.0001':self.ta_info['charset'],
@@ -207,14 +226,15 @@ class edifact(Envelope):
                         'S004.0017':date,
                         'S004.0019':time.strftime('%H%M'),
                         '0020':self.ta_info['reference']})
+        #the following fields are conditional; do not write these when empty string (separator compression does take empty strings into account)
         if self.ta_info['UNB.S002.0007']:
-            self.out.put({'BOTSID':'UNB','S002.0007':self.ta_info['UNB.S002.0007']})
+            self.out.put({'BOTSID':'UNB','S002.0007': self.ta_info['UNB.S002.0007']})
         if self.ta_info['UNB.S003.0007']:
-            self.out.put({'BOTSID':'UNB','S003.0007':self.ta_info['UNB.S003.0007']})
-        if self.ta_info['testindicator'] and self.ta_info['testindicator']!='0':    #first check value from ta
-            self.out.put({'BOTSID':'UNB','0035':'1'})
-        elif self.ta_info['UNB.0035'] != '0':   #than check values from grammar
-            self.out.put({'BOTSID':'UNB','0035':'1'})
+            self.out.put({'BOTSID':'UNB','S003.0007': self.ta_info['UNB.S003.0007']})
+        if self.ta_info['UNB.0026']:
+            self.out.put({'BOTSID':'UNB','0026': self.ta_info['UNB.0026']})
+        if testindicator:
+            self.out.put({'BOTSID':'UNB','0035': testindicator})
         self.out.put({'BOTSID':'UNB'},{'BOTSID':'UNZ','0036':self.ta_info['nrmessages'],'0020':self.ta_info['reference']})  #dummy segment; is not used
         #user exit
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
@@ -224,13 +244,8 @@ class edifact(Envelope):
         
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        if self.ta_info['version']<'4' and (self.ta_info['charset'] != 'UNOA' or self.ta_info['forceUNA']):
-            una = 'UNA'+self.ta_info['sfield_sep']+self.ta_info['field_sep']+self.ta_info['decimaal']+self.ta_info['escape']+' '+self.ta_info['record_sep']+self.ta_info['add_crlfafterrecord_sep']
-            tofile.write(una)
-        elif self.ta_info['version']>='4' and ( (self.ta_info['charset'] != 'UNOA' and self.ta_info['charset'] != 'UNOB') or self.ta_info['forceUNA']):
-            una = 'UNA'+self.ta_info['sfield_sep']+self.ta_info['field_sep']+self.ta_info['decimaal']+self.ta_info['escape']+self.ta_info['reserve']+self.ta_info['record_sep']+self.ta_info['add_crlfafterrecord_sep']
-            tofile.write(una)
-            #TODO: is not safe for repeating separator.
+        if writeUNA or self.ta_info['forceUNA']:
+            tofile.write('UNA'+self.ta_info['sfield_sep']+self.ta_info['field_sep']+self.ta_info['decimaal']+self.ta_info['escape']+ reserve +self.ta_info['record_sep']+self.ta_info['add_crlfafterrecord_sep'])
         tofile.write(self.out._record2string(self.out.records[0]))
         self.writefilelist(tofile)
         tofile.write(self.out._record2string(self.out.records[-1]))
@@ -279,7 +294,7 @@ class tradacoms(Envelope):
         tofile.close()
 
 
-class template(noenvelope):
+class template(Envelope):
     def run(self):
         ''' class for (test) orderprint; delevers a valid html-file.
             Uses a kid-template for the enveloping/merging.
@@ -307,6 +322,7 @@ class template(noenvelope):
         except:
             txt=botslib.txtexc()
             raise botslib.EnvelopeTemplateKidError(u'Error in "$editype.$messagetype"; probably in html file(s) to be merged: $txt',editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+
 
 class orders2printenvelope(template):
     pass
@@ -353,7 +369,7 @@ class x12(Envelope):
                         'ISA08':ISA08,
                         'ISA09':ISA09date,
                         'ISA10':time.strftime('%H%M'),
-                        'ISA11':self.ta_info['ISA11'],
+                        'ISA11':self.ta_info['ISA11'],      #if ISA version > 00403, replaced by reprtion separator
                         'ISA12':self.ta_info['version'],
                         'ISA13':self.ta_info['reference'],
                         'ISA14':self.ta_info['ISA14'],
@@ -399,7 +415,21 @@ class x12(Envelope):
             self.ta_info['confirmasked'] = True
 
 
-class myxmlenvelop(noenvelope):
+class jsonnocheck(noenvelope):
+    pass
+
+class json(noenvelope):
+    pass
+
+class xmlnocheck(noenvelope):
+    pass
+
+class xml(noenvelope):
+    pass
+
+
+class myxmlenvelop(xml):
+    ''' old xml enveloping; name is kept for upward comp. & as example for xml enveloping'''
     def run(self):
         ''' class for (test) xml envelope. There is no standardised XML-envelope!
             writes a new XML-tree; uses places-holders for XML-files to include; real enveloping is done by ElementTree's include'''
@@ -412,6 +442,3 @@ class myxmlenvelop(noenvelope):
         for filename in ta_list:
             self.out.put({'BOTSID':'root'},{'BOTSID':include,include + '__parse':'xml',include + '__href':filename})
         self.out.envelopewrite(self.out.root)   #'resolves' the included xml files 
-
-
-

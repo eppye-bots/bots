@@ -14,6 +14,7 @@ from botsconfig import *
 def cleanup():
     ''' public function, does all cleanup of the database and file system.'''
     try:
+        _cleanupsession() 
         _cleanfilereport() 
         _cleanreport() 
         _cleandatafile()
@@ -24,6 +25,12 @@ def cleanup():
         _cleanprocessnothingreceived()
     except:
         botsglobal.logger.exception(u'Cleanup error.')
+
+
+def _cleanupsession():
+    ''' delete all expired sessions. Bots-engine starts up much more often than web-server.'''
+    vanaf = datetime.datetime.today()
+    botslib.change('''DELETE FROM django_session WHERE expire_date < %(vanaf)s''', {'vanaf':vanaf})
 
 
 def _cleanfilereport():

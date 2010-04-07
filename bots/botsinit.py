@@ -123,7 +123,7 @@ def generalinit(configdir):
     #set environemnt for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     initbotscharsets()
-
+    botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #
 
 
 def initbotscharsets():
@@ -184,3 +184,33 @@ def initenginelogging():
         consuleformat = logging.Formatter("%(levelname)-8s %(message)s")
         console.setFormatter(consuleformat) # add formatter to console
         botsglobal.logger.addHandler(console)  # add console to logger
+
+
+def connect():
+    #different connect code per tyoe of database
+    if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
+        #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
+        import botssqlite
+        botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASE_NAME)
+    elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
+        import MySQLdb
+        from MySQLdb import cursors
+        botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASE_HOST, 
+                                        port=int(botsglobal.settings.DATABASE_PORT), 
+                                        db=botsglobal.settings.DATABASE_NAME, 
+                                        user=botsglobal.settings.DATABASE_USER, 
+                                        passwd=botsglobal.settings.DATABASE_PASSWORD,
+                                        cursorclass=cursors.DictCursor,
+                                        **botsglobal.settings.DATABASE_OPTIONS)
+    elif botsglobal.settings.DATABASE_ENGINE == 'postgresql_psycopg2':
+        import psycopg2
+        import psycopg2.extensions
+        import psycopg2.extras
+        psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+        botsglobal.db = psycopg2.connect( 'host=%s dbname=%s user=%s password=%s'%( botsglobal.settings.DATABASE_HOST,
+                                                                                    botsglobal.settings.DATABASE_NAME,
+                                                                                    botsglobal.settings.DATABASE_USER,
+                                                                                    botsglobal.settings.DATABASE_PASSWORD),connection_factory=psycopg2.extras.DictConnection)
+        botsglobal.db.set_client_encoding('UNICODE')
+        
+

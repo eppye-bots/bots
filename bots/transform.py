@@ -1,4 +1,4 @@
-'''module contains function that can be called from users scripts'''
+'''module contains the functions to be called from user scripts'''
 import pickle
 import re
 import copy
@@ -139,25 +139,18 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                 #~ print 'topartner',inn.ta_info['topartner']
                 while 1:    #whileloop continues as long as there are alt-translations
                     #************select parameters for translation(script):
-                    #~ for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
-                                                #~ FROM    translate
-                                                #~ WHERE   frommessagetype = %(frommessagetype)s
-                                                #~ AND     fromeditype = %(fromeditype)s
-                                                #~ AND     active=%(booll)s
-                                                #~ AND     (alt='' OR alt=%(alt)s)
-                                                #~ AND     (frompartner='' OR frompartner=%(frompartner)s OR frompartner in (SELECT idpartnergroup 
-                                                                                                                            #~ FROM partnergroup
-                                                                                                                            #~ WHERE idpartner=%(frompartner)s ))
-                                                #~ AND     (topartner=''   OR topartner=%(topartner)s OR topartner in (SELECT idpartnergroup
-                                                                                                                            #~ FROM partnergroup
-                                                                                                                            #~ WHERE idpartner=%(topartner)s ))
-                                                #~ ORDER BY alt DESC,frompartner DESC, topartner DESC''',
                     for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
                                                 FROM    translate
                                                 WHERE   frommessagetype = %(frommessagetype)s
                                                 AND     fromeditype = %(fromeditype)s
                                                 AND     active=%(booll)s
                                                 AND     (alt='' OR alt=%(alt)s)
+                                                AND     (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id 
+                                                                                                                            FROM partnergroup
+                                                                                                                            WHERE from_partner_id=%(frompartner)s ))
+                                                AND     (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
+                                                                                                                            FROM partnergroup
+                                                                                                                            WHERE from_partner_id=%(topartner)s ))
                                                 ORDER BY alt DESC,frompartner_id DESC, topartner_id DESC''',
                                                 {'frommessagetype':inn.ta_info['messagetype'],
                                                  'fromeditype':inn.ta_info['editype'],
@@ -165,7 +158,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                                  'frompartner':inn.ta_info['frompartner'],
                                                  'topartner':inn.ta_info['topartner'],
                                                 'booll':True}):
-                        break  #escape if found; we need only the first one (as determined by ORDER BY in query)
+                        break  #escape if found; we need only the first - ORDER BY in the query 
                     else:   #no translation record is found
                         raise botslib.TranslationNotFoundError(u'Editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"',
                                                                                                             editype=inn.ta_info['editype'],

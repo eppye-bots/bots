@@ -8,52 +8,8 @@ from botsconfig import *
 
 
 @botslib.log_session
-def prepareretransmit():
-    ''' check if user indicated a retrans/resend.
-        If so, prepare the retransmittable files and return retransmit=True '''
-    retransmit = False
-    #for rereceive
-    for row in botslib.query('''SELECT idta,reportidta
-                                FROM  filereport
-                                WHERE retransmit=%(retransmit)s ''',
-                                {'retransmit':True}):
-        retransmit = True 
-        botslib.change('''UPDATE filereport
-                           SET retransmit=%(retransmit)s
-                           WHERE idta=%(idta)s
-                           AND   reportidta=%(reportidta)s ''',
-                            {'idta':row['idta'],'reportidta':row['reportidta'],'retransmit':False})
-        for row2 in botslib.query('''SELECT idta
-                                    FROM  ta
-                                    WHERE parent=%(parent)s
-                                    AND   status=%(status)s''',
-                                    {'parent':row['idta'],
-                                    'status':RAWIN}):
-            ta_rereceive = botslib.OldTransaction(row2['idta'])
-            ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
-            ta_raw = ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
-    #for resend
-    for row in botslib.query('''SELECT idta,parent
-                                FROM  ta
-                                WHERE retransmit=%(retransmit)s
-                                AND   status=%(status)s''',
-                                {'retransmit':True,
-                                'status':EXTERNOUT}):
-        retransmit = True
-        ta_outgoing = botslib.OldTransaction(row['idta'])
-        ta_outgoing.update(retransmit=False)     #is reinjected; set retransmit back to False
-        ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
-        ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
-        ta_raw = ta_externin.copyta(status=RAWOUT,statust=OK)  #reinjected file is ready as new input
-    return retransmit
-
-
-@botslib.log_session
-def routedispatcher(routestorun,type):
-    ''' communication.run all route(s) for this type (retry, retransmit, new)'''
-    #for retransmit: check if there is something to retransmit; this limits the nr of reports/runs
-    if type == 'retransmit' and not prepareretransmit():
-        return False
+def routedispatcher(routestorun):
+    ''' run all route(s). '''
     botslib.setlastrun()
     for route in routestorun:
         foundroute=False
@@ -151,21 +107,23 @@ def router(routedict):
                     idroute=routedict['idroute'],
                     editype=routedict['toeditype'],
                     messagetype=routedict['tomessagetype'],
+                    frompartner_tochannel=routedict['frompartner_tochannel'],
+                    topartner_tochannel=routedict['topartner_tochannel'],
                     testindicator=routedict['testindicator'])
         towhere=dict([(key, value) for (key, value) in towhere.iteritems() if value])   #remove nul-values from dict
         wherestring = ' AND '.join([key+'=%('+key+')s' for key in towhere])
         if routedict['frompartner_tochannel']:   #use frompartner_tochannel in where-clause of query (partner/group dependent outchannel
             towhere['frompartner_tochannel']=routedict['frompartner_tochannel']
             wherestring += ''' AND (frompartner=%(frompartner_tochannel)s 
-                                    OR frompartner in (SELECT idpartner_id 
+                                    OR frompartner in (SELECT to_partner_id 
                                                         FROM partnergroup
-                                                        WHERE idpartnergroup_id=%(frompartner_tochannel_id)s ))'''
+                                                        WHERE from_partner_id =%(frompartner_tochannel)s ))'''
         if routedict['topartner_tochannel']:   #use topartner_tochannel in where-clause of query (partner/group dependent outchannel
             towhere['topartner_tochannel']=routedict['topartner_tochannel']
-            wherestring += ''' AND (topartner_id=%(topartner_tochannel)s 
-                                    OR topartner_id in (SELECT idpartner 
+            wherestring += ''' AND (topartner=%(topartner_tochannel)s 
+                                    OR topartner in (SELECT to_partner_id 
                                                         FROM partnergroup
-                                                        WHERE idpartnergroup=%(topartner_tochannel)s ))'''
+                                                        WHERE from_partner_id=%(topartner_tochannel)s ))'''
         toset={'tochannel':routedict['tochannel'],'status':FILEOUT}
         botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
         

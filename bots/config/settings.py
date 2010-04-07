@@ -9,27 +9,60 @@ SITE_ID = 1
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'm@-u37qiujmeqfbu$daaaaz)sp^7an4u@h=wfx9dd$$$zl2i*x9#awojdcw'
 
-
 ADMINS = (
      ('bots', 'your_email@domain.com'),
 )
 
-MANAGERS = ADMINS
+#~ MANAGERS = (,)
+MANAGERS = (    #bots will send error reports to the MANAGERS
+     ('hje', 'hjebbers@gmail.com'),
+)
+EMAIL_HOST = 'smtp.gmail.com'             #Default: 'localhost'
+EMAIL_PORT = '587'             #Default: 25
+EMAIL_USE_TLS = True       #Default: False
+EMAIL_HOST_USER = 'hjebbers@gmail.com'        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
+EMAIL_HOST_PASSWORD = ''    #Default: ''. PASSWORD to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
+SERVER_EMAIL = 'hjebbers@gmail.com'           #Sender of bots error reports. Default: 'root@localhost'
+EMAIL_SUBJECT_PREFIX = ''   #This is prepende
 
-#set in bots.ini
+#*********path settings*************************advised is not to change these values!!
 import bots
 PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
-#*********database*************************
+# Absolute path to the directory that holds media.
+# Example: "/home/media/media.lawrence.com/"
+MEDIA_ROOT = PROJECT_PATH + '/'
+# URL that handles the media served from MEDIA_ROOT. Make sure to use a
+# trailing slash if there is a path component (optional in other cases).
+# Examples: "http://media.lawrence.com", "http://example.com/media/"
+MEDIA_URL = ''
+# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
+# trailing slash.
+# Examples: "http://foo.com/media/", "/media/".
+ADMIN_MEDIA_PREFIX = '/media/'
+#~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
+ROOT_URLCONF = 'bots.urls'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/home/'
+LOGOUT_URL = '/logout/'
+#~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
+TEMPLATE_DIRS = (
+    os.path.join(PROJECT_PATH, 'templates'),
+    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+)
+
+#*********database settings*************************
 #django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
-#for sqlite3: path to database; if relative path: interpreted relative to bots root directory
+#SQLITE: 
 DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')
+DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
 DATABASE_USER = ''
 DATABASE_PASSWORD = ''
 DATABASE_HOST = ''
 DATABASE_PORT = ''
 DATABASE_OPTIONS = {}
-#example for MySQL
+#MySQL:
 #~ DATABASE_ENGINE = 'mysql'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
@@ -37,7 +70,7 @@ DATABASE_OPTIONS = {}
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
 #~ DATABASE_OPTIONS = {'use_unicode':0,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#example for PostgeSQL
+#PostgeSQL:
 #~ DATABASE_ENGINE = 'postgresql_psycopg2'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
@@ -45,6 +78,11 @@ DATABASE_OPTIONS = {}
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '5432'
 #~ DATABASE_OPTIONS = {}
+
+#*********sessions, cookies, log out time*************************
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed
+SESSION_COOKIE_AGE = 3600                   #seconds a user needs to login when no activity
+SESSION_SAVE_EVERY_REQUEST = True           #if True: SESSION_COOKIE_AGE is interpreted as: since last activity
 
 #*********localization*************************
 # Local time zone for this installation. Choices can be found here:
@@ -63,24 +101,9 @@ LANGUAGE_CODE = 'en-us'
 # to load the internationalization machinery.
 USE_I18N = False
 
-
-# Absolute path to the directory that holds media.
-# Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = PROJECT_PATH + '/'
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = ''
-
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
-
-#set in bots.ini
-#~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded')
+#*************************************************************************
+#*************************************************************************
 FILE_UPLOAD_HANDLERS = ("django.core.files.uploadhandler.TemporaryFileUploadHandler",)
-
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -88,29 +111,11 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.load_template_source',
 #     'django.template.loaders.eggs.load_template_source',
 )
-
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
-
-ROOT_URLCONF = 'bots.urls'
-
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/home/'
-LOGOUT_URL = '/logout/'
-#~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed
-SESSION_COOKIE_AGE = 3600                   #seconds a user needs to login when no activity
-SESSION_SAVE_EVERY_REQUEST = True           #if True: SESSION_COOKIE_AGE is interpreted as: since last activity
-TEMPLATE_DIRS = (
-    os.path.join(PROJECT_PATH, 'templates'),
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
-
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',

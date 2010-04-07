@@ -2,7 +2,6 @@
 import botslib
 import botsglobal
 from botsconfig import *
-import communication
 tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext'
 
 
@@ -23,6 +22,55 @@ def findlasterror():
             return True
     return False
 
+@botslib.log_session
+def prepareretransmit():
+    ''' prepare the retransmittable files. Return: indication if files should be retransmitted.'''
+    retransmit = False  #indicate retransmit
+    #for rereceive
+    for row in botslib.query('''SELECT idta,reportidta
+                                FROM  filereport
+                                WHERE retransmit=%(retransmit)s ''',
+                                {'retransmit':True}):
+        retransmit = True 
+        botslib.change('''UPDATE filereport
+                           SET retransmit=%(retransmit)s
+                           WHERE idta=%(idta)s
+                           AND   reportidta=%(reportidta)s ''',
+                            {'idta':row['idta'],'reportidta':row['reportidta'],'retransmit':False})
+        for row2 in botslib.query('''SELECT idta
+                                    FROM  ta
+                                    WHERE parent=%(parent)s
+                                    AND   status=%(status)s''',
+                                    {'parent':row['idta'],
+                                    'status':RAWIN}):
+            ta_rereceive = botslib.OldTransaction(row2['idta'])
+            ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
+            ta_raw = ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
+    #for resend
+    for row in botslib.query('''SELECT idta,parent
+                                FROM  ta
+                                WHERE retransmit=%(retransmit)s
+                                AND   status=%(status)s''',
+                                {'retransmit':True,
+                                'status':EXTERNOUT}):
+        retransmit = True
+        ta_outgoing = botslib.OldTransaction(row['idta'])
+        ta_outgoing.update(retransmit=False)     #is reinjected; set retransmit back to False
+        ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
+        ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
+        ta_raw = ta_externin.copyta(status=RAWOUT,statust=OK)  #reinjected file is ready as new input
+    return retransmit
+
+
+def evaluate(type):
+    ''' catch errors in retry....this should of course not happen...always avoid this!'''
+    try:
+        if type == 'retry':
+            return evaluateretryrun('retry')
+        else:
+            return evaluaterun(type)
+    except:
+        return 1    #there has been an error!
 
 def evaluaterun(type):
     ''' traces all recieved files.
@@ -97,7 +145,7 @@ def evaluaterun(type):
                             {'idta':rootidta,
                             'lastopen':resultLast[OPEN],'lasterror':resultLast[ERROR],'lastok':resultLast[OK],'lastdone':resultLast[DONE],
                             'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':LastReceived,'status':status,'type':type})
-    return sendreport(rootidta)    #return report status: 0 (no error) or 1 (error)
+    return generate_report(rootidta)    #return report status: 0 (no error) or 1 (error)
 
 
 def evaluateretryrun(type):
@@ -178,56 +226,40 @@ def evaluateretryrun(type):
                             {'idta':rootidta,
                             'lastopen':resultLast[OPEN],'lasterror':resultLast[ERROR],'lastok':resultLast[OK],'lastdone':resultLast[DONE],
                             'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':LastReceived,'status':status,'type':type})
-    return sendreport(rootidta)    #return report status: 0 (no error) or 1 (error)
+    return generate_report(rootidta)    #return report status: 0 (no error) or 1 (error)
 
-def sendreport(rootidta):
-    for row in botslib.query('''SELECT idta,lastopen,lasterror,lastok,lastdone,
-                                        send,processerrors,ts,lastreceived,type,status
-                                FROM  report
-                                WHERE idta=%(rootidta)s''',
-                                {'rootidta':rootidta}):
+def generate_report(rootidta):
+    for results in botslib.query('''SELECT idta,lastopen,lasterror,lastok,lastdone,
+                                            send,processerrors,ts,lastreceived,type,status
+                                    FROM  report
+                                    WHERE idta=%(rootidta)s''',
+                                    {'rootidta':rootidta}):
         break
     else:
-        raise botslib.PanicError(u'In sendreport: could not find report?')
-    results = dict([(key, row[key]) for key in row.keys()])   #convert to real dict (for SQLite)
+        raise botslib.PanicError(u'In generate report: could not find report?')
         
-    reporttext = 'Bots Report; type: %(type)s, time: %(ts)s\n'%(results)
-    reporttext += '    %(lastreceived)d files received/processed in run.\n'%(results)
+    subject = '[Bots Error Report] %s'%(results['ts'][:-3])
+    reporttext = 'Bots Report; type: %s, time: %s\n'%(results['type'],results['ts'])
+    reporttext += '    %d files received/processed in run.\n'%(results['lastreceived'])
     if results['lastdone']:
-        reporttext += '    %(lastdone)d files without errors,\n'%(results)
+        reporttext += '    %d files without errors,\n'%(results['lastdone'])
     if results['lasterror']:
-        reporttext += '    %(lasterror)d files with errors,\n'%(results)
+        subject += '; %d files errors'%(results['lasterror'])
+        reporttext += '    %d files with errors,\n'%(results['lasterror'])
     if results['lastok']:
-        reporttext += '    %(lastok)d files got stuck,\n'%(results)
+        subject += '; %d files stuck'%(results['lastok'])
+        reporttext += '    %d files got stuck,\n'%(results['lastok'])
     if results['lastopen']:
-        reporttext += '    %(lastopen)d system errors,\n'%(results)
+        subject += '; %d system errors'%(results['lastopen'])
+        reporttext += '    %d system errors,\n'%(results['lastopen'])
     if results['processerrors']:
-        reporttext += '    %(processerrors)d errors in processes.\n'%(results)
-    reporttext += '    %(send)d files send in run.\n'%(results)
+        subject += '; %d process errors'%(results['processerrors'])
+        reporttext += '    %d errors in processes.\n'%(results['processerrors'])
+    reporttext += '    %d files send in run.\n'%(results['send'])
+    
     botsglobal.logger.info(reporttext)
-    if botsglobal.ini.getboolean('settings','sendreportiferror',False) and results['status']:
-        botslib.setrouteid('botsreport')
-        ta_session = botslib.NewProcess('botsreport')
-        ta_report=botslib.NewTransaction(status=FILEOUT,idroute='botsreport')  #new transaction for report-file/mail
-        filename = str(ta_report.idta)   #create report filename
-        _outstream = botslib.opendata(filename,'wb','ascii')
-        _outstream.write(reporttext)
-        _outstream.close()
-        ta_report.update(statust=OK,filename=filename,frompartner=u'botsreportsender',topartner=u'botsreportreceiver',tochannel=u'botsreport',charset=u'ascii')
-        communication.run('botsreport',idroute='botsreport')
-        ta_session.update(statust=DONE)
-        #~ #check if sending of errorreport was OK
-        for row in botslib.query('''SELECT errortext
-                                    FROM  ta
-                                    WHERE idroute=%(idroute)s
-                                    AND   statust!=%(statust)s''',
-                                    {'statust':DONE,'idroute':'botsreport'}):
-            botsglobal.logger.error(u'Errors while trying to send error report.')
-        #~ #delete all bd-ta for botsreport (clean up report residue)
-        botslib.change('''DELETE FROM ta
-                            WHERE idroute=%(idroute)s''',
-                           {'idroute':'botsreport'})
-        botslib.setrouteid('')
+    if results['status']:
+        botslib.sendbotserrorreport(subject,reporttext)
     return int(results['status'])    #return report status: 0 (no error) or 1 (error)
 
 

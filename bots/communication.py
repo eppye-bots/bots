@@ -61,7 +61,7 @@ def run(idchannel,idroute=''):
         botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
     else:
-        raise botslib.CommunicationStartupError(u'Channel "$idchannel" is unknown.',idchannel=idchannel)
+        raise botslib.CommunicationError(u'Channel "$idchannel" is unknown.',idchannel=idchannel)
 
 
 class _comsession(object):
@@ -294,14 +294,14 @@ class _comsession(object):
         def mdnreceive():
             tmp = msg.get_param('reporttype')
             if tmp is None or email.Utils.collapse_rfc2231_value(tmp)!='disposition-notification':    #invalid MDN
-                raise botslib.InCommunicationMime (u'Found email return receipt with errors; can not be processed')
+                raise botslib.CommunicationError(u'Received email-MDN with errors.')
             for part in msg.get_payload():
                 if part.get_content_type()=='message/disposition-notification':
                     originalmessageid = part['original-message-id']
                     if originalmessageid is not None:
                         break
             else:   #invalid MDN: 'message/disposition-notification' not in email
-                raise botslib.InCommunicationMime (u'Found email return receipt with errors; can not be processed')
+                raise botslib.CommunicationError(u'Received email-MDN with errors.')
             botslib.change('''UPDATE ta
                                SET   confirmed=%(confirmed)s, confirmidta=%(confirmidta)s
                                WHERE reference=%(reference)s
@@ -433,7 +433,7 @@ class _comsession(object):
                             confirmasked = True
                     savemime(msg)
                     if not nrmimesaved[0]:
-                        raise botslib.InCommunicationMime (u'No attachment found in email')
+                        raise botslib.CommunicationError (u'No attachment found in received email')
             except:
                 txt=botslib.txtexc()
                 ta_mime.failure()
@@ -939,7 +939,7 @@ class intercommit(_comsession):
         botslib.dirshouldbethere(dirforintercommitsend)
         #output to one file or a queue of files (with unique names)
         if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
-            raise botslib.CommunicationParameterError(u'channel "$channel" needs unique filenames (no queue-file); use eg *.edi as value for "filename"',channel=self.channeldict['idchannel'])
+            raise botslib.CommunicationError(u'channel "$channel" needs unique filenames (no queue-file); use eg *.edi as value for "filename"',channel=self.channeldict['idchannel'])
         else:
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel

@@ -596,6 +596,7 @@ class edifact(Grammar):
         'version':'3',
         'UNB.S002.0007':'14',
         'UNB.S003.0007':'14',
+        'UNB.0026':'',
         'UNB.0035':'0',
         }
     formatconvert = {
@@ -633,14 +634,14 @@ class x12(Grammar):
         'skip_char':'\r\n',
         'stripfield_sep':True,
         'triad':'',
-        'version':'00000',
+        'version':'00403',
         'ISA01':'00',
         'ISA02':'          ',
         'ISA03':'00',
         'ISA04':'          ',
         'ISA05':'01',
         'ISA07':'01',
-        'ISA11':'U',
+        'ISA11':'U',        #since ISA version 00403 this is the reserve/repetition separator. Bots does not use this anymore for ISA version >00403
         'ISA14':'1',
         'ISA15':'P',
         'GS07':'X',
