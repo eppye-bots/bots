@@ -19,28 +19,25 @@ from botsconfig import *
 
 
 def showusage():
-    print '    Usage without parameters:'
-    print '    - Run all actived routes.'
-    print '    - Recieve new files.'
-    print '    - Previous errors are retried.'
-    print '    - Retransmitted/resend: as indicated by user.'
-    print '    - Cleanup: as indicated by parameter in config/bots.ini.'
-    print '    - Settings in config/bots.ini are used.'
-    print
-    print '    Routes can be used as parameters, eg:'
-    print '        %s  route1  route2'%os.path.basename(sys.argv[0])
-    print '    In this example Bots will run route1 and route2.'
-    print
-    print '    Options:'
-    print '        --new          recieve new edi files.'
-    print '        --retransmit   resend and rerececieve.'    
-    print '        --retry        retry previous errors.'
-    print '        --retrylastrun retry lat run (in case of crash).'
-    print '        --retrycommunication retry only outgoing communication errors.'
-    print '        --cleanup      remove older data from database.'
-    print "        -c<directory>   directory for configuration files (default: config)."
-    print '    Options can be combined.'
-    
+    usage = '''
+    This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
+    The %(name)s does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
+    Usage:
+        %(name)s  [options] [routes]
+
+    Routes: list the routes to run. If no route is given, all active routes in the database will run
+
+    Options:
+        --new                recieve new edi files.
+        --retransmit         resend and rerececieve.
+        --retry              retry previous errors.
+        --retrylastrun       retry last run (crash recovery).
+        --retrycommunication retry only outgoing communication errors.
+        --cleanup            remove older data from database.
+        -c<directory>        directory for configuration files (default: config).
+    Options can be combined.
+    '''%{'name':os.path.basename(sys.argv[0])}
+    print usage
     
 def start():
     #********command line arguments**************************
@@ -79,7 +76,6 @@ def start():
         
     for key,value in botslib.botsinfo():    #log start info
         botsglobal.logger.info(u'%s: "%s".',key,value)
-    botsglobal.logger.info(u'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.')
     #**************connect to database**********************************
     try:
         botsinit.connect() 
@@ -87,26 +83,40 @@ def start():
         botsglobal.logger.exception(u'Could not connect to database. Database settings are in bots/config/settings.py.')
         sys.exit(1)
     else:
-        botsglobal.logger.info(u'Connect to database "%s".',botsglobal.settings.DATABASE_ENGINE)
+        botsglobal.logger.info(u'Connected to database.')
         atexit.register(botsglobal.db.close)
     #**************handle database lock****************************************
     #try to set a lock on the database; if this is not possible, the database is already locked. Either:
-    #- another instance bots bots-engine is (still) running
-    #- or bots-engine had a severe crash.
+    #1 another instance bots bots-engine is (still) running
+    #2 or bots-engine had a severe crash.
+    #What to do? 
     #first: check ts of database lock. If below a certain value (set in bots.ini) we assume an other instance is running. Exit quietly - no errors, no logging.
-    #next:  warn with report or notification. try a retry of the last run.
+    #                                  else: Warn user, give advise on what to do. gather data: nr files in, errors.
+    #next:  warn with report & logging. advise a retrylastrun.
     if not botslib.set_database_lock():
-        vanaf = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntime',60))
-        for row in botslib.query('''SELECT ts FROM mutex WHERE ts < %(vanaf)s ''',{'vanaf':vanaf}):
-            botsglobal.logger.info('The database is locked. This means bots-engine has crashed in a previous run. This is very rare, eg after a ')
-            botslib.sendbotserrorreport('[Bots severe error]!!!Database is locked!!!','jaja...go for retry of last run. ')
-            commandstorun = ['--retrylastrun']
-            raise botslib.PanicError(u'Database locked - either another instance of bots-engine is running or bots-engine had a severe error in the last run.')
-            sys.exit(1)
-            break
+        if '--retrylastrun' in commandstorun:    #user starts recovery operation; the databaselock is ignored; the databaselock is unlocked when routes have run.
+            commandstorun = ['--retrylastrun']  #is an exclusive option!
         else:
-            exit(0)
-    #*************make up list of routes to run****************************************
+            #when scheduling bots it is possible that the last run is still running. Check if maxruntime has passed:
+            vanaf = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntime',60))
+            for row in botslib.query('''SELECT ts FROM mutex WHERE ts < %(vanaf)s ''',{'vanaf':vanaf}):
+                warn = '!!!The bots database is locked!!!\nThis indicates: bots-engine has ended unexpectedly in the last run.\nThis happens, but is very very rare.\nPossible causes: bots-engine terminated by user, system crash, power-down, python interpreter crash (does that happen?never seen this), etc.\nA forced retry of the last run is strongly advised now; bots will (try to) repair the last run.'
+                botsglobal.logger.critical(warn)
+                botslib.sendbotserrorreport('[Bots severe error]!!!Database is locked!!!',warn)
+                #add: count errors etc.
+                sys.exit(1)
+            else:   #maxruntime has not passed. Exit silently, nothing reported
+                botsglobal.logger.info(u'Database is locked, but "maxruntime" has not been exceeded.')
+                exit(0)
+    else:
+        if '--retrylastrun' in commandstorun:    #user starts recovery operation but there is no databaselock.
+            warn = 'User started a forced retry of the last run.\nOnly use this when the database is locked.\nThe database was not locked (database is OK).\nSo Bots has done nothing now.'
+            botsglobal.logger.error(warn)
+            botslib.sendbotserrorreport('[Bots Error Report] User started a forced retry of last run, but this was not needed',warn)
+            botslib.remove_database_lock()
+            sys.exit(1)
+            
+    #*************get list of routes to run****************************************
     if routestorun: 
         botsglobal.logger.info(u'Run routes from command line: "%s".',str(routestorun))
     else:   # no routes from command line parameters: fetch all active routes from database
@@ -117,42 +127,55 @@ def start():
                                     ORDER BY idroute ''',
                                     {'active':True,'notindefaultrun':False}):
             routestorun.append(row['idroute'])
-        botsglobal.logger.info(u'Run active routes for database: "%s".',str(routestorun))
+        botsglobal.logger.info(u'Run active routes from database: "%s".',str(routestorun))
     #routestorun is now either a list with routes from comandline, or the list of active routes for the routes tabel in the db.
     #**************run the routes for retry, retransmit and new runs*************************************
     try: 
+        #commandstorun determines to type of runs
+        #routes to run is a listof the routes that are runs (for each command to run
+        #botsglobal.incommunicate is used to control if there is communication in; eg retry and retransmit do not incommunicate.
+        #botsglobal.minta4query controls which ta's are queried by the routes.
+        #stuff2evaluate controls what is evaluated in automatic maintenance.
         #~ timer = botslib.Timer('../timer.txt')
-        errorinrun = 0      #detect if there has been some error.
-        #retry only communication errors
-        #retry last run ***errorrecovery
+        errorinrun = 0      #detect if there has been some error. Only used here for good exit code
+        botsglobal.incommunicate = False
+        if '--retrycommunication' in commandstorun:
+            botsglobal.logger.info(u'Run communication retry.')
+            if botslib.set_minta4query_retrycommunication():
+                stuff2evaluate = router.routedispatcher(routestorun,'--retrycommunication')
+                errorinrun +=  automaticmaintenance.evaluate('--retrycommunication',stuff2evaluate)
+            else:
+                botsglobal.logger.info(u'Run retrycommunication: nothing to retry.')
+        if '--retrylastrun' in commandstorun:
+            botsglobal.logger.info(u'Run retry of the last run (crash recovery).')
+            stuff2evaluate = botslib.set_minta4query_retrylastrun()
+            if stuff2evaluate:
+                router.routedispatcher(routestorun)
+                errorinrun +=  automaticmaintenance.evaluate('--retrylastrun',stuff2evaluate)
+            else:
+                botsglobal.logger.info(u'No retry of the last run - there was no last run.')
         if '--retry' in commandstorun:
-            if automaticmaintenance.findlasterror():
-                botsglobal.logger.info(u'Run for retry of old errors.')
-                botsglobal.retry = True     #global is used to indicate that dbta since last error are looked at
-                router.routedispatcher(routestorun)
-                botsglobal.retry = False    #needed for correct evaluate
-                #~ timer.point('retry')
-                errorinrun +=  automaticmaintenance.evaluate('retry')
-                #~ timer.point('retry maintenance')
+            botsglobal.logger.info(u'Run retry.')
+            if botslib.set_minta4query_retry():
+                stuff2evaluate = router.routedispatcher(routestorun)
+                errorinrun +=  automaticmaintenance.evaluate('--retry',stuff2evaluate)
             else:
-                #~ timer.point('retry')
-                botsglobal.logger.info(u'Nothing to retry.')
+                botsglobal.logger.info(u'Run retry: nothing to retry.')
         if '--retransmit' in commandstorun:
-            if automaticmaintenance.prepareretransmit():
-                botsglobal.logger.info(u'Run for retransmit.')
-                router.routedispatcher(routestorun)
-                errorinrun +=  automaticmaintenance.evaluate('retransmit')
+            botsglobal.logger.info(u'Run retransmit.')
+            stuff2evaluate = router.routedispatcher(routestorun,'--retransmit')
+            if stuff2evaluate:
+                errorinrun +=  automaticmaintenance.evaluate('--retransmit',stuff2evaluate)
             else:
-                botsglobal.logger.info(u'Nothing to retransmit.')
-            #~ timer.point('retransmit')
+                botsglobal.logger.info(u'Run retransmit: nothing to retransmit.')
         if '--new' in commandstorun:
-            botsglobal.logger.info('New run.')
+            botsglobal.logger.info('Run new.')
             botsglobal.incommunicate = True
-            router.routedispatcher(routestorun)
-            #~ timer.point('new')
-            errorinrun +=  automaticmaintenance.evaluate('new')
-            #~ timer.point('new maintenance')
+            botsglobal.minta4query = 0  #meaning: reset. the actual value is set later (in routedispatcher)
+            stuff2evaluate = router.routedispatcher(routestorun)
+            errorinrun +=  automaticmaintenance.evaluate('--new',stuff2evaluate)
         if '--cleanup' in commandstorun or botsglobal.ini.get('settings','whencleanup','always')=='always':
+            botsglobal.logger.debug(u'Do cleanup.')
             cleanup.cleanup()
         #~ timer.point('cleanup')
         #~ timer.close()

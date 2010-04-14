@@ -6,11 +6,54 @@ import botslib
 import botsglobal
 from botsconfig import *
 
+@botslib.log_session
+def prepareretransmit():
+    ''' prepare the retransmittable files. Return: indication if files should be retransmitted.'''
+    retransmit = False  #indicate retransmit
+    #for rereceive
+    for row in botslib.query('''SELECT idta,reportidta
+                                FROM  filereport
+                                WHERE retransmit=%(retransmit)s ''',
+                                {'retransmit':True}):
+        retransmit = True 
+        botslib.change('''UPDATE filereport
+                           SET retransmit=%(retransmit)s
+                           WHERE idta=%(idta)s
+                           AND   reportidta=%(reportidta)s ''',
+                            {'idta':row['idta'],'reportidta':row['reportidta'],'retransmit':False})
+        for row2 in botslib.query('''SELECT idta
+                                    FROM  ta
+                                    WHERE parent=%(parent)s
+                                    AND   status=%(status)s''',
+                                    {'parent':row['idta'],
+                                    'status':RAWIN}):
+            ta_rereceive = botslib.OldTransaction(row2['idta'])
+            ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
+            ta_raw = ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
+    #for resend
+    for row in botslib.query('''SELECT idta,parent
+                                FROM  ta
+                                WHERE retransmit=%(retransmit)s
+                                AND   status=%(status)s''',
+                                {'retransmit':True,
+                                'status':EXTERNOUT}):
+        retransmit = True
+        ta_outgoing = botslib.OldTransaction(row['idta'])
+        ta_outgoing.update(retransmit=False)     #is reinjected; set retransmit back to False
+        ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
+        ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
+        ta_raw = ta_externin.copyta(status=RAWOUT,statust=OK)  #reinjected file is ready as new input
+    return retransmit
+
 
 @botslib.log_session
-def routedispatcher(routestorun):
+def routedispatcher(routestorun,type=None):
     ''' run all route(s). '''
-    botslib.setlastrun()
+    if type == '--retransmit':
+        if not prepareretransmit():
+            return 0
+    stuff2evaluate = botslib.getlastrun()
+    botslib.set_minta4query()
     for route in routestorun:
         foundroute=False
         for routedict in botslib.query('''SELECT idroute     ,
@@ -36,13 +79,15 @@ def routedispatcher(routestorun):
             botslib.setrouteid(routedict['idroute'])
             botsglobal.logger.info(u'running route %s %s',routedict['idroute'],routedict['seq'])
             foundroute=True
-            router(routedict)
+            if type =='--retrycommunication':
+                router_communicationretry(routedict)
+            else:
+                router(routedict)
             botslib.setrouteid('')
             botsglobal.logger.debug(u'finished route %s %s',routedict['idroute'],routedict['seq'])
         if not foundroute:
             botsglobal.logger.warning(u'there is no (active) route "%s".',route)
-    return True
-
+    return stuff2evaluate
 
 @botslib.log_session
 def router(routedict):
@@ -81,7 +126,6 @@ def router(routedict):
         #all received files have status FILEIN
         botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
     
-    
     #communication.run translation
     if routedict['translateind']:
         #processes files with status FILEIN
@@ -94,6 +138,8 @@ def router(routedict):
         transform.splitmailbag(idroute=routedict['idroute'])
         transform.translate(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
+    #~ import time
+    #~ time.sleep(5)
         
     #merge messags & communication.run outgoing channel
     if routedict['tochannel']:   #do outgoing part of route
@@ -127,6 +173,23 @@ def router(routedict):
         toset={'tochannel':routedict['tochannel'],'status':FILEOUT}
         botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
         
+        botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
+        communication.run(idchannel=routedict['tochannel'],idroute=routedict['idroute'])    #communication.run outcommunication
+        botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)
+    
+    botslib.tryrunscript(userscript,scriptname,'end',routedict=routedict)
+        
+@botslib.log_session
+def router_communicationretry(routedict):
+    #is there a user route script?
+    try:
+        botsglobal.logger.debug(u'(try) to read user routescript route "%s".',routedict['idroute'])
+        userscript,scriptname = botslib.botsimport('routescripts',routedict['idroute'])
+    except ImportError: #other errors, eg syntax errors are just passed
+        userscript = scriptname = None
+        
+    #run outgoing channel
+    if routedict['tochannel']:   #do outgoing part of route
         botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
         communication.run(idchannel=routedict['tochannel'],idroute=routedict['idroute'])    #communication.run outcommunication
         botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)

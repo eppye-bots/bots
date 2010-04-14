@@ -29,7 +29,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                                 AND     statust=%(statust)s
                                 AND     idroute=%(idroute)s
                                 ''',
-                                {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.getactiverun()}):
+                                {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
             ta_org=botslib.OldTransaction(row['idta'])
             ta_intermediate = ta_org.copyta(status=MAILBAGPARSED)
@@ -42,7 +42,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                 found = header.search(edifile[startpos:])
                 if found==None:
                     if not startpos:
-                        raise botslib.InMessageNoContentError(u'Found no content in mailbag.')
+                        raise botslib.InMessageError(u'Found no content in mailbag.')
                     break
                 if found.group(1):
                     editype='x12'
@@ -70,11 +70,11 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                         headpos=startpos+ found.start(5)
                     foundtrailer = re.search(re.escape(record_sep)+'\s*UNZ'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
                 if not foundtrailer:
-                    raise botslib.InMessageEnvelopeError(u'Found no valid envelope trailer in mailbag.')
+                    raise botslib.InMessageError(u'Found no valid envelope trailer in mailbag.')
                 endpos = headpos+foundtrailer.end()
                 #so: interchange is from headerpos untill endpos
                 #~ if header.search(edifile[headpos+25:endpos]):   #check if there is another header in the interchange
-                    #~ raise botslib.InMessageEnvelopeError(u'Error in mailbag format: found no valid envelope trailer.')
+                    #~ raise botslib.InMessageError(u'Error in mailbag format: found no valid envelope trailer.')
                 ta_tomes=ta_intermediate.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
                 tofilename = str(ta_tomes.idta)
                 tofile = botslib.opendata(tofilename,'wb',charset=row['charset'])
@@ -112,7 +112,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                 AND     statust=%(statust)s
                                 AND     idroute=%(idroute)s
                                 ''',
-                                {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.getactiverun()}):
+                                {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
             ta_fromfile=botslib.OldTransaction(row['idta'])  #TRANSLATE ta
             ta_parsedfile = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta

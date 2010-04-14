@@ -60,6 +60,7 @@
 		<li><a href="/delete/?codelists" OnClick = "return confirm('Are you sure you want to delete all user maintained codes?\nThis action can not be undone!');">Delete code lists</a></li>
 		<li><a href="/admin/bots/uniek/" >View/edit counters</a></li>
 		<li><a href="/unlock/" >Unlock database</a></li>
+		<li><a href="/runengine/?clparameter=--retrylastrun"  OnClick = "return confirm('Use only in case of database lock/crash recovery. Are you sure?');">Run forced retry of last run</a></li>
 	</ul>
     {% endif %}
 	<ul>

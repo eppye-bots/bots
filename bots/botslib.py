@@ -14,19 +14,18 @@ import django
 #Bots-modules
 from botsconfig import *
 import botsglobal #as botsglobal
-#~ import communication
 
 def botsinfo():
-    return [('python version',sys.version),
+    return [
+            ('platform',platform.platform()),
+            ('machine',platform.machine()),
+            ('python version',sys.version),
             ('django version',django.VERSION),
             ('bots version',botsglobal.version),
             ('bots installation path',botsglobal.ini.get('directories','botspath')),
             ('config path',botsglobal.ini.get('directories','config')),
             ('botssys path',botsglobal.ini.get('directories','botssys')),
             ('usersys path',botsglobal.ini.get('directories','usersysabs')),
-            ('platform',platform.system()),
-            ('platform extended',platform.platform()),
-            ('machine',platform.machine()),
             ('DATABASE_ENGINE',botsglobal.settings.DATABASE_ENGINE),
             ('DATABASE_NAME',botsglobal.settings.DATABASE_NAME),
             ('DATABASE_USER',botsglobal.settings.DATABASE_USER),
@@ -38,17 +37,59 @@ def botsinfo():
 #**********************************************************/**
 #**************getters/setters for some globals***********************/**
 #**********************************************************/**
-def getactiverun():
-    ''' get the idta of the current 'run'.'''
-    if botsglobal.retry:    #for retry: look at all the idta, not only idta of last run.
-        return botsglobal.rootoflasterror
-    return _Transaction.processlist[1]  #get root-idta of last run
+def get_minta4query():
+    ''' get the first idta for queries etc.'''
+    return botsglobal.minta4query
 
-def setlastrun():
-    botsglobal.lastrun = _Transaction.processlist[1]  #get root-idta of last run
+#~ def set_min_idtatoquery():
+def set_minta4query():
+    if botsglobal.minta4query:    #if already set, do nothing
+        return
+    else:
+        botsglobal.minta4query = _Transaction.processlist[1]  #set root-idta of current run
+
+def set_minta4query_retry():
+    for row in query('''SELECT idta
+                        FROM  filereport
+                        GROUP BY idta
+                        HAVING MAX(statust) != %(statust)s''',
+                        {'statust':DONE}):
+        #found incoming file with error
+        for row2 in query('''SELECT min(reportidta) as min
+                            FROM  filereport
+                            WHERE idta = %(idta)s ''',
+                            {'idta':row['idta']}):
+            botsglobal.minta4query = row2['min']
+            return botsglobal.minta4query
+    return 0    #if no error found.
+
+def set_minta4query_retrylastrun():
+    ''' get the idat of last run (that is suppossed to have crashed'''
+    for row in query('''SELECT max(idta) as max
+                        FROM  ta
+                        WHERE status=%(status)s
+                        AND script= 0 ''',
+                        {'status':PROCESS}):
+        if row['max'] is None:
+            return 0
+        botsglobal.minta4query = row['max']
+        return botsglobal.minta4query
+    return 0
+
+def set_minta4query_retrycommunication():
+    for row in query('''SELECT min(idta) as min
+                        FROM  ta
+                        WHERE statust = %(statust)s
+                        AND   status = %(status)s ''',
+                        {'statust':OK, 'status':RAWOUT}):
+        if row['min'] is None:
+            return 0
+        botsglobal.minta4query = row['min'] -1
+        return botsglobal.minta4query
+    return 0    #if no error found.
 
 def getlastrun():
-    return botsglobal.lastrun
+    return _Transaction.processlist[1]  #get root-idta of last run
 
 def setrouteid(routeid):
     botsglobal.routeid = routeid
@@ -273,7 +314,7 @@ def addinfocore(change,where,wherestring):
         returns the number of db-ta that have been changed.
     '''
     if 'rootidta' not in where:
-        where['rootidta']=getactiverun()
+        where['rootidta']=get_minta4query()
         wherestring += ' AND idta > %(rootidta)s '
     if 'statust' not in where:  #by default: look only for statust is OK
         where['statust']=OK
@@ -304,7 +345,7 @@ def updateinfo(change,where):
         where['statust']=OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
     if 'rootidta' not in where:
-        where['rootidta']=getactiverun()
+        where['rootidta']=get_minta4query()
         wherestring += ' AND idta > %(rootidta)s '
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
@@ -329,7 +370,7 @@ def changestatustinfo(change,where):
         where['statust']=OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
     if 'rootidta' not in where:
-        where['rootidta']=getactiverun()
+        where['rootidta']=get_minta4query()
         wherestring += ' AND idta > %(rootidta)s '
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
@@ -344,8 +385,7 @@ def changestatustinfo(change,where):
 def set_database_lock():
     try:
         change(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
-    except Exception, e: 
-        print 'mutex on',e
+    except: 
         return False
     return True
 
@@ -487,7 +527,6 @@ def botsbaseimport(modulename):
         for comp in components[1:]:
             module = getattr(module, comp)
     except ImportError: #if module not found; often this is caught later on
-        #~ print txtexc()
         raise
     except:             #other errors
         txt=txtexc()
@@ -508,11 +547,9 @@ def botsimport(soort,modulename):
     modulefile = join(botsglobal.usersysimportpath,soort,modulename)   #assemble abs filename for errortexts
     botsglobal.logger.debug(u'import file "%s".',modulefile)
     try:
-        #~ print 'modulepath',modulepath
         module = botsbaseimport(modulepath)
     except ImportError: #if module not found
         botsglobal.logger.debug(u'no import of file "%s".',modulefile)
-        #~ print 'error import modulepath',modulepath
         raise
     else:
         return module,modulefile
@@ -692,71 +729,31 @@ class BotsError(Exception):
     def __str__(self):
         s = string.Template(self.msg).safe_substitute(self.kwargs)
         return s.encode(u'utf-8',u'ignore')
-class AuthorizeError(BotsError):    #for incoming and outgoing mime
-    pass
 class CodeConversionError(BotsError):
     pass
 class CommunicationError(BotsError):
     pass
-class CommunicationSMTPError(BotsError):
+class CommunicationInError(BotsError):
     pass
-class CommunicationOutCharsetError(BotsError):
+class CommunicationOutError(BotsError):
     pass
 class EanError(BotsError):
     pass
-class EnvelopeNotFoundError(BotsError): #calling a not existing envelope-class
-    pass
-class EnvelopeTemplateKidError(BotsError):
-    pass
-class EnvelopeTemplateError(BotsError):
-    pass
-class GrammarEdiTypeNotKnownError(BotsError):#Errors in table format; mostly in grammar.py during checking
-    pass
 class GrammarError(BotsError):            #grammar.py
-    pass
-class GrammarNotFoundError(BotsError):            #grammar.py
-    pass
-class GrammarSyntaxError(BotsError):            #grammar.py
-    pass
-class GrammarFieldError(BotsError):       #grammar.py
-    pass
-class GrammarEnhancedGetError(BotsError): #generated by node.enhancedget while looking for QUERIES or SUBTRANSLATION
-    pass
-class InMessageEdiTypeNotKnownError(BotsError):
     pass
 class InMessageError(BotsError):
     pass
-class InMessageNoContentError(BotsError):
-    pass
 class InMessageFieldError(BotsError):
-    pass
-class InMessageCharsetError(BotsError):
-    pass
-class InMessageParseError(BotsError):
-    pass
-class InMessageEnvelopeError(BotsError):  #error in envelope of incoming edifile
     pass
 class LockedFileError(BotsError):
     pass
 class MessageError(BotsError):
     pass
-class MpathRootError(BotsError):   #can not find script; not for errors in a script
+class MappingRootError(BotsError):
     pass
-class MpathError(BotsError):            #mpath is not valid; mapth will mostly come from mapping-script
-    pass
-class OutMessageEdiTypeNotKnownError(BotsError):
+class MappingFormatError(BotsError):            #mpath is not valid; mapth will mostly come from mapping-script
     pass
 class OutMessageError(BotsError):
-    pass
-class OutMessageFieldFormatError(BotsError):
-    pass
-class OutMessageCharsetError(BotsError):
-    pass
-class OutMessageTemplateKidError(BotsError):
-    pass
-class OutMessageTemplateError(BotsError):
-    pass
-class OutmessageWriteError(BotsError):
     pass
 class PanicError(BotsError):
     pass

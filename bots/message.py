@@ -37,26 +37,26 @@ class Message(object):
     def change(self,where,change):
         ''' query tree (self.root) with where; if found replace with change; return True if change, return False if not changed.'''
         if self.root.record is None:
-            raise botslib.MpathRootError(u'change($where,$change"): "root" of incoming message is empty; either split messages or use inn.getloop',where=where,change=change)
+            raise botslib.MappingRootError(u'change($where,$change"): "root" of incoming message is empty; either split messages or use inn.getloop',where=where,change=change)
         return self.root.change(where,change)
 
     def delete(self,*mpaths):
         ''' query tree (self.root) with mpath; delete if found. return True if deleted, return False if not deleted.'''
         if self.root.record is None:
-            raise botslib.MpathRootError(u'delete($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(u'delete($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
         return self.root.delete(*mpaths)
 
     def get(self,*mpaths):
         ''' query tree (self.root) with mpath; get value (string); get None if not found.'''
         if self.root.record is None:
-            raise botslib.MpathRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
         return self.root.get(*mpaths)
 
     def getnozero(self,*mpaths):
         ''' like get, returns None is value is zero (0) or not numeric.
             Is sometimes usefull in mapping.'''
         if self.root.record is None:
-            raise botslib.MpathRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
         return self.root.getnozero(*mpaths)
 
     def getcount(self):
@@ -73,7 +73,7 @@ class Message(object):
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
         if self.root.record is None:
-            raise botslib.MpathRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
         return self.root.getcountsum(*mpaths)
 
     def getloop(self,*mpaths):
@@ -89,7 +89,7 @@ class Message(object):
 
     def put(self,*mpaths):
         if self.root.record is None and self.root.children:
-            raise botslib.MpathRootError(u'put($mpath): "root" of outgoing message is empty; use out.putloop',mpath=mpaths)
+            raise botslib.MappingRootError(u'put($mpath): "root" of outgoing message is empty; use out.putloop',mpath=mpaths)
         return self.root.put(*mpaths)
 
     def putloop(self,*mpaths):
@@ -98,12 +98,12 @@ class Message(object):
                 self.root.append(node.Node(mpaths[0]))
                 return self.root.children[-1]
             else: #TODO: what if self.root.record is None and len(mpaths) > 1?
-                raise botslib.MpathRootError(u'putloop($mpath): mpath too long???',mpath=mpaths)
+                raise botslib.MappingRootError(u'putloop($mpath): mpath too long???',mpath=mpaths)
         return self.root.putloop(*mpaths)
 
     def sort(self,*mpaths):
         if self.root.record is None:
-            raise botslib.MpathRootError(u'get($mpath): "root" of message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(u'get($mpath): "root" of message is empty; either split messages or use inn.getloop',mpath=mpaths)
         self.root.sort(*mpaths)
         
     def normalisetree(self,node):

@@ -3,7 +3,7 @@ import os
 import sys
 import shutil
 import traceback
-import bots.botsconfig as botsconfig
+import bots.botsglobal as botsglobal
 
 def join(path,*paths):
     return os.path.normpath(os.path.join(path,*paths))
@@ -36,7 +36,7 @@ def installshortcuts(scriptpath):
 
 
 def start():
-    botsdir = os.path.dirname(botsconfig.__file__)
+    botsdir = os.path.dirname(botsglobal.__file__)
     scriptpath = join(sys.prefix,'Scripts')
     installfromdir = 'installwin'
     optioninstallfrom = '-f' + join(botsdir,installfromdir)

@@ -25,7 +25,7 @@ def edifromfile(**ta_info):
     try:
         classtocall = globals()[ta_info['editype']]  #get inmessage class to call (subclass of Inmessage)
     except KeyError:
-        raise botslib.InMessageEdiTypeNotKnownError(ta_info['editype'])
+        raise botslib.InMessageError('Unknown editype for incoming message: $editype',editype=ta_info['editype'])
     ediobject = classtocall(ta_info)
     ediobject.initfromfile()
     return ediobject
@@ -209,9 +209,9 @@ class Inmessage(message.Message):
                 #for StopIteration(loop rest of grammar) or when rec2parse
                 if tab[tabindex][COUNT] < tab[tabindex][MIN]:
                     try:
-                        raise botslib.InMessageParseError(u'line:$line pos:$pos; record:"$record" not in grammar; looked in grammar until mandatory record: "$looked".',record=rec2parse[ID][VALUE],line=rec2parse[ID][LIN],pos=rec2parse[ID][POS],looked=tab[tabindex][MPATH])
+                        raise botslib.InMessageError(u'line:$line pos:$pos; record:"$record" not in grammar; looked in grammar until mandatory record: "$looked".',record=rec2parse[ID][VALUE],line=rec2parse[ID][LIN],pos=rec2parse[ID][POS],looked=tab[tabindex][MPATH])
                     except TypeError:
-                        raise botslib.InMessageParseError(u'missing mandatory record at message-level: "$record"',record=tab[tabindex][MPATH])
+                        raise botslib.InMessageError(u'missing mandatory record at message-level: "$record"',record=tab[tabindex][MPATH])
                     #TODO: line/pos of original file in error...when this is possible,  XML?
                 tabindex += 1
                 if tabindex >= tabmax:  #rec2parse is not in this level. Go level up
@@ -220,7 +220,7 @@ class Inmessage(message.Message):
             else:   #if found in grammar
                 tab[tabindex][COUNT] += 1
                 if tab[tabindex][COUNT] > tab[tabindex][MAX]:
-                    raise botslib.InMessageParseError(u'line:$line pos:$pos; too many repeats record "$record".',line=rec2parse[ID][LIN],pos=rec2parse[ID][POS],record=tab[tabindex][ID])
+                    raise botslib.InMessageError(u'line:$line pos:$pos; too many repeats record "$record".',line=rec2parse[ID][LIN],pos=rec2parse[ID][POS],record=tab[tabindex][ID])
                 if argmessagetype:  #that is, header segment of subtranslation
                     newnode = argnewnode  #use old node that is already parsed
                     newnode.queries = {'messagetype':argmessagetype}    #copy messagetype into 1st segment of subtranslation (eg UNH, ST)
@@ -369,9 +369,9 @@ class fixed(Inmessage):
         for field in trecord:   #calculate total length of record from field lengths
             recordlength += field[LENGTH]
         if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-            raise botslib.InMessageParseError(u'line $line record "$record" too short; is $pos pos, defined is $defpos pos: "$content".',line=recordEdiFile[ID][LIN],record=recordEdiFile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
+            raise botslib.InMessageError(u'line $line record "$record" too short; is $pos pos, defined is $defpos pos: "$content".',line=recordEdiFile[ID][LIN],record=recordEdiFile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
         if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-            raise botslib.InMessageParseError(u'line $line record "$record" too long; is $pos pos, defined is $defpos pos: "$content".',line=recordEdiFile[ID][LIN],record=recordEdiFile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
+            raise botslib.InMessageError(u'line $line record "$record" too long; is $pos pos, defined is $defpos pos: "$content".',line=recordEdiFile[ID][LIN],record=recordEdiFile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
         pos = 0
         for field in trecord:   #for fields in this record
             value = fixedrecord[pos:pos+field[LENGTH]]
@@ -406,9 +406,9 @@ class idoc(fixed):
                 self.rawinput = self.rawinput[count:]  #here the interchange should start
                 break
         else:
-            raise botslib.InMessageEnvelopeError(u'edi file only contains whitespace.')
+            raise botslib.InMessageError(u'edi file only contains whitespace.')
         if self.rawinput[:6] != 'EDI_DC':
-            raise botslib.InMessageEnvelopeError(u'expect "EDI_DC", found "$content". Probably no SAP idoc.',content=self.rawinput[:6])
+            raise botslib.InMessageError(u'expect "EDI_DC", found "$content". Probably no SAP idoc.',content=self.rawinput[:6])
 
 
 class var(Inmessage):
@@ -550,7 +550,7 @@ class var(Inmessage):
         for tfield in trecord:
             if tfield[ISFIELD]:  #tfield is normal field (not a composite)
                 if tfield[MANDATORY]==u'M' and tfield[ID] not in recorddict:
-                    raise botslib.InMessageParseError(u'line:$line mandatory field "$field" not in record.',line=recordEdiFile[0][LIN],field=tfield[ID])
+                    raise botslib.InMessageError(u'line:$line mandatory field "$field" not in record.',line=recordEdiFile[0][LIN],field=tfield[ID])
             else:
                 compositefilled = False
                 for sfield in tfield[SUBFIELDS]:  #t[2]: subfields in grammar
@@ -560,9 +560,9 @@ class var(Inmessage):
                 if compositefilled:
                     for sfield in tfield[SUBFIELDS]:  #t[2]: subfields in grammar
                         if sfield[MANDATORY]==u'M' and sfield[ID] not in recorddict:
-                            raise botslib.InMessageParseError(u'line:$line mandatory subfield "$field" not in composite.',line=recordEdiFile[0][LIN],field=sfield[ID])
+                            raise botslib.InMessageError(u'line:$line mandatory subfield "$field" not in composite.',line=recordEdiFile[0][LIN],field=sfield[ID])
                 if not compositefilled and tfield[MANDATORY]==u'M':
-                    raise botslib.InMessageParseError(u'line:$line mandatory composite "$field" not in record.',line=recordEdiFile[0][LIN],field=tfield[ID])
+                    raise botslib.InMessageError(u'line:$line mandatory composite "$field" not in record.',line=recordEdiFile[0][LIN],field=tfield[ID])
         return recorddict
 
 
@@ -601,7 +601,7 @@ class edifact(var):
             if c.isalnum():
                 break
         else:
-            raise botslib.InMessageEnvelopeError(u'edi file only contains whitespace.')
+            raise botslib.InMessageError(u'edi file only contains whitespace.')
         if self.rawinput[count:count+3] == 'UNA':
             unacharset=True
             self.ta_info['sfield_sep'] = self.rawinput[count+3]
@@ -619,7 +619,7 @@ class edifact(var):
             unacharset=False
             self.rawinput = self.rawinput[count:]  #here the interchange should start
         if self.rawinput[:3] != 'UNB':
-            raise botslib.InMessageEnvelopeError(u'No "UNB" at the start of file. Maybe not edifact.')
+            raise botslib.InMessageError(u'No "UNB" at the start of file. Maybe not edifact.')
         self.ta_info['charset'] = self.rawinput[4:8]
         self.ta_info['version'] = self.rawinput[9:10]
         if not unacharset:
@@ -638,13 +638,13 @@ class edifact(var):
                 self.ta_info['reserve'] = ''    #for now: no support of repeating dataelements
                 self.ta_info['record_sep'] = '\x1C'
             else:
-                raise botslib.InMessageCharsetError(u'edi file uses non-standard seperators - should use UNA.')
+                raise botslib.InMessageError(u'Incoming edi file uses non-standard seperators - should use UNA.')
         try:
             self.rawinput = self.rawinput.decode(self.ta_info['charset'],self.ta_info['checkcharsetin'])
         except LookupError:
-            raise botslib.InMessageCharsetError(u'edi file has unknown charset "$charset".',charset=self.ta_info['charset'])
+            raise botslib.InMessageError(u'Incoming edi file has unknown charset "$charset".',charset=self.ta_info['charset'])
         except UnicodeDecodeError, flup:
-            raise botslib.InMessageCharsetError(u'not allowed chars in edi file (for translation) at/after filepos: $content',content=flup[2])
+            raise botslib.InMessageError(u'not allowed chars in incoming edi file (for translation) at/after filepos: $content',content=flup[2])
 
 
 
@@ -654,38 +654,38 @@ class edifact(var):
             UNBreference = nodeunb.get({'BOTSID':'UNB','0020':None})
             UNZreference = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0020':None})
             if UNBreference != UNZreference:
-                raise botslib.InMessageEnvelopeError(u'UNB-reference is "$UNBreference"; should be equal to UNZ-reference "$UNZreference".',UNBreference=UNBreference,UNZreference=UNZreference)
+                raise botslib.InMessageError(u'UNB-reference is "$UNBreference"; should be equal to UNZ-reference "$UNZreference".',UNBreference=UNBreference,UNZreference=UNZreference)
             UNZcount = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0036':None})
             messagecount = len(nodeunb.children) - 1
             if int(UNZcount) != messagecount:
-                raise botslib.InMessageEnvelopeError(u'Count in messages in UNZ is $UNZcount; should be equal to number of messages $messagecount.',UNZcount=UNZcount,messagecount=messagecount)
+                raise botslib.InMessageError(u'Count in messages in UNZ is $UNZcount; should be equal to number of messages $messagecount.',UNZcount=UNZcount,messagecount=messagecount)
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                 UNHreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                 UNTreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                 if UNHreference != UNTreference:
-                    raise botslib.InMessageEnvelopeError(u'UNH-reference is "$UNHreference"; should be equal to UNT-reference "$UNTreference".',UNHreference=UNHreference,UNTreference=UNTreference)
+                    raise botslib.InMessageError(u'UNH-reference is "$UNHreference"; should be equal to UNT-reference "$UNTreference".',UNHreference=UNHreference,UNTreference=UNTreference)
                 UNTcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
                 segmentcount = nodeunh.getcount()
                 if int(UNTcount) != segmentcount:
-                    raise botslib.InMessageEnvelopeError(u'Segmentcount in UNT is $UNTcount; should be equal to number of segments $segmentcount.',UNTcount=UNTcount,segmentcount=segmentcount)
+                    raise botslib.InMessageError(u'Segmentcount in UNT is $UNTcount; should be equal to number of segments $segmentcount.',UNTcount=UNTcount,segmentcount=segmentcount)
             for nodeung in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNG'}):
                 UNGreference = nodeung.get({'BOTSID':'UNG','0048':None})
                 UNEreference = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0048':None})
                 if UNGreference != UNEreference:
-                    raise botslib.InMessageEnvelopeError(u'UNG-reference is "$UNGreference"; should be equal to UNE-reference "$UNEreference".',UNGreference=UNGreference,UNEreference=UNEreference)
+                    raise botslib.InMessageError(u'UNG-reference is "$UNGreference"; should be equal to UNE-reference "$UNEreference".',UNGreference=UNGreference,UNEreference=UNEreference)
                 UNEcount = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0060':None})
                 groupcount = len(nodeung.children) - 1
                 if int(UNEcount) != groupcount:
-                    raise botslib.InMessageEnvelopeError(u'Groupcount in UNE is $UNEcount; should be equal to number of groups $groupcount.',UNEcount=UNEcount,groupcount=groupcount)
+                    raise botslib.InMessageError(u'Groupcount in UNE is $UNEcount; should be equal to number of groups $groupcount.',UNEcount=UNEcount,groupcount=groupcount)
                 for nodeunh in nodeung.getloop({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
                     UNHreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                     UNTreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                     if UNHreference != UNTreference:
-                        raise botslib.InMessageEnvelopeError(u'UNH-reference is "$UNHreference"; should be equal to UNT-reference "$UNTreference".',UNHreference=UNHreference,UNTreference=UNTreference)
+                        raise botslib.InMessageError(u'UNH-reference is "$UNHreference"; should be equal to UNT-reference "$UNTreference".',UNHreference=UNHreference,UNTreference=UNTreference)
                     UNTcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
                     segmentcount = nodeunh.getcount()
                     if int(UNTcount) != segmentcount:
-                        raise botslib.InMessageEnvelopeError(u'Segmentcount in UNT is $UNTcount; should be equal to number of segments $segmentcount.',UNTcount=UNTcount,segmentcount=segmentcount)
+                        raise botslib.InMessageError(u'Segmentcount in UNT is $UNTcount; should be equal to number of segments $segmentcount.',UNTcount=UNTcount,segmentcount=segmentcount)
             botsglobal.logmap.debug(u'Parsing edifact envelopes is OK')
 
 class x12(var):
@@ -705,9 +705,9 @@ class x12(var):
                 self.rawinput = self.rawinput[count:]  #here the interchange should start
                 break
         else:
-            raise botslib.InMessageEnvelopeError(u'edifile only contains whitespace.')
+            raise botslib.InMessageError(u'edifile only contains whitespace.')
         if self.rawinput[:3] != 'ISA':
-            raise botslib.InMessageEnvelopeError(u'expect "ISA", found "$content". Probably no x12?',content=self.rawinput[:7])
+            raise botslib.InMessageError(u'expect "ISA", found "$content". Probably no x12?',content=self.rawinput[:7])
         count = 0
         for c in self.rawinput[:120]:
             if c in '\r\n' and count!=105:
@@ -736,22 +736,22 @@ class x12(var):
             ISAreference = nodeisa.get({'BOTSID':'ISA','ISA13':None})
             IEAreference = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA02':None})
             if ISAreference != IEAreference:
-                raise botslib.InMessageEnvelopeError(u'ISA-reference is "$ISAreference"; should be equal to IEA-reference "$IEAreference".',ISAreference=ISAreference,IEAreference=IEAreference)
+                raise botslib.InMessageError(u'ISA-reference is "$ISAreference"; should be equal to IEA-reference "$IEAreference".',ISAreference=ISAreference,IEAreference=IEAreference)
             IEAcount = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':None})
             #~ groupcount = len(nodeisa.children) - 1
             groupcount = nodeisa.getcountoccurrences({'BOTSID':'ISA'},{'BOTSID':'GS'})
             if int(IEAcount) != groupcount:
-                raise botslib.InMessageEnvelopeError(u'Count in IEA-IEA01 is $IEAcount; should be equal to number of groups $groupcount.',IEAcount=IEAcount,groupcount=groupcount)
+                raise botslib.InMessageError(u'Count in IEA-IEA01 is $IEAcount; should be equal to number of groups $groupcount.',IEAcount=IEAcount,groupcount=groupcount)
             for nodegs in nodeisa.getloop({'BOTSID':'ISA'},{'BOTSID':'GS'}):
                 GSqualifier = nodegs.get({'BOTSID':'GS','GS01':None})
                 GSreference = nodegs.get({'BOTSID':'GS','GS06':None})
                 GEreference = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
                 if GSreference != GEreference:
-                    raise botslib.InMessageEnvelopeError(u'GS-reference is "$GSreference"; should be equal to GE-reference "$GEreference".',GSreference=GSreference,GEreference=GEreference)
+                    raise botslib.InMessageError(u'GS-reference is "$GSreference"; should be equal to GE-reference "$GEreference".',GSreference=GSreference,GEreference=GEreference)
                 GEcount = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE01':None})
                 messagecount = len(nodegs.children) - 1
                 if int(GEcount) != messagecount:
-                    raise botslib.InMessageEnvelopeError(u'Count in GE-GE01 is $GEcount; should be equal to number of transactions: $messagecount.',GEcount=GEcount,messagecount=messagecount)
+                    raise botslib.InMessageError(u'Count in GE-GE01 is $GEcount; should be equal to number of transactions: $messagecount.',GEcount=GEcount,messagecount=messagecount)
                 self.confirmationlist.append({'GSqualifier':GSqualifier,'GSreference':GSreference,'GEcount':GEcount,'sender':sender,'receiver':receiver,'STlist':[]})
                 for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
                     STqualifier = nodest.get({'BOTSID':'ST','ST01':None})
@@ -759,11 +759,11 @@ class x12(var):
                     SEreference = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
                     #referencefields are numerical; should I compare values??
                     if STreference != SEreference:
-                        raise botslib.InMessageEnvelopeError(u'ST-reference is "$STreference"; should be equal to SE-reference "$SEreference".',STreference=STreference,SEreference=SEreference)
+                        raise botslib.InMessageError(u'ST-reference is "$STreference"; should be equal to SE-reference "$SEreference".',STreference=STreference,SEreference=SEreference)
                     SEcount = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE01':None})
                     segmentcount = nodest.getcount()
                     if int(SEcount) != segmentcount:
-                        raise botslib.InMessageEnvelopeError(u'Count in SE-SE01 is $SEcount; should be equal to number of segments $segmentcount.',SEcount=SEcount,segmentcount=segmentcount)
+                        raise botslib.InMessageError(u'Count in SE-SE01 is $SEcount; should be equal to number of segments $segmentcount.',SEcount=SEcount,segmentcount=segmentcount)
                     self.confirmationlist[-1]['STlist'].append({'STreference':STreference,'STqualifier':STqualifier})
             botsglobal.logmap.debug(u'Parsing X12 envelopes is OK')
 
@@ -820,7 +820,7 @@ class tradacoms(var):
             ENDcount = nodeSTX.get({'BOTSID':'STX'},{'BOTSID':'END','NMST':None})
             messagecount = len(nodeSTX.children) - 1
             if int(ENDcount) != messagecount:
-                raise botslib.InMessageEnvelopeError(u'Count in messages in END is $ENDcount; should be equal to number of messages $messagecount',ENDcount=ENDcount,messagecount=messagecount)
+                raise botslib.InMessageError(u'Count in messages in END is $ENDcount; should be equal to number of messages $messagecount',ENDcount=ENDcount,messagecount=messagecount)
             firstmessage = True
             for nodeMHD in nodeSTX.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
                 if firstmessage:    #
@@ -829,7 +829,7 @@ class tradacoms(var):
                 MTRcount = nodeMHD.get({'BOTSID':'MHD'},{'BOTSID':'MTR','NOSG':None})
                 segmentcount = nodeMHD.getcount()
                 if int(MTRcount) != segmentcount:
-                    raise botslib.InMessageEnvelopeError(u'Segmentcount in MTR is $MTRcount; should be equal to number of segments $segmentcount',MTRcount=MTRcount,segmentcount=segmentcount)
+                    raise botslib.InMessageError(u'Segmentcount in MTR is $MTRcount; should be equal to number of segments $segmentcount',MTRcount=MTRcount,segmentcount=segmentcount)
             botsglobal.logmap.debug(u'Parsing tradacoms envelopes is OK')
 
 
@@ -895,7 +895,7 @@ class xml(Inmessage):
                     str_recordlist = str_record[4]
                     break
             else:
-                raise botslib.InMessageParseError(u'Unknown XML-tag in "$record".',record=record)
+                raise botslib.InMessageError(u'Unknown XML-tag in "$record".',record=record)
         for str_record in str_recordlist:   #see if xmlchildnode is in structure
             #~ print '    is xmlhildnode in this level comparing',xmlchildnode.tag,str_record[0]
             if xmlchildnode.tag == str_record[0]:
@@ -945,7 +945,7 @@ class json(Inmessage):
             self.root.children = self.dojsonlist(jsonobject,self.getrootID())   #fill root with children
             for child in self.root.children:
                 if not child.record:    #sanity test: the children must have content
-                    raise botslib.InMessageNoContentError(u'JSON text has no usable content.')
+                    raise botslib.InMessageError(u'JSON text has no usable content.')
                 self.normalisetree(child)
         elif isinstance(jsonobject,dict):
             if len(jsonobject)==1 and isinstance(jsonobject.values()[0],dict):
@@ -966,11 +966,11 @@ class json(Inmessage):
                 self.root = self.dojsonobject(jsonobject,self.getrootID())
                 #~ print self.root
             if not self.root:
-                raise botslib.InMessageNoContentError(u'JSON text has no usable content.')
+                raise botslib.InMessageError(u'JSON text has no usable content.')
             self.normalisetree(self.root)
         else:
             #root in JSON is neither dict or list. 
-            raise botslib.MessageError(u'Content in JSON file must be a "list" or "object".')
+            raise botslib.InMessageError(u'Content in JSON file must be a "list" or "object".')
 
     def getrootID(self):
         return self.defmessage.structure[0][ID]
@@ -983,7 +983,7 @@ class json(Inmessage):
                 if newnode:
                     lijst.append(newnode)
             elif self.ta_info['checkunknownentities']:
-                raise botslib.MessageError(u'List content in JSON must be a "object".')
+                raise botslib.InMessageError(u'List content in JSON must be a "object".')
         return lijst
 
     def dojsonobject(self,jsonobject,name):
@@ -1003,7 +1003,7 @@ class json(Inmessage):
                 thisnode.record[key]=str(value)
             else:
                 if self.ta_info['checkunknownentities']:
-                    raise botslib.MessageError(u'Key "$key" value "$value": is not string, list or dict.',key=key,value=value)
+                    raise botslib.InMessageError(u'Key "$key" value "$value": is not string, list or dict.',key=key,value=value)
                 thisnode.record[key]=str(value)
         if not thisnode.record and not thisnode.children:
             return None #node is empty...

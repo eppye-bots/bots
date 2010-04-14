@@ -41,7 +41,7 @@ class ChannelAdmin(admin.ModelAdmin):
     ordering = ('idchannel',)
     save_as = True
     fieldsets = (
-        (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username'), ('path', 'filename'), 'remove', 'archivepath', 'charset')
+        (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset')
                         }),
         ('FTP specific data',{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
                          'classes': ('collapse',)
@@ -115,21 +115,19 @@ class EdiPartnerAdmin(PartnerAdmin):
 admin.site.register(models.edipartner,EdiPartnerAdmin)
 
 class RoutesAdmin(admin.ModelAdmin):
-    list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator')
+    list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
     list_display_links = ('idroute',)
     list_filter = ('active','fromeditype','testindicator')
     ordering = ('idroute','seq')
     actions = (activate,)
     list_per_page = screen_limit
     fieldsets = (
-        (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'))
-                    }),
-        ('Advanced - multiple translations for one messagetype, eg partner specific translation',{'fields':  ('alt', 'frompartner', 'topartner'),
-                     'classes': ('collapse',) 
-                    }),
-        (None,      {'fields':  ('translateind','tochannel')}),
-        ('Advanced - filter edi messages for outchannel',{'fields':(('toeditype', 'tomessagetype'),'frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
+        (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel')}),
+        ('Filtering for outchannel',{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
                     'classes':  ('collapse',)
+                    }),
+        ('Advanced',{'fields':  ('alt', 'frompartner', 'topartner', 'notindefaultrun'),
+                     'classes': ('collapse',) 
                     }),
     )
 admin.site.register(models.routes,RoutesAdmin)
@@ -142,12 +140,10 @@ class TranslateAdmin(admin.ModelAdmin):
     actions = (activate,)
     list_per_page = screen_limit
     fieldsets = (
-        (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'))
+        (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype'))
                     }),
-        ('Advanced - multiple translations for one messagetype, eg partner specific translation',{'fields': ('alt', 'frompartner', 'topartner'),
+        ('Advanced - multiple translations per editype/messagetype',{'fields': ('alt', 'frompartner', 'topartner'),
                      'classes': ('collapse',)
-                    }),
-        (None,      {'fields': ('tscript', ('toeditype', 'tomessagetype'))
                     }),
     )
 admin.site.register(models.translate,TranslateAdmin)

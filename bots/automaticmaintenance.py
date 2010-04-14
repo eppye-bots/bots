@@ -5,154 +5,39 @@ from botsconfig import *
 tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext'
 
 
-
-def findlasterror():
-    for row in botslib.query('''SELECT idta
-                            FROM  filereport
-                            GROUP BY idta
-                            HAVING MAX(statust) != %(statust)s''',
-                            {'statust':DONE}):
-        #found incoming file with error
-        for row2 in botslib.query('''SELECT min(reportidta) as min
-                                FROM  filereport
-                                WHERE idta = %(idta)s ''',
-                                {'idta':row['idta']}):
-            print '>',row2
-            botsglobal.rootoflasterror = row2['min']
-            return True
-    return False
-
-@botslib.log_session
-def prepareretransmit():
-    ''' prepare the retransmittable files. Return: indication if files should be retransmitted.'''
-    retransmit = False  #indicate retransmit
-    #for rereceive
-    for row in botslib.query('''SELECT idta,reportidta
-                                FROM  filereport
-                                WHERE retransmit=%(retransmit)s ''',
-                                {'retransmit':True}):
-        retransmit = True 
-        botslib.change('''UPDATE filereport
-                           SET retransmit=%(retransmit)s
-                           WHERE idta=%(idta)s
-                           AND   reportidta=%(reportidta)s ''',
-                            {'idta':row['idta'],'reportidta':row['reportidta'],'retransmit':False})
-        for row2 in botslib.query('''SELECT idta
-                                    FROM  ta
-                                    WHERE parent=%(parent)s
-                                    AND   status=%(status)s''',
-                                    {'parent':row['idta'],
-                                    'status':RAWIN}):
-            ta_rereceive = botslib.OldTransaction(row2['idta'])
-            ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
-            ta_raw = ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
-    #for resend
-    for row in botslib.query('''SELECT idta,parent
-                                FROM  ta
-                                WHERE retransmit=%(retransmit)s
-                                AND   status=%(status)s''',
-                                {'retransmit':True,
-                                'status':EXTERNOUT}):
-        retransmit = True
-        ta_outgoing = botslib.OldTransaction(row['idta'])
-        ta_outgoing.update(retransmit=False)     #is reinjected; set retransmit back to False
-        ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
-        ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
-        ta_raw = ta_externin.copyta(status=RAWOUT,statust=OK)  #reinjected file is ready as new input
-    return retransmit
-
-
-def evaluate(type):
+def evaluate(type,stuff2evaluate):
     ''' catch errors in retry....this should of course not happen...always avoid this!'''
     try:
-        if type == 'retry':
-            return evaluateretryrun('retry')
+        if type in ['--retry','--retrycommunication']:
+            return evaluateretryrun(type,stuff2evaluate)
         else:
-            return evaluaterun(type)
+            return evaluaterun(type,stuff2evaluate)
     except:
+        botsglobal.logger.exception(u'Error in automatic maintenance.')
         return 1    #there has been an error!
 
-def evaluaterun(type):
+def evaluaterun(type,stuff2evaluate):
     ''' traces all recieved files.
         Write a filereport for each file,
         and writes a report for the run.
     '''
-    rootidta = botslib.getlastrun()
-    resultLast={OPEN:0,ERROR:0,OK:0,DONE:0}
-    send=0
-    processerrors=0
+    resultlast={OPEN:0,ERROR:0,OK:0,DONE:0}
     #look at infiles from this run; trace them to determine their tracestatus.
     for tadict in botslib.query('''SELECT ''' + tavars + '''
                                 FROM  ta
                                 WHERE idta > %(rootidta)s
                                 AND status=%(status)s ''',
-                                {'status':EXTERNIN,'rootidta':rootidta}):
-        #~ tadict = dict(zip(tavars,row))
+                                {'status':EXTERNIN,'rootidta':stuff2evaluate}):
         botsglobal.logger.debug(u'evaluate %s.',tadict['idta'])
-        mytrace = Trace(tadict,rootidta)
-        resultLast[mytrace.statusttree]+=1
-        #write filereport:
-        botslib.change(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
-                                                    infilename,tochannel,frompartner,topartner,frommail,
-                                                    tomail,ineditype,inmessagetype,outeditype,outmessagetype,
-                                                    incontenttype,outcontenttype,nrmessages,outfilename,errortext,
-                                                    divtext,outidta)
-                                VALUES  (%(idta)s,%(statust)s,%(reportidta)s,%(retransmit)s,%(idroute)s,%(fromchannel)s,%(ts)s,
-                                        %(infilename)s,%(tochannel)s,%(frompartner)s,%(topartner)s,%(frommail)s,
-                                        %(tomail)s,%(ineditype)s,%(inmessagetype)s,%(outeditype)s,%(outmessagetype)s,
-                                        %(incontenttype)s,%(outcontenttype)s,%(nrmessages)s,%(outfilename)s,%(errortext)s,
-                                        %(divtext)s,%(outidta)s )
-                                ''',
-                                {'idta':mytrace.idta,'statust':mytrace.statusttree,'reportidta':mytrace.reportidta,
-                                'retransmit':mytrace.retransmit,'idroute':mytrace.idroute,'fromchannel':mytrace.fromchannel,
-                                'ts':mytrace.ts,'infilename':mytrace.infilename,'tochannel':mytrace.tochannel,
-                                'frompartner':mytrace.frompartner,'topartner':mytrace.topartner,'frommail':mytrace.frommail,
-                                'tomail':mytrace.tomail,'ineditype':mytrace.ineditype,'inmessagetype':mytrace.inmessagetype,
-                                'outeditype':mytrace.outeditype,'outmessagetype':mytrace.outmessagetype,
-                                'incontenttype':mytrace.incontenttype,'outcontenttype':mytrace.outcontenttype,
-                                'nrmessages':mytrace.nrmessages,'outfilename':mytrace.outfilename,'errortext':mytrace.errortext,
-                                'divtext':mytrace.divtext,'outidta':mytrace.outidta})
+        mytrace = Trace(tadict,stuff2evaluate)
+        resultlast[mytrace.statusttree]+=1
+        insert_filereport(mytrace)
         del mytrace.ta
         del mytrace
-    #count nr files send
-    for row in botslib.query('''SELECT COUNT(*) as count
-                                FROM  ta
-                                WHERE idta > %(rootidta)s
-                                AND status=%(status)s
-                                AND statust=%(statust)s ''',
-                                {'status':EXTERNOUT,'rootidta':rootidta,'statust':DONE}):
-        send=row['count']
-    #count nr of process with errors
-    for row in botslib.query('''SELECT COUNT(*) as count
-                                FROM  ta
-                                WHERE idta >= %(rootidta)s
-                                AND status=%(status)s
-                                AND statust=%(statust)s''',
-                                {'status':PROCESS,'rootidta':rootidta,'statust':ERROR}):
-        processerrors=row['count']
-    #generate report (in database)
-    rootta=botslib.OldTransaction(rootidta)
-    rootta.syn('ts')    #get the timestamp of this run
-    LastReceived=resultLast[DONE]+resultLast[OK]+resultLast[OPEN]+resultLast[ERROR]
-    status = bool(resultLast[OK]+resultLast[OPEN]+resultLast[ERROR]+processerrors)
-    botslib.change(u'''INSERT INTO report (idta,
-                                            lastopen,lasterror,lastok,lastdone,
-                                            send,processerrors,ts,lastreceived,status,type)
-                            VALUES  (%(idta)s,
-                                    %(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,
-                                    %(send)s,%(processerrors)s,%(ts)s,%(lastreceived)s,%(status)s,%(type)s)
-                            ''',
-                            {'idta':rootidta,
-                            'lastopen':resultLast[OPEN],'lasterror':resultLast[ERROR],'lastok':resultLast[OK],'lastdone':resultLast[DONE],
-                            'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':LastReceived,'status':status,'type':type})
-    return generate_report(rootidta)    #return report status: 0 (no error) or 1 (error)
+    return finish_evaluation(stuff2evaluate,resultlast,type)
 
-
-def evaluateretryrun(type):
-    rootidta = botslib.getlastrun()
-    resultLast={OPEN:0,ERROR:0,OK:0,DONE:0}
-    send=0
-    processerrors=0
+def evaluateretryrun(type,stuff2evaluate):
+    resultlast={OPEN:0,ERROR:0,OK:0,DONE:0}
     didretry = False
     for row in botslib.query('''SELECT idta
                             FROM  filereport
@@ -168,72 +53,78 @@ def evaluateretryrun(type):
         else:   #there really should be a corresponding ta
             raise botslib.PanicError(u'MaintenanceRetry: could not find transaction "$txt".',txt=row['idta'])
         #~ tadict = dict(zip(tavars,row2))
-        mytrace = Trace(tadict,rootidta)
-        resultLast[mytrace.statusttree]+=1
+        mytrace = Trace(tadict,stuff2evaluate)
+        resultlast[mytrace.statusttree]+=1
         if mytrace.statusttree == DONE:
             mytrace.errortext = ''
         #~ mytrace.ta.update(tracestatus=mytrace.statusttree)
-        botslib.change(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
-                                                    infilename,tochannel,frompartner,topartner,frommail,
-                                                    tomail,ineditype,inmessagetype,outeditype,outmessagetype,
-                                                    incontenttype,outcontenttype,nrmessages,outfilename,errortext,
-                                                    divtext,outidta)
-                                VALUES  (%(idta)s,%(statust)s,%(reportidta)s,%(retransmit)s,%(idroute)s,%(fromchannel)s,%(ts)s,
-                                        %(infilename)s,%(tochannel)s,%(frompartner)s,%(topartner)s,%(frommail)s,
-                                        %(tomail)s,%(ineditype)s,%(inmessagetype)s,%(outeditype)s,%(outmessagetype)s,
-                                        %(incontenttype)s,%(outcontenttype)s,%(nrmessages)s,%(outfilename)s,%(errortext)s,
-                                        %(divtext)s,%(outidta)s )
-                                ''',
-                                {'idta':mytrace.idta,'statust':mytrace.statusttree,'reportidta':mytrace.reportidta,
-                                'retransmit':mytrace.retransmit,'idroute':mytrace.idroute,'fromchannel':mytrace.fromchannel,
-                                'ts':mytrace.ts,'infilename':mytrace.infilename,'tochannel':mytrace.tochannel,
-                                'frompartner':mytrace.frompartner,'topartner':mytrace.topartner,'frommail':mytrace.frommail,
-                                'tomail':mytrace.tomail,'ineditype':mytrace.ineditype,'inmessagetype':mytrace.inmessagetype,
-                                'outeditype':mytrace.outeditype,'outmessagetype':mytrace.outmessagetype,
-                                'incontenttype':mytrace.incontenttype,'outcontenttype':mytrace.outcontenttype,
-                                'nrmessages':mytrace.nrmessages,'outfilename':mytrace.outfilename,'errortext':mytrace.errortext,
-                                'divtext':mytrace.divtext,'outidta':mytrace.outidta})
+        insert_filereport(mytrace)
     if not didretry:
         return 0    #no error
+    return finish_evaluation(stuff2evaluate,resultlast,type)
 
+def insert_filereport(mytrace):
+    botslib.change(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
+                                                infilename,tochannel,frompartner,topartner,frommail,
+                                                tomail,ineditype,inmessagetype,outeditype,outmessagetype,
+                                                incontenttype,outcontenttype,nrmessages,outfilename,errortext,
+                                                divtext,outidta)
+                            VALUES  (%(idta)s,%(statust)s,%(reportidta)s,%(retransmit)s,%(idroute)s,%(fromchannel)s,%(ts)s,
+                                    %(infilename)s,%(tochannel)s,%(frompartner)s,%(topartner)s,%(frommail)s,
+                                    %(tomail)s,%(ineditype)s,%(inmessagetype)s,%(outeditype)s,%(outmessagetype)s,
+                                    %(incontenttype)s,%(outcontenttype)s,%(nrmessages)s,%(outfilename)s,%(errortext)s,
+                                    %(divtext)s,%(outidta)s )
+                            ''',
+                            {'idta':mytrace.idta,'statust':mytrace.statusttree,'reportidta':mytrace.reportidta,
+                            'retransmit':mytrace.retransmit,'idroute':mytrace.idroute,'fromchannel':mytrace.fromchannel,
+                            'ts':mytrace.ts,'infilename':mytrace.infilename,'tochannel':mytrace.tochannel,
+                            'frompartner':mytrace.frompartner,'topartner':mytrace.topartner,'frommail':mytrace.frommail,
+                            'tomail':mytrace.tomail,'ineditype':mytrace.ineditype,'inmessagetype':mytrace.inmessagetype,
+                            'outeditype':mytrace.outeditype,'outmessagetype':mytrace.outmessagetype,
+                            'incontenttype':mytrace.incontenttype,'outcontenttype':mytrace.outcontenttype,
+                            'nrmessages':mytrace.nrmessages,'outfilename':mytrace.outfilename,'errortext':mytrace.errortext,
+                            'divtext':mytrace.divtext,'outidta':mytrace.outidta})
+
+def finish_evaluation(stuff2evaluate,resultlast,type):
     #count nr files send
     for row in botslib.query('''SELECT COUNT(*) as count
                                 FROM  ta
-                                WHERE status=%(status)s
-                                AND statust=%(statust)s
-                                AND idta > %(rootidta)s''',
-                                {'status':EXTERNOUT,'rootidta':rootidta,'statust':DONE}):
-        send=row['count']
-    #count nr of process with errors
+                                WHERE idta > %(rootidta)s
+                                AND status=%(status)s
+                                AND statust=%(statust)s ''',
+                                {'status':EXTERNOUT,'rootidta':stuff2evaluate,'statust':DONE}):
+        send = row['count']
+    #count process errors
     for row in botslib.query('''SELECT COUNT(*) as count
                                 FROM  ta
-                                WHERE status=%(status)s
-                                AND idta >= %(rootidta)s
+                                WHERE idta >= %(rootidta)s
+                                AND status=%(status)s
                                 AND statust=%(statust)s''',
-                                {'status':PROCESS,'rootidta':rootidta,'statust':ERROR}):
-        processerrors=row['count']
+                                {'status':PROCESS,'rootidta':stuff2evaluate,'statust':ERROR}):
+        processerrors = row['count']
     #generate report (in database)
-    rootta=botslib.OldTransaction(rootidta)
+    rootta=botslib.OldTransaction(stuff2evaluate)
     rootta.syn('ts')    #get the timestamp of this run
-    LastReceived=resultLast[DONE]+resultLast[OK]+resultLast[OPEN]+resultLast[ERROR]
-    status = bool(resultLast[OK]+resultLast[OPEN]+resultLast[ERROR]+processerrors)
+    LastReceived=resultlast[DONE]+resultlast[OK]+resultlast[OPEN]+resultlast[ERROR]
+    status = bool(resultlast[OK]+resultlast[OPEN]+resultlast[ERROR]+processerrors)
     botslib.change(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,
                                             send,processerrors,ts,lastreceived,status,type)
                             VALUES  (%(idta)s,
                                     %(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,
                                     %(send)s,%(processerrors)s,%(ts)s,%(lastreceived)s,%(status)s,%(type)s)
                             ''',
-                            {'idta':rootidta,
-                            'lastopen':resultLast[OPEN],'lasterror':resultLast[ERROR],'lastok':resultLast[OK],'lastdone':resultLast[DONE],
-                            'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':LastReceived,'status':status,'type':type})
-    return generate_report(rootidta)    #return report status: 0 (no error) or 1 (error)
+                            {'idta':stuff2evaluate,
+                            'lastopen':resultlast[OPEN],'lasterror':resultlast[ERROR],'lastok':resultlast[OK],'lastdone':resultlast[DONE],
+                            'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':LastReceived,'status':status,'type':type[2:]})
+    return generate_report(stuff2evaluate)    #return report status: 0 (no error) or 1 (error)
 
-def generate_report(rootidta):
+
+def generate_report(stuff2evaluate):
     for results in botslib.query('''SELECT idta,lastopen,lasterror,lastok,lastdone,
                                             send,processerrors,ts,lastreceived,type,status
                                     FROM  report
                                     WHERE idta=%(rootidta)s''',
-                                    {'rootidta':rootidta}):
+                                    {'rootidta':stuff2evaluate}):
         break
     else:
         raise botslib.PanicError(u'In generate report: could not find report?')
@@ -269,9 +160,9 @@ class Trace(object):
         tree gets a (one) statust, by walking the tree and evaluating the statust of nodes.
         all nodes are put into a tree of ta-objects;
     '''
-    def __init__(self,tadict,rootidta):
+    def __init__(self,tadict,stuff2evaluate):
         self.ta=botslib.OldTransaction(**tadict)
-        self.rootidta = rootidta
+        self.rootidta = stuff2evaluate
         self._build(self.ta)
         self._evaluatestatus()
         self._getfilereport()

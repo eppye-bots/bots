@@ -19,24 +19,11 @@ class BotsConfig(ConfigParser.SafeConfigParser):
             if default == '':
                 raise botslib.BotsError(u'No entry "$entry" in section "$section" in "bots.ini".',entry=option,section=section)
             return default
-    #~ def getornone(self,section, option):
-        #~ try:
-            #~ return ConfigParser.SafeConfigParser.get(self,section,option)
-        #~ except:
-            #~ return None
     def getint(self,section, option, default):
         try:
             return ConfigParser.SafeConfigParser.getint(self,section,option)
         except:
             return default
-    #~ def getintornone(self,section, option, default):
-        #~ try:
-            #~ terug = ConfigParser.SafeConfigParser.get(self,section,option)
-            #~ if terug is None:
-                #~ return None
-            #~ return int(terug)
-        #~ except:
-            #~ return default
     def getboolean(self,section, option, default):
         try:
             return ConfigParser.SafeConfigParser.getboolean(self,section,option)
@@ -99,7 +86,6 @@ def generalinit(configdir):
     botsglobal.ini.set('directories','usersysabs',os.path.abspath(os.path.dirname(importedusersys.__file__)))    #???Find pathname usersys using imported usersys
     
     botsglobal.usersysimportpath = importnameforusersys
-    print 'botsglobal.usersysimportpath', botsglobal.usersysimportpath 
     botssys = botsglobal.ini.get('directories','botssys','botssys')
     botsglobal.ini.set('directories','botssys',botslib.join(botssys))
     
@@ -190,6 +176,8 @@ def connect():
     #different connect code per tyoe of database
     if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
         #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
+        if not os.path.isfile(botsglobal.settings.DATABASE_NAME):
+            raise Exception('Could not find database file for SLQite')
         import botssqlite
         botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASE_NAME)
     elif botsglobal.settings.DATABASE_ENGINE == 'mysql':

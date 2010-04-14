@@ -1,10 +1,8 @@
 from django.db import models
 from datetime import datetime
-
 '''
-- database defaults are not set up by django. what is needed? ts on ta
-- some unique 
-- codelists for values
+django is not excelletnm in generating db. But they have provided a way to customize the generated database using SQL. I love this!.
+
 '''
 STATUST = [
     (0, 'Open'),
@@ -132,13 +130,13 @@ class channel(models.Model):
     port = models.PositiveIntegerField(default=0,blank=True)
     username = models.CharField(max_length=35,blank=True)
     secret = models.CharField(max_length=35,blank=True,verbose_name='password')
-    starttls = models.BooleanField(default=False,verbose_name='accept all fromaddresses')       #20091027: used as 'no check on "from:" email adress'
+    starttls = models.BooleanField(default=False,verbose_name='Skip checking from-addresses',help_text='Do not check if an incoming email addresses exist in bots.')       #20091027: used as 'no check on "from:" email adress'
     apop = models.BooleanField(default=False)           #not used anymore (is in 'type' now)
-    remove = models.BooleanField(default=False)
+    remove = models.BooleanField(default=False,help_text='For in-channels: remove the edi files after succesful reading. Note: in production you do want to remove the edi files, else these are read over and over again!')
     path = models.CharField(max_length=256,blank=True)  #different from host - in ftp both are used
-    filename = models.CharField(max_length=35,blank=True)
-    lockname = models.CharField(max_length=35,blank=True)
-    syslock = models.BooleanField(default=False)
+    filename = models.CharField(max_length=35,blank=True,help_text='For "type" ftp and file; read or write this filename. Wildcards allowed, eg "*.edi". Note for out-channels: if no wildcard is used, all edi message are written to one file.')
+    lockname = models.CharField(max_length=35,blank=True,help_text='When reading or writing edi files in this directory use this file to indicate a directory lock.')
+    syslock = models.BooleanField(default=False,help_text='Use system file locking for reading & writing edi files on windows, *nix.')
     parameters = models.CharField(max_length=70,blank=True)
     ftpaccount = models.CharField(max_length=35,blank=True)
     ftpactive = models.BooleanField(default=False)
@@ -146,7 +144,7 @@ class channel(models.Model):
     askmdn = models.CharField(max_length=17,blank=True)     #not used anymore 20091019
     sendmdn = models.CharField(max_length=17,blank=True)    #not used anymore 20091019
     mdnchannel = models.CharField(max_length=35,blank=True)             #not used anymore 20091019
-    archivepath = models.CharField(max_length=256,blank=True)           #added 20091028
+    archivepath = models.CharField(max_length=256,blank=True,verbose_name='Archive path',help_text='Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/mychannel".')           #added 20091028
     def __unicode__(self):
         return self.idchannel
     class Meta:
@@ -187,38 +185,38 @@ class chanpar(models.Model):
         verbose_name = 'email address per channel'
         verbose_name_plural = 'email address per channel'
 class translate(models.Model):
-    #~ id = models.IntegerField(primary_key=True)     #added 20091221
+    #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
-    fromeditype = models.CharField(max_length=35,choices=EDITYPES)
-    frommessagetype = models.CharField(max_length=35)
-    alt = models.CharField(max_length=35,null=False,blank=True)
-    frompartner = models.ForeignKey(partner,related_name='tfrompartner',null=True,blank=True)
-    topartner = models.ForeignKey(partner,related_name='ttopartner',null=True,blank=True)
-    tscript = models.CharField(max_length=35)
-    toeditype = models.CharField(max_length=35,choices=EDITYPES)
-    tomessagetype = models.CharField(max_length=35)
+    fromeditype = models.CharField(max_length=35,choices=EDITYPES,help_text='Editype to translate from.')
+    frommessagetype = models.CharField(max_length=35,help_text='Messagetype to translate from.')
+    alt = models.CharField(max_length=35,null=False,blank=True,verbose_name='Alternative translation',help_text='Do this translation only for this alternative translation.')
+    frompartner = models.ForeignKey(partner,related_name='tfrompartner',null=True,blank=True,help_text='Do this translation only for this frompartner.')
+    topartner = models.ForeignKey(partner,related_name='ttopartner',null=True,blank=True,help_text='Do this translation only for this topartner.')
+    tscript = models.CharField(max_length=35,help_text='User mapping script to use for translation.')
+    toeditype = models.CharField(max_length=35,choices=EDITYPES,help_text='Editype to translate to.')
+    tomessagetype = models.CharField(max_length=35,help_text='Messagetype to translate to.')
     class Meta:
         db_table = 'translate'
         verbose_name = 'translation'
 class routes(models.Model):  
-    #~ id = models.IntegerField(primary_key=True)     #added 20091221
-    idroute = models.CharField(max_length=35,db_index=True)
-    seq = models.PositiveIntegerField(default=9999)
+    #~ id = models.IntegerField(primary_key=True)
+    idroute = models.CharField(max_length=35,db_index=True,help_text='identification of route; one route can consist of multiple parts having the same "idroute".')
+    seq = models.PositiveIntegerField(default=1,help_text='for routes consisting of multiple parts, "seq" indicates the order these parts are run.')
     active = models.BooleanField(default=False)
     fromchannel = models.ForeignKey(channel,related_name='rfromchannel',null=True,blank=True,verbose_name='incoming channel')
-    fromeditype = models.CharField(max_length=35,choices=EDITYPES,blank=True)
-    frommessagetype = models.CharField(max_length=35,blank=True)
+    fromeditype = models.CharField(max_length=35,choices=EDITYPES,blank=True,help_text='the editype of the incoming edi files.')
+    frommessagetype = models.CharField(max_length=35,blank=True,help_text='the messagetype of incoming edi files. For edifact: messagetype=edifact; for x12: messagetype=x12.')
     tochannel = models.ForeignKey(channel,related_name='rtochannel',null=True,blank=True,verbose_name='outgoing channel')
-    toeditype = models.CharField(max_length=35,choices=EDITYPES,blank=True)
-    tomessagetype = models.CharField(max_length=35,blank=True)
-    alt = models.CharField(max_length=35,default=u'',blank=True)
-    frompartner = models.ForeignKey(partner,related_name='rfrompartner',null=True,blank=True)
-    topartner = models.ForeignKey(partner,related_name='rtopartner',null=True,blank=True)
-    frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,blank=True)
-    topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,blank=True)
-    testindicator = models.CharField(max_length=1,blank=True)
-    translateind = models.BooleanField(default=True,blank=True,verbose_name='translate')
-    notindefaultrun = models.BooleanField(default=False,blank=True)
+    toeditype = models.CharField(max_length=35,choices=EDITYPES,blank=True,help_text='Only edi files with this editype to this outgoing channel.')
+    tomessagetype = models.CharField(max_length=35,blank=True,help_text='Only edi files of this messagetype to this outgoing channel.')
+    alt = models.CharField(max_length=35,default=u'',blank=True,verbose_name='Alternative translation',help_text='Only use if there is more than one "translation" for the same editype and messagetype. Advanced use, seldom needed.')
+    frompartner = models.ForeignKey(partner,related_name='rfrompartner',null=True,blank=True,help_text='The frompartner of the incoming edi files. Seldom needed.')
+    topartner = models.ForeignKey(partner,related_name='rtopartner',null=True,blank=True,help_text='The topartner of the incoming edi files. Seldom needed.')
+    frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,blank=True,help_text='Only edi files from this partner/partnergroup for this outgoing channel')
+    topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,blank=True,help_text='Only edi files to this partner/partnergroup to this channel')
+    testindicator = models.CharField(max_length=1,blank=True,help_text='Only edi files with this testindicator to this outgoing channel.')
+    translateind = models.BooleanField(default=True,blank=True,verbose_name='translate',help_text='Do a translation in this route.')
+    notindefaultrun = models.BooleanField(default=False,blank=True,help_text='Do not use this route in a normal run. Advanced, related to scheduling specific routes or not.')
     class Meta:
         db_table = 'routes'
         verbose_name = 'route'
@@ -230,7 +228,7 @@ class routes(models.Model):
 #******** written by engine ********************************************************
 #***********************************************************************************
 class filereport(models.Model):
-    #~ id = models.IntegerField(primary_key=True)     #added 20091221
+    #~ id = models.IntegerField(primary_key=True)
     idta = models.IntegerField(db_index=True)
     reportidta = models.IntegerField(db_index=True)
     statust = models.IntegerField(choices=STATUST)

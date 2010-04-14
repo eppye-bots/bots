@@ -88,7 +88,7 @@ class _comsession(object):
                 self.disconnect()
                 self.outarchive()
         else:   #incommunication
-            if botsglobal.incommunicate: #for in-communication: only communicate for 'new' run
+            if botsglobal.incommunicate: #for in-communication: only communicate for new run
                 self.connect()
                 self.incommunicate()
                 self.disconnect()
@@ -109,7 +109,7 @@ class _comsession(object):
                                     AND   idroute=%(idroute)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':FILEIN,
-                                    'statust':OK,'idroute':self.idroute,'rootidta':botslib.getactiverun()}):
+                                    'statust':OK,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
             botslib.archivefile(self.channeldict['archivepath'],row['filename'])
 
     def outarchive(self):
@@ -125,7 +125,7 @@ class _comsession(object):
                                     AND   idroute=%(idroute)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':FILEOUT,
-                                    'statust':DONE,'idroute':self.idroute,'rootidta':botslib.getactiverun()}):
+                                    'statust':DONE,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
             botslib.archivefile(self.channeldict['archivepath'],row['filename'])
         
     def countoutfiles(self):
@@ -139,7 +139,7 @@ class _comsession(object):
                                     AND   idta>%(rootidta)s
                                     ''',
                                     {'idroute':self.idroute,'status':RAWOUT,'statust':OK,
-                                    'tochannel':self.channeldict['idchannel'],'rootidta':botslib.getactiverun()}):
+                                    'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query()}):
             return row['count']
 
 
@@ -167,7 +167,7 @@ class _comsession(object):
                                     AND   idta>%(rootidta)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':fromstatus,
-                                    'statust':OK,'idroute':self.idroute,'rootidta':botslib.getactiverun()}):
+                                    'statust':OK,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=tostatus)
@@ -294,14 +294,14 @@ class _comsession(object):
         def mdnreceive():
             tmp = msg.get_param('reporttype')
             if tmp is None or email.Utils.collapse_rfc2231_value(tmp)!='disposition-notification':    #invalid MDN
-                raise botslib.CommunicationError(u'Received email-MDN with errors.')
+                raise botslib.CommunicationInError(u'Received email-MDN with errors.')
             for part in msg.get_payload():
                 if part.get_content_type()=='message/disposition-notification':
                     originalmessageid = part['original-message-id']
                     if originalmessageid is not None:
                         break
             else:   #invalid MDN: 'message/disposition-notification' not in email
-                raise botslib.CommunicationError(u'Received email-MDN with errors.')
+                raise botslib.CommunicationInError(u'Received email-MDN with errors.')
             botslib.change('''UPDATE ta
                                SET   confirmed=%(confirmed)s, confirmidta=%(confirmidta)s
                                WHERE reference=%(reference)s
@@ -375,7 +375,7 @@ class _comsession(object):
                                     AND     fromchannel=%(fromchannel)s
                                     AND     idta>%(rootidta)s
                                     ''',
-                                    {'status':fromstatus,'statust':OK,'rootidta':botslib.getactiverun(),
+                                    {'status':fromstatus,'statust':OK,'rootidta':botslib.get_minta4query(),
                                     'fromchannel':self.channeldict['idchannel'],'idroute':self.idroute}):
             try:
                 confirmtype = ''
@@ -406,12 +406,12 @@ class _comsession(object):
                         topartner =  self.mailaddress2idpartner(tomail_tmp)
                         tomail = tomail_tmp
                         break
-                    except botslib.AuthorizeError:
+                    except botslib.CommunicationInError:
                         pass
                 else:
                     if not topartner:
                         emailtos = [address[1] for address in tos]
-                        raise botslib.AuthorizeError(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").',email=emailtos,idchannel=self.channeldict['idchannel'])
+                        raise botslib.CommunicationInError(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").',email=emailtos,idchannel=self.channeldict['idchannel'])
                         
                 
                 #update transaction of mail with information found in mail
@@ -433,7 +433,7 @@ class _comsession(object):
                             confirmasked = True
                     savemime(msg)
                     if not nrmimesaved[0]:
-                        raise botslib.CommunicationError (u'No attachment found in received email')
+                        raise botslib.CommunicationInError (u'No attachment found in received email')
             except:
                 txt=botslib.txtexc()
                 ta_mime.failure()
@@ -460,7 +460,7 @@ class _comsession(object):
                                         AND LOWER(mail)=%(mail)s''',
                                         {'active':True,'mail':mailaddress.lower()}):
                 return row['idpartner']
-            raise botslib.AuthorizeError(u'Emailaddress "$email" not authorised (channel "$idchannel").',email=mailaddress,idchannel=self.channeldict['idchannel'])
+            raise botslib.CommunicationInError(u'Emailaddress "$email" not authorised (channel "$idchannel").',email=mailaddress,idchannel=self.channeldict['idchannel'])
 
 
     def idpartner2mailaddress(self,idpartner):
@@ -483,7 +483,7 @@ class _comsession(object):
                 if row['mail']:
                     return row['mail'],row['cc']
             else:
-                raise botslib.AuthorizeError(u'No mail-address for partner "$partner" (channel "$idchannel").',partner=idpartner,idchannel=self.channeldict['idchannel'])
+                raise botslib.CommunicationOutError(u'No mail-address for partner "$partner" (channel "$idchannel").',partner=idpartner,idchannel=self.channeldict['idchannel'])
 
     def checkcharset(self,charset):
         ''' if charset (of edifile) is compatible with charset of channel: OK; else: raise exception
@@ -503,9 +503,9 @@ class _comsession(object):
                     if codecs.getdecoder(self.channeldict['charset']) == codecs.getdecoder(c):
                         break
                 else:
-                    raise botslib.CommunicationOutCharsetError(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.',charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
+                    raise botslib.CommunicationOutError(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.',charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
             else:
-                raise botslib.CommunicationOutCharsetError(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.',charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
+                raise botslib.CommunicationOutError(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.',charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
 
 class pop3(_comsession):
     def connect(self):
@@ -581,10 +581,10 @@ class smtp(_comsession):
             try: 
                 self.session.login(self.channeldict['username'],self.channeldict['secret'])
             except smtplib.SMTPAuthenticationError:
-                raise botslib.CommunicationSMTPError(u'SMTP server did not accept user/password combination.')
+                raise botslib.CommunicationOutError(u'SMTP server did not accept user/password combination.')
             except:
                 txt=botslib.txtexc()
-                raise botslib.CommunicationSMTPError(u'SMTP login failed: "$txt".',txt=txt)
+                raise botslib.CommunicationOutError(u'SMTP login failed: "$txt".',txt=txt)
         
     @botslib.log_session
     def outcommunicate(self):
@@ -600,7 +600,7 @@ class smtp(_comsession):
                                     AND   tochannel=%(tochannel)s
                                     AND   idta>%(rootidta)s
                                     ''',
-                                    {'status':RAWOUT,'statust':OK,'rootidta':botslib.getactiverun(),
+                                    {'status':RAWOUT,'statust':OK,'rootidta':botslib.get_minta4query(),
                                     'tochannel':self.channeldict['idchannel']}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -720,7 +720,7 @@ class file(_comsession):
                                         AND statust=%(statust)s
                                         AND idta>%(rootidta)s
                                         ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.getactiverun(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -736,6 +736,7 @@ class file(_comsession):
                     filename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=filename,ta=ta_from)
                 tofilename = botslib.join(outputdir,filename)
                 tofile = open(tofilename, mode)
+                #~ raise Exception('test')  #for testing
                 if self.channeldict['syslock']:
                     if os.name == 'nt':
                         msvcrt.locking(tofile.fileno(), msvcrt.LK_LOCK, 0x0fffffff)
@@ -842,7 +843,7 @@ class ftp(_comsession):
                                       AND statust=%(statust)s
                                       AND idta>%(rootidta)s
                                         ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.getactiverun(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -939,7 +940,7 @@ class intercommit(_comsession):
         botslib.dirshouldbethere(dirforintercommitsend)
         #output to one file or a queue of files (with unique names)
         if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
-            raise botslib.CommunicationError(u'channel "$channel" needs unique filenames (no queue-file); use eg *.edi as value for "filename"',channel=self.channeldict['idchannel'])
+            raise botslib.CommunicationOutError(u'channel "$channel" needs unique filenames (no queue-file); use eg *.edi as value for "filename"',channel=self.channeldict['idchannel'])
         else:
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel
@@ -951,7 +952,7 @@ class intercommit(_comsession):
                                     AND   idroute=%(idroute)s
                                     AND   idta>%(rootidta)s
                                     ''',
-                                    {'idchannel':self.channeldict['idchannel'],'rootidta':botslib.getactiverun(),
+                                    {'idchannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK,'idroute':self.idroute}):
             try:    #for each db-ta:
                 ta_attr={}    #ta_attr contains attributes used for updating ta
@@ -1069,7 +1070,7 @@ class database(_comsession):
                                         AND statust=%(statust)s
                                         AND idta>%(rootidta)s
                                         ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.getactiverun(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -1194,7 +1195,7 @@ class communicationscript(_comsession):
                                         AND status=%(status)s
                                         AND statust=%(statust)s
                                         AND idta>%(rootidta)s ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.getactiverun(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
