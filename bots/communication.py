@@ -30,30 +30,14 @@ import inmessage
 import outmessage
 from botsconfig import *
 
-_codeccanonicalname = {
-    'unoa' : 'us-ascii',
-    'unob' : 'us-ascii',
-    'unoc' : 'iso-8859-1',
-    }
-def codeccanonicalname(s):
-    s = s.lower().replace('_','-')
-    try:
-        s = _codeccanonicalname[s]
-        return s
-    except:
-        return s
-    
-
-
 @botslib.log_session
 def run(idchannel,idroute=''):
     '''run a communication session (dispatcher for communication functions).'''
-    #~ channelvars = ['idchannel','inorout','type','starttls','apop','remove','path','filename','lockname','host','username','secret','port','ftpaccount','ftpactive','ftpbinary','charset','syslock','parameters','askmdn','sendmdn','mdnchannel','archivepath']
-    for channeldict in botslib.query('''SELECT idchannel,inorout,type,starttls,apop,remove,path,filename,lockname,host,username,secret,port,ftpaccount,ftpactive,ftpbinary,charset,syslock,parameters,askmdn,sendmdn,mdnchannel,archivepath
+    #~ for channeldict in botslib.query('''SELECT idchannel,inorout,type,starttls,apop,remove,path,filename,lockname,host,username,secret,port,ftpaccount,ftpactive,ftpbinary,charset,syslock,parameters,askmdn,sendmdn,mdnchannel,archivepath
+    for channeldict in botslib.query('''SELECT *
                                 FROM channel
                                 WHERE idchannel=%(idchannel)s''',
                                 {'idchannel':idchannel}):
-        #~ channeldict = dict(zip(channelvars,row))    #put the values of row in a dict
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         classtocall = globals()[channeldict['type']]
         classtocall(channeldict,idroute) #call the class for this type of channel
@@ -102,10 +86,10 @@ class _comsession(object):
             return
         for row in botslib.query('''SELECT filename
                                     FROM  ta
-                                    WHERE fromchannel=%(idchannel)s
+                                    WHERE idta>%(rootidta)s
                                     AND   status=%(status)s
                                     AND   statust=%(statust)s
-                                    AND   idta>%(rootidta)s
+                                    AND   fromchannel=%(idchannel)s
                                     AND   idroute=%(idroute)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':FILEIN,
@@ -118,10 +102,10 @@ class _comsession(object):
             return
         for row in botslib.query('''SELECT filename
                                     FROM  ta
-                                    WHERE tochannel=%(idchannel)s
+                                    WHERE idta>%(rootidta)s
                                     AND   status=%(status)s
                                     AND   statust=%(statust)s
-                                    AND   idta>%(rootidta)s
+                                    AND   tochannel=%(idchannel)s
                                     AND   idroute=%(idroute)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':FILEOUT,
@@ -132,11 +116,11 @@ class _comsession(object):
         ''' counts the number of edifiles to be transmitted.'''
         for row in botslib.query('''SELECT COUNT(*) as count
                                     FROM  ta
-                                    WHERE status=%(status)s
+                                    WHERE idta>%(rootidta)s
+                                    AND   status=%(status)s
                                     AND   statust=%(statust)s
                                     AND   tochannel=%(tochannel)s
                                     AND   idroute=%(idroute)s 
-                                    AND   idta>%(rootidta)s
                                     ''',
                                     {'idroute':self.idroute,'status':RAWOUT,'statust':OK,
                                     'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query()}):
@@ -161,10 +145,10 @@ class _comsession(object):
         #select files with right statust, status and channel.
         for row in botslib.query('''SELECT idta,filename,frompartner,topartner,charset,contenttype,editype
                                     FROM  ta
-                                    WHERE tochannel=%(idchannel)s
+                                    WHERE idta>%(rootidta)s
                                     AND   status=%(status)s
                                     AND   statust=%(statust)s
-                                    AND   idta>%(rootidta)s
+                                    AND   tochannel=%(idchannel)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':fromstatus,
                                     'statust':OK,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
@@ -218,7 +202,7 @@ class _comsession(object):
                     if attachmentfilename:  #if None or empty string: not an attachment
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
                     #end set attachmentname
-                    charset = codeccanonicalname(row['charset'])
+                    charset = self.codeccanonicalname(row['charset'])
                     message.add_header('Content-Type',row['contenttype'].lower(),charset=charset)          #contenttype is set in grammar.syntax
                     #*******set attachment/payload*************************
                     #~ content = botslib.readdata(contentfilename,charset)     #get attachment (the data file); read is using the right charset
@@ -369,11 +353,11 @@ class _comsession(object):
         #*****************end of nested function dispositionnotification***************************
         #select received mails for channel
         for row in botslib.query('''SELECT    idta,filename
-                                    FROM    ta
-                                    WHERE   status=%(status)s
+                                    FROM  ta
+                                    WHERE   idta>%(rootidta)s
+                                    AND     status=%(status)s
                                     AND     statust=%(statust)s
                                     AND     fromchannel=%(fromchannel)s
-                                    AND     idta>%(rootidta)s
                                     ''',
                                     {'status':fromstatus,'statust':OK,'rootidta':botslib.get_minta4query(),
                                     'fromchannel':self.channeldict['idchannel'],'idroute':self.idroute}):
@@ -507,6 +491,20 @@ class _comsession(object):
             else:
                 raise botslib.CommunicationOutError(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.',charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
 
+    @staticmethod
+    def codeccanonicalname(codec_in):
+        convertdict = {
+            'unoa' : 'us-ascii',
+            'unob' : 'us-ascii',
+            'unoc' : 'iso-8859-1',
+            }
+        codec_in = codec_in.lower().replace('_','-')
+        try:
+            codec_out = convertdict[codec_in]
+            return codec_out
+        except:
+            return codec_in
+
 class pop3(_comsession):
     def connect(self):
         self.session = poplib.POP3(host=self.channeldict['host'],port=int(self.channeldict['port']))
@@ -595,10 +593,10 @@ class smtp(_comsession):
         #send messages
         for row in botslib.query(u'''SELECT idta,filename,frommail,tomail,cc
                                     FROM  ta
-                                    WHERE status=%(status)s
+                                    WHERE idta>%(rootidta)s
+                                    AND   status=%(status)s
                                     AND   statust=%(statust)s
                                     AND   tochannel=%(tochannel)s
-                                    AND   idta>%(rootidta)s
                                     ''',
                                     {'status':RAWOUT,'statust':OK,'rootidta':botslib.get_minta4query(),
                                     'tochannel':self.channeldict['idchannel']}):
@@ -715,10 +713,10 @@ class file(_comsession):
         #select the db-ta's for this channel
         for row in botslib.query(u'''SELECT idta,filename,charset
                                        FROM ta
-                                      WHERE tochannel=%(tochannel)s
+                                      WHERE idta>%(rootidta)s
                                         AND status=%(status)s
                                         AND statust=%(statust)s
-                                        AND idta>%(rootidta)s
+                                        AND tochannel=%(tochannel)s
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
@@ -838,10 +836,10 @@ class ftp(_comsession):
             mode = 'STOR '  #unique filenames; (over)write
         for row in botslib.query('''SELECT idta,filename,charset
                                     FROM ta
-                                    WHERE tochannel=%(tochannel)s
+                                    WHERE idta>%(rootidta)s
                                       AND status=%(status)s
                                       AND statust=%(statust)s
-                                      AND idta>%(rootidta)s
+                                      AND tochannel=%(tochannel)s
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
@@ -946,11 +944,11 @@ class intercommit(_comsession):
         #select the db-ta's for this channel
         for row in botslib.query('''SELECT idta,filename,frompartner,topartner,charset
                                     FROM  ta
-                                    WHERE tochannel=%(idchannel)s
+                                    WHERE idta>%(rootidta)s
                                     AND   status=%(status)s
                                     AND   statust=%(statust)s
+                                    AND   tochannel=%(idchannel)s
                                     AND   idroute=%(idroute)s
-                                    AND   idta>%(rootidta)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK,'idroute':self.idroute}):
@@ -1064,11 +1062,11 @@ class database(_comsession):
         ''' write data to database.
         '''
         for row in botslib.query('''SELECT idta,filename
-                                    FROM ta
-                                    WHERE tochannel=%(tochannel)s
+                                    FROM  ta
+                                    WHERE idta>%(rootidta)s
                                         AND status=%(status)s
                                         AND statust=%(statust)s
-                                        AND idta>%(rootidta)s
+                                        AND tochannel=%(tochannel)s
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
@@ -1191,10 +1189,11 @@ class communicationscript(_comsession):
         #select the db-ta's for this channel
         for row in botslib.query(u'''SELECT idta,filename,charset
                                        FROM ta
-                                      WHERE tochannel=%(tochannel)s
+                                      WHERE idta>%(rootidta)s
                                         AND status=%(status)s
                                         AND statust=%(statust)s
-                                        AND idta>%(rootidta)s ''',
+                                        AND tochannel=%(tochannel)s
+                                        ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK}):
             try:    #for each db-ta:

@@ -1,7 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>{{ request.path }}</title>
+    {% load botsfilters %}
+    <title>{{ request.get_full_path|url2path }}</title>
     <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% load adminmedia %}{% admin_media_prefix %}css/base.css{% endblock %}" />
     {% block extrastyle %}{% endblock %}
     <!--[if lte IE 7]><link rel="stylesheet" type="text/css" href="{% block stylesheet_ie %}{% load adminmedia %}{% admin_media_prefix %}css/ie.css{% endblock %}" /><![endif]-->
@@ -11,10 +12,12 @@
 </head>
 
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
-<div id="logo">
-    <img src="/media/images/botslogo.png" alt="botslogo"/>
-</div>
-{% include "bots/menu.html" %}
+{% if not is_popup %}
+    <div id="logo">
+        <img src="/media/images/botslogo.png" alt="botslogo"/>
+    </div>
+    {% include "bots/menu.html" %}
+{% endif %}
 
 <div id="container">
     {% if messages %}

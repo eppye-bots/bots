@@ -23,7 +23,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
         handles x12 and edifact; these can be mixed.
     '''
     for row in botslib.query(u'''SELECT idta,filename,charset
-                                FROM    ta
+                                FROM  ta
                                 WHERE   idta>%(rootidta)s
                                 AND     status=%(status)s
                                 AND     statust=%(statust)s
@@ -106,7 +106,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
     #~ import gc
     #~ gc.disable()
     for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel
-                                FROM    ta
+                                FROM  ta
                                 WHERE   idta>%(rootidta)s
                                 AND     status=%(status)s
                                 AND     statust=%(statust)s

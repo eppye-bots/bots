@@ -30,7 +30,7 @@ def prepareretransmit():
             ta_rereceive = botslib.OldTransaction(row2['idta'])
             ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
             ta_raw = ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
-    #for resend
+    #for resend; this one is slow. Can be improved by having a seperate list of idta to resend
     for row in botslib.query('''SELECT idta,parent
                                 FROM  ta
                                 WHERE retransmit=%(retransmit)s

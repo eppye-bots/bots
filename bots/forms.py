@@ -27,8 +27,6 @@ def getallmessagetypes():
 class Select(django.forms.Form):
     datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom)
     dateuntil = django.forms.DateTimeField(initial=viewlib.datetimeuntil)
-    #~ datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom,widget=django.contrib.admin.widgets.AdminSplitDateTime)
-    #~ dateuntil = django.forms.DateTimeField(initial=viewlib.datetimeuntil,widget=django.contrib.admin.widgets.AdminSplitDateTime)
     page = django.forms.IntegerField(required=False,initial=1,widget=HiddenInput())
     sortedby = django.forms.CharField(initial='ts',widget=HiddenInput())
     sortedasc = django.forms.BooleanField(initial=False,required=False,widget=HiddenInput())
@@ -79,6 +77,32 @@ class ViewIncoming(View):
     inmessagetype = django.forms.CharField(required=False,widget=HiddenInput())
     outeditype = django.forms.CharField(required=False,widget=HiddenInput())
     outmessagetype = django.forms.CharField(required=False,widget=HiddenInput())
+    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HiddenInput())
+    botskey = django.forms.CharField(required=False,widget=HiddenInput())
+
+class SelectDocument(Select):
+    template = 'bots/selectform.html'
+    action = '/document/'
+    idroute = django.forms.ChoiceField([],required=False,initial='')
+    frompartner = django.forms.ModelChoiceField(models.partner.objects.filter(isgroup=False).all(),required=False)
+    topartner = django.forms.ModelChoiceField(models.partner.objects.filter(isgroup=False).all(),required=False)
+    editype = django.forms.ChoiceField(editypelist,required=False)
+    messagetype = django.forms.ChoiceField(required=False)
+    lastrun = django.forms.BooleanField(required=False,initial=False)
+    botskey = django.forms.CharField(required=False,label='Document number',max_length=35)
+    def __init__(self, *args, **kwargs):
+        super(SelectDocument, self).__init__(*args, **kwargs)
+        self.fields['idroute'].choices = getroutelist()
+        self.fields['messagetype'].choices = getoutmessagetypes()
+
+class ViewDocument(View):
+    template = 'bots/document.html'
+    action = '/document/'
+    idroute = django.forms.CharField(required=False,widget=HiddenInput())
+    frompartner = django.forms.CharField(required=False,widget=HiddenInput())
+    topartner = django.forms.CharField(required=False,widget=HiddenInput())
+    editype = django.forms.CharField(required=False,widget=HiddenInput())
+    messagetype = django.forms.CharField(required=False,widget=HiddenInput())
     lastrun = django.forms.BooleanField(required=False,initial=False,widget=HiddenInput())
 
 class SelectOutgoing(Select):

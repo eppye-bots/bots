@@ -51,7 +51,7 @@ div#menu ul:hover li,
 div#menu ul:hover li a {
 	display:    block;
 	width:      20em;
-	background: #FFFFFF;
+	background:#F1FBFF;
 	padding:    0;
 	margin:     0;
 	text-transform:		capitalize;
@@ -79,7 +79,7 @@ div.dropdown  ul {
 	z-index:598;
 	left:99%;
 	top:1px;
-	background-color: 	#FFFFFF;
+	background:#F1FBFF;
 	}
 div.dropdown:hover  ul {
 	visibility:visible;
@@ -87,6 +87,9 @@ div.dropdown:hover  ul {
 div.dropdown  ul  li {
 	list-style: none;
     }
+div.dropdown:hover button{
+	background-color:#F1FBFF;
+	}
 div.dropdown:hover >button,
 div.dropdown  ul li:hover,
 div.dropdown  ul li button:hover{
@@ -118,6 +121,14 @@ div#changelist-filter:hover ul {
 	cursor:				pointer;
 	white-space:		nowrap;
 	color: 				#000000;
+	}
+p.botsheader2	{
+	border-style:		none;
+	margin:				0em;
+	padding:		    0em;
+	white-space:		nowrap;
+	color: 				#000000;
+	font-weight:		normal;
 	}
 a.botslink	{
 	cursor:				pointer;

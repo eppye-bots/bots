@@ -8,20 +8,17 @@ def convert(value,conversiondict):
     status ={
             1:'process',
             200:'FileRecieve',
-            210:'RawInfile',
-            215:'Mimein',
-            220:'Infile',
-            280:'Mailbag',
-            290:'Mailbagparsed',
-            300:'Translate',
-            310:'Parsed',
-            320:'Splitup',
-            330:'Translated',
-            400:'Merged',
-            500:'Outfile',
-            510:'RawOutfile',
-            520:'FileSend',
             }
-
     return locals()[conversiondict][value]
+
+@register.filter
+def url2path(value):
+    print '>>>>',value
+    if value.startswith('/admin/bots/'):
+        value = value[12:]
+    else:
+        value = value[1:]
+    if value[-1] == '/':
+        value = value[:-1]
+    return value
 

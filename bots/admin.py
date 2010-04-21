@@ -11,7 +11,7 @@ def activate(ding, request, queryset):
     for obj in queryset:
         obj.active = not obj.active
         obj.save()
-activate.short_description = "Toggle active"
+activate.short_description = "(de)activate"
 
 #*****************************************************************************************************
 class CcodeAdmin(admin.ModelAdmin):
@@ -41,7 +41,7 @@ class ChannelAdmin(admin.ModelAdmin):
     ordering = ('idchannel',)
     save_as = True
     fieldsets = (
-        (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset')
+        (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset','desc')
                         }),
         ('FTP specific data',{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
                          'classes': ('collapse',)
@@ -88,6 +88,7 @@ class PartnerAdmin(admin.ModelAdmin):
     list_display = ('active','idpartner')   #is needed for list_display_links, but not used.
     list_display_links = ('idpartner',)
     list_filter = ('active',)
+    filter_horizontal = ('group',)
     list_per_page = screen_limit
     actions = (activate,)
     def queryset(self, request):
@@ -95,7 +96,8 @@ class PartnerAdmin(admin.ModelAdmin):
         qs = qs.filter(isgroup=self.isgroup)
         return qs
     def save_model(self, request, obj, form, change):
-        obj.isgroup = self.isgroup
+        if hasattr(self,'isgroup'): 
+            obj.isgroup = self.isgroup
         obj.save()
 admin.site.register(models.partner,PartnerAdmin)
 
@@ -122,7 +124,7 @@ class RoutesAdmin(admin.ModelAdmin):
     actions = (activate,)
     list_per_page = screen_limit
     fieldsets = (
-        (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel')}),
+        (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc')}),
         ('Filtering for outchannel',{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
                     'classes':  ('collapse',)
                     }),
@@ -140,7 +142,7 @@ class TranslateAdmin(admin.ModelAdmin):
     actions = (activate,)
     list_per_page = screen_limit
     fieldsets = (
-        (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype'))
+        (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype','desc'))
                     }),
         ('Advanced - multiple translations per editype/messagetype',{'fields': ('alt', 'frompartner', 'topartner'),
                      'classes': ('collapse',)

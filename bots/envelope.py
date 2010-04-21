@@ -18,7 +18,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
     outerqueryparameters = {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query(),'merge':False}
     #**********for messages only to envelope (no merging)
     for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,tochannel,envelope,nrmessages,idta,filename
-                                FROM    ta
+                                FROM  ta
                                 WHERE   idta>%(rootidta)s
                                 AND     status=%(status)s
                                 AND     statust=%(statust)s
@@ -48,7 +48,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
     #as files get merged: can not copy idta; must extract relevant attributes.
     outerqueryparameters['merge']=True
     for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,tochannel,envelope,sum(nrmessages) as nrmessages
-                                FROM    ta
+                                FROM  ta
                                 WHERE   idta>%(rootidta)s
                                 AND     status=%(status)s
                                 AND     statust=%(statust)s
@@ -69,7 +69,10 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
             #gather individual idta and filenames
             for row2 in botslib.query(u'''SELECT idta, filename
                                                     FROM ta
-                                                    WHERE merge=%(merge)s
+                                                    WHERE idta>%(rootidta)s
+                                                    AND status=%(status)s
+                                                    AND statust=%(statust)s
+                                                    AND merge=%(merge)s
                                                     AND editype=%(editype)s
                                                     AND messagetype=%(messagetype)s
                                                     AND frompartner=%(frompartner)s
@@ -77,10 +80,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
                                                     AND tochannel=%(tochannel)s
                                                     AND testindicator=%(testindicator)s
                                                     AND charset=%(charset)s
-                                                    AND status=%(status)s
-                                                    AND statust=%(statust)s
                                                     AND idroute=%(idroute)s
-                                                    AND idta>%(rootidta)s
                                                     ''', 
                                                     innerqueryparameters):
                 ta_fromfile = botslib.OldTransaction(row2['idta'])           #edi message to envelope

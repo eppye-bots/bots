@@ -17,7 +17,7 @@
             <tr>
                 <th></th>
                 <th><button class="botsheader" type="submit" name="order" value="status" />State</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="retransmit" />Rereceive</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="retransmit" />Re*</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="idroute" />Route</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="ts" />Date/time</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="nrmessages" />#in</button></th>
@@ -43,13 +43,16 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><a href="/detail/?inidta={{row.idta}}" class="botslink">View detail</a></li>
+                            <li><a href="/detail/?inidta={{row.idta}}" class="botslink" target="_blank">View detail</a></li>
                             <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}-{{row.reportidta}}" />Rerecieve</button></li>
+                            <li><button class="botsheader" type="submit" name="retry" value="{{row.idta}}-{{row.reportidta}}" />Retry</button></li>
+                            <li><button class="botsheader" type="submit" name="retrycommunication" value="{{row.idta}}-{{row.reportidta}}" />Retry Communication</button></li>
+                            <li><button class="botsheader" type="submit" name="noretry" value="{{row.idta}}-{{row.reportidta}}" />No retry/rereveive</button></li>
                         </ul>
                     </div>
                 </td>
                 <td>{{ row.get_statust_display}}</td>
-                <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
+                <td>{{ row.get_retransmit_display}}</td>
                 <td>{{row.idroute}}</td>
                 <td class="nowrap">{{row.ts}}</td>
                 <td>{{row.nrmessages}}</td>

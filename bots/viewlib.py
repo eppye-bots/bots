@@ -98,6 +98,51 @@ def django_trace_origin(idta,where):
     return teruglijst
 
 
+def trace_document(pquery):
+    ''' trace forward & backwardfrom the current step/ta (status SPLITUP). 
+        gathers confirm information
+    '''
+    def trace_forward(ta):
+        ''' recursive. walk over ta's forward (to exit). '''
+        if ta.child: 
+            child = models.ta.objects.get(idta=ta.child)
+        else:
+            try:
+                child = models.ta.objects.filter(parent=ta.idta).all()[0]
+            except IndexError:
+                return    #no result, return
+        if child.confirmasked:
+            taorg.confirmtext += u'Confirm send: %s; confirmed: %s; confirmtype: %s\n'%(child.confirmasked,child.confirmed,child.confirmtype)
+        if child.status==EXTERNOUT:
+            taorg.outgoing = child.idta
+            taorg.channel = child.tochannel
+        trace_forward(child)
+    def trace_back(ta):
+        ''' recursive. walk over ta's backward (to origin).  '''
+        if ta.parent: 
+            parent = models.ta.objects.get(idta=ta.parent)
+        else:
+            try:
+                parent = models.ta.objects.filter(child=ta.idta).all()[0]   #just get one parent
+            except IndexError:
+                return    #no result, return
+        if parent.confirmasked:
+            taorg.confirmtext += u'Confirm asked: %s; confirmed: %s; confirmtype: %s\n'%(parent.confirmasked,parent.confirmed,parent.confirmtype)
+        if parent.status==EXTERNIN:
+            taorg.incoming = parent.idta
+            taorg.channel = parent.fromchannel
+        trace_back(parent)
+    #main for trace_document*****************
+    for taorg in pquery.object_list:
+        taorg.confirmtext = u''
+        if taorg.status == SPLITUP:
+            trace_back(taorg)
+        else:
+            trace_forward(taorg)
+        if not taorg.confirmtext:
+            taorg.confirmtext = '---'
+
+
 def gettrace(ta):
     ''' recursive. Build trace (tree of ta's).'''
     if ta.child:  #has a explicit child
@@ -182,6 +227,8 @@ def filterquery(query , org_cleaned_data, incoming=False):
         query = query.filter(ts__lte=cleaned_data.pop('dateuntil'))
     if 'datefrom' in cleaned_data:
         query = query.filter(ts__gte=cleaned_data.pop('datefrom'))
+    if 'botskey' in cleaned_data:
+        query = query.filter(botskey__icontains=cleaned_data.pop('botskey'))
     if 'sortedby' in cleaned_data:
         query = query.order_by({True:'',False:'-'}[cleaned_data.pop('sortedasc')] + cleaned_data.pop('sortedby'))
     if 'lastrun' in cleaned_data:

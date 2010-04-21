@@ -122,15 +122,14 @@ def finish_evaluation(stuff2evaluate,resultlast,type):
 def generate_report(stuff2evaluate):
     for results in botslib.query('''SELECT idta,lastopen,lasterror,lastok,lastdone,
                                             send,processerrors,ts,lastreceived,type,status
-                                    FROM  report
+                                    FROM report
                                     WHERE idta=%(rootidta)s''',
                                     {'rootidta':stuff2evaluate}):
         break
     else:
         raise botslib.PanicError(u'In generate report: could not find report?')
-        
-    subject = '[Bots Error Report] %s'%(results['ts'][:-3])
-    reporttext = 'Bots Report; type: %s, time: %s\n'%(results['type'],results['ts'])
+    subject = '[Bots Error Report] %s'%(results['ts'].strftime('%Y-%m-%d %H:%M'))
+    reporttext = 'Bots Report; type: %s, time: %s\n'%(results['type'],results['ts'].strftime('%Y-%m-%d %H:%M:%S'))
     reporttext += '    %d files received/processed in run.\n'%(results['lastreceived'])
     if results['lastdone']:
         reporttext += '    %d files without errors,\n'%(results['lastdone'])
@@ -180,7 +179,7 @@ class Trace(object):
                 break   #there is only one child
         else:   #find successor by using parent-relationship; mostly this relation except for merge operations
             for row in botslib.query('''SELECT ''' + tavars + '''
-                                        FROM   ta
+                                        FROM  ta
                                         WHERE idta > %(currentidta)s
                                         AND parent=%(currentidta)s ''',      #adding the idta > %(parent)s to selection speeds up a lot.
                                         {'currentidta':tacurrent.idta}):
@@ -341,7 +340,7 @@ class Trace(object):
         asterisk = botsglobal.ini.getboolean('settings','multiplevaluesasterisk',True)
         self.idta = self.ta.idta
         self.reportidta = self.rootidta
-        self.retransmit = False
+        self.retransmit = 0
         self.idroute = self.ta.idroute
         self.fromchannel = self.ta.fromchannel
         self.ts = self.ta.ts

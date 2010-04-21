@@ -9,7 +9,13 @@ STATUST = [
     (1, 'Error'),
     (2, 'OK'),
     (3, 'Done'),
-    (4,'Retransmit'),
+    #~ (4,'Retransmit'),
+    ]
+RETRANSMIT = [
+    (0, '---'),
+    (1, 'Rereceive'),
+    (2, 'Retry'),
+    (3, 'RetryComm.'),
     ]
 STATUS = [
     (1,'process'),
@@ -144,7 +150,8 @@ class channel(models.Model):
     askmdn = models.CharField(max_length=17,blank=True)     #not used anymore 20091019
     sendmdn = models.CharField(max_length=17,blank=True)    #not used anymore 20091019
     mdnchannel = models.CharField(max_length=35,blank=True)             #not used anymore 20091019
-    archivepath = models.CharField(max_length=256,blank=True,verbose_name='Archive path',help_text='Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/mychannel".')           #added 20091028
+    archivepath = models.CharField(max_length=256,blank=True,verbose_name='Archive path',help_text='Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".')           #added 20091028
+    desc = models.TextField(max_length=256,null=True,blank=True)
     def __unicode__(self):
         return self.idchannel
     class Meta:
@@ -157,7 +164,7 @@ class partner(models.Model):
     mail = models.EmailField(max_length=256,blank=True)
     cc = models.EmailField(max_length=256,blank=True)
     mail2 = models.ManyToManyField(channel, through='chanpar',blank=True)
-    group = models.ManyToManyField("self",db_table='partnergroup',blank=True,limit_choices_to = {'isgroup': True})
+    group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
 
     def __unicode__(self):
         return self.idpartner
@@ -195,6 +202,7 @@ class translate(models.Model):
     tscript = models.CharField(max_length=35,help_text='User mapping script to use for translation.')
     toeditype = models.CharField(max_length=35,choices=EDITYPES,help_text='Editype to translate to.')
     tomessagetype = models.CharField(max_length=35,help_text='Messagetype to translate to.')
+    desc = models.TextField(max_length=256,null=True,blank=True)
     class Meta:
         db_table = 'translate'
         verbose_name = 'translation'
@@ -217,6 +225,7 @@ class routes(models.Model):
     testindicator = models.CharField(max_length=1,blank=True,help_text='Only edi files with this testindicator to this outgoing channel.')
     translateind = models.BooleanField(default=True,blank=True,verbose_name='translate',help_text='Do a translation in this route.')
     notindefaultrun = models.BooleanField(default=False,blank=True,help_text='Do not use this route in a normal run. Advanced, related to scheduling specific routes or not.')
+    desc = models.TextField(max_length=256,null=True,blank=True)
     class Meta:
         db_table = 'routes'
         verbose_name = 'route'
@@ -232,7 +241,7 @@ class filereport(models.Model):
     idta = models.IntegerField(db_index=True)
     reportidta = models.IntegerField(db_index=True)
     statust = models.IntegerField(choices=STATUST)
-    retransmit = models.BooleanField()
+    retransmit = models.IntegerField(choices=RETRANSMIT)
     idroute = models.CharField(max_length=35)
     fromchannel = models.CharField(max_length=35)
     tochannel = models.CharField(max_length=35)
@@ -260,7 +269,7 @@ class filereport(models.Model):
 class mutex(models.Model):
     mutexk = models.IntegerField(primary_key=True)
     mutexer = models.IntegerField()
-    #~ mysql_engine='InnoDB'
+    ts = models.DateTimeField()
     class Meta:
         db_table = 'mutex'
 class persist(models.Model):
@@ -281,19 +290,20 @@ class report(models.Model):
     lasterror = models.IntegerField()
     send = models.IntegerField()
     processerrors = models.IntegerField()
-    ts = models.DateTimeField() #copied from ta
+    ts = models.DateTimeField()                     #copied from (runroot)ta
     type = models.CharField(max_length=35)
     status = models.BooleanField()
     class Meta:
         db_table = 'report'
-#trigger for sqlite to use local time (instead of utc)
-#~ CREATE TRIGGER uselocaltime  AFTER INSERT ON ta                   
-     #~ BEGIN                                                                 
-     #~ UPDATE  ta   SET  ts = datetime('now = models.'localtime')
-     #~ WHERE idta = new.idta ;
-     #~ END
+#~ #trigger for sqlite to use local time (instead of utc)
+#~ CREATE TRIGGER uselocaltime  AFTER INSERT ON ta
+#~ BEGIN
+#~ UPDATE ta
+#~ SET ts = datetime('now','localtime') 
+#~ WHERE idta = new.idta ;
+#~ END;
 class ta(models.Model):
-    idta = models.IntegerField(primary_key=True)
+    idta = models.AutoField(primary_key=True)
     statust = models.IntegerField(choices=STATUST)
     status = models.IntegerField(choices=STATUS)
     parent = models.IntegerField(db_index=True)
@@ -320,7 +330,7 @@ class ta(models.Model):
     retransmit = models.BooleanField()                  #20070831: only retransmit, not rerecieve
     contenttype = models.CharField(max_length=35)
     errortext = models.CharField(max_length=2048)
-    ts = models.DateTimeField(db_index=True)
+    ts = models.DateTimeField()
     confirmasked = models.BooleanField()                #added 20091019; confirmation asked or send
     confirmed = models.BooleanField()                   #added 20091019; is confirmation received (when asked)
     confirmtype = models.CharField(max_length=35)       #added 20091019
@@ -336,4 +346,3 @@ class uniek(models.Model):
     class Meta:
         db_table = 'uniek'
         verbose_name = 'counter'
-    #~ mysql_engine='InnoDB'

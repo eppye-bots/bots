@@ -49,11 +49,11 @@ class BotsConnection(sqlite.Connection):
         return sqlite.Connection.cursor(self, factory=BotsCursor)
 
 class BotsCursor(sqlite.Cursor):
-    #~ def execute(self,string,parameters=None):
-        #~ if parameters is None:
-            #~ sqlite.Cursor.execute(self,string)
-        #~ else:
-            #~ sqlite.Cursor.execute(self,reformatparamstyle.sub(u''':\g<name>''',string),parameters)
-    def execute(self,string,*args):
-        sqlite.Cursor.execute(self,reformatparamstyle.sub(u''':\g<name>''',string),*args)
+    def execute(self,string,parameters=None):
+        if parameters is None:
+            sqlite.Cursor.execute(self,string)
+        else:
+            sqlite.Cursor.execute(self,reformatparamstyle.sub(u''':\g<name>''',string),parameters)
+    #~ def execute(self,string,*args):
+        #~ sqlite.Cursor.execute(self,reformatparamstyle.sub(u''':\g<name>''',string),*args)
 

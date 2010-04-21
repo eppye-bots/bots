@@ -14,6 +14,7 @@
 		<a>Last run</a>
 		<li><a href="/reports/?all" >Reports</a></li>
 		<li><a href="/incoming/?last" >Incoming</a></li>
+		<li><a href="/document/?last" >Document</a></li>
 		<li><a href="/outgoing/?last" >Outgoing</a></li>
 		<li><a href="/processes/?last" >Process Errors</a></li>
 	</ul>
@@ -21,6 +22,7 @@
 		<a>All runs</a>
 		<li><a href="/reports/?all" >Reports</a></li>
         <li><a href="/incoming/?all" >Incoming</a></li>
+		<li><a href="/document/?all" >Document</a></li>
 		<li><a href="/outgoing/?all" >Outgoing</a></li>
 		<li><a href="/processes/?all" >Process Errors</a></li>
 		<li><a href="/confirm/?all" >Confirmations</a></li>
@@ -29,6 +31,7 @@
 		<a>Select</a>
 		<li><a href="/reports/?select" >Reports</a></li>
         <li><a href="/incoming/?select" >Incoming</a></li>
+		<li><a href="/document/?select" >Document</a></li>
 		<li><a href="/outgoing/?select" >Outgoing</a></li>
 		<li><a href="/processes/?select" >Process Errors</a></li>
 		<li><a href="/confirm/?select" >Confirmations</a></li>
@@ -61,6 +64,7 @@
 		<li><a href="/admin/bots/uniek/" >View/edit counters</a></li>
 		<li><a href="/unlock/" >Unlock database</a></li>
 		<li><a href="/runengine/?clparameter=--retrylastrun"  OnClick = "return confirm('Use only in case of database lock/crash recovery. Are you sure?');">Run forced retry of last run</a></li>
+		<li><a href="/sendtestmail/"">Send test report</li>
 	</ul>
     {% endif %}
 	<ul>

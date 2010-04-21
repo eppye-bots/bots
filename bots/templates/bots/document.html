@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+
+
+{% block content %}
+<form action="{{ form.action }}" method="post">
+    <input onClick="history.back()" type="button" value="Back" />
+    <input type="submit" name="2select" value="Change selection" />
+    {% include "bots/paginator.html" %}
+
+    <table id="botstable">
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        <thead>
+            <tr>
+                <th></th>
+                <th><p class="botsheader2">Phase</p></th>
+                <th><p class="botsheader2">Reference</p></th>
+                <th><p class="botsheader2">Botskey</p></th>
+                <th><p class="botsheader2">Date</p></th>
+                <th><p class="botsheader2">Confirm</p></th>
+                <th><p class="botsheader2">Route</p></th>
+                <th><p class="botsheader2">Channel</p></th>
+                <th><p class="botsheader2">FromPartner</p></th>
+                <th><p class="botsheader2">ToPartner</p></th>
+                <th><p class="botsheader2">Editype</p></th>
+                <th><p class="botsheader2">Messagetype</p></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in queryset.object_list %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td>
+                    <div class="dropdown"><img class="action" src="/media/images/star.png" />
+                        <ul>
+                            <li><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">View this file</a></li>
+                            {% if row.incoming %} 
+                                <li><a href="/detail/?inidta={{row.incoming}}" class="botslink" target="_blank">View detail</a></li>
+                                <li><a href="/filer/?action=this&amp;idta={{row.incoming}}" class="botslink" target="_blank">View incoming file</a></li>
+                            {% else %}
+                                <li><a href="/filer/?action=this&amp;idta={{row.outgoing}}" class="botslink" target="_blank">View outgoing file</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </td>
+                <td>{{row.get_status_display}}</td>
+                <td>{{row.reference}}</td>
+                <td>{{row.botskey}}</td>
+                <td class="nowrap">{{row.ts}}</td>
+                <td  style="white-space: pre;">{{row.confirmtext}}</td>
+                <td>{{row.idroute}}</td>
+                <td>{{row.channel}}</td>
+                <td>{{row.frompartner}}</td>
+                <td>{{row.topartner}}</td>
+                <td>{{row.editype}}</td>
+                <td>{{row.messagetype}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</form>
+{% endblock %}
+

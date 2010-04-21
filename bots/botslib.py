@@ -65,11 +65,11 @@ def set_minta4query_retry():
 
 def set_minta4query_retrylastrun():
     ''' get the idat of last run (that is suppossed to have crashed'''
+    #removed the 'AND status = PROCESS rule; if script=0 then status as always process and key is on script
     for row in query('''SELECT max(idta) as max
                         FROM  ta
-                        WHERE status=%(status)s
-                        AND script= 0 ''',
-                        {'status':PROCESS}):
+                        WHERE script= 0
+                        '''):
         if row['max'] is None:
             return 0
         botsglobal.minta4query = row['max']
@@ -77,6 +77,7 @@ def set_minta4query_retrylastrun():
     return 0
 
 def set_minta4query_retrycommunication():
+    #bad query....
     for row in query('''SELECT min(idta) as min
                         FROM  ta
                         WHERE statust = %(statust)s
@@ -139,15 +140,17 @@ class _Transaction(object):
         '''Failure: deletes all children of transaction (and children of children etc)'''
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''SELECT idta FROM ta
-                           WHERE parent=%(selfid)s''',
-                            {'selfid':self.idta})
+                           WHERE idta>%(rootidta)s
+                           AND parent=%(selfid)s''',
+                            {'selfid':self.idta,'rootidta':get_minta4query()})
         rows = cursor.fetchall()
         for row in rows:
             ta=OldTransaction(row['idta'])
             ta.failure()
         cursor.execute(u'''DELETE FROM ta
-                            WHERE parent=%(selfid)s''',
-                            {'selfid':self.idta})
+                            WHERE idta>%(rootidta)s
+                            AND parent=%(selfid)s''',
+                            {'selfid':self.idta,'rootidta':get_minta4query()})
         botsglobal.db.commit()
         cursor.close()
 
@@ -155,8 +158,9 @@ class _Transaction(object):
         '''Succces: give correct status to all children of transaction (and children of children etc)'''
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''SELECT idta FROM ta
-                           WHERE parent=%(selfid)s''',
-                            {'selfid':self.idta})
+                           WHERE idta>%(rootidta)s
+                           AND parent=%(selfid)s''',
+                            {'selfid':self.idta,'rootidta':get_minta4query()})
         rows = cursor.fetchall()
         for row in rows:
             ta=OldTransaction(row['idta'])
@@ -170,9 +174,10 @@ class _Transaction(object):
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''UPDATE ta
                            SET statust=%(statustnew)s
-                           WHERE child=%(selfid)s
+                           WHERE idta>%(rootidta)s
+                           AND child=%(selfid)s
                            AND statust=%(statustold)s''',
-                            {'selfid':self.idta,'statustold':DONE,'statustnew':OK})
+                            {'selfid':self.idta,'statustold':DONE,'statustnew':OK,'rootidta':get_minta4query()})
         botsglobal.db.commit()
         cursor.close()
 
@@ -205,7 +210,6 @@ class _Transaction(object):
     def copyta(self,status,**ta_info):
         ''' copy: make a new transaction, copy '''
         script = _Transaction.processlist[-1]
-        #~ newidta = unique('OID')
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey)
                                 SELECT   %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey
@@ -213,6 +217,9 @@ class _Transaction(object):
                                 WHERE idta=%(selfid)s''',
                                 {'selfid':self.idta,'script':script,'newstatus':status})
         newidta = cursor.lastrowid
+        if not newidta:   #if botsglobal.settings.DATABASE_ENGINE ==
+            cursor.execute('''SELECT lastval() as idta''')
+            newidta = cursor.fetchone()['idta']
         botsglobal.db.commit()
         cursor.close()
         newdbta = OldTransaction(newidta)
@@ -243,7 +250,6 @@ class NewTransaction(_Transaction):
         '''Generates new transaction, returns key of transaction '''
         updatedict = dict([(key,value) for key,value in ta_info.items() if key in _Transaction.filterlist])
         updatedict['script'] = _Transaction.processlist[-1]
-        #~ updatedict['idta'] = self.idta = unique('OID')     #add later, idta would be filterd out
         namesstring = ','.join([key for key in updatedict])
         varsstring = ','.join(['%('+key+')s' for key in updatedict])
         cursor = botsglobal.db.cursor()
@@ -251,6 +257,9 @@ class NewTransaction(_Transaction):
                                  VALUES   (''' + varsstring + ''')''',
                                 updatedict)
         self.idta = cursor.lastrowid
+        if not self.idta:   #if botsglobal.settings.DATABASE_ENGINE ==
+            cursor.execute('''SELECT lastval() as idta''')
+            self.idta = cursor.fetchone()['idta']
         botsglobal.db.commit()
         cursor.close()
 
@@ -291,15 +300,18 @@ def trace_origin(ta,where=None):
             trace_recurse(taparent)
     def get_parent(ta):
         ''' yields the parents of a ta '''
-        for row in query('''SELECT idta
-                             FROM  ta
-                             WHERE child=%(idta)s''',
-                            {'idta':ta.idta}):
-            if row['idta'] in donelijst:
-                continue
-            yield row['idta']
-        if ta.parent != 0 and ta.parent not in donelijst:
-            yield ta.parent
+        if ta.parent:   #the is a parent via the normal parent-pointer
+            if ta.parent not in donelijst:
+                yield ta.parent
+        else:           #no parent via parent-link, so look via child-link
+            for row in query('''SELECT idta
+                                 FROM  ta
+                                 WHERE idta>%(rootidta)s
+                                 AND child=%(idta)s''',
+                                {'idta':ta.idta,'rootidta':get_minta4query()}):
+                if row['idta'] in donelijst:
+                    continue
+                yield row['idta']
         
     donelijst = []
     teruglijst = []
@@ -315,7 +327,7 @@ def addinfocore(change,where,wherestring):
     '''
     if 'rootidta' not in where:
         where['rootidta']=get_minta4query()
-        wherestring += ' AND idta > %(rootidta)s '
+        wherestring = ' idta > %(rootidta)s AND ' + wherestring
     if 'statust' not in where:  #by default: look only for statust is OK
         where['statust']=OK
         wherestring += ' AND statust = %(statust)s '
@@ -346,7 +358,7 @@ def updateinfo(change,where):
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
     if 'rootidta' not in where:
         where['rootidta']=get_minta4query()
-        wherestring += ' AND idta > %(rootidta)s '
+        wherestring = ' idta > %(rootidta)s AND ' + wherestring
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
         counter += 1
@@ -365,13 +377,13 @@ def changestatustinfo(change,where):
         returns the number of db-ta that have been changed.
     '''
     if not isinstance(change,int):
-        raise BotsError(u'change not valid')
+        raise BotsError(u'change not valid: expect status to be an integer. Programming error.')
     if 'statust' not in where:
         where['statust']=OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
     if 'rootidta' not in where:
         where['rootidta']=get_minta4query()
-        wherestring += ' AND idta > %(rootidta)s '
+        wherestring = ' idta > %(rootidta)s AND ' + wherestring
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
         counter += 1
