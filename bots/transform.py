@@ -139,6 +139,29 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                 #~ print 'topartner',inn.ta_info['topartner']
                 while 1:    #whileloop continues as long as there are alt-translations
                     #************select parameters for translation(script):
+                    #~ print 'view translation selection'
+                    #~ for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
+                                                #~ FROM    translate
+                                                #~ WHERE   frommessagetype = %(frommessagetype)s
+                                                #~ AND     fromeditype = %(fromeditype)s
+                                                #~ AND     active=%(booll)s
+                                                #~ AND     (alt='' OR alt=%(alt)s)
+                                                #~ AND     (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id 
+                                                                                                                            #~ FROM partnergroup
+                                                                                                                            #~ WHERE from_partner_id=%(frompartner)s ))
+                                                #~ AND     (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
+                                                                                                                            #~ FROM partnergroup
+                                                                                                                            #~ WHERE from_partner_id=%(topartner)s ))
+                                                #~ ORDER BY alt DESC,
+                                                         #~ CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id , 
+                                                         #~ CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
+                                                #~ {'frommessagetype':inn.ta_info['messagetype'],
+                                                 #~ 'fromeditype':inn.ta_info['editype'],
+                                                 #~ 'alt':inn.ta_info['alt'],
+                                                 #~ 'frompartner':inn.ta_info['frompartner'],
+                                                 #~ 'topartner':inn.ta_info['topartner'],
+                                                #~ 'booll':True}):
+                        #~ print inn.ta_info['editype'],inn.ta_info['messagetype'],inn.ta_info['alt'],inn.ta_info['frompartner'],inn.ta_info['topartner'],row2
                     for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
                                                 FROM    translate
                                                 WHERE   frommessagetype = %(frommessagetype)s
@@ -151,7 +174,9 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                                 AND     (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
                                                                                                                             FROM partnergroup
                                                                                                                             WHERE from_partner_id=%(topartner)s ))
-                                                ORDER BY alt DESC,frompartner_id DESC, topartner_id DESC''',
+                                                ORDER BY alt DESC,
+                                                         CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id , 
+                                                         CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
                                                 {'frommessagetype':inn.ta_info['messagetype'],
                                                  'fromeditype':inn.ta_info['editype'],
                                                  'alt':inn.ta_info['alt'],
@@ -200,10 +225,9 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         except:
             #~ edifile.close(ta_fromfile,error=True)    #only useful if errors are reported in acknowledgement (eg x12 997). Not used now.
             txt=botslib.txtexc()
-            print txt
             ta_parsedfile.failure()
             ta_parsedfile.update(statust=ERROR,errortext=txt)
-            botsglobal.logger.debug(u'Error reading and parsing input file')
+            botsglobal.logger.debug(u'Error reading and parsing input file: %s',txt)
         else:
             edifile.close(ta_fromfile,error=False)
             ta_fromfile.update(statust=DONE)

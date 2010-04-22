@@ -428,19 +428,19 @@ class _comsession(object):
         return 0    #is not useful, as mime2file is used in postcommunication, and #files processed is not checked in postcommunication.
 
     def mailaddress2idpartner(self,mailaddress):
-        for row in botslib.query(u'''SELECT chanpar.idpartner as idpartner
+        for row in botslib.query(u'''SELECT chanpar.idpartner_id as idpartner
                                     FROM chanpar,channel,partner
-                                    WHERE chanpar.idchannel=channel.idchannel
-                                    AND chanpar.idpartner=partner.idpartner
+                                    WHERE chanpar.idchannel_id=channel.idchannel
+                                    AND chanpar.idpartner_id=partner.idpartner
                                     AND partner.active=%(active)s
-                                    AND chanpar.idchannel=%(idchannel)s
+                                    AND chanpar.idchannel_id=%(idchannel)s
                                     AND LOWER(chanpar.mail)=%(mail)s''',
                                     {'active':True,'idchannel':self.channeldict['idchannel'],'mail':mailaddress.lower()}):
             return row['idpartner']
         else:   #if not found
             for row in botslib.query(u'''SELECT idpartner
                                         FROM partner
-                                        WHERE partner.active=%(active)s
+                                        WHERE active=%(active)s
                                         AND LOWER(mail)=%(mail)s''',
                                         {'active':True,'mail':mailaddress.lower()}):
                 return row['idpartner']
@@ -450,18 +450,18 @@ class _comsession(object):
     def idpartner2mailaddress(self,idpartner):
         for row in botslib.query(u'''SELECT chanpar.mail as mail,chanpar.cc as cc
                                     FROM    chanpar,channel,partner
-                                    WHERE   chanpar.idchannel=channel.idchannel
-                                    AND     chanpar.idpartner=partner.idpartner
+                                    WHERE   chanpar.idchannel_id=channel.idchannel
+                                    AND     chanpar.idpartner_id=partner.idpartner
                                     AND     partner.active=%(active)s
-                                    AND     chanpar.idchannel=%(idchannel)s
-                                    AND     chanpar.idpartner=%(idpartner)s''',
+                                    AND     chanpar.idchannel_id=%(idchannel)s
+                                    AND     chanpar.idpartner_id=%(idpartner)s''',
                                     {'active':True,'idchannel':self.channeldict['idchannel'],'idpartner':idpartner}):
             if row['mail']:
                 return row['mail'],row['cc']
         else:   #if not found
             for row in botslib.query(u'''SELECT mail,cc
                                         FROM    partner
-                                        WHERE   partner.active=%(active)s
+                                        WHERE   active=%(active)s
                                         AND     idpartner=%(idpartner)s''',
                                         {'active':True,'idpartner':idpartner}):
                 if row['mail']:

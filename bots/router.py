@@ -67,8 +67,8 @@ def routedispatcher(routestorun,type=None):
                                                  toeditype,
                                                  tomessagetype,
                                                  seq,
-                                                 frompartner_tochannel_id as frompartner_tochannel,
-                                                 topartner_tochannel_id as topartner_tochannel,
+                                                 frompartner_tochannel_id,
+                                                 topartner_tochannel_id,
                                                  testindicator,
                                                  translateind
                                         FROM routes
@@ -134,7 +134,8 @@ def router(routedict):
             toset = {'status':MAILBAG}
         else:
             toset = {'status':TRANSLATE}
-        botslib.addinfo(change=toset,where={'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']})
+        #~ botslib.addinfo(change=toset,where={'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']})
+        botslib.addinfo(change=toset,where={'status':FILEIN,'idroute':routedict['idroute']})
         transform.splitmailbag(idroute=routedict['idroute'])
         transform.translate(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
@@ -153,23 +154,21 @@ def router(routedict):
                     idroute=routedict['idroute'],
                     editype=routedict['toeditype'],
                     messagetype=routedict['tomessagetype'],
-                    frompartner_tochannel=routedict['frompartner_tochannel'],
-                    topartner_tochannel=routedict['topartner_tochannel'],
                     testindicator=routedict['testindicator'])
         towhere=dict([(key, value) for (key, value) in towhere.iteritems() if value])   #remove nul-values from dict
         wherestring = ' AND '.join([key+'=%('+key+')s' for key in towhere])
-        if routedict['frompartner_tochannel']:   #use frompartner_tochannel in where-clause of query (partner/group dependent outchannel
-            towhere['frompartner_tochannel']=routedict['frompartner_tochannel']
-            wherestring += ''' AND (frompartner=%(frompartner_tochannel)s 
-                                    OR frompartner in (SELECT to_partner_id 
+        if routedict['frompartner_tochannel_id']:   #use frompartner_tochannel in where-clause of query (partner/group dependent outchannel
+            towhere['frompartner_tochannel_id']=routedict['frompartner_tochannel_id']
+            wherestring += ''' AND (frompartner=%(frompartner_tochannel_id)s 
+                                    OR frompartner in (SELECT from_partner_id 
                                                         FROM partnergroup
-                                                        WHERE from_partner_id =%(frompartner_tochannel)s ))'''
-        if routedict['topartner_tochannel']:   #use topartner_tochannel in where-clause of query (partner/group dependent outchannel
-            towhere['topartner_tochannel']=routedict['topartner_tochannel']
-            wherestring += ''' AND (topartner=%(topartner_tochannel)s 
-                                    OR topartner in (SELECT to_partner_id 
+                                                        WHERE to_partner_id =%(frompartner_tochannel_id)s ))'''
+        if routedict['topartner_tochannel_id']:   #use topartner_tochannel in where-clause of query (partner/group dependent outchannel
+            towhere['topartner_tochannel_id']=routedict['topartner_tochannel_id']
+            wherestring += ''' AND (topartner=%(topartner_tochannel_id)s 
+                                    OR topartner in (SELECT from_partner_id 
                                                         FROM partnergroup
-                                                        WHERE from_partner_id=%(topartner_tochannel)s ))'''
+                                                        WHERE to_partner_id=%(topartner_tochannel_id)s ))'''
         toset={'tochannel':routedict['tochannel'],'status':FILEOUT}
         botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
         

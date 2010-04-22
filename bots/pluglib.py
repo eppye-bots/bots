@@ -62,14 +62,15 @@ def writetodatabase(pluglist):
                 #~ plug['to_partner_id'] = plug['idpartnergroup']
                 #~ del plug['idpartnergroup']
         #make some fields None instead of '' (translate formpartner, topartner)
-        if plug['plugintype'] == 'confirmrule':
-            continue
-            plug.pop('id', None)       #artificial key, from bots 1.*
+        #~ if plug['plugintype'] == 'confirmrule':
+            #~ continue
+            #~ plug.pop('id', None)       #artificial key, from bots 1.*
         if plug['plugintype'] == 'translate':
             if not plug['frompartner']:
                 plug['frompartner'] = None
             if not plug['topartner']:
                 plug['topartner'] = None
+        #sqlite can have errortexts that are to long. Chop these
         if plug['plugintype'] == 'ta':
             plug['errortext'] = plug['errortext'][:2047]
         if plug['plugintype'] == 'filereport':
@@ -134,7 +135,7 @@ def writetodatabase(pluglist):
             botsglobal.logger.info(u'        Existing entry in database is deleted.')
             
         dbobject = table(**sleutel)   #create db-object
-        if 'idpartner'in sleutel:   #for partners, first te partner needs to be saved before groups can be made
+        if 'idpartner'in sleutel:   #for partners, first the partner needs to be saved before groups can be made
             dbobject.save()
         for key,value in plug.items():
             setattr(dbobject,key,value)

@@ -674,7 +674,7 @@ def checkconfirmrules(confirmtype,**kwargs):
     #~ confirmlist = ['ruletype','idroute','idchannel','frompartner','topartner','editype','messagetype','negativerule']
     terug = False       #boolean to return: ask a confirm of not?
     #~ print 'kwargs',kwargs
-    for confirmdict in query(u'''SELECT ruletype,idroute,idchannel,frompartner,topartner,editype,messagetype,negativerule
+    for confirmdict in query(u'''SELECT ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,editype,messagetype,negativerule
                         FROM    confirmrule
                         WHERE   active=%(active)s
                         AND     confirmtype=%(confirmtype)s

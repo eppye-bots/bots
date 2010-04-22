@@ -54,7 +54,7 @@
                 <td>{{ row.get_statust_display}}</td>
                 <td>{{ row.get_retransmit_display}}</td>
                 <td>{{row.idroute}}</td>
-                <td class="nowrap">{{row.ts}}</td>
+                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s" }}</td>
                 <td>{{row.nrmessages}}</td>
                 <td>{{row.ineditype}}</td>
                 <td>{{row.inmessagetype}}</td>

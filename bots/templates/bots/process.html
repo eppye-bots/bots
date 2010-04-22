@@ -28,7 +28,7 @@
             <tr class="{% cycle 'row1' 'row2' %}">
                 <td>{{row.get_statust_display}}</td>
                 <td>{{row.idroute}}</td>
-                <td class="nowrap">{{row.ts}}</td>
+                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
                 <td>{{row.fromchannel}}</td>
                 <td>{{row.tochannel}}</td>
                 <td>{{row.filename}}</td>

@@ -1,15 +1,14 @@
 from django.db import models
 from datetime import datetime
 '''
-django is not excelletnm in generating db. But they have provided a way to customize the generated database using SQL. I love this!.
-
+django is not excellent in generating db. But they have provided a way to customize the generated database using SQL. I love this! see bots/sql/*.
 '''
+
 STATUST = [
     (0, 'Open'),
     (1, 'Error'),
-    (2, 'OK'),
+    (2, 'Stuck'),
     (3, 'Done'),
-    #~ (4,'Retransmit'),
     ]
 RETRANSMIT = [
     (0, '---'),
@@ -82,6 +81,7 @@ RULETYPE = (
     ('topartner','topartner'),
     ('messagetype','messagetype'),
     )
+
 #***********************************************************************************
 #******** written by webserver ********************************************************
 #***********************************************************************************
@@ -93,7 +93,8 @@ class confirmrule(models.Model):
     negativerule = models.BooleanField(default=False)
     frompartner = models.ForeignKey('partner',related_name='cfrompartner',null=True,blank=True)
     topartner = models.ForeignKey('partner',related_name='ctopartner',null=True,blank=True)
-    idroute = models.ForeignKey('routes',null=True,blank=True,verbose_name='route')
+    #~ idroute = models.ForeignKey('routes',null=True,blank=True,verbose_name='route')
+    idroute = models.CharField(max_length=35,null=True,blank=True,verbose_name='route')
     idchannel = models.ForeignKey('channel',null=True,blank=True,verbose_name='channel')
     editype = models.CharField(max_length=35,choices=EDITYPES,blank=True)
     messagetype = models.CharField(max_length=35,blank=True)
@@ -211,10 +212,10 @@ class routes(models.Model):
     idroute = models.CharField(max_length=35,db_index=True,help_text='identification of route; one route can consist of multiple parts having the same "idroute".')
     seq = models.PositiveIntegerField(default=1,help_text='for routes consisting of multiple parts, "seq" indicates the order these parts are run.')
     active = models.BooleanField(default=False)
-    fromchannel = models.ForeignKey(channel,related_name='rfromchannel',null=True,blank=True,verbose_name='incoming channel')
+    fromchannel = models.ForeignKey(channel,related_name='rfromchannel',null=True,blank=True,verbose_name='incoming channel',limit_choices_to = {'inorout': 'in'})
     fromeditype = models.CharField(max_length=35,choices=EDITYPES,blank=True,help_text='the editype of the incoming edi files.')
     frommessagetype = models.CharField(max_length=35,blank=True,help_text='the messagetype of incoming edi files. For edifact: messagetype=edifact; for x12: messagetype=x12.')
-    tochannel = models.ForeignKey(channel,related_name='rtochannel',null=True,blank=True,verbose_name='outgoing channel')
+    tochannel = models.ForeignKey(channel,related_name='rtochannel',null=True,blank=True,verbose_name='outgoing channel',limit_choices_to = {'inorout': 'out'})
     toeditype = models.CharField(max_length=35,choices=EDITYPES,blank=True,help_text='Only edi files with this editype to this outgoing channel.')
     tomessagetype = models.CharField(max_length=35,blank=True,help_text='Only edi files of this messagetype to this outgoing channel.')
     alt = models.CharField(max_length=35,default=u'',blank=True,verbose_name='Alternative translation',help_text='Only use if there is more than one "translation" for the same editype and messagetype. Advanced use, seldom needed.')

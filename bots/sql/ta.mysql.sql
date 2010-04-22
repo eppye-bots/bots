@@ -1,4 +1,4 @@
-ALTER TABLE ta ALTER COLUMN ts          SET DEFAULT current_timestamp;
+ALTER TABLE ta MODIFY ts timestamp  DEFAULT current_timestamp;
 
 ALTER TABLE ta ALTER COLUMN statust     SET DEFAULT 0;
 ALTER TABLE ta ALTER COLUMN status      SET DEFAULT 0;

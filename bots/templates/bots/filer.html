@@ -20,7 +20,7 @@
 											status &quot;{{ ta.get_statust_display }}&quot;;
 											editype &quot;{{ ta.editype }}&quot;;
 											messagetype &quot;{{ ta.messagetype }}&quot;;
-											date &quot;{{ ta.ts }}&quot;;
+											date &quot;{{ ta.ts|date:"Y-m-d H:i:s" }}&quot;;
 											file &quot;{{ ta.filename }}&quot;;
 											confirm asked &quot;{{ ta.confirmasked }}&quot;;
 											{% if ta.confirmasked %}

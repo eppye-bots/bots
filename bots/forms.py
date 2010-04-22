@@ -7,20 +7,16 @@ DEFAULT_ENTRY = ('',"---------")
 editypelist=[DEFAULT_ENTRY] + models.EDITYPES
 confirmtypelist=[DEFAULT_ENTRY] + models.CONFIRMTYPE
 
-#~ class whichrun(django.forms.ChoiceField):
-    #~ def clean(self, value):
-        #~ if value == '0':
-            #~ return 0
-        #~ elif value == '1':
-            #~ return sys.maxint   #last run
-
 
 def getroutelist():     #needed because the routeid is needed (and this is not theprimary key
-    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.routes.objects.values_list('idroute', flat=True).all())) ]
+    #~ return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.routes.objects.values_list('idroute', flat=True).all())) ]
+    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(models.routes.objects.values_list('idroute', flat=True).distinct()) ]
 def getinmessagetypes():
-    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.translate.objects.values_list('frommessagetype', flat=True).all())) ]
+    #~ return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.translate.objects.values_list('frommessagetype', flat=True).all())) ]
+    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(models.translate.objects.values_list('frommessagetype', flat=True).distinct()) ]
 def getoutmessagetypes():
-    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.translate.objects.values_list('tomessagetype', flat=True).all())) ]
+    #~ return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.translate.objects.values_list('tomessagetype', flat=True).all())) ]
+    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(models.translate.objects.values_list('tomessagetype', flat=True).distinct()) ]
 def getallmessagetypes():
     return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(list(models.translate.objects.values_list('tomessagetype', flat=True).all()) + list(models.translate.objects.values_list('frommessagetype', flat=True).all()) )) ]
 

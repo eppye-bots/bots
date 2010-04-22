@@ -70,7 +70,7 @@ class MailInline(admin.TabularInline):
     extra = 1
 
 class MyTranslateAdminForm(django.forms.ModelForm):
-    ''' customs form for translations to check if entry exitsts (unique_together not validated right (because of null values in partner fields))'''
+    ''' customs form for translations to check if entry exists (unique_together not validated right (because of null values in partner fields))'''
     class Meta:
         model = models.translate
     def clean(self):
@@ -117,6 +117,7 @@ class EdiPartnerAdmin(PartnerAdmin):
 admin.site.register(models.edipartner,EdiPartnerAdmin)
 
 class RoutesAdmin(admin.ModelAdmin):
+    save_as = True
     list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
     list_display_links = ('idroute',)
     list_filter = ('active','fromeditype','testindicator')
@@ -136,6 +137,7 @@ admin.site.register(models.routes,RoutesAdmin)
 
 class TranslateAdmin(admin.ModelAdmin):
     form = MyTranslateAdminForm
+    save_as = True
     list_display = ('active', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'tscript', 'toeditype', 'tomessagetype')
     list_display_links = ('fromeditype',)
     list_filter = ('active','fromeditype','toeditype')

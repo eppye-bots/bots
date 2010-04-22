@@ -128,13 +128,13 @@ def generate_report(stuff2evaluate):
         break
     else:
         raise botslib.PanicError(u'In generate report: could not find report?')
-    subject = '[Bots Error Report] %s'%(results['ts'].strftime('%Y-%m-%d %H:%M'))
-    reporttext = 'Bots Report; type: %s, time: %s\n'%(results['type'],results['ts'].strftime('%Y-%m-%d %H:%M:%S'))
+    subject = '[Bots Error Report] %s'%(str(results['ts'])[:16])
+    reporttext = 'Bots Report; type: %s, time: %s\n'%(results['type'],str(results['ts'])[:19])
     reporttext += '    %d files received/processed in run.\n'%(results['lastreceived'])
     if results['lastdone']:
         reporttext += '    %d files without errors,\n'%(results['lastdone'])
     if results['lasterror']:
-        subject += '; %d files errors'%(results['lasterror'])
+        subject += '; %d file errors'%(results['lasterror'])
         reporttext += '    %d files with errors,\n'%(results['lasterror'])
     if results['lastok']:
         subject += '; %d files stuck'%(results['lastok'])

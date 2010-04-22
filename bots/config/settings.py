@@ -62,22 +62,22 @@ TEMPLATE_DIRS = (
 #~ DATABASE_HOST = ''
 #~ DATABASE_PORT = ''
 #~ DATABASE_OPTIONS = {}
-#MySQL:
-#~ DATABASE_ENGINE = 'mysql'
-#~ DATABASE_NAME = 'botsdb'
-#~ DATABASE_USER = 'bots'
-#~ DATABASE_PASSWORD = 'botsbots'
-#~ DATABASE_HOST = '192.168.0.7'
-#~ DATABASE_PORT = '3306'
-#~ DATABASE_OPTIONS = {'use_unicode':0,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#PostgeSQL:
-DATABASE_ENGINE = 'postgresql_psycopg2'
+#~ #MySQL:
+DATABASE_ENGINE = 'mysql'
 DATABASE_NAME = 'botsdb'
 DATABASE_USER = 'bots'
 DATABASE_PASSWORD = 'botsbots'
 DATABASE_HOST = '192.168.0.7'
-DATABASE_PORT = '5432'
-DATABASE_OPTIONS = {}
+DATABASE_PORT = '3306'
+DATABASE_OPTIONS = {'use_unicode':0,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
+#PostgeSQL:
+#~ DATABASE_ENGINE = 'postgresql_psycopg2'
+#~ DATABASE_NAME = 'botsdb'
+#~ DATABASE_USER = 'bots'
+#~ DATABASE_PASSWORD = 'botsbots'
+#~ DATABASE_HOST = '192.168.0.7'
+#~ DATABASE_PORT = '5432'
+#~ DATABASE_OPTIONS = {}
 
 #*********sessions, cookies, log out time*************************
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed

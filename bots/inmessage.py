@@ -833,7 +833,7 @@ class tradacoms(var):
             botsglobal.logmap.debug(u'Parsing tradacoms envelopes is OK')
 
 
-class xml(Inmessage):
+class xml(var):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def initfromfile(self):
         self.stack = []
@@ -931,7 +931,7 @@ class xmlnocheck(xml):
             return True
         return False
 
-class json(Inmessage):
+class json(var):
     def initfromfile(self):
         import simplejson
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
