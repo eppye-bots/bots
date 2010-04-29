@@ -395,9 +395,15 @@ def delete(request,*kw,**kwargs):
     #~ print 'delete received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'transactions' in request.GET:
-            models.ta.objects.all().delete()
-            models.filereport.objects.all().delete()
-            models.report.objects.all().delete()
+            from django.db import connection, transaction
+            cursor = connection.cursor()
+            cursor.execute("DELETE FROM ta")
+            cursor.execute("DELETE FROM filereport")
+            cursor.execute("DELETE FROM report")
+            #~ models.ta.objects.all().delete()
+            #~ models.filereport.objects.all().delete()
+            #~ models.report.objects.all().delete()
+            transaction.commit_unless_managed()
             request.user.message_set.create(message='All transactions are deleted.')
         elif 'configuration' in request.GET:
             models.confirmrule.objects.all().delete()

@@ -40,7 +40,7 @@ def start():
             showusage()
         else:
             showusage()
-            
+    
     #init general: find locating of bots, configfiles, init paths etc.***********************
     botsinit.generalinit(configdir)
 
@@ -78,11 +78,7 @@ def start():
     botsglobal.logger.info(u'Django version: "%s".',django.VERSION)
     
     #start cherrypy *********************************************************************
-    if hasattr(cherrypy.engine, 'block'):
-        # 3.1 syntax
-        cherrypy.engine.start()
-        cherrypy.engine.block()
-    else:
-        # 3.0 syntax
-        cherrypy.server.quickstart()
-        cherrypy.engine.start()
+    # 3.1 syntax
+    cherrypy.engine.start()
+    cherrypy.engine.block()
+        

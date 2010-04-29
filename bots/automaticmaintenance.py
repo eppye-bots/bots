@@ -160,7 +160,8 @@ class Trace(object):
         all nodes are put into a tree of ta-objects;
     '''
     def __init__(self,tadict,stuff2evaluate):
-        self.ta=botslib.OldTransaction(**tadict)
+        realdict = dict([(key,tadict[key]) for key in tadict.keys()])
+        self.ta=botslib.OldTransaction(**realdict)
         self.rootidta = stuff2evaluate
         self._build(self.ta)
         self._evaluatestatus()
@@ -175,7 +176,8 @@ class Trace(object):
                                          FROM  ta
                                          WHERE idta=%(child)s''',
                                         {'child':tacurrent.child}):
-                tacurrent.talijst = [botslib.OldTransaction(**row)]
+                realdict = dict([(key,row[key]) for key in row.keys()])
+                tacurrent.talijst = [botslib.OldTransaction(**realdict)]
                 break   #there is only one child
         else:   #find successor by using parent-relationship; mostly this relation except for merge operations
             for row in botslib.query('''SELECT ''' + tavars + '''
@@ -183,7 +185,8 @@ class Trace(object):
                                         WHERE idta > %(currentidta)s
                                         AND parent=%(currentidta)s ''',      #adding the idta > %(parent)s to selection speeds up a lot.
                                         {'currentidta':tacurrent.idta}):
-                tacurrent.talijst.append(botslib.OldTransaction(**row))
+                realdict = dict([(key,row[key]) for key in row.keys()])
+                tacurrent.talijst.append(botslib.OldTransaction(**realdict))
         for child in tacurrent.talijst:
             self._build(child)
 

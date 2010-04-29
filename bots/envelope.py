@@ -17,7 +17,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
     '''
     outerqueryparameters = {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query(),'merge':False}
     #**********for messages only to envelope (no merging)
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,tochannel,envelope,nrmessages,idta,filename
+    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,tochannel,envelope,nrmessages,idta,filename,idroute,merge
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
                                 AND     status=%(status)s
@@ -27,9 +27,10 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
                                 ''',
                                 outerqueryparameters):
         try:
-            ta_info={'merge':False,'idroute':idroute}
-            for key in row.keys():
-                ta_info[key] = row[key]
+            ta_info = dict([(key,row[key]) for key in row.keys()])
+            #~ ta_info={'merge':False,'idroute':idroute}
+            #~ for key in row.keys():
+                #~ ta_info[key] = row[key]
             ta_fromfile = botslib.OldTransaction(row['idta'])    #edi message to envelope
             ta_tofile=ta_fromfile.copyta(status=endstatus)  #edifile for enveloped message; attributes of not-enveloped message are copied...
             #~ ta_fromfile.update(child=ta_tofile.idta)        #??there is already a parent-child relation (1-1)...
@@ -47,7 +48,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
     #all GROUP BY fields must be used in SELECT!
     #as files get merged: can not copy idta; must extract relevant attributes.
     outerqueryparameters['merge']=True
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,tochannel,envelope,sum(nrmessages) as nrmessages
+    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,tochannel,testindicator,charset,contenttype,envelope,sum(nrmessages) as nrmessages
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
                                 AND     status=%(status)s
@@ -58,9 +59,10 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
                                 ''',
                                 outerqueryparameters):
         try:
-            ta_info={'merge':False,'idroute':idroute}
-            for key in row.keys():
-                ta_info[key] = row[key]
+            ta_info = dict([(key,row[key]) for key in row.keys()])
+            ta_info.update({'merge':False,'idroute':idroute})
+            #~ for key in row.keys():
+                #~ ta_info[key] = row[key]
             ta_tofile=botslib.NewTransaction(status=endstatus,idroute=idroute)  #edifile for enveloped messages
             ta_info['filename'] = str(ta_tofile.idta)                           #create filename for enveloped message
             innerqueryparameters = ta_info.copy()

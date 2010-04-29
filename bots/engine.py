@@ -23,19 +23,19 @@ def showusage():
     This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
     The %(name)s does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
     Usage:
-        %(name)s  [options] [routes]
+        %(name)s  [run-options] [config-option] [routes]
 
-    Routes: list the routes to run. If no route is given, all active routes in the database will run
-
-    Options:
-        --new                recieve new edi files.
+    Run-options (can be combined):
+        --new                recieve new edi files (default: if no run-option given: run as new).
         --retransmit         resend and rerececieve.
         --retry              retry previous errors.
         --retrylastrun       retry last run (crash recovery).
         --retrycommunication retry only outgoing communication errors.
         --cleanup            remove older data from database.
+    Config-option:
         -c<directory>        directory for configuration files (default: config).
-    Options can be combined.
+    Routes: list of routes to run. Default: all active routes (in the database)
+
     '''%{'name':os.path.basename(sys.argv[0])}
     print usage
     
@@ -64,6 +64,9 @@ def start():
         commandstorun = ['--new']
     #**************init general: find locating of bots, configfiles, init paths etc.****************
     botsinit.generalinit(configdir)
+    #set current working directory to botspath
+    #~ old_current_directory = os.getcwdu()
+    os.chdir(botsglobal.ini.get('directories','botspath'))
     #**************initialise logging******************************
     try:
         botsinit.initenginelogging()

@@ -4,7 +4,6 @@ import zipfile
 import os
 
 def start(dirname):
-    print ' yes'
     for root, dirs, files in os.walk(dirname):
         head, tail = os.path.split(root)
         if tail in ['.svn','charsets']:
