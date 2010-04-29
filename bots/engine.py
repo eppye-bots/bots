@@ -60,8 +60,8 @@ def start():
             sys.exit(0)
         else:   #pick up names of routes to run
             routestorun.append(arg)
-    if not commandstorun:   #if no command on command line, use all (default)
-        commandstorun = commandspossible
+    if not commandstorun:   #if no command on command line, use new (default)
+        commandstorun = ['--new']
     #**************init general: find locating of bots, configfiles, init paths etc.****************
     botsinit.generalinit(configdir)
     #**************initialise logging******************************

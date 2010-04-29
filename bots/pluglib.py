@@ -20,21 +20,26 @@ exeptions:
 - translate: may be confusing. But anyway, no existing translate will be overwritten....
 '''
 
+#lijst is used for filtering and sorting the plugins. 
+lijst = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','chanpar','translate','routes','confirmrule']
 
-def mycmp(key1,key2):
-    #~ print key1,key2
-    #this list is used for sorting the plugin. 
-    lijst = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','partnergroup','chanpar','translate','routes','confirmrule']
+
+def pluglistcmp(key1,key2):
     return lijst.index(key1) - lijst.index(key2)
 
-def writetodatabase(pluglist):
-    if not pluglist:  #list of plugins is empty: is allowed
+def pluglistcmpisgroup(plug1,plug2):
+    if plug1['plugintype'] == 'partner' and plug2['plugintype'] == 'partner':
+        return  int(plug2['isgroup']) - int(plug1['isgroup'])
+    else:
+        return 0
+
+def writetodatabase(orgpluglist):
+    #sanity checks on pluglist
+    if not orgpluglist:  #list of plugins is empty: is OK. DO nothing
         return
-    #check list of database plugings
-    if not isinstance(pluglist,list):   #has to be a list!!
+    if not isinstance(orgpluglist,list):   #has to be a list!!
         raise Exception('plugins should be list of dicts. Nothing is written.')
-    copypluglist = []
-    for plug in pluglist:
+    for plug in orgpluglist:
         if not isinstance(plug,dict):
             raise botslib.PluginError('plugins should be list of dicts. Nothing is written.')
         for key in plug.keys():
@@ -42,42 +47,53 @@ def writetodatabase(pluglist):
                 raise botslib.PluginError('key of dict is not a string: "%s". Nothing is written.'%(plug))
         if 'plugintype' not in plug:
             raise botslib.PluginError('"plugintype" missing in: "%s". Nothing is written.'%(plug))
-        if plug['plugintype'] == 'ccode':
-            copypluglist.append({'plugintype':'ccodetrigger','ccodeid':plug['ccodeid']})
-        if plug['plugintype'] not in ['user']:
-            copypluglist.append(plug)
-    pluglist = copypluglist
-    #end check list of database plugings
- 
-    pluglist.sort(cmp=mycmp,key=operator.itemgetter('plugintype'))  #sort pluglist
-    
-    for plug in pluglist:
-        botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
-        print '\nstart plug', plug
-        #~ if plug['plugintype'] == 'partnergroup':
-            #~ if 'idpartner' in plug:
-                #~ plug['from_partner_id'] = plug['idpartner']
-                #~ del plug['idpartner']
-            #~ if 'idpartnergroup' in plug:
-                #~ plug['to_partner_id'] = plug['idpartnergroup']
-                #~ del plug['idpartnergroup']
-        #make some fields None instead of '' (translate formpartner, topartner)
-        #~ if plug['plugintype'] == 'confirmrule':
-            #~ continue
-            #~ plug.pop('id', None)       #artificial key, from bots 1.*
-        if plug['plugintype'] == 'translate':
+            
+    #in bots 1.*, partnrgroup was in seperate tabel; in bots 2.* partnergroup is in partner
+    for plug in orgpluglist[:]:
+        if plug['plugintype'] == 'partnergroup':
+            for plugpartner in orgpluglist:
+                if plugpartner['plugintype'] == 'partner' and plugpartner['idpartner'] == plug['idpartner']:
+                    if 'group' in plugpartner:
+                        plugpartner['group'].append(plug['idpartnergroup'])
+                    else:
+                        plugpartner['group'] = [plug['idpartnergroup']]
+                    break
+        
+    #copy & filter orgpluglist; do plugtype specific adaptions
+    pluglist = []
+    for plug in orgpluglist:
+        if plug['plugintype'] == 'ccode':   #add ccodetrigger.
+            for seachccodetriggerplug in pluglist:
+                if seachccodetriggerplug['plugintype']=='ccodetrigger' and seachccodetriggerplug['ccodeid']==plug['ccodeid']:
+                    break
+            else:
+                pluglist.append({'plugintype':'ccodetrigger','ccodeid':plug['ccodeid']})
+        elif plug['plugintype'] == 'translate': #make some fields None instead of '' (translate formpartner, topartner)
             if not plug['frompartner']:
                 plug['frompartner'] = None
             if not plug['topartner']:
                 plug['topartner'] = None
-        #sqlite can have errortexts that are to long. Chop these
-        if plug['plugintype'] == 'ta':
+        elif plug['plugintype'] in ['ta','filereport']: #sqlite can have errortexts that are to long. Chop these
             plug['errortext'] = plug['errortext'][:2047]
-        if plug['plugintype'] == 'filereport':
-            plug['errortext'] = plug['errortext'][:2047]
-        
+        elif plug['plugintype'] == 'routes':
+            plug['active'] = False
+        elif plug['plugintype'] == 'confirmrule':
+            plug.pop('id', None)       #id is an artificial key, delete,
+        elif plug['plugintype'] not in lijst: #filter
+            continue
+        pluglist.append(plug)
+    #sort pluglist: this is needed for relationships
+    pluglist.sort(cmp=pluglistcmp,key=operator.itemgetter('plugintype'))
+    #2nd sort: 
+    pluglist.sort(cmp=pluglistcmpisgroup)
+    #~ for plug in pluglist:
+        #~ print 'list:',plug
+    
+    for plug in pluglist:
+        botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
+        print '\nstart plug', plug
         table = django.db.models.get_model('bots',plug['plugintype'])
-        #~ print '1>>>',table,type(table)
+        print table
         
         #delete fields not in model (create compatibility plugin-version)
         loopdictionary = plug.keys()
@@ -140,11 +156,11 @@ def writetodatabase(pluglist):
         for key,value in plug.items():
             setattr(dbobject,key,value)
         dbobject.save()
-        print 'wrote plug entry in database'
         botsglobal.logger.info(u'        Write to database is OK.')
-        
+
+
 @django.db.transaction.commit_on_success  #if no exception raised: commit, else rollback.
-def load(pathzipfile,orgnamezipfile):
+def load(pathzipfile):
     ''' process uploaded plugin. '''
     #test is valid zipfile
     if not zipfile.is_zipfile(pathzipfile):
@@ -266,6 +282,8 @@ def database2indexfile(filename,function):
     f.close()
 
 def files2plugin(pluginzipfilehandler,function):
+    if function=='codelist':
+        return
     #get usersys files
     usersys = botsglobal.ini.get('directories','usersysabs')
     files2pluginbydir(function,pluginzipfilehandler,usersys,'usersys')

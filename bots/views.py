@@ -362,14 +362,16 @@ def plugin(request,*kw,**kwargs):
             if form.is_valid():
                 botsglobal.logger.info(u'Start reading plugin "%s".',request.FILES['file'].name)
                 try:
-                    if pluglib.load(request.FILES['file'].temporary_file_path(),request.FILES['file'].name):
+                    if pluglib.load(request.FILES['file'].temporary_file_path()):
                         request.user.message_set.create(message='Renamed existing files.')
-                except botslib.PluginError as txt:
+                except botslib.PluginError,txt:
                     botsglobal.logger.info(u'%s',str(txt))
                     request.user.message_set.create(message='%s'%txt)
                 else:
                     botsglobal.logger.info(u'Plugin "%s" read succesful.',request.FILES['file'].name)
                     request.user.message_set.create(message='Plugin %s read succesful.'%request.FILES['file'].name)
+                #~ print 'removed', request.FILES['file'].temporary_file_path()
+                request.FILES['file'].close()
             else:
                  request.user.message_set.create(message='No plugin read.')
         return django.shortcuts.redirect('/bots')

@@ -1,8 +1,8 @@
 try:
-    import sqlite3 as sqlite    # Python 2.5 and up
+    from pysqlite2 import dbapi2 as sqlite  #prefer external modules for pylite
 except ImportError:
     try:
-        from pysqlite2 import dbapi2 as sqlite
+        import sqlite3 as sqlite    #works OK for python26
     except:
         botsglobal.logger.error('Bots tried to connect to database SQLite (is the default database), but this has not succeeded. If you use python 2.4, you should install pysqlite.')
         raise

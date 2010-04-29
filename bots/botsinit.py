@@ -103,7 +103,7 @@ def generalinit(configdir):
         settings.DEBUG = False
     settings.TEMPLATE_DEBUG = settings.DEBUG
     #set paths in settings.py:
-    settings.FILE_UPLOAD_TEMP_DIR = os.path.join(settings.PROJECT_PATH, 'botssys/pluginsuploaded')
+    #~ settings.FILE_UPLOAD_TEMP_DIR = os.path.join(settings.PROJECT_PATH, 'botssys/pluginsuploaded')
 
     #start initializing bots charsets
     initbotscharsets()

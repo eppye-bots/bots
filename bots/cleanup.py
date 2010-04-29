@@ -18,10 +18,6 @@ def cleanup():
         _cleanarchive()
         _cleanpersist()
         _cleantransactions() 
-        #~ _cleanfilereport() 
-        #~ _cleanreport() 
-        #~ _cleanta()
-        #~ _cleanprocessold()
         _cleanprocessnothingreceived()
     except:
         botsglobal.logger.exception(u'Cleanup error.')

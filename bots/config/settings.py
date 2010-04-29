@@ -1,19 +1,8 @@
 # Django settings for bots project.
 import os
-#~ import django
+import bots
 
-#set in bots.ini
-#~ DEBUG = True
-#~ TEMPLATE_DEBUG = DEBUG
-SITE_ID = 1
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = 'm@-u37qiujmeqfbu$daaaaz)sp^7an4u@h=wfx9dd$$$zl2i*x9#awojdcw'
-
-ADMINS = (
-     ('bots', 'your_email@domain.com'),
-)
-
-#~ MANAGERS = (,)
+#*******settings for bots error reports**********************************
 MANAGERS = (    #bots will send error reports to the MANAGERS
      ('hje', 'hjebbers@gmail.com'),
 )
@@ -23,10 +12,9 @@ EMAIL_USE_TLS = True       #Default: False
 EMAIL_HOST_USER = 'hjebbers@gmail.com'        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
 EMAIL_HOST_PASSWORD = ''    #Default: ''. PASSWORD to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
 SERVER_EMAIL = 'hjebbers@gmail.com'           #Sender of bots error reports. Default: 'root@localhost'
-EMAIL_SUBJECT_PREFIX = ''   #This is prepende
+EMAIL_SUBJECT_PREFIX = ''   #This is prepended on email subject.
 
 #*********path settings*************************advised is not to change these values!!
-import bots
 PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -55,21 +43,21 @@ TEMPLATE_DIRS = (
 #*********database settings*************************
 #django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
 #SQLITE: 
-#~ DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#~ DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
-#~ DATABASE_USER = ''
-#~ DATABASE_PASSWORD = ''
-#~ DATABASE_HOST = ''
-#~ DATABASE_PORT = ''
-#~ DATABASE_OPTIONS = {}
-#~ #MySQL:
-DATABASE_ENGINE = 'mysql'
-DATABASE_NAME = 'botsdb'
-DATABASE_USER = 'bots'
-DATABASE_PASSWORD = 'botsbots'
-DATABASE_HOST = '192.168.0.7'
-DATABASE_PORT = '3306'
-DATABASE_OPTIONS = {'use_unicode':0,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
+DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
+DATABASE_USER = ''
+DATABASE_PASSWORD = ''
+DATABASE_HOST = ''
+DATABASE_PORT = ''
+DATABASE_OPTIONS = {}
+#MySQL:
+#~ DATABASE_ENGINE = 'mysql'
+#~ DATABASE_NAME = 'botsdb'
+#~ DATABASE_USER = 'bots'
+#~ DATABASE_PASSWORD = 'botsbots'
+#~ DATABASE_HOST = '192.168.0.7'
+#~ DATABASE_PORT = '3306'
+#~ DATABASE_OPTIONS = {'use_unicode':0,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
 #PostgeSQL:
 #~ DATABASE_ENGINE = 'postgresql_psycopg2'
 #~ DATABASE_NAME = 'botsdb'
@@ -102,7 +90,21 @@ LANGUAGE_CODE = 'en-us'
 USE_I18N = False
 
 #*************************************************************************
-#*************************************************************************
+#*********other django setting. please consult django docs.***************
+#set in bots.ini
+#~ DEBUG = True
+#~ TEMPLATE_DEBUG = DEBUG
+SITE_ID = 1
+# Make this unique, and don't share it with anybody.
+SECRET_KEY = 'm@-u37qiujmeqfbu$daaaaz)sp^7an4u@h=wfx9dd$$$zl2i*x9#awojdcw'
+
+ADMINS = (
+     ('bots', 'your_email@domain.com'),
+)
+
+
+
+#save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
 FILE_UPLOAD_HANDLERS = ("django.core.files.uploadhandler.TemporaryFileUploadHandler",)
 
 # List of callables that know how to import templates from various sources.

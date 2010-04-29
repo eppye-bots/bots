@@ -10,7 +10,7 @@ syntax: regexp
 ^bots/botssys/infile.*
 ^bots/botssys/outfile.*
 ^bots/botssys/logging.*
-^bots/botssys/pluginsuploaded.*
+^bots/botssys/archive.*
 ^bots/djangolink.*
 ^bots/usersys/\w+/.*
 #^bots/media/img.*

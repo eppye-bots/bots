@@ -171,13 +171,6 @@ class partner(models.Model):
         return self.idpartner
     class Meta:
         db_table = 'partner'
-class edigroup(partner):
-    class Meta:
-        proxy = True
-        verbose_name = 'edipartnergroup'
-class edipartner(partner):
-    class Meta:
-        proxy = True
         
 class chanpar(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221

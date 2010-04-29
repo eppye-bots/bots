@@ -22,16 +22,16 @@ class CcodeAdmin(admin.ModelAdmin):
     ordering = ('ccodeid','leftcode')
 admin.site.register(models.ccode,CcodeAdmin)
 
-class CcodeInline(admin.TabularInline):
-    model = models.ccode
-    extra = 1
-    ordering = ('leftcode',)
+#~ class CcodeInline(admin.TabularInline):
+    #~ model = models.ccode
+    #~ extra = 1
+    #~ ordering = ('leftcode',)
 
 class CcodetriggerAdmin(admin.ModelAdmin):
     list_display = ('ccodeid','ccodeid_desc',)
     list_display_links = ('ccodeid',)
     list_per_page = screen_limit
-    inlines = (CcodeInline,)
+    #~ inlines = (CcodeInline,)
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
@@ -39,7 +39,6 @@ class ChannelAdmin(admin.ModelAdmin):
     list_filter = ('inorout','type')
     list_per_page = screen_limit
     ordering = ('idchannel',)
-    save_as = True
     fieldsets = (
         (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset','desc')
                         }),
@@ -53,6 +52,7 @@ class ChannelAdmin(admin.ModelAdmin):
 admin.site.register(models.channel,ChannelAdmin)
 
 class ConfirmruleAdmin(admin.ModelAdmin):
+    save_as = True
     list_display = ('active','negativerule','confirmtype','ruletype', 'frompartner', 'topartner','idroute','idchannel','editype','messagetype')
     list_display_links = ('confirmtype',)
     list_filter = ('active','confirmtype','ruletype')
@@ -68,53 +68,29 @@ class MailInline(admin.TabularInline):
     model = models.chanpar
     fields = ('idchannel','mail', 'cc')
     extra = 1
+    classes = ('collapse', )
 
-class MyTranslateAdminForm(django.forms.ModelForm):
-    ''' customs form for translations to check if entry exists (unique_together not validated right (because of null values in partner fields))'''
+class MyPartnerAdminForm(django.forms.ModelForm):
+    ''' customs form for partners to check if group has groups'''
     class Meta:
-        model = models.translate
+        model = models.partner
     def clean(self):
-        super(MyTranslateAdminForm, self).clean()
-        b = models.translate.objects.filter(fromeditype=self.cleaned_data['fromeditype'],
-                                            frommessagetype=self.cleaned_data['frommessagetype'],
-                                            alt=self.cleaned_data['alt'],
-                                            frompartner=self.cleaned_data['frompartner'],
-                                            topartner=self.cleaned_data['topartner'])
-        if b and (self.instance.pk is None or self.instance.pk != b[0].id):
-                raise django.forms.util.ValidationError('This combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists!')
+        super(MyPartnerAdminForm, self).clean()
+        if self.cleaned_data['isgroup'] and self.cleaned_data['group']: 
+            raise django.forms.util.ValidationError('A group can not be part of a group.')
         return self.cleaned_data
 
 class PartnerAdmin(admin.ModelAdmin):
-    list_display = ('active','idpartner')   #is needed for list_display_links, but not used.
+    form = MyPartnerAdminForm
+    inlines = (MailInline,)
+    fields = ('active', 'isgroup', 'idpartner', 'name','mail','cc','group')
+    list_display = ('active','isgroup','idpartner', 'name','mail','cc')
     list_display_links = ('idpartner',)
-    list_filter = ('active',)
+    list_filter = ('active','isgroup')
     filter_horizontal = ('group',)
     list_per_page = screen_limit
     actions = (activate,)
-    def queryset(self, request):
-        qs = super(PartnerAdmin, self).queryset(request)
-        qs = qs.filter(isgroup=self.isgroup)
-        return qs
-    def save_model(self, request, obj, form, change):
-        if hasattr(self,'isgroup'): 
-            obj.isgroup = self.isgroup
-        obj.save()
 admin.site.register(models.partner,PartnerAdmin)
-
-class EdiGroupAdmin(PartnerAdmin):
-    list_display = ('active','idpartner', 'name')
-    #~ list_display_links = ('idpartner',)
-    fields = ('active', 'idpartner', 'name')
-    isgroup = True
-admin.site.register(models.edigroup,EdiGroupAdmin)
-
-class EdiPartnerAdmin(PartnerAdmin):
-    list_display = ('active','idpartner', 'name','mail','cc')
-    fields = ('active', 'idpartner', 'name','mail','cc','group')
-    filter_horizontal = ('group',)
-    inlines = (MailInline,)
-    isgroup = False
-admin.site.register(models.edipartner,EdiPartnerAdmin)
 
 class RoutesAdmin(admin.ModelAdmin):
     save_as = True
@@ -134,6 +110,21 @@ class RoutesAdmin(admin.ModelAdmin):
                     }),
     )
 admin.site.register(models.routes,RoutesAdmin)
+
+class MyTranslateAdminForm(django.forms.ModelForm):
+    ''' customs form for translations to check if entry exists (unique_together not validated right (because of null values in partner fields))'''
+    class Meta:
+        model = models.translate
+    def clean(self):
+        super(MyTranslateAdminForm, self).clean()
+        b = models.translate.objects.filter(fromeditype=self.cleaned_data['fromeditype'],
+                                            frommessagetype=self.cleaned_data['frommessagetype'],
+                                            alt=self.cleaned_data['alt'],
+                                            frompartner=self.cleaned_data['frompartner'],
+                                            topartner=self.cleaned_data['topartner'])
+        if b and (self.instance.pk is None or self.instance.pk != b[0].id):
+            raise django.forms.util.ValidationError('Combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists.')
+        return self.cleaned_data
 
 class TranslateAdmin(admin.ModelAdmin):
     form = MyTranslateAdminForm

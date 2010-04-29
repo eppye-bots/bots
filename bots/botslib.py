@@ -623,7 +623,7 @@ def readdata(filename,charset=None,errors=None):
     return content
 
 def archivefile(archivedir,fileforarchive):
-    archivedir = join(archivedir,time.strftime('%Y%m'))
+    archivedir = join(archivedir,time.strftime('%Y%m%d'))
     dirshouldbethere(archivedir)
     absfilename = abspathdata(fileforarchive)
     shutil.copy(absfilename,archivedir)
