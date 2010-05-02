@@ -4,8 +4,8 @@ import bots
 
 #*******settings for bots error reports**********************************
 MANAGERS = (    #bots will send error reports to the MANAGERS
-     ('hje', 'hjebbers@gmail.com'),
-)
+    ('hje', 'hjebbers@gmail.com'),
+    )
 EMAIL_HOST = 'smtp.gmail.com'             #Default: 'localhost'
 EMAIL_PORT = '587'             #Default: 25
 EMAIL_USE_TLS = True       #Default: False
@@ -38,34 +38,34 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-)
+    )
 
 #*********database settings*************************
 #django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
 #SQLITE: 
-DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
-DATABASE_USER = ''
-DATABASE_PASSWORD = ''
-DATABASE_HOST = ''
-DATABASE_PORT = ''
-DATABASE_OPTIONS = {}
-#MySQL:
+#~ DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+#~ DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
+#~ DATABASE_USER = ''
+#~ DATABASE_PASSWORD = ''
+#~ DATABASE_HOST = ''
+#~ DATABASE_PORT = ''
+#~ DATABASE_OPTIONS = {}
+#~ #MySQL:
 #~ DATABASE_ENGINE = 'mysql'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
 #~ DATABASE_PASSWORD = 'botsbots'
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
-#~ DATABASE_OPTIONS = {'use_unicode':0,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#PostgeSQL:
-#~ DATABASE_ENGINE = 'postgresql_psycopg2'
-#~ DATABASE_NAME = 'botsdb'
-#~ DATABASE_USER = 'bots'
-#~ DATABASE_PASSWORD = 'botsbots'
-#~ DATABASE_HOST = '192.168.0.7'
-#~ DATABASE_PORT = '5432'
-#~ DATABASE_OPTIONS = {}
+#~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
+#~ #PostgeSQL:
+DATABASE_ENGINE = 'postgresql_psycopg2'
+DATABASE_NAME = 'botsdb'
+DATABASE_USER = 'bots'
+DATABASE_PASSWORD = 'botsbots'
+DATABASE_HOST = '192.168.0.7'
+DATABASE_PORT = '5432'
+DATABASE_OPTIONS = {}
 
 #*********sessions, cookies, log out time*************************
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed
@@ -84,10 +84,11 @@ DATETIME_FORMAT = "Y-m-d G:i"
 TIME_FORMAT  = "G:i"
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+#~ LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'nl'
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
-USE_I18N = False
+USE_I18N = True
 
 #*************************************************************************
 #*********other django setting. please consult django docs.***************
@@ -99,25 +100,26 @@ SITE_ID = 1
 SECRET_KEY = 'm@-u37qiujmeqfbu$daaaaz)sp^7an4u@h=wfx9dd$$$zl2i*x9#awojdcw'
 
 ADMINS = (
-     ('bots', 'your_email@domain.com'),
-)
+    ('bots', 'your_email@domain.com'),
+    )
 
 
 
 #save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
-FILE_UPLOAD_HANDLERS = ("django.core.files.uploadhandler.TemporaryFileUploadHandler",)
-
+FILE_UPLOAD_HANDLERS = (
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+    )
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
     'django.template.loaders.app_directories.load_template_source',
-#     'django.template.loaders.eggs.load_template_source',
-)
+    #'django.template.loaders.eggs.load_template_source',
+    )
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-)
+    )
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -125,9 +127,11 @@ INSTALLED_APPS = (
     #~ 'django.contrib.sites',
     'django.contrib.admin',
     'bots',
-)
-TEMPLATE_CONTEXT_PROCESSORS = ("django.core.context_processors.auth",
-"django.core.context_processors.debug",
-"django.core.context_processors.i18n",
-"django.core.context_processors.media",
-"django.core.context_processors.request")
+    )
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.core.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.request",
+    )

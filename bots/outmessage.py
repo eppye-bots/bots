@@ -246,19 +246,19 @@ class Outmessage(message.Message):
                         calculatelengthwithdecimalsign=1
                     else:
                         calculatelengthwithdecimalsign=0
-                    value='%0*.*F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign+calculatelengthwithdecimalsign,lendecimal,fvalue)
+                    value='%0*.*F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign+calculatelengthwithdecimalsign,lendecimal,round(fvalue,lendecimal))
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
                 elif grammarfield[BFORMAT] == 'N':  #fixed decimals
                     if grammarfield[DECIMALS] and self.ta_info['lengthnumericbare']:
                         calculatelengthwithdecimalsign=1
                     else:
                         calculatelengthwithdecimalsign=0
-                    value='%0*.*F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign+calculatelengthwithdecimalsign,grammarfield[DECIMALS],fvalue)
+                    value='%0*.*F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign+calculatelengthwithdecimalsign,grammarfield[DECIMALS],round(fvalue,grammarfield[DECIMALS]))
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
                 elif grammarfield[BFORMAT] == 'I':  #implicit decimals
                     calculatelengthwithdecimalsign=0
                     fvalue = fvalue * 10**grammarfield[DECIMALS]
-                    value='%0*.0F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign,fvalue)
+                    value='%0*.0F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign,round(fvalue,0))
                     value = value.replace('.',u'',1)
                 if iszeronegative:
                     value = '-' + value

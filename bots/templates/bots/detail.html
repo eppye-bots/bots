@@ -1,35 +1,36 @@
 {% extends "admin/base.html" %}
+{% load i18n %}
 
 {% block content %}
-    <input onClick="history.back()" type="button" value="Back" />
+    <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
     <table>
-        <tr><td>Date/time</td><td class="nowrap">{{rootta.ts|date:"Y-m-d H:i:s"}}</td></tr>
-        <tr><td>State</td><td>{{rootta.get_statust_display}}</td></tr>
-        <tr><td>Route</td><td>{{rootta.idroute}}</td></tr>
+        <tr><td>{% trans 'Date/time' %}</td><td class="nowrap">{{rootta.ts|date:"Y-m-d H:i:s"}}</td></tr>
+        <tr><td>{% trans 'State' %}</td><td>{{rootta.get_statust_display}}</td></tr>
+        <tr><td>{% trans 'Route' %}</td><td>{{rootta.idroute}}</td></tr>
 </table>
     <table id="botstable">
         <thead>
             <tr>
                 <th></th>
-                <th><button class="botsheader" />Phase</button></th>
-                <th><button class="botsheader" />State</button></th>
-                <th><button class="botsheader" />Channel</button></th>
-                <th><button class="botsheader" />Editype</button></th>
-                <th><button class="botsheader" />Messagetype</button></th>
-                <th><button class="botsheader" />FromPartner</button></th>
-                <th><button class="botsheader" />ToPartner</button></th>
-                <th><button class="botsheader" />Reference</button></th>
-                <th><button class="botsheader" />Test</button></th>
-                <th><button class="botsheader" />File</button></th>
-                <th><button class="botsheader" />#mes</button></th>
-                <th><button class="botsheader" />Date/time</button></th>
-                <th><button class="botsheader" />Error</button></th>
-                <th><button class="botsheader" />FromMail</button></th>
-                <th><button class="botsheader" />ToMail</button></th>
-                <th><button class="botsheader" />Charset</button></th>
-                <th><button class="botsheader" />Contenttype</button></th>
-                <th><button class="botsheader" />Alt</button></th>
-                <th><button class="botsheader" />Mapping</button></th>
+                <th><button class="botsheader" />{% trans 'Phase' %}</button></th>
+                <th><button class="botsheader" />{% trans 'State' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Channel' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Editype' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Messagetype' %}</button></th>
+                <th><button class="botsheader" />{% trans 'FromPartner' %}</button></th>
+                <th><button class="botsheader" />{% trans 'ToPartner' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Reference' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Test' %}</button></th>
+                <th><button class="botsheader" />{% trans 'File' %}</button></th>
+                <th><button class="botsheader" />{% trans '#mes' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Error' %}</button></th>
+                <th><button class="botsheader" />{% trans 'FromMail' %}</button></th>
+                <th><button class="botsheader" />{% trans 'ToMail' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Charset' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Contenttype' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Alt' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Mapping' %}</button></th>
             </tr>
         </thead>
         <tbody>

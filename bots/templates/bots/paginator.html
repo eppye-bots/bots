@@ -1,8 +1,9 @@
+{% load i18n %}
     {% if queryset.has_previous %}
         <input type="submit" name="first" value="&lt;&lt;" />
         <input type="submit" name="previous" value="&lt;" />
    {% endif %}
-    (Page {{ queryset.number }} of {{ queryset.paginator.num_pages }}; {{ queryset.paginator.count }} items)
+    ({% trans 'Page' %} {{ queryset.number }} {% trans 'of' %} {{ queryset.paginator.num_pages }}; {{ queryset.paginator.count }} {% trans 'items' %})
    {% if queryset.has_next %}
         <input type="submit" name="next" value="&gt;" />
         <input type="submit" name="last" value="&gt;&gt;" />

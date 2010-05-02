@@ -103,7 +103,7 @@ def start():
             #when scheduling bots it is possible that the last run is still running. Check if maxruntime has passed:
             vanaf = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntime',60))
             for row in botslib.query('''SELECT ts FROM mutex WHERE ts < %(vanaf)s ''',{'vanaf':vanaf}):
-                warn = '!!!The bots database is locked!!!\nThis indicates: bots-engine has ended unexpectedly in the last run.\nThis happens, but is very very rare.\nPossible causes: bots-engine terminated by user, system crash, power-down, python interpreter crash (does that happen?never seen this), etc.\nA forced retry of the last run is strongly advised now; bots will (try to) repair the last run.'
+                warn = '!!!The bots database is locked!!!\nBots-engine has ended in an unexpected way during the last run.\nThis happens, but is very very rare.\nPossible causes: bots-engine terminated by user, system crash, power-down, etc.\nA forced retry of the last run is advised; bots will (try to) repair the last run.'
                 botsglobal.logger.critical(warn)
                 botslib.sendbotserrorreport('[Bots severe error]!!!Database is locked!!!',warn)
                 #add: count errors etc.

@@ -1,10 +1,10 @@
 {% extends "admin/base.html" %}
-
+{% load i18n %}
 
 {% block content %}
 <form action="{{ form.action }}" method="post">
-    <input onClick="history.back()" type="button" value="Back" />
-    <input type="submit" name="2select" value="Change selection" />
+    <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
+    <input type="submit" name="2select" value="{% trans 'Change selection' %}" />
     {% include "bots/paginator.html" %}
 
     <table id="botstable">
@@ -14,17 +14,17 @@
         <thead>
             <tr>
                 <th></th>
-                <th><p class="botsheader2">Phase</p></th>
-                <th><p class="botsheader2">Reference</p></th>
-                <th><p class="botsheader2">Botskey</p></th>
-                <th><p class="botsheader2">Date</p></th>
-                <th><p class="botsheader2">Confirm</p></th>
-                <th><p class="botsheader2">Route</p></th>
-                <th><p class="botsheader2">Channel</p></th>
-                <th><p class="botsheader2">FromPartner</p></th>
-                <th><p class="botsheader2">ToPartner</p></th>
-                <th><p class="botsheader2">Editype</p></th>
-                <th><p class="botsheader2">Messagetype</p></th>
+                <th><p class="botsheader2">{% trans 'Phase' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Reference' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Botskey' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Date' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Confirm' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Route' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Channel' %}</p></th>
+                <th><p class="botsheader2">{% trans 'FromPartner' %}</p></th>
+                <th><p class="botsheader2">{% trans 'ToPartner' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Editype' %}</p></th>
+                <th><p class="botsheader2">{% trans 'Messagetype' %}</p></th>
             </tr>
         </thead>
         <tbody>
@@ -33,12 +33,12 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">View this file</a></li>
+                            <li><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">{% trans 'View this file' %}</a></li>
                             {% if row.incoming %} 
-                                <li><a href="/detail/?inidta={{row.incoming}}" class="botslink" target="_blank">View detail</a></li>
-                                <li><a href="/filer/?action=this&amp;idta={{row.incoming}}" class="botslink" target="_blank">View incoming file</a></li>
+                                <li><a href="/detail/?inidta={{row.incoming}}" class="botslink" target="_blank">{% trans 'View detail' %}</a></li>
+                                <li><a href="/filer/?action=this&amp;idta={{row.incoming}}" class="botslink" target="_blank">{% trans 'View incoming file' %}</a></li>
                             {% else %}
-                                <li><a href="/filer/?action=this&amp;idta={{row.outgoing}}" class="botslink" target="_blank">View outgoing file</a></li>
+                                <li><a href="/filer/?action=this&amp;idta={{row.outgoing}}" class="botslink" target="_blank">{% trans 'View outgoing file' %}</a></li>
                             {% endif %}
                         </ul>
                     </div>

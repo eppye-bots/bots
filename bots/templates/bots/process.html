@@ -1,11 +1,12 @@
 {% extends "admin/base.html" %}
+{% load i18n %}
 
 {% block content %}
 <form action="{{ form.action }}" method="post">
-    <input onClick="history.back()" type="button" value="Back" />
-    <input type="submit" name="2select" value="Change selection" />
-    <input type="submit" name="2incoming" value="Incoming (same selection)" />
-    <input type="submit" name="2outgoing" value="Outgoing (same selection)" />
+    <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
+    <input type="submit" name="2select" value="{% trans 'Change selection' %}" />
+    <input type="submit" name="2incoming" value="{% trans 'Incoming (same selection)' %}" />
+    <input type="submit" name="2outgoing" value="{% trans 'Outgoing (same selection)' %}" />
     {% include "bots/paginator.html" %}
 
     <table id="botstable">
@@ -14,13 +15,13 @@
         {% endfor %}
         <thead>
             <tr>
-                <th><button class="botsheader" type="submit" name="order" value="status" />State</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="idroute" />Route</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="ts" />Date/time</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="fromchannel" />FromChannel</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="tochannel" />ToChannel</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="filename" />Process</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="errortext" />Error</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'State' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="idroute" />{% trans 'Route' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="fromchannel" />{% trans 'FromChannel' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="tochannel" />{% trans 'ToChannel' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="filename" />{% trans 'Process' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="errortext" />{% trans 'Error' %}</button></th>
             </tr>
         </thead>
         <tbody>

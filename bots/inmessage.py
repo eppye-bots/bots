@@ -953,12 +953,6 @@ class json(var):
                 self.root = self.dojsonobject(jsonobject.values()[0],jsonobject.keys()[0])
             elif len(jsonobject)==1 and isinstance(jsonobject.values()[0],list) : 
                 #root dict has no name; use value from grammar for rootID; {id2:<dict, list>}
-                #~ {'article': 
-                    #~ [
-                    #~ {'ccodeid': 'artikel', 'leftcode': 'leftcode', 'rightcode': 'rightcode'}, 
-                    #~ {'ccodeid': 'artikel', 'leftcode': 'leftcode2', 'rightcode': 'rightcode'},
-                    #~ ]
-                #~ }
                 self.root=node.Node({'BOTSID': self.getrootID()})  #initialise empty node.
                 self.root.children = self.dojsonlist(jsonobject.values()[0],jsonobject.keys()[0])
             else:

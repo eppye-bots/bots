@@ -10,11 +10,12 @@
     <link rel="icon" type="image/png" href="/media/images/favicon.png"/>
     <link rel="stylesheet" type="text/css" href="/media/css/bots.css" />
 </head>
+{% load i18n %}
 
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
 {% if not is_popup %}
     <div id="logo">
-        <img src="/media/images/botslogo.png" alt="botslogo"/>
+        <img src="/media/images/botslogo.png"/>
     </div>
     {% include "bots/menu.html" %}
 {% endif %}

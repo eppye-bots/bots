@@ -2,6 +2,7 @@
 import botslib
 import botsglobal
 from botsconfig import *
+from django.utils.translation import ugettext as _
 tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext'
 
 
@@ -13,7 +14,7 @@ def evaluate(type,stuff2evaluate):
         else:
             return evaluaterun(type,stuff2evaluate)
     except:
-        botsglobal.logger.exception(u'Error in automatic maintenance.')
+        botsglobal.logger.exception(_(u'Error in automatic maintenance.'))
         return 1    #there has been an error!
 
 def evaluaterun(type,stuff2evaluate):
@@ -51,7 +52,7 @@ def evaluateretryrun(type,stuff2evaluate):
                                     {'idta':row['idta']}):
             break
         else:   #there really should be a corresponding ta
-            raise botslib.PanicError(u'MaintenanceRetry: could not find transaction "$txt".',txt=row['idta'])
+            raise botslib.PanicError(_(u'MaintenanceRetry: could not find transaction "$txt".'),txt=row['idta'])
         #~ tadict = dict(zip(tavars,row2))
         mytrace = Trace(tadict,stuff2evaluate)
         resultlast[mytrace.statusttree]+=1
@@ -127,25 +128,25 @@ def generate_report(stuff2evaluate):
                                     {'rootidta':stuff2evaluate}):
         break
     else:
-        raise botslib.PanicError(u'In generate report: could not find report?')
-    subject = '[Bots Error Report] %s'%(str(results['ts'])[:16])
-    reporttext = 'Bots Report; type: %s, time: %s\n'%(results['type'],str(results['ts'])[:19])
-    reporttext += '    %d files received/processed in run.\n'%(results['lastreceived'])
+        raise botslib.PanicError(_(u'In generate report: could not find report?'))
+    subject = _(u'[Bots Error Report] %(time)s')%{'time':str(results['ts'])[:16]}
+    reporttext = _(u'Bots Report; type: %(type)s, time: %(time)s\n')%{'type':results['type'],'time':str(results['ts'])[:19]}
+    reporttext += _(u'    %d files received/processed in run.\n')%(results['lastreceived'])
     if results['lastdone']:
-        reporttext += '    %d files without errors,\n'%(results['lastdone'])
+        reporttext += _(u'    %d files without errors,\n')%(results['lastdone'])
     if results['lasterror']:
-        subject += '; %d file errors'%(results['lasterror'])
-        reporttext += '    %d files with errors,\n'%(results['lasterror'])
+        subject += _(u'; %d file errors')%(results['lasterror'])
+        reporttext += _(u'    %d files with errors,\n')%(results['lasterror'])
     if results['lastok']:
-        subject += '; %d files stuck'%(results['lastok'])
-        reporttext += '    %d files got stuck,\n'%(results['lastok'])
+        subject += _(u'; %d files stuck')%(results['lastok'])
+        reporttext += _(u'    %d files got stuck,\n')%(results['lastok'])
     if results['lastopen']:
-        subject += '; %d system errors'%(results['lastopen'])
-        reporttext += '    %d system errors,\n'%(results['lastopen'])
+        subject += _(u'; %d system errors')%(results['lastopen'])
+        reporttext += _(u'    %d system errors,\n')%(results['lastopen'])
     if results['processerrors']:
-        subject += '; %d process errors'%(results['processerrors'])
-        reporttext += '    %d errors in processes.\n'%(results['processerrors'])
-    reporttext += '    %d files send in run.\n'%(results['send'])
+        subject += _(u'; %d process errors')%(results['processerrors'])
+        reporttext += _(u'    %d errors in processes.\n')%(results['processerrors'])
+    reporttext += _(u'    %d files send in run.\n')%(results['send'])
     
     botsglobal.logger.info(reporttext)
     if results['status']:
@@ -226,26 +227,26 @@ class Trace(object):
                 elif statustcount[OK]:
                     return OK   #at least one of the child-trees is not DONE
                 elif statustcount[ERROR]:
-                    raise botslib.TraceError(u'DONE but no child is DONE or OK (idta: $idta).',idta=tacurrent.idta)
+                    raise botslib.TraceError(-(u'DONE but no child is DONE or OK (idta: $idta).'),idta=tacurrent.idta)
                 else:   #if no ERROR and has no children: end of trace
                     return DONE
             elif tacurrent.statust==OK:
                 if statustcount[ERROR]:
                     return OK   #child(ren) ERROR, this is expected
                 elif statustcount[DONE]:
-                    raise botslib.TraceError(u'OK but child is DONE (idta: $idta). Changing setup while errors are pending?',idta=tacurrent.idta)
+                    raise botslib.TraceError(_(u'OK but child is DONE (idta: $idta). Changing setup while errors are pending?'),idta=tacurrent.idta)
                 elif statustcount[OK]:
-                    raise botslib.TraceError(u'OK but child is OK (idta: $idta). Changing setup while errors are pending?',idta=tacurrent.idta)
+                    raise botslib.TraceError(_(u'OK but child is OK (idta: $idta). Changing setup while errors are pending?'),idta=tacurrent.idta)
                 else:
-                    raise botslib.TraceNotPickedUpError(u'OK but file is not processed further (idta: $idta).',idta=tacurrent.idta)
+                    raise botslib.TraceNotPickedUpError(_(u'OK but file is not processed further (idta: $idta).'),idta=tacurrent.idta)
             elif tacurrent.statust==ERROR:
                 if tacurrent.talijst:
-                    raise botslib.TraceError(u'ERROR but has child(ren) (idta: $idta). Changing setup while errors are pending?',idta=tacurrent.idta)
+                    raise botslib.TraceError(_(u'ERROR but has child(ren) (idta: $idta). Changing setup while errors are pending?'),idta=tacurrent.idta)
                 else:
                     #~ self.errorta += [tacurrent]
                     return ERROR
             else:   #tacurrent.statust==OPEN
-                raise botslib.TraceError(u'Severe error: found statust (idta: $idta).',idta=tacurrent.idta)
+                raise botslib.TraceError(_(u'Severe error: found statust (idta: $idta).'),idta=tacurrent.idta)
 
     def _getfilereport(self):
         ''' Walk the ta-tree again in order to retrieve information belonging to incoming file.

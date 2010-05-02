@@ -1,0 +1,974 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-05-02 22:53+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admin.py:15
+msgid "(de)activate"
+msgstr ""
+
+#: admin.py:46
+msgid "FTP specific data"
+msgstr ""
+
+#: admin.py:49 admin.py:108
+msgid "Advanced"
+msgstr ""
+
+#: admin.py:80
+msgid "A group can not be part of a group."
+msgstr ""
+
+#: admin.py:105
+msgid "Filtering for outchannel"
+msgstr ""
+
+#: admin.py:126
+msgid ""
+"Combination of fromeditype,frommessagetype,alt,frompartner,topartner already "
+"exists."
+msgstr ""
+
+#: admin.py:140
+msgid "Advanced - multiple translations per editype/messagetype"
+msgstr "Geavanceerd - meerdere vertalingen per editype/berichttype"
+
+#: automaticmaintenance.py:17
+msgid "Error in automatic maintenance."
+msgstr ""
+
+#: automaticmaintenance.py:55
+msgid "MaintenanceRetry: could not find transaction \"$txt\"."
+msgstr ""
+
+#: automaticmaintenance.py:131
+msgid "In generate report: could not find report?"
+msgstr ""
+
+#: automaticmaintenance.py:132
+#, python-format
+msgid "[Bots Error Report] %(time)s"
+msgstr ""
+
+#: automaticmaintenance.py:133
+#, python-format
+msgid "Bots Report; type: %(type)s, time: %(time)s\n"
+msgstr "Bots rapportage; soort: %(type)s, tijdstip: %(time)s\n"
+
+#: automaticmaintenance.py:134
+#, python-format
+msgid "    %d files received/processed in run.\n"
+msgstr "    %d files ontvangen en verwerkt in deze run.\n"
+
+#: automaticmaintenance.py:136
+#, python-format
+msgid "    %d files without errors,\n"
+msgstr "    %d files zonder fouten,\n"
+
+#: automaticmaintenance.py:138
+#, python-format
+msgid "; %d file errors"
+msgstr "; %d file fouten"
+
+#: automaticmaintenance.py:139
+#, python-format
+msgid "    %d files with errors,\n"
+msgstr "    %d files met fouten,\n"
+
+#: automaticmaintenance.py:141
+#, python-format
+msgid "; %d files stuck"
+msgstr "; %d files vastgelopen"
+
+#: automaticmaintenance.py:142
+#, python-format
+msgid "    %d files got stuck,\n"
+msgstr "    %d files vastgelopen,\n"
+
+#: automaticmaintenance.py:144
+#, python-format
+msgid "; %d system errors"
+msgstr "; %d system fouten"
+
+#: automaticmaintenance.py:145
+#, python-format
+msgid "    %d system errors,\n"
+msgstr "    %d system fouten,\n"
+
+#: automaticmaintenance.py:147
+#, python-format
+msgid "; %d process errors"
+msgstr "; %d proces fouten"
+
+#: automaticmaintenance.py:148
+#, python-format
+msgid "    %d errors in processes.\n"
+msgstr "    %d fouten in processen.\n"
+
+#: automaticmaintenance.py:149
+#, python-format
+msgid "    %d files send in run.\n"
+msgstr "    %d files als output in deze run.\n"
+
+#: automaticmaintenance.py:237
+msgid ""
+"OK but child is DONE (idta: $idta). Changing setup while errors are pending?"
+msgstr ""
+
+#: automaticmaintenance.py:239
+msgid ""
+"OK but child is OK (idta: $idta). Changing setup while errors are pending?"
+msgstr ""
+
+#: automaticmaintenance.py:241
+msgid "OK but file is not processed further (idta: $idta)."
+msgstr ""
+
+#: automaticmaintenance.py:244
+msgid ""
+"ERROR but has child(ren) (idta: $idta). Changing setup while errors are "
+"pending?"
+msgstr ""
+
+#: automaticmaintenance.py:249
+msgid "Severe error: found statust (idta: $idta)."
+msgstr ""
+
+#: botslib.py:21
+msgid "platform"
+msgstr ""
+
+#: botslib.py:22
+msgid "machine"
+msgstr ""
+
+#: botslib.py:23
+msgid "python version"
+msgstr "python versie"
+
+#: botslib.py:24
+msgid "django version"
+msgstr ""
+
+#: botslib.py:25
+msgid "bots version"
+msgstr ""
+
+#: botslib.py:26
+msgid "bots installation path"
+msgstr ""
+
+#: botslib.py:27
+msgid "config path"
+msgstr ""
+
+#: botslib.py:28
+msgid "botssys path"
+msgstr ""
+
+#: botslib.py:29
+msgid "usersys path"
+msgstr ""
+
+#: botslib.py:30
+msgid "DATABASE_ENGINE"
+msgstr ""
+
+#: botslib.py:31
+msgid "DATABASE_NAME"
+msgstr ""
+
+#: botslib.py:32
+msgid "DATABASE_USER"
+msgstr ""
+
+#: botslib.py:33
+msgid "DATABASE_HOST"
+msgstr ""
+
+#: botslib.py:34
+msgid "DATABASE_PORT"
+msgstr ""
+
+#: botslib.py:35
+msgid "DATABASE_OPTIONS"
+msgstr ""
+
+#: botslib.py:479
+#, python-format
+msgid "Error in sending error report: %s"
+msgstr ""
+
+#: botslib.py:496
+#, python-format
+msgid "Error in process: %s"
+msgstr ""
+
+#: botslib.py:546
+msgid "Import file: \"$filename\", error: $txt"
+msgstr ""
+
+#: botslib.py:565
+#, python-format
+msgid "no import of file \"%s\"."
+msgstr ""
+
+#: botslib.py:645 botslib.py:660
+msgid "Script file \"$filename\": \"$txt\"."
+msgstr ""
+
+#: templates/bots/about.html:8
+msgid "Bots Open Source EDI translator"
+msgstr ""
+
+#: templates/bots/about.html:9
+msgid "Bots documentation"
+msgstr ""
+
+#: templates/bots/about.html:10
+msgid "Bots mailing list"
+msgstr ""
+
+#: templates/bots/about.html:11
+msgid "Commercial support by EbbersConsult"
+msgstr "Commerciële ondersteuning door Ebbersonsult (Nederlandstalig)."
+
+#: templates/bots/confirm.html:6 templates/bots/detail.html:5
+#: templates/bots/document.html:6 templates/bots/incoming.html:6
+#: templates/bots/outgoing.html:6 templates/bots/process.html:6
+#: templates/bots/reports.html:6
+msgid "Back"
+msgstr "Terug"
+
+#: templates/bots/confirm.html:7 templates/bots/document.html:7
+#: templates/bots/incoming.html:7 templates/bots/outgoing.html:7
+#: templates/bots/process.html:7 templates/bots/reports.html:7
+msgid "Change selection"
+msgstr ""
+
+#: templates/bots/confirm.html:8 templates/bots/outgoing.html:8
+#: templates/bots/process.html:8
+msgid "Incoming (same selection)"
+msgstr ""
+
+#: templates/bots/confirm.html:9 templates/bots/incoming.html:8
+#: templates/bots/process.html:9
+msgid "Outgoing (same selection)"
+msgstr ""
+
+#: templates/bots/confirm.html:19
+msgid "Confirmed"
+msgstr "Bevestigd"
+
+#: templates/bots/confirm.html:20 templates/bots/reports.html:18
+msgid "Type"
+msgstr ""
+
+#: templates/bots/confirm.html:21 templates/bots/detail.html:9
+#: templates/bots/document.html:22 templates/bots/filer.html:19
+#: templates/bots/incoming.html:22 templates/bots/outgoing.html:24
+#: templates/bots/process.html:19
+msgid "Route"
+msgstr ""
+
+#: templates/bots/confirm.html:22
+msgid "Received"
+msgstr "Ontvangen"
+
+#: templates/bots/confirm.html:23 templates/bots/detail.html:20
+#: templates/bots/document.html:24 templates/bots/incoming.html:28
+#: templates/bots/outgoing.html:26
+msgid "FromPartner"
+msgstr ""
+
+#: templates/bots/confirm.html:24 templates/bots/detail.html:21
+#: templates/bots/document.html:25 templates/bots/incoming.html:30
+#: templates/bots/outgoing.html:27
+msgid "ToPartner"
+msgstr ""
+
+#: templates/bots/confirm.html:25
+msgid "ContentFile"
+msgstr ""
+
+#: templates/bots/confirm.html:26
+msgid "ConfirmFile"
+msgstr ""
+
+#: templates/bots/confirm.html:27 templates/bots/confirm.html.py:28
+#: templates/bots/incoming.html:29 templates/bots/outgoing.html:25
+#: templates/bots/process.html:22
+msgid "ToChannel"
+msgstr ""
+
+#: templates/bots/confirm.html:29 templates/bots/detail.html:18
+#: templates/bots/document.html:26 templates/bots/outgoing.html:30
+msgid "Editype"
+msgstr ""
+
+#: templates/bots/confirm.html:30 templates/bots/detail.html:19
+#: templates/bots/document.html:27 templates/bots/outgoing.html:31
+msgid "Messagetype"
+msgstr ""
+
+#: templates/bots/confirm.html:31 templates/bots/detail.html:28
+#: templates/bots/incoming.html:37 templates/bots/outgoing.html:28
+msgid "FromMail"
+msgstr ""
+
+#: templates/bots/confirm.html:32 templates/bots/detail.html:29
+#: templates/bots/incoming.html:38 templates/bots/outgoing.html:29
+msgid "ToMail"
+msgstr ""
+
+#: templates/bots/confirm.html:41 templates/bots/document.html:38
+#: templates/bots/incoming.html:47 templates/bots/outgoing.html:44
+msgid "View detail"
+msgstr ""
+
+#: templates/bots/confirm.html:42
+msgid "Manual confirm"
+msgstr "Handmatig bevestigen"
+
+#: templates/bots/detail.html:7 templates/bots/detail.html.py:26
+#: templates/bots/incoming.html:23 templates/bots/outgoing.html:21
+#: templates/bots/process.html:20 templates/bots/reports.html:21
+msgid "Date/time"
+msgstr "Datum/tijd"
+
+#: templates/bots/detail.html:8 templates/bots/detail.html.py:16
+#: templates/bots/incoming.html:20 templates/bots/process.html:18
+#: templates/bots/reports.html:17
+msgid "State"
+msgstr ""
+
+#: templates/bots/detail.html:15 templates/bots/document.html:17
+msgid "Phase"
+msgstr ""
+
+#: templates/bots/detail.html:17 templates/bots/document.html:23
+msgid "Channel"
+msgstr ""
+
+#: templates/bots/detail.html:22 templates/bots/document.html:18
+#: templates/bots/outgoing.html:35
+msgid "Reference"
+msgstr ""
+
+#: templates/bots/detail.html:23 templates/bots/outgoing.html:32
+msgid "Test"
+msgstr ""
+
+#: templates/bots/detail.html:24
+msgid "File"
+msgstr ""
+
+#: templates/bots/detail.html:25
+msgid "#mes"
+msgstr ""
+
+#: templates/bots/detail.html:27 templates/bots/incoming.html:35
+#: templates/bots/process.html:24 templates/bots/reports.html:22
+msgid "Error"
+msgstr ""
+
+#: templates/bots/detail.html:30 templates/bots/outgoing.html:34
+msgid "Charset"
+msgstr ""
+
+#: templates/bots/detail.html:31 templates/bots/outgoing.html:33
+msgid "Contenttype"
+msgstr ""
+
+#: templates/bots/detail.html:32
+msgid "Alt"
+msgstr ""
+
+#: templates/bots/detail.html:33
+msgid "Mapping"
+msgstr ""
+
+#: templates/bots/document.html:19
+msgid "Botskey"
+msgstr ""
+
+#: templates/bots/document.html:20
+msgid "Date"
+msgstr "Datum/tijd"
+
+#: templates/bots/document.html:21
+msgid "Confirm"
+msgstr ""
+
+#: templates/bots/document.html:36
+msgid "View this file"
+msgstr ""
+
+#: templates/bots/document.html:39
+msgid "View incoming file"
+msgstr ""
+
+#: templates/bots/document.html:41
+msgid "View outgoing file"
+msgstr ""
+
+#: templates/bots/filer.html:16
+msgid "Previous"
+msgstr ""
+
+#: templates/bots/filer.html:17
+msgid "Next"
+msgstr ""
+
+#: templates/bots/filer.html:18
+msgid "Download"
+msgstr ""
+
+#: templates/bots/filer.html:20
+msgid "phase"
+msgstr ""
+
+#: templates/bots/filer.html:21
+msgid "status"
+msgstr ""
+
+#: templates/bots/filer.html:22
+msgid "editype"
+msgstr ""
+
+#: templates/bots/filer.html:23
+msgid "messagetype"
+msgstr ""
+
+#: templates/bots/filer.html:24
+msgid "date"
+msgstr "Datum/tijd"
+
+#: templates/bots/filer.html:25
+msgid "file"
+msgstr ""
+
+#: templates/bots/filer.html:26
+msgid "confirm asked"
+msgstr ""
+
+#: templates/bots/filer.html:28
+msgid "confirmed"
+msgstr ""
+
+#: templates/bots/filer.html:29
+msgid "confirmtype"
+msgstr ""
+
+#: templates/bots/incoming.html:9 templates/bots/outgoing.html:9
+msgid "Process Errors (same selection)"
+msgstr ""
+
+#: templates/bots/incoming.html:10
+msgid "Confirm (same selection"
+msgstr ""
+
+#: templates/bots/incoming.html:21
+msgid "Re*"
+msgstr ""
+
+#: templates/bots/incoming.html:24 templates/bots/reports.html:19
+msgid "#in"
+msgstr ""
+
+#: templates/bots/incoming.html:25
+msgid "InEditype"
+msgstr ""
+
+#: templates/bots/incoming.html:26
+msgid "InMessagetype"
+msgstr ""
+
+#: templates/bots/incoming.html:27 templates/bots/process.html:21
+msgid "FromChannel"
+msgstr ""
+
+#: templates/bots/incoming.html:31
+msgid "OutEditype"
+msgstr ""
+
+#: templates/bots/incoming.html:32
+msgid "OutMessagetype"
+msgstr ""
+
+#: templates/bots/incoming.html:33
+msgid "InFile"
+msgstr ""
+
+#: templates/bots/incoming.html:34 templates/bots/outgoing.html:23
+msgid "OutFile"
+msgstr ""
+
+#: templates/bots/incoming.html:36
+msgid "MappingScript"
+msgstr ""
+
+#: templates/bots/incoming.html:48
+msgid "Rerecieve"
+msgstr ""
+
+#: templates/bots/menu.html:5 templates/bots/menu.html.py:6
+#: templates/registration/logged_out.html:4
+#: templates/registration/password_change_done.html:4
+#: templates/registration/password_change_form.html:4
+#: templates/registration/password_reset_complete.html:4
+#: templates/registration/password_reset_confirm.html:4
+#: templates/registration/password_reset_done.html:4
+#: templates/registration/password_reset_form.html:4
+msgid "Home"
+msgstr ""
+
+#: templates/bots/menu.html:7
+msgid "About Bots"
+msgstr ""
+
+#: templates/bots/menu.html:8
+msgid "Help"
+msgstr ""
+
+#: templates/bots/menu.html:9
+#: templates/registration/password_change_done.html:3
+#: templates/registration/password_change_form.html:3
+msgid "Log out"
+msgstr ""
+
+#: templates/bots/menu.html:10
+#: templates/registration/password_change_done.html:3
+#: templates/registration/password_change_form.html:3
+msgid "Change password"
+msgstr ""
+
+#: templates/bots/menu.html:11
+msgid "Current user"
+msgstr ""
+
+#: templates/bots/menu.html:12
+msgid "Last login"
+msgstr ""
+
+#: templates/bots/menu.html:15
+msgid "Last run"
+msgstr ""
+
+#: templates/bots/menu.html:16 templates/bots/menu.html.py:24
+#: templates/bots/menu.html:33
+msgid "Reports"
+msgstr ""
+
+#: templates/bots/menu.html:17 templates/bots/menu.html.py:25
+#: templates/bots/menu.html:34
+msgid "Incoming"
+msgstr ""
+
+#: templates/bots/menu.html:18 templates/bots/menu.html.py:26
+#: templates/bots/menu.html:35
+msgid "Document"
+msgstr ""
+
+#: templates/bots/menu.html:19 templates/bots/menu.html.py:27
+#: templates/bots/menu.html:36
+msgid "Outgoing"
+msgstr ""
+
+#: templates/bots/menu.html:20 templates/bots/menu.html.py:28
+#: templates/bots/menu.html:37
+msgid "Process Errors"
+msgstr ""
+
+#: templates/bots/menu.html:23
+msgid "All runs"
+msgstr ""
+
+#: templates/bots/menu.html:29 templates/bots/menu.html.py:38
+#, fuzzy
+msgid "Confirmations"
+msgstr "Bevestigd"
+
+#: templates/bots/menu.html:32
+msgid "Select"
+msgstr ""
+
+#: templates/bots/menu.html:42
+#, fuzzy
+msgid "Configuration"
+msgstr "Bevestigd"
+
+#: templates/bots/menu.html:43
+msgid "Routes"
+msgstr ""
+
+#: templates/bots/menu.html:44
+msgid "Channels"
+msgstr ""
+
+#: templates/bots/menu.html:45
+msgid "Translations"
+msgstr ""
+
+#: templates/bots/menu.html:46
+msgid "Partners &amp; groups"
+msgstr ""
+
+#: templates/bots/menu.html:47
+#, fuzzy
+msgid "Confirmrules"
+msgstr "Bevestigd"
+
+#: templates/bots/menu.html:48
+msgid "User Codes as list"
+msgstr ""
+
+#: templates/bots/menu.html:49
+msgid "User Codes by type"
+msgstr ""
+
+#: templates/bots/menu.html:54
+msgid "SysTasks"
+msgstr ""
+
+#: templates/bots/menu.html:55
+msgid "Read plugin"
+msgstr ""
+
+#: templates/bots/menu.html:56
+msgid "Make configuration plugin"
+msgstr ""
+
+#: templates/bots/menu.html:57
+msgid "Make snapshot plugin"
+msgstr ""
+
+#: templates/bots/menu.html:58
+msgid "Make codelist plugin"
+msgstr ""
+
+#: templates/bots/menu.html:60
+msgid ""
+"Are you sure you want to delete all transactions?\\nThis action can not be "
+"undone!"
+msgstr "poep"
+
+#: templates/bots/menu.html:60
+msgid "Delete transactions"
+msgstr ""
+
+#: templates/bots/menu.html:61
+msgid ""
+"Are you sure you want to delete all configuration?\\nThis action can not be "
+"undone!"
+msgstr ""
+
+#: templates/bots/menu.html:61
+msgid "Delete configuration"
+msgstr ""
+
+#: templates/bots/menu.html:62
+msgid ""
+"Are you sure you want to delete all user maintained codes?\\nThis action can "
+"not be undone!"
+msgstr ""
+
+#: templates/bots/menu.html:62
+msgid "Delete code lists"
+msgstr ""
+
+#: templates/bots/menu.html:64
+msgid "Users"
+msgstr ""
+
+#: templates/bots/menu.html:65
+msgid "UserGroups"
+msgstr ""
+
+#: templates/bots/menu.html:66
+msgid "View/edit counters"
+msgstr ""
+
+#: templates/bots/menu.html:68
+msgid "Unlock database"
+msgstr ""
+
+#: templates/bots/menu.html:69
+msgid "Only needed in case of database lock/crash recovery. Are you sure?"
+msgstr ""
+
+#: templates/bots/menu.html:69
+msgid "Run forced retry of last run"
+msgstr ""
+
+#: templates/bots/menu.html:70
+msgid "Send test report"
+msgstr ""
+
+#: templates/bots/menu.html:74
+msgid "Run engine"
+msgstr ""
+
+#: templates/bots/menu.html:75
+msgid "Run only new"
+msgstr ""
+
+#: templates/bots/menu.html:76
+msgid "Run only retry"
+msgstr ""
+
+#: templates/bots/menu.html:77
+msgid "Run only retransmit"
+msgstr ""
+
+#: templates/bots/menu.html:81 templates/registration/login.html:26
+#: templates/registration/password_reset_complete.html:14
+msgid "Log in"
+msgstr ""
+
+#: templates/bots/menu.html:84
+msgid "Javascript is not enabled. Bots works beter with javascript."
+msgstr ""
+
+#: templates/bots/outgoing.html:10
+msgid "Confirm (same selection)"
+msgstr ""
+
+#: templates/bots/outgoing.html:20 templates/bots/outgoing.html.py:45
+msgid "Resend"
+msgstr ""
+
+#: templates/bots/outgoing.html:22
+msgid "#messages"
+msgstr ""
+
+#: templates/bots/paginator.html:6
+msgid "Page"
+msgstr "Pagina"
+
+#: templates/bots/paginator.html:6
+msgid "of"
+msgstr "van"
+
+#: templates/bots/paginator.html:6
+msgid "items"
+msgstr ""
+
+#: templates/bots/plugin.html:11
+msgid "Read"
+msgstr ""
+
+#: templates/bots/process.html:23
+msgid "Process"
+msgstr ""
+
+#: templates/bots/reports.html:20
+msgid "#out"
+msgstr ""
+
+#: templates/bots/reports.html:31
+msgid "View incoming"
+msgstr ""
+
+#: templates/bots/reports.html:32
+msgid "View outgoing"
+msgstr ""
+
+#: templates/bots/reports.html:33
+msgid "View process errors"
+msgstr ""
+
+#: templates/bots/reports.html:34
+msgid "View file errors"
+msgstr ""
+
+#: templates/bots/reports.html:50
+msgid "files with errors"
+msgstr ""
+
+#: templates/bots/reports.html:53
+msgid "files got stuck"
+msgstr ""
+
+#: templates/bots/reports.html:56
+msgid "system errors"
+msgstr ""
+
+#: templates/bots/reports.html:59
+msgid "errors in processes"
+msgstr ""
+
+#: templates/bots/selectform.html:6
+msgid "Show selection"
+msgstr ""
+
+#: templates/registration/logged_out.html:8
+msgid "Thanks for spending some quality time with the Web site today."
+msgstr ""
+
+#: templates/registration/logged_out.html:10
+msgid "Log in again"
+msgstr ""
+
+#: templates/registration/login.html:19
+msgid "Username:"
+msgstr ""
+
+#: templates/registration/login.html:22
+msgid "Password:"
+msgstr ""
+
+#: templates/registration/password_change_done.html:3
+#: templates/registration/password_change_form.html:3
+msgid "Documentation"
+msgstr ""
+
+#: templates/registration/password_change_done.html:4
+#: templates/registration/password_change_form.html:4
+#: templates/registration/password_change_form.html:6
+#: templates/registration/password_change_form.html:10
+msgid "Password change"
+msgstr ""
+
+#: templates/registration/password_change_done.html:6
+#: templates/registration/password_change_done.html:10
+msgid "Password change successful"
+msgstr ""
+
+#: templates/registration/password_change_done.html:12
+msgid "Your password was changed."
+msgstr ""
+
+#: templates/registration/password_change_form.html:12
+msgid ""
+"Please enter your old password, for security's sake, and then enter your new "
+"password twice so we can verify you typed it in correctly."
+msgstr ""
+
+#: templates/registration/password_change_form.html:17
+msgid "Old password:"
+msgstr ""
+
+#: templates/registration/password_change_form.html:19
+#: templates/registration/password_reset_confirm.html:18
+msgid "New password:"
+msgstr ""
+
+#: templates/registration/password_change_form.html:21
+#: templates/registration/password_reset_confirm.html:20
+msgid "Confirm password:"
+msgstr ""
+
+#: templates/registration/password_change_form.html:23
+#: templates/registration/password_reset_confirm.html:21
+msgid "Change my password"
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:4
+#: templates/registration/password_reset_confirm.html:6
+#: templates/registration/password_reset_done.html:4
+#: templates/registration/password_reset_form.html:4
+#: templates/registration/password_reset_form.html:6
+#: templates/registration/password_reset_form.html:10
+msgid "Password reset"
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:6
+#: templates/registration/password_reset_complete.html:10
+msgid "Password reset complete"
+msgstr ""
+
+#: templates/registration/password_reset_complete.html:12
+msgid "Your password has been set.  You may go ahead and log in now."
+msgstr ""
+
+#: templates/registration/password_reset_confirm.html:4
+msgid "Password reset confirmation"
+msgstr ""
+
+#: templates/registration/password_reset_confirm.html:12
+msgid "Enter new password"
+msgstr ""
+
+#: templates/registration/password_reset_confirm.html:14
+msgid ""
+"Please enter your new password twice so we can verify you typed it in "
+"correctly."
+msgstr ""
+
+#: templates/registration/password_reset_confirm.html:26
+msgid "Password reset unsuccessful"
+msgstr ""
+
+#: templates/registration/password_reset_confirm.html:28
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please request a new password reset."
+msgstr ""
+
+#: templates/registration/password_reset_done.html:6
+#: templates/registration/password_reset_done.html:10
+msgid "Password reset successful"
+msgstr ""
+
+#: templates/registration/password_reset_done.html:12
+msgid ""
+"We've e-mailed you instructions for setting your password to the e-mail "
+"address you submitted. You should be receiving it shortly."
+msgstr ""
+
+#: templates/registration/password_reset_email.html:2
+msgid "You're receiving this e-mail because you requested a password reset"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:3
+#, python-format
+msgid "for your user account at %(site_name)s"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:5
+msgid "Please go to the following page and choose a new password:"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:9
+msgid "Your username, in case you've forgotten:"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:11
+msgid "Thanks for using our site!"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:13
+#, python-format
+msgid "The %(site_name)s team"
+msgstr ""
+
+#: templates/registration/password_reset_form.html:12
+msgid ""
+"Forgotten your password? Enter your e-mail address below, and we'll e-mail "
+"instructions for setting a new one."
+msgstr ""
+
+#: templates/registration/password_reset_form.html:16
+msgid "E-mail address:"
+msgstr ""
+
+#: templates/registration/password_reset_form.html:16
+msgid "Reset my password"
+msgstr ""
+
+#~ msgid "Poep"
+#~ msgstr "Strong"

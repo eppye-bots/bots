@@ -269,7 +269,7 @@ class mutex(models.Model):
 class persist(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     domein = models.CharField(max_length=35)
-    botskey = models.CharField(max_length=35,db_index=True)
+    botskey = models.CharField(max_length=35)
     content = models.CharField(max_length=1024) 
     ts = models.DateTimeField()
     class Meta:

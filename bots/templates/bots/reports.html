@@ -1,10 +1,10 @@
 {% extends "admin/base.html" %}
-
+{% load i18n %}
 
 {% block content %}
 <form action="{{ form.action }}" method="post">
-    <input onClick="history.back()" type="button" value="Back" />
-    <input type="submit" name="toselect" value="Change selection" />
+    <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
+    <input type="submit" name="toselect" value="{% trans 'Change selection' %}" />
     {% include "bots/paginator.html" %}
 
     <table id="botstable">
@@ -14,12 +14,12 @@
         <thead>
             <tr>
                 <th></th>
-                <th><button class="botsheader" type="submit" name="order" value="status" />State</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="type" />Type</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="lastreceived" />#in</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="send" />#out</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="ts" />Date/time</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="errortext" />Error</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'State' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="type" />{% trans 'Type' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="lastreceived" />{% trans '#in' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="send" />{% trans '#out' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="errortext" />{% trans 'Error' %}</button></th>
             </tr>
         </thead>
         <tbody>
@@ -28,10 +28,10 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><button class="botsheader" type="submit" name="report2incoming" value="{{row.idta}}" />View incoming</button></li>
-                            <li><button class="botsheader" type="submit" name="report2outgoing" value="{{row.idta}}" />View outgoing</button></li>
-                            <li><button class="botsheader" type="submit" name="report2process" value="{{row.idta}}" />View process errors</button></li>
-                            <li><button class="botsheader" type="submit" name="report2errors" value="{{row.idta}}" />View file errors</button></li>
+                            <li><button class="botsheader" type="submit" name="report2incoming" value="{{row.idta}}" />{% trans 'View incoming' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2outgoing" value="{{row.idta}}" />{% trans 'View outgoing' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2process" value="{{row.idta}}" />{% trans 'View process errors' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2errors" value="{{row.idta}}" />{% trans 'View file errors' %}</button></li>
                         </ul>
                     </div>
                 </td>
@@ -47,16 +47,16 @@
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
                 <td>
                     {% if row.lasterror %}
-                        {{row.lasterror}} files with errors; 
+                        {{row.lasterror}} {% trans 'files with errors' %}; 
                     {% endif %}
                     {% if row.lastok %}
-                        {{row.lastok}} files got stuck; 
+                        {{row.lastok}} {% trans 'files got stuck' %}; 
                     {% endif %}
                     {% if row.lastopen %}
-                        {{row.lastopen}} system errors; 
+                        {{row.lastopen}} {% trans 'system errors' %}; 
                     {% endif %}
                     {% if row.processerrors %}
-                        {{row.processerrors}} errors in processes; 
+                        {{row.processerrors}} {% trans 'errors in processes' %}; 
                     {% endif %}
                 </td>
             </tr>

@@ -225,6 +225,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         except:
             #~ edifile.close(ta_fromfile,error=True)    #only useful if errors are reported in acknowledgement (eg x12 997). Not used now.
             txt=botslib.txtexc()
+            print '>>>',txt
             ta_parsedfile.failure()
             ta_parsedfile.update(statust=ERROR,errortext=txt)
             botsglobal.logger.debug(u'Error reading and parsing input file: %s',txt)
@@ -242,7 +243,7 @@ def persist_add(domein,botskey,value):
     ''' store persistent values in db.
     '''
     content = pickle.dumps(value,0)
-    if botsglobal.dbinfo.drivername != 'sqlite' and len(content)>1024:
+    if botsglobal.settings.DATABASE_ENGINE != 'sqlite3' and len(content)>1024:
         raise botslib.PersistError(u'Data too long for domein "$domein", botskey "$botskey", value "$value".',domein=domein,botskey=botskey,value=value)
     try:
         botslib.change(u'''INSERT INTO persist (domein,botskey,content)
@@ -255,7 +256,7 @@ def persist_update(domein,botskey,value):
     ''' store persistent values in db.
     '''
     content = pickle.dumps(value,0)
-    if botsglobal.dbinfo.drivername != 'sqlite' and len(content)>1024:
+    if botsglobal.settings.DATABASE_ENGINE != 'sqlite3' and len(content)>1024:
         raise botslib.PersistError(u'Data too long for domein "$domein", botskey "$botskey", value "$value".',domein=domein,botskey=botskey,value=value)
     botslib.change(u'''UPDATE persist 
                           SET content=%(content)s
@@ -288,7 +289,7 @@ def safecodetconversion(ccodeid,leftcode,field='rightcode'):
     '''
     for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
-                                WHERE   ccodeid = %(ccodeid)s
+                                WHERE   ccodeid_id = %(ccodeid)s
                                 AND     leftcode = %(leftcode)s''',
                                 {'ccodeid':ccodeid,
                                  'leftcode':leftcode,
@@ -302,7 +303,7 @@ def codetconversion(ccodeid,leftcode,field='rightcode'):
     '''
     for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
-                                WHERE   ccodeid = %(ccodeid)s
+                                WHERE   ccodeid_id = %(ccodeid)s
                                 AND     leftcode = %(leftcode)s''',
                                 {'ccodeid':ccodeid,
                                  'leftcode':leftcode,
@@ -314,7 +315,7 @@ def safercodetconversion(ccodeid,rightcode,field='leftcode'):
     ''' as codetconversion but reverses the dictionary first'''
     for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
-                                WHERE   ccodeid = %(ccodeid)s
+                                WHERE   ccodeid_id = %(ccodeid)s
                                 AND     rightcode = %(rightcode)s''',
                                 {'ccodeid':ccodeid,
                                  'rightcode':rightcode,
@@ -326,7 +327,7 @@ def rcodetconversion(ccodeid,rightcode,field='leftcode'):
     ''' as codetconversion but reverses the dictionary first'''
     for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
-                                WHERE   ccodeid = %(ccodeid)s
+                                WHERE   ccodeid_id = %(ccodeid)s
                                 AND     rightcode = %(rightcode)s''',
                                 {'ccodeid':ccodeid,
                                  'rightcode':rightcode,

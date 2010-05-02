@@ -1,5 +1,6 @@
 import django
 from django.contrib import admin
+from django.utils.translation import ugettext as _
 #***********
 import models
 import botsglobal
@@ -11,7 +12,7 @@ def activate(ding, request, queryset):
     for obj in queryset:
         obj.active = not obj.active
         obj.save()
-activate.short_description = "(de)activate"
+activate.short_description = _(u'(de)activate')
 
 #*****************************************************************************************************
 class CcodeAdmin(admin.ModelAdmin):
@@ -42,10 +43,10 @@ class ChannelAdmin(admin.ModelAdmin):
     fieldsets = (
         (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset','desc')
                         }),
-        ('FTP specific data',{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
+        (_(u'FTP specific data'),{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
                          'classes': ('collapse',)
                         }),
-        ('Advanced',{'fields': (('lockname', 'syslock'), 'parameters', 'starttls'),
+        (_(u'Advanced'),{'fields': (('lockname', 'syslock'), 'parameters', 'starttls'),
                          'classes': ('collapse',)
                         }),
     )
@@ -68,7 +69,6 @@ class MailInline(admin.TabularInline):
     model = models.chanpar
     fields = ('idchannel','mail', 'cc')
     extra = 1
-    classes = ('collapse', )
 
 class MyPartnerAdminForm(django.forms.ModelForm):
     ''' customs form for partners to check if group has groups'''
@@ -77,7 +77,7 @@ class MyPartnerAdminForm(django.forms.ModelForm):
     def clean(self):
         super(MyPartnerAdminForm, self).clean()
         if self.cleaned_data['isgroup'] and self.cleaned_data['group']: 
-            raise django.forms.util.ValidationError('A group can not be part of a group.')
+            raise django.forms.util.ValidationError(_(u'A group can not be part of a group.'))
         return self.cleaned_data
 
 class PartnerAdmin(admin.ModelAdmin):
@@ -102,10 +102,10 @@ class RoutesAdmin(admin.ModelAdmin):
     list_per_page = screen_limit
     fieldsets = (
         (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc')}),
-        ('Filtering for outchannel',{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
+        (_(u'Filtering for outchannel'),{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
                     'classes':  ('collapse',)
                     }),
-        ('Advanced',{'fields':  ('alt', 'frompartner', 'topartner', 'notindefaultrun'),
+        (_(u'Advanced'),{'fields':  ('alt', 'frompartner', 'topartner', 'notindefaultrun'),
                      'classes': ('collapse',) 
                     }),
     )
@@ -123,7 +123,7 @@ class MyTranslateAdminForm(django.forms.ModelForm):
                                             frompartner=self.cleaned_data['frompartner'],
                                             topartner=self.cleaned_data['topartner'])
         if b and (self.instance.pk is None or self.instance.pk != b[0].id):
-            raise django.forms.util.ValidationError('Combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists.')
+            raise django.forms.util.ValidationError(_(u'Combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists.'))
         return self.cleaned_data
 
 class TranslateAdmin(admin.ModelAdmin):
@@ -137,7 +137,7 @@ class TranslateAdmin(admin.ModelAdmin):
     fieldsets = (
         (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype','desc'))
                     }),
-        ('Advanced - multiple translations per editype/messagetype',{'fields': ('alt', 'frompartner', 'topartner'),
+        (_(u'Advanced - multiple translations per editype/messagetype'),{'fields': ('alt', 'frompartner', 'topartner'),
                      'classes': ('collapse',)
                     }),
     )

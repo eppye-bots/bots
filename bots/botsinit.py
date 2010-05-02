@@ -75,7 +75,7 @@ def generalinit(configdir):
                 raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "$path".',path=usersys)
             addtopythonpath = os.path.abspath(os.path.dirname(usersys))     #????
             moduletoimport = os.path.basename(usersys)
-            print 'add pythonpath for usersys',addtopythonpath
+            #~ print 'add pythonpath for usersys',addtopythonpath
             sys.path.append(addtopythonpath)
             importnameforusersys = os.path.normpath(usersys).replace(os.sep,'.')
             importedusersys = botslib.botsbaseimport(importnameforusersys)
