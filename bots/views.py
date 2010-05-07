@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import django
+from django.utils.translation import ugettext as _
 import forms
 import models
 import viewlib
@@ -21,7 +22,7 @@ def help(request,*kw,**kwargs):
     return django.shortcuts.render_to_response('bots/help.html', {},context_instance=django.template.RequestContext(request))
 
 def reports(request,*kw,**kwargs):
-    print 'reports received',kw,kwargs,request.POST,request.GET
+    #~ print 'reports received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectReports()
@@ -64,7 +65,6 @@ def reports(request,*kw,**kwargs):
     return viewlib.render(request,formout,pquery)
     
 def incoming(request,*kw,**kwargs):
-    #~ print 'incoming received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectIncoming()
@@ -100,7 +100,6 @@ def incoming(request,*kw,**kwargs):
                 filereport.retransmit = 1
                 filereport.save()
             elif 'retry' in request.POST:        #coming from ViewIncoming
-                print 'retry!',request.POST[u'retry']
                 idta,reportidta = request.POST[u'retry'].split('-')
                 filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
                 filereport.retransmit = 2
@@ -125,7 +124,6 @@ def incoming(request,*kw,**kwargs):
     return viewlib.render(request,formout,pquery)
 
 def outgoing(request,*kw,**kwargs):
-    #~ print 'outgoing received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectOutgoing()
@@ -244,7 +242,6 @@ def detail(request,*kw,**kwargs):
         first, get a tree (trace) starting with the incoming ta ;
         than make up the details for the trace
     '''
-    #~ print 'detail received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'inidta' in request.GET:
             rootta = models.ta.objects.get(idta=int(request.GET['inidta']))
@@ -259,7 +256,6 @@ def detail(request,*kw,**kwargs):
             return django.shortcuts.render_to_response('bots/detail.html', {'detaillist':detaillist,'rootta':rootta,},context_instance=django.template.RequestContext(request))
 
 def confirm(request,*kw,**kwargs):
-    #~ print 'filereport received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectConfirm()
@@ -295,14 +291,14 @@ def confirm(request,*kw,**kwargs):
 
 def filer(request,*kw,**kwargs):
     ''' handles bots file viewer. Only files in data dir of Bots are displayed.'''
-    #~ print 'filer received',kw,kwargs,request.POST,request.GET
+    nosuchfile = _(u'No such file.')
     if request.method == 'GET':
         try:
             idta = request.GET['idta']
         except:
-            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': 'No such file.'},context_instance=django.template.RequestContext(request))
+            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
         if idta == 0: #for the 'starred' file names (eg multiple output)
-            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': 'No such file.'},context_instance=django.template.RequestContext(request))
+            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
         try:
             currentta = list(models.ta.objects.filter(idta=idta))[0]
             if request.GET['action']=='downl':
@@ -332,15 +328,15 @@ def filer(request,*kw,**kwargs):
             for ta in talijst:
                 ta.has_next = True
                 if ta.status == EXTERNIN:
-                    ta.content = '(External file. Can not be displayed. Use "next".)'
+                    ta.content = _(u'External file. Can not be displayed. Use "next".')
                 elif ta.status == EXTERNOUT:
-                    ta.content = '(External file. Can not be displayed. Use "previous".)'
+                    ta.content = _(u'External file. Can not be displayed. Use "previous".')
                     ta.has_next = False
                 elif ta.statust in [OPEN,ERROR]:
-                    ta.content = '(File has error status and does not exist. Use "previous".)'
+                    ta.content = _(u'File has error status and does not exist. Use "previous".')
                     ta.has_next = False
                 elif not ta.filename:
-                    ta.content = '(File can not be displayed.)'
+                    ta.content = _(u'File can not be displayed.')
                 else:
                     if ta.charset:  #guess charset; uft-8 is reasonable
                         ta.content = botslib.readdata(ta.filename,charset=ta.charset,errors='ignore')
@@ -349,10 +345,9 @@ def filer(request,*kw,**kwargs):
             return  django.shortcuts.render_to_response('bots/filer.html', {'idtas': talijst},context_instance=django.template.RequestContext(request))
         except:
             print botslib.txtexc()
-            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': 'No such file.'},context_instance=django.template.RequestContext(request))
+            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
 
 def plugin(request,*kw,**kwargs):
-    #~ print 'plugin received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         form = forms.UploadFileForm()
         return  django.shortcuts.render_to_response('bots/plugin.html', {'form': form},context_instance=django.template.RequestContext(request))
@@ -360,7 +355,7 @@ def plugin(request,*kw,**kwargs):
         if 'submit' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             form = forms.UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
-                botsglobal.logger.info(u'Start reading plugin "%s".',request.FILES['file'].name)
+                botsglobal.logger.info(_(u'Start reading plugin "%s".'),request.FILES['file'].name)
                 try:
                     if pluglib.load(request.FILES['file'].temporary_file_path()):
                         request.user.message_set.create(message='Renamed existing files.')
@@ -368,33 +363,32 @@ def plugin(request,*kw,**kwargs):
                     botsglobal.logger.info(u'%s',str(txt))
                     request.user.message_set.create(message='%s'%txt)
                 else:
-                    botsglobal.logger.info(u'Plugin "%s" read succesful.',request.FILES['file'].name)
+                    botsglobal.logger.info(_(u'Plugin "%s" read succesful.'),request.FILES['file'].name)
                     request.user.message_set.create(message='Plugin %s read succesful.'%request.FILES['file'].name)
-                #~ print 'removed', request.FILES['file'].temporary_file_path()
                 request.FILES['file'].close()
             else:
-                 request.user.message_set.create(message='No plugin read.')
+                 request.user.message_set.create(message=_(u'No plugin read.'))
         return django.shortcuts.redirect('/bots')
     
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
         #~ filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function'])
         filename = os.path.abspath(request.GET['function'])
-        botsglobal.logger.info(u'Start writing plugin "%s".',filename)
+        botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
         try:
             pluglib.dump(filename,request.GET['function'])
         except botslib.PluginError, txt:
             botsglobal.logger.info(u'%s',str(txt))
             request.user.message_set.create(message='%s'%txt)
         else:
-            botsglobal.logger.info(u'Plugin "%s" created succesful.',filename)
-            request.user.message_set.create(message='Plugin %s created succesful.'%filename)
+            botsglobal.logger.info(_(u'Plugin "%s" created succesful.'),filename)
+            request.user.message_set.create(message=_(u'Plugin %s created succesful.')%filename)
     return django.shortcuts.redirect('/bots')
 
 def delete(request,*kw,**kwargs):
-    #~ print 'delete received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         if 'transactions' in request.GET:
+            #while testing with very big loads, deleting transaction when wrong. Using raw SQL solved this.
             from django.db import connection, transaction
             cursor = connection.cursor()
             cursor.execute("DELETE FROM ta")
@@ -404,7 +398,7 @@ def delete(request,*kw,**kwargs):
             #~ models.filereport.objects.all().delete()
             #~ models.report.objects.all().delete()
             transaction.commit_unless_managed()
-            request.user.message_set.create(message='All transactions are deleted.')
+            request.user.message_set.create(message=_(u'All transactions are deleted.'))
         elif 'configuration' in request.GET:
             models.confirmrule.objects.all().delete()
             models.channel.objects.all().delete()
@@ -412,16 +406,15 @@ def delete(request,*kw,**kwargs):
             models.partner.objects.all().delete()
             models.translate.objects.all().delete()
             models.routes.objects.all().delete()
-            request.user.message_set.create(message='All configuration is deleted.')
+            request.user.message_set.create(message=_(u'All configuration is deleted.'))
         elif 'codelists' in request.GET:
             models.ccode.objects.all().delete()
             models.ccodetrigger.objects.all().delete()
-            request.user.message_set.create(message='All user code lists are deleted.')
+            request.user.message_set.create(message=_(u'All user code lists are deleted.'))
     return django.shortcuts.redirect('/home')
 
 
 def runengine(request,*kw,**kwargs):
-    #~ print 'runengine received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
             #~ logger = logging.getLogger('bots')
         if os.name=='nt':
@@ -431,30 +424,28 @@ def runengine(request,*kw,**kwargs):
         elif os.path.exists(os.path.join(sys.prefix,'local/bin','bots-engine.py')):
             scriptpath = os.path.normpath(os.path.join(sys.prefix,'local/bin','bots-engine.py'))
         else:
-            request.user.message_set.create(message='Bots can not find executable for bots-engine.')
+            request.user.message_set.create(message=_(u'Bots can not find executable for bots-engine.'))
             #~ logger.info('Bots can not find executable for bots-engine.')
             return django.shortcuts.redirect('/home')
             
         try:
             lijst = [scriptpath,]
-            print lijst
             if 'clparameter' in request.GET:
                 lijst.append(request.GET['clparameter'])
             #~ logger.info('Run bots-engine with parameters: "%s"',str(lijst))
             terug = subprocess.Popen(lijst).pid
-            request.user.message_set.create(message='Bots-engine is started.')
+            request.user.message_set.create(message=_(u'Bots-engine is started.'))
             #~ logger.info('Bots-engine is started.')
         except:
             print botslib.txtexc()
-            request.user.message_set.create(message='Errors while trying to run bots-engine.')
+            request.user.message_set.create(message=_(u'Errors while trying to run bots-engine.'))
             #~ logger.info('Errors while trying to run bots-engine.')
     return django.shortcuts.redirect('/home')
 
 def unlock(request,*kw,**kwargs):
-    #~ print 'unlock received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
         models.mutex.objects.get(mutexk=1).delete()
-        request.user.message_set.create(message='Unlocked database.')
+        request.user.message_set.create(message=_(u'Unlocked database.'))
     return django.shortcuts.redirect('/home')
 
 def sendtestmailmanagers(request,*kw,**kwargs):
@@ -463,15 +454,15 @@ def sendtestmailmanagers(request,*kw,**kwargs):
     except botslib.BotsError:
         sendornot = False
     if not sendornot:
-        request.user.message_set.create(message='In bots.ini, section [settings], "sendreportiferror" is not set (to "True").')
+        request.user.message_set.create(message=_(u'In bots.ini, section [settings], "sendreportiferror" is not set (to "True").'))
         return django.shortcuts.redirect('/home')
             
     from django.core.mail import mail_managers
     try:
-        mail_managers('testsubject', 'test content of report')
+        mail_managers(_(u'testsubject'), _(u'test content of report'))
     except:
-        request.user.message_set.create(message='Sending test report failed: "%s".'%botslib.txtexc())
+        request.user.message_set.create(message=_(u'Sending test report failed: "%s".')%botslib.txtexc())
         return django.shortcuts.redirect('/home')
-    request.user.message_set.create(message='Sending test report succeeded.')
+    request.user.message_set.create(message=_(u'Sending test report succeeded.'))
     return django.shortcuts.redirect('/home')
 

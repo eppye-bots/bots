@@ -2,6 +2,7 @@
 import pickle
 import re
 import copy
+from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsglobal
@@ -42,7 +43,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                 found = header.search(edifile[startpos:])
                 if found==None:
                     if not startpos:
-                        raise botslib.InMessageError(u'Found no content in mailbag.')
+                        raise botslib.InMessageError(_(u'Found no content in mailbag.'))
                     break
                 if found.group(1):
                     editype='x12'
@@ -70,7 +71,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                         headpos=startpos+ found.start(5)
                     foundtrailer = re.search(re.escape(record_sep)+'\s*UNZ'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
                 if not foundtrailer:
-                    raise botslib.InMessageError(u'Found no valid envelope trailer in mailbag.')
+                    raise botslib.InMessageError(_(u'Found no valid envelope trailer in mailbag.'))
                 endpos = headpos+foundtrailer.end()
                 #so: interchange is from headerpos untill endpos
                 #~ if header.search(edifile[headpos+25:endpos]):   #check if there is another header in the interchange
@@ -134,34 +135,8 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                 ta_frommes=ta_parsedfile.copyta(status=SPLITUP)    #copy PARSED to SPLITUP ta
                 inn.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in user script; used to give idta of 'confirming message'
                 ta_frommes.update(**inn.ta_info)    #update ta-record SLIPTUP with info from message content and/or grammar
-                #~ print 'alt',inn.ta_info['alt']
-                #~ print 'frompartner', inn.ta_info['frompartner']
-                #~ print 'topartner',inn.ta_info['topartner']
                 while 1:    #whileloop continues as long as there are alt-translations
                     #************select parameters for translation(script):
-                    #~ print 'view translation selection'
-                    #~ for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
-                                                #~ FROM    translate
-                                                #~ WHERE   frommessagetype = %(frommessagetype)s
-                                                #~ AND     fromeditype = %(fromeditype)s
-                                                #~ AND     active=%(booll)s
-                                                #~ AND     (alt='' OR alt=%(alt)s)
-                                                #~ AND     (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id 
-                                                                                                                            #~ FROM partnergroup
-                                                                                                                            #~ WHERE from_partner_id=%(frompartner)s ))
-                                                #~ AND     (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
-                                                                                                                            #~ FROM partnergroup
-                                                                                                                            #~ WHERE from_partner_id=%(topartner)s ))
-                                                #~ ORDER BY alt DESC,
-                                                         #~ CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id , 
-                                                         #~ CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
-                                                #~ {'frommessagetype':inn.ta_info['messagetype'],
-                                                 #~ 'fromeditype':inn.ta_info['editype'],
-                                                 #~ 'alt':inn.ta_info['alt'],
-                                                 #~ 'frompartner':inn.ta_info['frompartner'],
-                                                 #~ 'topartner':inn.ta_info['topartner'],
-                                                #~ 'booll':True}):
-                        #~ print inn.ta_info['editype'],inn.ta_info['messagetype'],inn.ta_info['alt'],inn.ta_info['frompartner'],inn.ta_info['topartner'],row2
                     for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
                                                 FROM    translate
                                                 WHERE   frommessagetype = %(frommessagetype)s
@@ -185,7 +160,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                                 'booll':True}):
                         break  #escape if found; we need only the first - ORDER BY in the query 
                     else:   #no translation record is found
-                        raise botslib.TranslationNotFoundError(u'Editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"',
+                        raise botslib.TranslationNotFoundError(_(u'Editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"'),
                                                                                                             editype=inn.ta_info['editype'],
                                                                                                             messagetype=inn.ta_info['messagetype'],
                                                                                                             frompartner=inn.ta_info['frompartner'],
@@ -225,7 +200,6 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         except:
             #~ edifile.close(ta_fromfile,error=True)    #only useful if errors are reported in acknowledgement (eg x12 997). Not used now.
             txt=botslib.txtexc()
-            print '>>>',txt
             ta_parsedfile.failure()
             ta_parsedfile.update(statust=ERROR,errortext=txt)
             botsglobal.logger.debug(u'Error reading and parsing input file: %s',txt)
@@ -244,20 +218,20 @@ def persist_add(domein,botskey,value):
     '''
     content = pickle.dumps(value,0)
     if botsglobal.settings.DATABASE_ENGINE != 'sqlite3' and len(content)>1024:
-        raise botslib.PersistError(u'Data too long for domein "$domein", botskey "$botskey", value "$value".',domein=domein,botskey=botskey,value=value)
+        raise botslib.PersistError(_(u'Data too long for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
     try:
         botslib.change(u'''INSERT INTO persist (domein,botskey,content)
                                 VALUES   (%(domein)s,%(botskey)s,%(content)s)''',
                                 {'domein':domein,'botskey':botskey,'content':content})
     except:
-        raise botslib.PersistError(u'Failed to add for domein "$domein", botskey "$botskey", value "$value".',domein=domein,botskey=botskey,value=value)
+        raise botslib.PersistError(_(u'Failed to add for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
 
 def persist_update(domein,botskey,value):
     ''' store persistent values in db.
     '''
     content = pickle.dumps(value,0)
     if botsglobal.settings.DATABASE_ENGINE != 'sqlite3' and len(content)>1024:
-        raise botslib.PersistError(u'Data too long for domein "$domein", botskey "$botskey", value "$value".',domein=domein,botskey=botskey,value=value)
+        raise botslib.PersistError(_(u'Data too long for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
     botslib.change(u'''UPDATE persist 
                           SET content=%(content)s
                         WHERE domein=%(domein)s
@@ -309,7 +283,7 @@ def codetconversion(ccodeid,leftcode,field='rightcode'):
                                  'leftcode':leftcode,
                                 }):
         return row[field]
-    raise botslib.CodeConversionError(u'Value "$value" not in codetconversions, user table "$table".',value=rightcode,tabel=ccodeid)
+    raise botslib.CodeConversionError(_(u'Value "$value" not in codetconversions, user table "$table".'),value=rightcode,tabel=ccodeid)
 
 def safercodetconversion(ccodeid,rightcode,field='leftcode'):
     ''' as codetconversion but reverses the dictionary first'''
@@ -333,7 +307,7 @@ def rcodetconversion(ccodeid,rightcode,field='leftcode'):
                                  'rightcode':rightcode,
                                 }):
         return row[field]
-    raise botslib.CodeConversionError(u'Value "$value" not in codetconversions, user table "$table".',value=rightcode,tabel=ccodeid)
+    raise botslib.CodeConversionError(_(u'Value "$value" not in codetconversions, user table "$table".'),value=rightcode,tabel=ccodeid)
 
 def safecodeconversion(modulename,value):
     ''' converts code using a codelist.
@@ -355,7 +329,7 @@ def codeconversion(modulename,value):
     try:
         return module.codeconversions[value]
     except KeyError:
-        raise botslib.CodeConversionError(u'Value "$value" not in file for codeconversion "$filename".',value=value,filename=filename)
+        raise botslib.CodeConversionError(_(u'Value "$value" not in file for codeconversion "$filename".'),value=value,filename=filename)
 
 def safercodeconversion(modulename,value):
     ''' as codeconversion but reverses the dictionary first'''
@@ -377,15 +351,15 @@ def rcodeconversion(modulename,value):
     try:
         return module.botsreversedcodeconversions[value]
     except KeyError:
-        raise botslib.CodeConversionError(u'Value "$value" not in file for reversed codeconversion "$filename".',value=value,filename=filename)
+        raise botslib.CodeConversionError(_(u'Value "$value" not in file for reversed codeconversion "$filename".'),value=value,filename=filename)
 
 def calceancheckdigit(ean):
     ''' input: EAN without checkdigit; returns the checkdigit'''
     try:
         if not ean.isdigit():
-            raise botslib.EanError(u'EAN "$ean" should be string with only numericals',ean=ean)
+            raise botslib.EanError(_(u'EAN "$ean" should be string with only numericals'),ean=ean)
     except AttributeError:
-        raise botslib.EanError(u'EAN "$ean" should be string, but is a "$type"',ean=ean,type=type(ean))
+        raise botslib.EanError(_(u'EAN "$ean" should be string, but is a "$type"'),ean=ean,type=type(ean))
     sum1=sum([int(x)*3 for x in ean[-1::-2]]) + sum([int(x) for x in ean[-2::-2]])
     return str((1000-sum1)%10)
 

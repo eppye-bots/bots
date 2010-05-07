@@ -1,5 +1,6 @@
 import shutil
 import time
+from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsglobal
@@ -126,7 +127,7 @@ def envelope(ta_info,ta_list):
             try:
                 classtocall = globals()[ta_info['editype']]
             except KeyError:
-                raise botslib.OutMessageError(u'Not found envelope "$envelope".',envelope=ta_info['editype'])
+                raise botslib.OutMessageError(_(u'Not found envelope "$envelope".'),envelope=ta_info['editype'])
         if userscript and hasattr(userscript,ta_info['envelope']):
             classtocall = getattr(userscript,ta_info['envelope'])
     env = classtocall(ta_info,ta_list,userscript,scriptname)
@@ -307,7 +308,7 @@ class template(Envelope):
         self.ta_info.update(defmessage.syntax)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         if not self.ta_info['envelope-template']:
-            raise botslib.OutMessageError(u'While enveloping in "$editype.$messagetype": syntax option "envelope-template" not filled; is required.',editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'])
+            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype": syntax option "envelope-template" not filled; is required.'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'])
         templatefile = botslib.abspath('templates',self.ta_info['envelope-template'])
         ta_list = self.filelist2absolutepaths()
         try:
@@ -315,7 +316,7 @@ class template(Envelope):
             ediprint = kid.Template(file=templatefile, data=ta_list) #init template; pass list with filenames
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(u'While enveloping in "$editype.$messagetype": $txt',editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype": $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
         try:
             f = botslib.opendata(self.ta_info['filename'],'wb')
             ediprint.write(f,
@@ -323,7 +324,7 @@ class template(Envelope):
                             output=self.ta_info['output'])
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(u'While enveloping error in "$editype.$messagetype"; probably in html file(s) to be merged: $txt',editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While enveloping error in "$editype.$messagetype"; probably in html file(s) to be merged: $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
 
 
 class orders2printenvelope(template):

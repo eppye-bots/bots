@@ -8,6 +8,7 @@ import logging
 import datetime
 logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line. 
                                 #it is better to have a missing log line than an error in a translation....
+from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsinit
@@ -19,7 +20,7 @@ from botsconfig import *
 
 
 def showusage():
-    usage = '''
+    usage = _('''
     This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
     The %(name)s does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
     Usage:
@@ -36,7 +37,7 @@ def showusage():
         -c<directory>        directory for configuration files (default: config).
     Routes: list of routes to run. Default: all active routes (in the database)
 
-    '''%{'name':os.path.basename(sys.argv[0])}
+    ''')%{'name':os.path.basename(sys.argv[0])}
     print usage
     
 def start():
@@ -51,7 +52,7 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Configuration directory indicated, but no directory name.'
+                print _('Configuration directory indicated, but no directory name.')
                 sys.exit(1)
         elif arg in commandspossible:
             commandstorun.append(arg)
@@ -71,7 +72,7 @@ def start():
     try:
         botsinit.initenginelogging()
     except:
-        print 'Error in initialising logging system.'
+        print _('Error in initialising logging system.')
         traceback.print_exc()
         sys.exit(1)
     else:
@@ -83,10 +84,10 @@ def start():
     try:
         botsinit.connect() 
     except:
-        botsglobal.logger.exception(u'Could not connect to database. Database settings are in bots/config/settings.py.')
+        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py.'))
         sys.exit(1)
     else:
-        botsglobal.logger.info(u'Connected to database.')
+        botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
     #**************handle database lock****************************************
     #try to set a lock on the database; if this is not possible, the database is already locked. Either:
@@ -103,19 +104,19 @@ def start():
             #when scheduling bots it is possible that the last run is still running. Check if maxruntime has passed:
             vanaf = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntime',60))
             for row in botslib.query('''SELECT ts FROM mutex WHERE ts < %(vanaf)s ''',{'vanaf':vanaf}):
-                warn = '!!!The bots database is locked!!!\nBots-engine has ended in an unexpected way during the last run.\nThis happens, but is very very rare.\nPossible causes: bots-engine terminated by user, system crash, power-down, etc.\nA forced retry of the last run is advised; bots will (try to) repair the last run.'
+                warn = _(u'!Bots database is locked!\nBots-engine has ended in an unexpected way during the last run.\nThis happens, but is very very rare.\nPossible causes: bots-engine terminated by user, system crash, power-down, etc.\nA forced retry of the last run is advised; bots will (try to) repair the last run.')
                 botsglobal.logger.critical(warn)
-                botslib.sendbotserrorreport('[Bots severe error]!!!Database is locked!!!',warn)
+                botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),warn)
                 #add: count errors etc.
                 sys.exit(1)
             else:   #maxruntime has not passed. Exit silently, nothing reported
-                botsglobal.logger.info(u'Database is locked, but "maxruntime" has not been exceeded.')
+                botsglobal.logger.info(_(u'Database is locked, but "maxruntime" has not been exceeded.'))
                 exit(0)
     else:
         if '--retrylastrun' in commandstorun:    #user starts recovery operation but there is no databaselock.
-            warn = 'User started a forced retry of the last run.\nOnly use this when the database is locked.\nThe database was not locked (database is OK).\nSo Bots has done nothing now.'
+            warn = _(u'User started a forced retry of the last run.\nOnly use this when the database is locked.\nThe database was not locked (database is OK).\nSo Bots has done nothing now.')
             botsglobal.logger.error(warn)
-            botslib.sendbotserrorreport('[Bots Error Report] User started a forced retry of last run, but this was not needed',warn)
+            botslib.sendbotserrorreport(_(u'[Bots Error Report] User started a forced retry of last run, but this was not needed'),warn)
             botslib.remove_database_lock()
             sys.exit(1)
             
@@ -130,7 +131,7 @@ def start():
                                     ORDER BY idroute ''',
                                     {'active':True,'notindefaultrun':False}):
             routestorun.append(row['idroute'])
-        botsglobal.logger.info(u'Run active routes from database: "%s".',str(routestorun))
+        botsglobal.logger.info(_(u'Run active routes from database: "%s".'),str(routestorun))
     #routestorun is now either a list with routes from comandline, or the list of active routes for the routes tabel in the db.
     #**************run the routes for retry, retransmit and new runs*************************************
     try: 
@@ -143,34 +144,34 @@ def start():
         errorinrun = 0      #detect if there has been some error. Only used here for good exit code
         botsglobal.incommunicate = False
         if '--retrycommunication' in commandstorun:
-            botsglobal.logger.info(u'Run communication retry.')
+            botsglobal.logger.info(_(u'Run communication retry.'))
             if botslib.set_minta4query_retrycommunication():
                 stuff2evaluate = router.routedispatcher(routestorun,'--retrycommunication')
                 errorinrun +=  automaticmaintenance.evaluate('--retrycommunication',stuff2evaluate)
             else:
-                botsglobal.logger.info(u'Run retrycommunication: nothing to retry.')
+                botsglobal.logger.info(_(u'Run retrycommunication: nothing to retry.'))
         if '--retrylastrun' in commandstorun:
-            botsglobal.logger.info(u'Run retry of the last run (crash recovery).')
+            botsglobal.logger.info(_(u'Run retry of the last run (crash recovery).'))
             stuff2evaluate = botslib.set_minta4query_retrylastrun()
             if stuff2evaluate:
                 router.routedispatcher(routestorun)
                 errorinrun +=  automaticmaintenance.evaluate('--retrylastrun',stuff2evaluate)
             else:
-                botsglobal.logger.info(u'No retry of the last run - there was no last run.')
+                botsglobal.logger.info(_(u'No retry of the last run - there was no last run.'))
         if '--retry' in commandstorun:
             botsglobal.logger.info(u'Run retry.')
             if botslib.set_minta4query_retry():
                 stuff2evaluate = router.routedispatcher(routestorun)
                 errorinrun +=  automaticmaintenance.evaluate('--retry',stuff2evaluate)
             else:
-                botsglobal.logger.info(u'Run retry: nothing to retry.')
+                botsglobal.logger.info(_(u'Run retry: nothing to retry.'))
         if '--retransmit' in commandstorun:
             botsglobal.logger.info(u'Run retransmit.')
             stuff2evaluate = router.routedispatcher(routestorun,'--retransmit')
             if stuff2evaluate:
                 errorinrun +=  automaticmaintenance.evaluate('--retransmit',stuff2evaluate)
             else:
-                botsglobal.logger.info(u'Run retransmit: nothing to retransmit.')
+                botsglobal.logger.info(_(u'Run retransmit: nothing to retransmit.'))
         if '--new' in commandstorun:
             botsglobal.logger.info('Run new.')
             botsglobal.incommunicate = True
@@ -184,7 +185,7 @@ def start():
         #~ timer.close()
         botslib.remove_database_lock()
     except Exception,e:
-        botsglobal.logger.exception(u'Severe error in bots system: "%s".'%(e))    #of course this 'should' not happen. 
+        botsglobal.logger.exception(_(u'Severe error in bots system: "%s".')%(e))    #of course this 'should' not happen. 
         sys.exit(1)
     else:
         if errorinrun:

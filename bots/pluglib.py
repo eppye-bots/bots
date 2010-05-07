@@ -6,6 +6,7 @@ import zipimport
 import operator
 import django
 from django.core import serializers
+from django.utils.translation import ugettext as _
 import models
 import botslib
 import botsglobal
@@ -38,15 +39,15 @@ def writetodatabase(orgpluglist):
     if not orgpluglist:  #list of plugins is empty: is OK. DO nothing
         return
     if not isinstance(orgpluglist,list):   #has to be a list!!
-        raise Exception('plugins should be list of dicts. Nothing is written.')
+        raise Exception(_(u'plugins should be list of dicts. Nothing is written.'))
     for plug in orgpluglist:
         if not isinstance(plug,dict):
-            raise botslib.PluginError('plugins should be list of dicts. Nothing is written.')
+            raise botslib.PluginError(_(u'plugins should be list of dicts. Nothing is written.'))
         for key in plug.keys():
             if not isinstance(key,basestring):
-                raise botslib.PluginError('key of dict is not a string: "%s". Nothing is written.'%(plug))
+                raise botslib.PluginError(_('key of dict is not a string: "%s". Nothing is written.')%(plug))
         if 'plugintype' not in plug:
-            raise botslib.PluginError('"plugintype" missing in: "%s". Nothing is written.'%(plug))
+            raise botslib.PluginError(_(u'"plugintype" missing in: "%s". Nothing is written.')%(plug))
             
     #in bots 1.*, partnrgroup was in seperate tabel; in bots 2.* partnergroup is in partner
     for plug in orgpluglist[:]:
@@ -148,7 +149,7 @@ def writetodatabase(orgpluglist):
             elif len(checkifexistsindb)==1:
                 checkifexistsindb[0].delete()
                 print 'deleted old enty'
-            botsglobal.logger.info(u'        Existing entry in database is deleted.')
+            botsglobal.logger.info(_(u'        Existing entry in database is deleted.'))
             
         dbobject = table(**sleutel)   #create db-object
         if 'idpartner'in sleutel:   #for partners, first the partner needs to be saved before groups can be made
@@ -156,7 +157,7 @@ def writetodatabase(orgpluglist):
         for key,value in plug.items():
             setattr(dbobject,key,value)
         dbobject.save()
-        botsglobal.logger.info(u'        Write to database is OK.')
+        botsglobal.logger.info(_(u'        Write to database is OK.'))
 
 
 @django.db.transaction.commit_on_success  #if no exception raised: commit, else rollback.
@@ -164,7 +165,7 @@ def load(pathzipfile):
     ''' process uploaded plugin. '''
     #test is valid zipfile
     if not zipfile.is_zipfile(pathzipfile):
-        raise botslib.PluginError('Plugin is not a valid file.')
+        raise botslib.PluginError(_(u'Plugin is not a valid file.'))
 
     #read index file
     try:
@@ -175,9 +176,9 @@ def load(pathzipfile):
             del sys.modules['botsindex']
     except:
         txt = botslib.txtexc()
-        raise botslib.PluginError('Error in plugin. Nothing is written. Error: "%s"'%(txt))
+        raise botslib.PluginError(_(u'Error in plugin. Nothing is written. Error: "%s"')%(txt))
     else:
-        botsglobal.logger.info(u'Plugin is OK.\nStart writing to database.')
+        botsglobal.logger.info(_(u'Plugin is OK.\nStart writing to database.'))
     
     #write content of index file to the bots database
     try:
@@ -206,31 +207,31 @@ def load(pathzipfile):
                 targetpath = targetpath.replace('botssys',botsglobal.ini.get('directories','botssys'),1)
                 targetpath = botslib.join(orgtargetpath, targetpath)
                 #targetpath is OK now.
-                botsglobal.logger.info(u'    Start writing file: "%s".',targetpath)
+                botsglobal.logger.info(_(u'    Start writing file: "%s".'),targetpath)
                 
                 if botslib.dirshouldbethere(os.path.dirname(targetpath)):
-                    botsglobal.logger.info(u'        Create directory "%s".',os.path.dirname(targetpath))
+                    botsglobal.logger.info(_(u'        Create directory "%s".'),os.path.dirname(targetpath))
                 if f.filename[-1] == '/':    #check if this is a dir; if so continue
                     continue
                 if os.path.isfile(targetpath):  #check if file already exists
                     try:    #this ***sometimes*** fails. (python25, for static/help/home.html...only there...)
                         os.rename(targetpath,targetpath+'.'+time.strftime('%Y%m%d%H%M%S'))
                         warnrenamed=True
-                        botsglobal.logger.info(u'        Renamed existing file "%s" to "%s".',targetpath,targetpath+time.strftime('%Y%m%d%H%M%S'))
+                        botsglobal.logger.info(_(u'        Renamed existing file "%(from)s" to "%(to)s".'),{'from':targetpath,'to':targetpath+time.strftime('%Y%m%d%H%M%S')})
                     except:
                         pass
                 source = z.read(f.filename)
                 target = open(targetpath, "wb")
                 target.write(source)
                 target.close()
-                botsglobal.logger.info(u'        File written: "%s".',targetpath)
+                botsglobal.logger.info(_(u'        File written: "%s".'),targetpath)
     except:
         txt = botslib.txtexc()
         z.close()
-        raise botslib.PluginError('Error writing files to system. Nothing is written to database. Error: "%s"'%(txt))
+        raise botslib.PluginError(_(u'Error writing files to system. Nothing is written to database. Error: "%s"')%(txt))
     else:
         z.close()
-        botsglobal.logger.info(u'Writing files to filesystem is OK.')
+        botsglobal.logger.info(_(u'Writing files to filesystem is OK.'))
         return warnrenamed
 
 def dump(filename,function):    #filename is without extension!
@@ -322,5 +323,5 @@ def files2pluginbydir(function,pluginzipfilehandler,dirname,defaultdirname):
             if ext in ['.pyc','.pyo'] or bestand in ['__init__.py']:
                 continue
             pluginzipfilehandler.write(os.path.join(root,bestand),os.path.join(rootinplugin,bestand))
-            botsglobal.logger.info(u'    write file "%s" as "%s".',os.path.join(root,bestand),os.path.join(rootinplugin,bestand))
+            botsglobal.logger.info(_(u'    write file "%s".'),os.path.join(rootinplugin,bestand))
 

@@ -43,13 +43,13 @@ TEMPLATE_DIRS = (
 #*********database settings*************************
 #django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
 #SQLITE: 
-#~ DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#~ DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
-#~ DATABASE_USER = ''
-#~ DATABASE_PASSWORD = ''
-#~ DATABASE_HOST = ''
-#~ DATABASE_PORT = ''
-#~ DATABASE_OPTIONS = {}
+DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
+DATABASE_USER = ''
+DATABASE_PASSWORD = ''
+DATABASE_HOST = ''
+DATABASE_PORT = ''
+DATABASE_OPTIONS = {}
 #~ #MySQL:
 #~ DATABASE_ENGINE = 'mysql'
 #~ DATABASE_NAME = 'botsdb'
@@ -58,14 +58,14 @@ TEMPLATE_DIRS = (
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
 #~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#~ #PostgeSQL:
-DATABASE_ENGINE = 'postgresql_psycopg2'
-DATABASE_NAME = 'botsdb'
-DATABASE_USER = 'bots'
-DATABASE_PASSWORD = 'botsbots'
-DATABASE_HOST = '192.168.0.7'
-DATABASE_PORT = '5432'
-DATABASE_OPTIONS = {}
+#PostgeSQL:
+#~ DATABASE_ENGINE = 'postgresql_psycopg2'
+#~ DATABASE_NAME = 'botsdb'
+#~ DATABASE_USER = 'bots'
+#~ DATABASE_PASSWORD = 'botsbots'
+#~ DATABASE_HOST = '192.168.0.7'
+#~ DATABASE_PORT = '5432'
+#~ DATABASE_OPTIONS = {}
 
 #*********sessions, cookies, log out time*************************
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed

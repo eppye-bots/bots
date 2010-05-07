@@ -1,36 +1,44 @@
-ALTER TABLE ta ALTER COLUMN ts          SET DEFAULT now();
+DROP TABLE ta ;
 
-ALTER TABLE ta ALTER COLUMN statust     SET DEFAULT 0;
-ALTER TABLE ta ALTER COLUMN status      SET DEFAULT 0;
-ALTER TABLE ta ALTER COLUMN parent      SET DEFAULT 0;
-ALTER TABLE ta ALTER COLUMN child       SET DEFAULT 0;
-ALTER TABLE ta ALTER COLUMN script      SET DEFAULT 0;
-ALTER TABLE ta ALTER COLUMN idroute     SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN filename    SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN frompartner SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN topartner   SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN fromchannel SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN tochannel   SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN editype     SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN messagetype SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN alt         SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN divtext     SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN merge       SET DEFAULT FALSE;
-ALTER TABLE ta ALTER COLUMN nrmessages  SET DEFAULT 1;
-ALTER TABLE ta ALTER COLUMN testindicator SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN reference   SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN frommail    SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN tomail      SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN charset     SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN statuse     SET DEFAULT 0;
-ALTER TABLE ta ALTER COLUMN retransmit  SET DEFAULT FALSE;
-ALTER TABLE ta ALTER COLUMN contenttype SET DEFAULT 'text/plain';
-ALTER TABLE ta ALTER COLUMN errortext   SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN confirmasked SET DEFAULT FALSE;
-ALTER TABLE ta ALTER COLUMN confirmed   SET DEFAULT FALSE;
-ALTER TABLE ta ALTER COLUMN confirmtype SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN confirmidta SET DEFAULT 0;
-ALTER TABLE ta ALTER COLUMN envelope    SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN botskey     SET DEFAULT '';
-ALTER TABLE ta ALTER COLUMN cc          SET DEFAULT '';
+CREATE TABLE ta (
+    idta serial primary key,
+    statust integer DEFAULT 0,
+    status integer DEFAULT 0,
+    parent integer DEFAULT 0,
+    child integer DEFAULT 0,
+    script integer DEFAULT 0,
+    idroute varchar(35) DEFAULT '',
+    filename varchar(256) DEFAULT '',
+    frompartner varchar(35) DEFAULT '',
+    topartner varchar(35) DEFAULT '',
+    fromchannel varchar(35) DEFAULT '',
+    tochannel varchar(35) DEFAULT '',
+    editype varchar(35) DEFAULT '',
+    messagetype varchar(35) DEFAULT '',
+    alt varchar(35) DEFAULT '',
+    divtext varchar(35) DEFAULT '',
+    merge BOOLEAN DEFAULT false,
+    nrmessages integer DEFAULT 1,
+    testindicator varchar(10) DEFAULT '',
+    reference varchar(70) DEFAULT '',
+    frommail varchar(256) DEFAULT '',
+    tomail varchar(256) DEFAULT '',
+    charset varchar(35) DEFAULT '',
+    statuse integer DEFAULT 0,
+    retransmit BOOLEAN DEFAULT false,
+    contenttype varchar(35) DEFAULT 'text/plain',
+    errortext varchar(1024) DEFAULT '',
+    ts timestamp DEFAULT CURRENT_TIMESTAMP,
+    confirmasked BOOLEAN DEFAULT false,
+    confirmed BOOLEAN DEFAULT false,
+    confirmtype varchar(35) DEFAULT '',
+    confirmidta integer DEFAULT 0,
+    envelope varchar(35) DEFAULT '',
+    botskey varchar(35) DEFAULT '',
+    cc varchar(512) DEFAULT '',
+    rsrv1 varchar(35) DEFAULT '',
+    rsrv2 integer DEFAULT 0,
+    rsrv3 varchar(35) DEFAULT '',
+    rsrv4 integer DEFAULT 0
+) ;
 

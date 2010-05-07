@@ -1,3 +1,0 @@
-ALTER TABLE mutex ALTER COLUMN ts          SET DEFAULT now();
-ALTER TABLE mutex ALTER COLUMN mutexer     SET DEFAULT 0;
-

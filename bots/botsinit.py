@@ -4,9 +4,10 @@ import encodings
 import codecs
 import ConfigParser
 import logging, logging.handlers
+from django.utils.translation import ugettext as _
 #Bots-modules
 from botsconfig import *
-import botsglobal #as botsglobal
+import botsglobal
 import botslib
 
 class BotsConfig(ConfigParser.SafeConfigParser):
@@ -17,7 +18,7 @@ class BotsConfig(ConfigParser.SafeConfigParser):
             return ConfigParser.SafeConfigParser.get(self,section,option)
         except: #if there is no such section,option
             if default == '':
-                raise botslib.BotsError(u'No entry "$entry" in section "$section" in "bots.ini".',entry=option,section=section)
+                raise botslib.BotsError(_(u'No entry "$entry" in section "$section" in "bots.ini".'),entry=option,section=section)
             return default
     def getint(self,section, option, default):
         try:
@@ -42,9 +43,9 @@ def generalinit(configdir):
             settings = botslib.botsbaseimport(importnameforsettings)
         except ImportError:     #set pythonpath to config directory first
             if not os.path.exists(configdir):    #check if configdir exists.
-                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "$path".',path=configdir)
+                raise botslib.BotsError(_(u'In initilisation: path to configuration does not exists: "$path".'),path=configdir)
             addtopythonpath = os.path.abspath(os.path.dirname(configdir))
-            print 'add pythonpath for usersys',addtopythonpath
+            #~ print 'add pythonpath for usersys',addtopythonpath
             moduletoimport = os.path.basename(configdir)
             sys.path.append(addtopythonpath)
             importnameforsettings = os.path.normpath(os.path.join(moduletoimport,'settings')).replace(os.sep,'.')
@@ -72,7 +73,7 @@ def generalinit(configdir):
             importedusersys = botslib.botsbaseimport(importnameforusersys)
         except ImportError:     #set pythonpath to usersys directory first
             if not os.path.exists(usersys):    #check if configdir exists.
-                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "$path".',path=usersys)
+                raise botslib.BotsError(_(u'In initilisation: path to configuration does not exists: "$path".'),path=usersys)
             addtopythonpath = os.path.abspath(os.path.dirname(usersys))     #????
             moduletoimport = os.path.basename(usersys)
             #~ print 'add pythonpath for usersys',addtopythonpath
@@ -178,7 +179,7 @@ def connect():
     if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
         #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
         if not os.path.isfile(botsglobal.settings.DATABASE_NAME):
-            raise Exception('Could not find database file for SLQite')
+            raise Exception(_('Could not find database file for SQLite'))
         import botssqlite
         botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASE_NAME)
     elif botsglobal.settings.DATABASE_ENGINE == 'mysql':

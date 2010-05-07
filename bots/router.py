@@ -1,3 +1,4 @@
+from django.utils.translation import ugettext as _
 #bots-modules
 import communication
 import envelope
@@ -77,7 +78,7 @@ def routedispatcher(routestorun,type=None):
                                         ORDER BY seq''',
                                         {'idroute':route,'active':True}):
             botslib.setrouteid(routedict['idroute'])
-            botsglobal.logger.info(u'running route %s %s',routedict['idroute'],routedict['seq'])
+            botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),{'idroute':routedict['idroute'],'seq':routedict['seq']})
             foundroute=True
             if type =='--retrycommunication':
                 router_communicationretry(routedict)
@@ -86,7 +87,7 @@ def routedispatcher(routestorun,type=None):
             botslib.setrouteid('')
             botsglobal.logger.debug(u'finished route %s %s',routedict['idroute'],routedict['seq'])
         if not foundroute:
-            botsglobal.logger.warning(u'there is no (active) route "%s".',route)
+            botsglobal.logger.warning(_(u'there is no (active) route "%s".'),route)
     return stuff2evaluate
 
 @botslib.log_session
@@ -109,7 +110,7 @@ def router(routedict):
     if botslib.tryrunscript(userscript,scriptname,'main',routedict=routedict):
         return  #so: if function ' main' : communication.run only the routescript, nothing else.
     if not (userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']): 
-        raise botslib.ScriptError(u'Route "$route" is empty: no script, not enough parameters.',route=routedict['idroute'])
+        raise botslib.ScriptError(_(u'Route "$route" is empty: no script, not enough parameters.',route=routedict['idroute']))
 
     
     botslib.tryrunscript(userscript,scriptname,'start',routedict=routedict)

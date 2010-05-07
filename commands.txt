@@ -1,0 +1,5 @@
+cd bots
+django-admin makemessages -a -lnl --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
+django-admin compilemessages -v2 -lnl --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
+
+django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'

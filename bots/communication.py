@@ -22,7 +22,7 @@ import simplejson
 import smtplib
 import poplib
 import ftplib
-
+from django.utils.translation import ugettext as _
 #Bots modules
 import botslib
 import botsglobal
@@ -33,7 +33,6 @@ from botsconfig import *
 @botslib.log_session
 def run(idchannel,idroute=''):
     '''run a communication session (dispatcher for communication functions).'''
-    #~ for channeldict in botslib.query('''SELECT idchannel,inorout,type,starttls,apop,remove,path,filename,lockname,host,username,secret,port,ftpaccount,ftpactive,ftpbinary,charset,syslock,parameters,askmdn,sendmdn,mdnchannel,archivepath
     for channeldict in botslib.query('''SELECT *
                                 FROM channel
                                 WHERE idchannel=%(idchannel)s''',
@@ -41,11 +40,10 @@ def run(idchannel,idroute=''):
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         classtocall = globals()[channeldict['type']]
         classtocall(channeldict,idroute) #call the class for this type of channel
-        #~ getattr(communication,channeldict['type'])(channeldict,idroute) #call the class for this type of channel
         botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
     else:
-        raise botslib.CommunicationError(u'Channel "$idchannel" is unknown.',idchannel=idchannel)
+        raise botslib.CommunicationError(_(u'Channel "$idchannel" is unknown.'),idchannel=idchannel)
 
 
 class _comsession(object):
@@ -285,7 +283,7 @@ class _comsession(object):
                     if originalmessageid is not None:
                         break
             else:   #invalid MDN: 'message/disposition-notification' not in email
-                raise botslib.CommunicationInError(u'Received email-MDN with errors.')
+                raise botslib.CommunicationInError(_(u'Received email-MDN with errors.'))
             botslib.change('''UPDATE ta
                                SET   confirmed=%(confirmed)s, confirmidta=%(confirmidta)s
                                WHERE reference=%(reference)s
@@ -395,7 +393,7 @@ class _comsession(object):
                 else:
                     if not topartner:
                         emailtos = [address[1] for address in tos]
-                        raise botslib.CommunicationInError(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").',email=emailtos,idchannel=self.channeldict['idchannel'])
+                        raise botslib.CommunicationInError(_(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").'),email=emailtos,idchannel=self.channeldict['idchannel'])
                         
                 
                 #update transaction of mail with information found in mail
@@ -417,7 +415,7 @@ class _comsession(object):
                             confirmasked = True
                     savemime(msg)
                     if not nrmimesaved[0]:
-                        raise botslib.CommunicationInError (u'No attachment found in received email')
+                        raise botslib.CommunicationInError (_(u'No valid attachment in received email'))
             except:
                 txt=botslib.txtexc()
                 ta_mime.failure()
@@ -444,7 +442,7 @@ class _comsession(object):
                                         AND LOWER(mail)=%(mail)s''',
                                         {'active':True,'mail':mailaddress.lower()}):
                 return row['idpartner']
-            raise botslib.CommunicationInError(u'Emailaddress "$email" not authorised (channel "$idchannel").',email=mailaddress,idchannel=self.channeldict['idchannel'])
+            raise botslib.CommunicationInError(_(u'Emailaddress "$email" unknown (or not authorised for channel "$idchannel").'),email=mailaddress,idchannel=self.channeldict['idchannel'])
 
 
     def idpartner2mailaddress(self,idpartner):
@@ -467,7 +465,7 @@ class _comsession(object):
                 if row['mail']:
                     return row['mail'],row['cc']
             else:
-                raise botslib.CommunicationOutError(u'No mail-address for partner "$partner" (channel "$idchannel").',partner=idpartner,idchannel=self.channeldict['idchannel'])
+                raise botslib.CommunicationOutError(_(u'No mail-address for partner "$partner" (channel "$idchannel").'),partner=idpartner,idchannel=self.channeldict['idchannel'])
 
     def checkcharset(self,charset):
         ''' if charset (of edifile) is compatible with charset of channel: OK; else: raise exception
@@ -487,9 +485,9 @@ class _comsession(object):
                     if codecs.getdecoder(self.channeldict['charset']) == codecs.getdecoder(c):
                         break
                 else:
-                    raise botslib.CommunicationOutError(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.',charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
+                    raise botslib.CommunicationOutError(_(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.'),charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
             else:
-                raise botslib.CommunicationOutError(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.',charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
+                raise botslib.CommunicationOutError(_(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.'),charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
 
     @staticmethod
     def codeccanonicalname(codec_in):
@@ -579,10 +577,10 @@ class smtp(_comsession):
             try: 
                 self.session.login(self.channeldict['username'],self.channeldict['secret'])
             except smtplib.SMTPAuthenticationError:
-                raise botslib.CommunicationOutError(u'SMTP server did not accept user/password combination.')
+                raise botslib.CommunicationOutError(_(u'SMTP server did not accept user/password combination.'))
             except:
                 txt=botslib.txtexc()
-                raise botslib.CommunicationOutError(u'SMTP login failed: "$txt".',txt=txt)
+                raise botslib.CommunicationOutError(_(u'SMTP login failed: "$txt".'),txt=txt)
         
     @botslib.log_session
     def outcommunicate(self):
@@ -689,7 +687,7 @@ class file(_comsession):
                 botslib.ErrorProcess(functionname='file-incommunicate',errortext=txt)
                 ta_from.delete()
                 ta_to.delete()    #is not received
-                botsglobal.logger.debug(u'Error read incoming file "%s".',fromfilename)
+                botsglobal.logger.debug(u'Error reading incoming file "%s".',fromfilename)
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(filename=tofilename,statust=OK)
@@ -741,7 +739,7 @@ class file(_comsession):
                     elif os.name == 'posix':
                         fcntl.lockf(tofile.fileno(), fcntl.LOCK_EX|fcntl.LOCK_NB)
                     else:
-                        raise botslib.LockedFileError("Can not do a systemlock on this platform")
+                        raise botslib.LockedFileError(_('Can not do a systemlock on this platform'))
                 #open fromfile
                 fromfile = botslib.opendata(row['filename'], 'rb')
                 #copy
@@ -938,7 +936,7 @@ class intercommit(_comsession):
         botslib.dirshouldbethere(dirforintercommitsend)
         #output to one file or a queue of files (with unique names)
         if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
-            raise botslib.CommunicationOutError(u'channel "$channel" needs unique filenames (no queue-file); use eg *.edi as value for "filename"',channel=self.channeldict['idchannel'])
+            raise botslib.CommunicationOutError(_(u'channel "$channel" needs unique filenames (no queue-file); use eg *.edi as value for "filename"'),channel=self.channeldict['idchannel'])
         else:
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel
@@ -1026,7 +1024,7 @@ class database(_comsession):
         botsglobal.logger.debug(u'(try) to read user databasescript channel "%s".',self.channeldict['idchannel'])
         self.dbscript,self.dbscriptname = botslib.botsimport('dbconnectors',self.channeldict['idchannel']) #get the dbconnector-script
         if not hasattr(self.dbscript,'main'):
-            raise botslib.ScriptImportError(u'No function "$function" in imported script "$script".',function='main',script=self.dbscript)
+            raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='main',script=self.dbscript)
         
         import sqlalchemy
         from sqlalchemy.orm import sessionmaker

@@ -1,3 +1,4 @@
+from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import node
@@ -37,26 +38,26 @@ class Message(object):
     def change(self,where,change):
         ''' query tree (self.root) with where; if found replace with change; return True if change, return False if not changed.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(u'change($where,$change"): "root" of incoming message is empty; either split messages or use inn.getloop',where=where,change=change)
+            raise botslib.MappingRootError(_(u'change($where,$change"): "root" of incoming message is empty; either split messages or use inn.getloop'),where=where,change=change)
         return self.root.change(where,change)
 
     def delete(self,*mpaths):
         ''' query tree (self.root) with mpath; delete if found. return True if deleted, return False if not deleted.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(u'delete($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(_(u'delete($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
         return self.root.delete(*mpaths)
 
     def get(self,*mpaths):
         ''' query tree (self.root) with mpath; get value (string); get None if not found.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
         return self.root.get(*mpaths)
 
     def getnozero(self,*mpaths):
         ''' like get, returns None is value is zero (0) or not numeric.
             Is sometimes usefull in mapping.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
         return self.root.getnozero(*mpaths)
 
     def getcount(self):
@@ -73,7 +74,7 @@ class Message(object):
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
         return self.root.getcountsum(*mpaths)
 
     def getloop(self,*mpaths):
@@ -89,7 +90,7 @@ class Message(object):
 
     def put(self,*mpaths):
         if self.root.record is None and self.root.children:
-            raise botslib.MappingRootError(u'put($mpath): "root" of outgoing message is empty; use out.putloop',mpath=mpaths)
+            raise botslib.MappingRootError(_(u'put($mpath): "root" of outgoing message is empty; use out.putloop'),mpath=mpaths)
         return self.root.put(*mpaths)
 
     def putloop(self,*mpaths):
@@ -98,12 +99,12 @@ class Message(object):
                 self.root.append(node.Node(mpaths[0]))
                 return self.root.children[-1]
             else: #TODO: what if self.root.record is None and len(mpaths) > 1?
-                raise botslib.MappingRootError(u'putloop($mpath): mpath too long???',mpath=mpaths)
+                raise botslib.MappingRootError(_(u'putloop($mpath): mpath too long???'),mpath=mpaths)
         return self.root.putloop(*mpaths)
 
     def sort(self,*mpaths):
         if self.root.record is None:
-            raise botslib.MappingRootError(u'get($mpath): "root" of message is empty; either split messages or use inn.getloop',mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get($mpath): "root" of message is empty; either split messages or use inn.getloop'),mpath=mpaths)
         self.root.sort(*mpaths)
         
     def normalisetree(self,node):
@@ -124,7 +125,7 @@ class Message(object):
             #check tree recursively with structure
             self._checktreecore(tree,structure)  
         else:
-            raise botslib.MessageError(u'Grammar "$grammar" has (root)record "$grammarroot"; found "$root".',root=tree.record['BOTSID'],grammarroot=structure[ID],grammar=self.defmessage.grammarname)
+            raise botslib.MessageError(_(u'Grammar "$grammar" has (root)record "$grammarroot"; found "$root".'),root=tree.record['BOTSID'],grammarroot=structure[ID],grammar=self.defmessage.grammarname)
             
     def _checktreecore(self,node,structure):
         ''' recursive
@@ -133,7 +134,7 @@ class Message(object):
         self._checkfields(node.record,structure)
         if node.children and not LEVEL in structure:
             if self.ta_info['checkunknownentities']:
-                raise botslib.MessageError(u'Record "$record" in message has children, but grammar "$grammar" not. Found "$xx".',record=node.record['BOTSID'],grammar=self.defmessage.grammarname,xx=node.children[0].record['BOTSID'])
+                raise botslib.MessageError(_(u'Record "$record" in message has children, but grammar "$grammar" not. Found "$xx".'),record=node.record['BOTSID'],grammar=self.defmessage.grammarname,xx=node.children[0].record['BOTSID'])
             node.children=[]
             return
         for childnode in node.children:          #for every node:
@@ -144,7 +145,7 @@ class Message(object):
                     break    #check next mpathnode
             else:   #checked all structure_record in grammar, but nothing found
                 if self.ta_info['checkunknownentities']:
-                    raise botslib.MessageError(u'Record "$record" in message not in structure of grammar "$grammar". Whole record: "$content".',record=childnode.record['BOTSID'],grammar=self.defmessage.grammarname,content=childnode.record)
+                    raise botslib.MessageError(_(u'Record "$record" in message not in structure of grammar "$grammar". Whole record: "$content".'),record=childnode.record['BOTSID'],grammar=self.defmessage.grammarname,content=childnode.record)
                 deletelist.append(childnode)
         for child in deletelist:
             node.children.remove(child)
@@ -168,7 +169,7 @@ class Message(object):
                     break
             else:
                 if self.ta_info['checkunknownentities']:
-                    raise botslib.MessageError(u'Record: "$mpath" field "$field" does not exist.',field=field,mpath=structure_record[MPATH])
+                    raise botslib.MessageError(_(u'Record: "$mpath" field "$field" does not exist.'),field=field,mpath=structure_record[MPATH])
                 deletelist.append(field)
         for field in deletelist:
             del record[field]
@@ -189,9 +190,9 @@ class Message(object):
                     self._canonicaltree(childnode,structure_record,self.recordnumber)         #use rest of index in deeper level
                     sortednodelist.append(childnode)
                 if structure_record[MIN] > count:
-                    raise botslib.MessageError(u'Record "$mpath" mandatory but not present.',mpath=structure_record[MPATH])
+                    raise botslib.MessageError(_(u'Record "$mpath" mandatory but not present.'),mpath=structure_record[MPATH])
                 if structure_record[MAX] < count:
-                    raise botslib.MessageError(u'Record "$mpath" occures to often ($count times).',mpath=structure_record[MPATH],count=count)
+                    raise botslib.MessageError(_(u'Record "$mpath" occures to often ($count times).'),mpath=structure_record[MPATH],count=count)
             node.children=sortednodelist
             if hasattr(self,'get_queries_from_edi'):
                 self.get_queries_from_edi(node,structure)
@@ -204,7 +205,7 @@ class Message(object):
                 value = noderecord.get(grammarfield[ID],'')
                 if not value:
                     if grammarfield[MANDATORY] == 'M':
-                        raise botslib.MessageError(u'Record "$mpath" field "$field" is mandatory.',mpath=structure_record[MPATH],field=grammarfield[ID])
+                        raise botslib.MessageError(_(u'Record "$mpath" field "$field" is mandatory.'),mpath=structure_record[MPATH],field=grammarfield[ID])
                     elif not grammarfield[MINLENGTH]:   #if minlength=0
                         continue
                 noderecord[grammarfield[ID]] = self._formatfield(value,grammarfield,structure_record)
@@ -215,13 +216,13 @@ class Message(object):
                         compositefilled = True
                 if not compositefilled:
                     if grammarfield[MANDATORY]=='M':
-                        raise botslib.MessageError(u'Record "$mpath" composite "$field" is mandatory.',mpath=structure_record[MPATH],field=grammarfield[ID])
+                        raise botslib.MessageError(_(u'Record "$mpath" composite "$field" is mandatory.'),mpath=structure_record[MPATH],field=grammarfield[ID])
                     continue
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
                     value = noderecord.get(grammarsubfield[ID],'')
                     if not value:
                         if grammarsubfield[MANDATORY]=='M':
-                            raise botslib.MessageError(u'Record "$mpath" subfield "$field" is mandatory: "$record".',mpath=structure_record[MPATH],field=grammarsubfield[ID],record=noderecord)
+                            raise botslib.MessageError(_(u'Record "$mpath" subfield "$field" is mandatory: "$record".'),mpath=structure_record[MPATH],field=grammarsubfield[ID],record=noderecord)
                         else:
                             continue
                     noderecord[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,structure_record)

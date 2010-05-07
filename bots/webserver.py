@@ -5,19 +5,22 @@ import logging,logging.handlers
 import django
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.servers.basehttp import AdminMediaHandler     
+from django.utils.translation import ugettext as _
 import cherrypy
 import botslib
 import botsglobal
 import botsinit
 
 def showusage():
-    print
-    print '    Usage:  %s  -c<directory> '%os.path.basename(sys.argv[0])
-    print
-    print '    Start the bots web server.'
-    print '    Options:'
-    print "        -c<directory>   directory for configuration files (default: config)."
-    print
+    usage = _('''
+    This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
+    The %(name)s is the web server for bots; the interface (bots-monitor) can be accessed in a btrowser, eg 'http://localhost:8080'.
+    Usage:
+        %(name)s  -c<directory>
+    Options:
+        -c<directory>   directory for configuration files (default: config).
+    ''')%{'name':os.path.basename(sys.argv[0])}
+    print usage
     sys.exit(0)
 
 class Root(object):
@@ -34,7 +37,7 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'You indicated Bots should use specific config directory but no path was given.'
+                print _('Configuration directory indicated, but no directory name.')
                 sys.exit(1)
         elif arg in ["?", "/?"] or arg.startswith('-'):
             showusage()
@@ -73,12 +76,11 @@ def start():
     botsglobal.logger = myappl.log.access_log 
     
     #write start info to cherrypy log********************************************
-    botsglobal.logger.info(u'Bots web server started.')
-    botsglobal.logger.info(u'Python version: "%s".',sys.version)
-    botsglobal.logger.info(u'Django version: "%s".',django.VERSION)
+    botsglobal.logger.info(_(u'Bots web server started.'))
+    botsglobal.logger.info(_(u'Python version: "%s".'),sys.version)
+    botsglobal.logger.info(_(u'Django version: "%s".'),django.VERSION)
     
     #start cherrypy *********************************************************************
-    # 3.1 syntax
     cherrypy.engine.start()
     cherrypy.engine.block()
         

@@ -16,7 +16,7 @@ def txtexc():
 #***    install shortcuts/links in menu ***************************************
 #******************************************************************************
 def installshortcuts(scriptpath):
-    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots16')
+    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots2.0')
     try:
         os.mkdir(shortcutdir)
     except: 
@@ -41,39 +41,20 @@ def start():
     installfromdir = 'installwin'
     optioninstallfrom = '-f' + join(botsdir,installfromdir)
     
-    lijst =['SymbolType',
-            'tgMochiKit',
-            'Extremes' ,
-            'Paste',
-            'PasteDeploy',
-            'CherryPy',
-            'configobj',
-            'decoratortools',
-            'AddOns',
-            'BytecodeAssembler',
-            'PEAK-Rules',
-            'prioritized_methods',
-            'FormEncode',
-            'PasteScript',
-            'TurboJson',
+    lijst =['CherryPy',
             'kid',
-            'TurboKid',
             'SQLAlchemy',
-            'Genshi',
-            'TurboGears']
+            'django',
+            ]
     lijst24 =['elementtree','celementtree']
     lijst25 =['simplejson']
     
     #python version dependencies
     version = str(sys.version_info[0]) + str(sys.version_info[1])
     if version == '24':
-        modulesetuptool = 'setuptools-0.6c11.win32-py2.4.exe'
         lijst = lijst24 + lijst25 + lijst
     elif version == '25':
         lijst = lijst25 + lijst
-        modulesetuptool = 'setuptools-0.6c11.win32-py2.5.exe'
-    elif version == '26':
-        modulesetuptool = 'setuptools-0.6c11.win32-py2.6.exe'
     else:
         raise Exception('Wrong python version, use python 2.4.*, 2.5.* or 2.6.*')
 
@@ -85,30 +66,11 @@ def start():
     installshortcuts(scriptpath)
     
 #******************************************************************************
-#***    install setuptools        *********************************************
-#******************************************************************************
-    try:
-        import setuptools   #test if setuptools is already installed
-    except:
-        if subprocess.call(join(botsdir,installfromdir,modulesetuptool),cwd=join(botsdir,installfromdir),bufsize=-1):
-            raise Exception('failed to install "setuptools".')
-    
-    try:
-        import setuptools   #test if setuptools is installed
-    except:
-        raise Exception('failed to install "setuptools".')
-    
-#******************************************************************************
 #***    install libraries, dependencies  ***************************************
 #******************************************************************************
     for item in lijst:
-        #~ f = open(join(botsdir,'install%s.txt'%item),'w')
-        #~ print join(botsdir,installfromdir),item
-        #~ if subprocess.call([join(scriptpath,'easy_install'), '-q','-Z','--allow-hosts=None',optioninstallfrom,item],stdout=f,stderr=subprocess.STDOUT):
         if subprocess.call([join(scriptpath,'easy_install'), '-q','-Z','--allow-hosts=None',optioninstallfrom,item]):
-            #~ f.close()
             raise Exception('failed to install "%s".'%item)
-        #~ f.close()
 
 #******************************************************************************
 #***    install configuration files, database; upgrade existing db ************

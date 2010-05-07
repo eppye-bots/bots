@@ -1,18 +1,19 @@
 import time
 try:
-    import cElementTree as ET
+    from xml.etree import cElementTree as ET
 except ImportError:
     try:
-        import elementtree.ElementTree as ET
+        from xml.etree import ElementTree as ET
     except ImportError:
         try:
-            from xml.etree import cElementTree as ET
+            import cElementTree as ET
         except ImportError:
-            from xml.etree import ElementTree as ET
+                import elementtree.ElementTree as ET
 try:
-    import elementtree.ElementInclude as ETI
-except ImportError:
     from xml.etree import ElementInclude as ETI
+except ImportError:
+    import elementtree.ElementInclude as ETI
+from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsglobal
@@ -28,7 +29,7 @@ def outmessage_init(**ta_info):
     try:
         classtocall = globals()[ta_info['editype']]
     except KeyError:
-        raise botslib.OutMessageError('Unknown editype for outgoing message: $editype',editype=ta_info['editype'])
+        raise botslib.OutMessageError(_(u'Unknown editype for outgoing message: $editype'),editype=ta_info['editype'])
     return classtocall(ta_info)
 
 class Outmessage(message.Message):
@@ -92,7 +93,7 @@ class Outmessage(message.Message):
             self.nrmessagewritten = 1
             self._closewrite()
         elif not self.root.children:
-            raise botslib.OutMessageError(u'No outgoing message')    #then there is nothing to write...
+            raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
         else:
             self.multiplewrite = True
             for childnode in self.root.children:
@@ -182,7 +183,7 @@ class Outmessage(message.Message):
             value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
             valuelength=len(value)
             if valuelength > grammarfield[LENGTH]:
-                raise botslib.OutMessageError(u'record "$mpath" field "$field" too big (max $max): "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
         elif grammarfield[BFORMAT] == 'D':
             try:
                 lenght = len(value)
@@ -193,12 +194,12 @@ class Outmessage(message.Message):
                 else:
                     raise ValueError
             except ValueError:
-                raise botslib.OutMessageError(u'record "$mpath" field "$field" no valid date: "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH])
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" no valid date: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
             valuelength=len(value)
             if valuelength > grammarfield[LENGTH]:
-                raise botslib.OutMessageError(u'record "$mpath" field "$field" too big (max $max): "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
             if valuelength < grammarfield[MINLENGTH]:
-                raise botslib.OutMessageError(u'record "$mpath" field "$field" too small (min $min): "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too small (min $min): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
         elif grammarfield[BFORMAT] == 'T':
             try:
                 lenght = len(value)
@@ -209,12 +210,12 @@ class Outmessage(message.Message):
                 else: #lenght==8:     #tsja...just use first part of field
                     raise ValueError
             except  ValueError:
-                raise botslib.OutMessageError(u'record "$mpath" field "$field" no valid time: "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH])
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" no valid time: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
             valuelength=len(value)
             if valuelength > grammarfield[LENGTH]:
-                raise botslib.OutMessageError(u'record "$mpath" field "$field" too big (max $max): "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
             if valuelength < grammarfield[MINLENGTH]:
-                raise botslib.OutMessageError(u'record "$mpath" field "$field" too small (min $min): "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too small (min $min): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
         else:   #numerics
             #calculatelengthwithdecimalsign and calculatelengthwithminussign: used to calcute the right field length (instead of True,False use 1,0 for field lengths calculations
             #self.ta_info['lengthnumericbare']: True: interpretate field elngths without (decimals sign, minus sign) 
@@ -224,7 +225,7 @@ class Outmessage(message.Message):
                 try:
                     fvalue = float(value)
                 except:
-                    raise botslib.OutMessageError(u'record "$mpath" field "$field" numerical format not valid: "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH])
+                    raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
                 if value[0]=='-':   
                     if self.ta_info['lengthnumericbare']:
                         calculatelengthwithminussign=1
@@ -265,7 +266,7 @@ class Outmessage(message.Message):
                     calculatelengthwithminussign+=1
                 #~ print value, len(value), calculatelengthwithdecimalsign,calculatelengthwithdecimalsign, grammarfield[LENGTH]
                 if len(value)-calculatelengthwithminussign-calculatelengthwithdecimalsign > grammarfield[LENGTH]:
-                    raise botslib.OutMessageError(u'record "$mpath" field "$field": content to large: "$content".',field=grammarfield[ID],content=value,mpath=record[MPATH])
+                    raise botslib.OutMessageError(_(u'record "$mpath" field "$field": content to large: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
         return value
 
 
@@ -277,7 +278,7 @@ class Outmessage(message.Message):
             try:
                 self._outstream.write(self._record2string(record))
             except UnicodeEncodeError, flup:
-                raise botslib.OutMessageError(u'Chars in outmessage not in charset "$char": $content',char=self.ta_info['charset'],content=flup)
+                raise botslib.OutMessageError(_(u'Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=flup)
                 #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
 
     def _record2string(self,record):
@@ -320,7 +321,7 @@ class Outmessage(message.Message):
                         if self.ta_info['replacechar']:
                             char = self.ta_info['replacechar']
                         else:
-                            raise botslib.OutMessageError(u'Character "$char" is in use as separator in this x12 file. Field: "$data".',char=char,data=field[VALUE])
+                            raise botslib.OutMessageError(_(u'Character "$char" is in use as separator in this x12 file. Field: "$data".'),char=char,data=field[VALUE])
                     else:
                         value +=escape
                 elif mode_quote and char==quote_char:
@@ -377,7 +378,7 @@ class tradacoms(var):
         '''
         self.nrmessagewritten = 0
         if not self.root.children:
-            raise botslib.OutMessageError(u'No outgoing message')    #then there is nothing to write...
+            raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
         for message in self.root.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
             self.outmessagegrammarread(self.ta_info['editype'],message.get({'BOTSID':'MHD','TYPE.01':None}) + message.get({'BOTSID':'MHD','TYPE.02':None}))
             if not self.nrmessagewritten:
@@ -641,7 +642,7 @@ class template(Outmessage):
             ediprint = kid.Template(file=templatefile, data=self.data)
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(u'While templating "$editype.$messagetype": $txt',editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype": $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
         try:
             f = botslib.opendata(self.ta_info['filename'],'wb')
             ediprint.write(f,
@@ -651,8 +652,8 @@ class template(Outmessage):
                             fragment=self.ta_info['merge'])
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(u'While templating "$editype.$messagetype": $txt',editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
-        botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
+            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype": $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+        botsglobal.logger.debug(_(u'End writing to file "%s".'),self.ta_info['filename'])
 
 
 class database(jsonnocheck):

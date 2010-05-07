@@ -3,6 +3,7 @@ import copy
 import datetime
 import django
 from django.core.paginator import Paginator,EmptyPage, InvalidPage
+from django.utils.translation import ugettext as _
 import models
 import botsglobal
 from botsconfig import *
@@ -57,7 +58,6 @@ def changepostparameters(post,type):
     terugpost['sortedby'] = 'ts'
     terugpost['sortedasc'] = False
     terugpost['page'] = 1
-    print 'terugpost',terugpost
     return terugpost
 
 def django_trace_origin(idta,where):
@@ -112,7 +112,7 @@ def trace_document(pquery):
             except IndexError:
                 return    #no result, return
         if child.confirmasked:
-            taorg.confirmtext += u'Confirm send: %s; confirmed: %s; confirmtype: %s\n'%(child.confirmasked,child.confirmed,child.confirmtype)
+            taorg.confirmtext += _(u'Confirm send: %(confirmasked)s; confirmed: %(confirmed)s; confirmtype: %(confirmtype)s\n')%{'confirmasked':child.confirmasked,'confirmed':child.confirmed,'confirmtype':child.confirmtype}
         if child.status==EXTERNOUT:
             taorg.outgoing = child.idta
             taorg.channel = child.tochannel
@@ -127,7 +127,7 @@ def trace_document(pquery):
             except IndexError:
                 return    #no result, return
         if parent.confirmasked:
-            taorg.confirmtext += u'Confirm asked: %s; confirmed: %s; confirmtype: %s\n'%(parent.confirmasked,parent.confirmed,parent.confirmtype)
+            taorg.confirmtext += u'Confirm asked: %(confirmasked)s; confirmed: %(confirmed)s; confirmtype: %(confirmtype)s\n'%{'confirmasked':parent.confirmasked,'confirmed':parent.confirmed,'confirmtype':parent.confirmtype}
         if parent.status==EXTERNIN:
             taorg.incoming = parent.idta
             taorg.channel = parent.fromchannel
@@ -140,7 +140,7 @@ def trace_document(pquery):
         else:
             trace_forward(taorg)
         if not taorg.confirmtext:
-            taorg.confirmtext = '---'
+            taorg.confirmtext = u'---'
 
 
 def gettrace(ta):
@@ -157,13 +157,13 @@ def trace2detail(ta):
         def dota(ta, isfirststep = False):
             if isfirststep:
                 if not level:
-                    ta.ind= 'in'
+                    ta.ind= _(u'in')
                 else:
-                    ta.ind = 'split>>>'
+                    ta.ind = _(u'split>>>')
             elif ta.status==MERGED and ta.nrmessages>1:
-                ta.ind ='merge<<<'
+                ta.ind = _(u'merge<<<')
             elif ta.status==EXTERNOUT:
-                ta.ind ='out'
+                ta.ind = _(u'out')
             else:
                 ta.ind =''
             #~ ta.action = models.ta.objects.only('filename').get(idta=ta.script)

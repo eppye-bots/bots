@@ -4,6 +4,7 @@ import time
 import datetime
 import stat
 import shutil
+from django.utils.translation import ugettext as _
 #bots modules
 import botslib
 import botsglobal
@@ -31,12 +32,13 @@ def _cleanupsession():
 
 def _cleanarchive():
     ''' delete all archive directories older than maxdaysarchive days.'''
-    vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m')
+    vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
     for row in botslib.query('''SELECT archivepath  FROM  channel '''):
-        vanafdir = botslib.join(row['archivepath'],vanaf)
-        for dir in glob.glob(botslib.join(row['archivepath'],'*')):
-            if dir < vanafdir:
-                shutil.rmtree(dir,ignore_errors=True)
+        if row['archivepath']:
+            vanafdir = botslib.join(row['archivepath'],vanaf)
+            for dir in glob.glob(botslib.join(row['archivepath'],'*')):
+                if dir < vanafdir:
+                    shutil.rmtree(dir,ignore_errors=True)
     
     
 def _cleandatafile():
@@ -49,7 +51,7 @@ def _cleandatafile():
             try:
                 os.remove(filename) #remove files - should be no files in root of data dir
             except:
-                botsglobal.logger.exception(u'Cleanup could not remove file')
+                botsglobal.logger.exception(_(u'Cleanup could not remove file'))
         elif statinfo.st_mtime > vanaf :
             continue #directory is newer than maxdays, which is also true for the data files in it. Skip it.
         else:   #check files in dir and remove all older than maxdays
@@ -63,12 +65,12 @@ def _cleandatafile():
                     try:
                         os.remove(filename2)
                     except:
-                        botsglobal.logger.exception(u'Cleanup could not remove file')
+                        botsglobal.logger.exception(_(u'Cleanup could not remove file'))
             if emptydir:
                 try:
                     os.rmdir(filename)
                 except:
-                    botsglobal.logger.exception(u'Cleanup could not remove directory')
+                    botsglobal.logger.exception(_(u'Cleanup could not remove directory'))
 
 
 def _cleanpersist():

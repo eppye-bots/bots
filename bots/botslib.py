@@ -27,12 +27,12 @@ def botsinfo():
             (_(u'config path'),botsglobal.ini.get('directories','config')),
             (_(u'botssys path'),botsglobal.ini.get('directories','botssys')),
             (_(u'usersys path'),botsglobal.ini.get('directories','usersysabs')),
-            (_(u'DATABASE_ENGINE'),botsglobal.settings.DATABASE_ENGINE),
-            (_(u'DATABASE_NAME'),botsglobal.settings.DATABASE_NAME),
-            (_(u'DATABASE_USER'),botsglobal.settings.DATABASE_USER),
-            (_(u'DATABASE_HOST'),botsglobal.settings.DATABASE_HOST),
-            (_(u'DATABASE_PORT'),botsglobal.settings.DATABASE_PORT),
-            (_(u'DATABASE_OPTIONS'),botsglobal.settings.DATABASE_OPTIONS),
+            (u'DATABASE_ENGINE',botsglobal.settings.DATABASE_ENGINE),
+            (u'DATABASE_NAME',botsglobal.settings.DATABASE_NAME),
+            (u'DATABASE_USER',botsglobal.settings.DATABASE_USER),
+            (u'DATABASE_HOST',botsglobal.settings.DATABASE_HOST),
+            (u'DATABASE_PORT',botsglobal.settings.DATABASE_PORT),
+            (u'DATABASE_OPTIONS',botsglobal.settings.DATABASE_OPTIONS),
             ]
 
 #**********************************************************/**
@@ -378,7 +378,7 @@ def changestatustinfo(change,where):
         returns the number of db-ta that have been changed.
     '''
     if not isinstance(change,int):
-        raise BotsError(u'change not valid: expect status to be an integer. Programming error.')
+        raise BotsError(_(u'change not valid: expect status to be an integer. Programming error.'))
     if 'statust' not in where:
         where['statust']=OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
@@ -476,7 +476,7 @@ def sendbotserrorreport(subject,reporttext):
         try:
             mail_managers(subject, reporttext)
         except:
-            botsglobal.logger.debug(_(u'Error in sending error report: %s'),txtexc())
+            botsglobal.logger.debug(u'Error in sending error report: %s',txtexc())
 
 def log_session(f):
     ''' used as decorator.
@@ -493,7 +493,7 @@ def log_session(f):
             terug =f(*args,**argv)
         except:
             txt=txtexc()
-            botsglobal.logger.debug(_(u'Error in process: %s'),txt)
+            botsglobal.logger.debug(u'Error in process: %s',txt)
             ta_session.update(statust=ERROR,errortext=txt)
         else:
             ta_session.update(statust=DONE)
@@ -562,7 +562,7 @@ def botsimport(soort,modulename):
     try:
         module = botsbaseimport(modulepath)
     except ImportError: #if module not found
-        botsglobal.logger.debug(_(u'no import of file "%s".'),modulefile)
+        botsglobal.logger.debug(u'no import of file "%s".',modulefile)
         raise
     else:
         return module,modulefile
@@ -666,15 +666,13 @@ def runexternprogram(*args):
         subprocess.call(list(args),cwd=path)
     except:
         txt=txtexc()
-        raise OSError(u'error running extern program "$program": $txt',program=args,txt=txt)
+        raise OSError(_(u'error running extern program "$program": $txt'),program=args,txt=txt)
 
 #**********************************************************/**
 #***************###############  mdn   #############
 #**********************************************************/**
 def checkconfirmrules(confirmtype,**kwargs):
-    #~ confirmlist = ['ruletype','idroute','idchannel','frompartner','topartner','editype','messagetype','negativerule']
     terug = False       #boolean to return: ask a confirm of not?
-    #~ print 'kwargs',kwargs
     for confirmdict in query(u'''SELECT ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,editype,messagetype,negativerule
                         FROM    confirmrule
                         WHERE   active=%(active)s
@@ -682,8 +680,6 @@ def checkconfirmrules(confirmtype,**kwargs):
                         ORDER BY negativerule ASC
                         ''',
                         {'active':True,'confirmtype':confirmtype}):
-        #~ confirmdict = dict(zip(confirmlist,row))    #put the values of row in a dict
-        #~ print 'confirmdict',confirmdict
         if confirmdict['ruletype']=='all':
             terug = not confirmdict['negativerule']
         elif confirmdict['ruletype']=='route':
