@@ -83,10 +83,34 @@ RULETYPE = (
     ('messagetype',_(u'messagetype')),
     )
 
+
+class botsmodel(models.Model):
+    class Meta:
+        abstract = True
+    def delete(self, *args, **kwargs):
+        ''' bots does not use cascaded deletes!; so for delete: set references to null'''
+        self.clear_nullable_related()
+        super(botsmodel, self).delete(*args, **kwargs)
+    def clear_nullable_related(self):
+        """
+        Recursively clears any nullable foreign key fields on related objects.
+        Django is hard-wired for cascading deletes, which is very dangerous for
+        us. This simulates ON DELETE SET NULL behavior manually.
+        """
+        for related in self._meta.get_all_related_objects():
+            accessor = related.get_accessor_name()
+            related_set = getattr(self, accessor)
+
+            if related.field.null:
+                related_set.clear()
+            else:
+                for related_object in related_set.all():
+                    related_object.clear_nullable_related()
+
 #***********************************************************************************
 #******** written by webserver ********************************************************
 #***********************************************************************************
-class confirmrule(models.Model):
+class confirmrule(botsmodel):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
     confirmtype = models.CharField(max_length=35,choices=CONFIRMTYPE)
@@ -106,7 +130,7 @@ class confirmrule(models.Model):
     class Meta:
         db_table = 'confirmrule'
         verbose_name = _(u'confirm rule')
-class ccodetrigger(models.Model):
+class ccodetrigger(botsmodel):
     ccodeid = models.CharField(primary_key=True,max_length=35,verbose_name=_(u'type code'))
     ccodeid_desc = models.CharField(max_length=35,null=True,blank=True)
     def __unicode__(self):
@@ -114,7 +138,7 @@ class ccodetrigger(models.Model):
     class Meta:
         db_table = 'ccodetrigger'
         verbose_name = _(u'user code type')
-class ccode(models.Model):
+class ccode(botsmodel):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     ccodeid = models.ForeignKey(ccodetrigger,verbose_name=_(u'type code'))
     leftcode = models.CharField(max_length=35,db_index=True)
@@ -133,7 +157,7 @@ class ccode(models.Model):
         db_table = 'ccode'
         verbose_name = _(u'user code')
         unique_together = (('ccodeid','leftcode','rightcode'),)
-class channel(models.Model):
+class channel(botsmodel):
     idchannel = models.CharField(max_length=35,primary_key=True)
     inorout = models.CharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
     type = models.CharField(max_length=35,choices=CHANNELTYPE)  #use seperate in/out; keuzelijst; ook keuzelijst voor type (FILE, POP3, etc)
@@ -164,7 +188,7 @@ class channel(models.Model):
         return self.idchannel
     class Meta:
         db_table = 'channel'
-class partner(models.Model):
+class partner(botsmodel):
     idpartner = models.CharField(max_length=35,primary_key=True,verbose_name=_(u'partner identification'))
     active = models.BooleanField(default=False)
     isgroup = models.BooleanField(default=False)
@@ -180,7 +204,7 @@ class partner(models.Model):
     class Meta:
         db_table = 'partner'
         
-class chanpar(models.Model):
+class chanpar(botsmodel):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idpartner = models.ForeignKey(partner,verbose_name=_(u'partner'))
     idchannel = models.ForeignKey(channel,verbose_name=_(u'channel'))
@@ -195,7 +219,7 @@ class chanpar(models.Model):
         verbose_name_plural = _(u'email address per channel')
     def __unicode__(self):
         return self.idpartner + ' ' + self.idchannel + ' ' + self.mail
-class translate(models.Model):
+class translate(botsmodel):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
     fromeditype = models.CharField(max_length=35,choices=EDITYPES,help_text=_(u'Editype to translate from.'))
@@ -214,7 +238,7 @@ class translate(models.Model):
         verbose_name = _(u'translation')
     def __unicode__(self):
         return self.fromeditype + ' ' + self.frommessagetype + ' ' + self.alt + ' ' + self.frompartner + ' ' + self.topartner
-class routes(models.Model):  
+class routes(botsmodel):  
     #~ id = models.IntegerField(primary_key=True)
     idroute = models.CharField(max_length=35,db_index=True,help_text=_(u'identification of route; one route can consist of multiple parts having the same "idroute".'))
     seq = models.PositiveIntegerField(default=1,help_text=_(u'for routes consisting of multiple parts, "seq" indicates the order these parts are run.'))
@@ -241,12 +265,12 @@ class routes(models.Model):
         verbose_name = _(u'route')
         unique_together = (("idroute","seq"),)
     def __unicode__(self):
-        return self.idroute + ' ' + self.seq
+        return self.idroute + ' ' + str(self.seq)
 
 #***********************************************************************************
 #******** written by engine ********************************************************
 #***********************************************************************************
-class filereport(models.Model):
+class filereport(botsmodel):
     #~ id = models.IntegerField(primary_key=True)
     idta = models.IntegerField(db_index=True)
     reportidta = models.IntegerField(db_index=True)
@@ -278,14 +302,14 @@ class filereport(models.Model):
     class Meta:
         db_table = 'filereport'
         unique_together = (("idta","reportidta"),)
-class mutex(models.Model):
+class mutex(botsmodel):
     #specific SQL is used (database defaults are used)
     mutexk = models.IntegerField(primary_key=True)
     mutexer = models.IntegerField()
     ts = models.DateTimeField()
     class Meta:
         db_table = 'mutex'
-class persist(models.Model):
+class persist(botsmodel):
     #specific SQL is used (database defaults are used)
     domein = models.CharField(max_length=35)
     botskey = models.CharField(max_length=35)
@@ -294,7 +318,7 @@ class persist(models.Model):
     class Meta:
         db_table = 'persist'
         unique_together = (("domein","botskey"),)
-class report(models.Model):
+class report(botsmodel):
     idta = models.IntegerField(primary_key=True)    #rename to reportidta
     lastreceived = models.IntegerField()
     lastdone = models.IntegerField()
@@ -310,14 +334,14 @@ class report(models.Model):
     rsrv2 = models.IntegerField(null=True)                       ##added 20100501
     class Meta:
         db_table = 'report'
-#~ #trigger for sqlite to use local time (instead of utc)
+#~ #trigger for sqlite to use local time (instead of utc). I can not add this to sqlite specific sql code, as django does not allow complex (begin ... end) sql here.
 #~ CREATE TRIGGER uselocaltime  AFTER INSERT ON ta
 #~ BEGIN
 #~ UPDATE ta
 #~ SET ts = datetime('now','localtime') 
 #~ WHERE idta = new.idta ;
 #~ END;
-class ta(models.Model):
+class ta(botsmodel):
     #specific SQL is used (database defaults are used)
     idta = models.AutoField(primary_key=True)
     statust = models.IntegerField(choices=STATUST)
@@ -360,7 +384,7 @@ class ta(models.Model):
     rsrv4 = models.IntegerField(null=True)              #added 20100501
     class Meta:
         db_table = 'ta'
-class uniek(models.Model):
+class uniek(botsmodel):
     #specific SQL is used (database defaults are used)
     domein = models.CharField(max_length=35,primary_key=True)
     nummer = models.IntegerField()

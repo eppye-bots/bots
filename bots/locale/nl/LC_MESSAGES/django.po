@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-07 12:55+0200\n"
+"POT-Creation-Date: 2010-05-09 15:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,27 +16,41 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admin.py:15
+#: admin.py:32
+#, python-format
+msgid "%(name)s object with primary key %(key)r does not exist."
+msgstr ""
+
+#: admin.py:37
+#, python-format
+msgid "The %(name)s \"%(obj)s\" was deleted successfully."
+msgstr ""
+
+#: admin.py:47
 msgid "(de)activate"
 msgstr "(de)activeer"
 
-#: admin.py:46
+#: admin.py:52
+msgid "delete selected"
+msgstr "verwijder selectie"
+
+#: admin.py:77
 msgid "FTP specific data"
 msgstr "FTP specifieke gegevens"
 
-#: admin.py:49 admin.py:108
+#: admin.py:80 admin.py:136
 msgid "Advanced"
 msgstr "Geavanceerd"
 
-#: admin.py:80
+#: admin.py:110
 msgid "A group can not be part of a group."
 msgstr "EEN (partner)group kan geen deel uitmaken van een (partner)group"
 
-#: admin.py:105
+#: admin.py:133
 msgid "Filtering for outchannel"
 msgstr "Filter voor uitgaande kanaal"
 
-#: admin.py:126
+#: admin.py:154
 msgid ""
 "Combination of fromeditype,frommessagetype,alt,frompartner,topartner already "
 "exists."
@@ -44,7 +58,7 @@ msgstr ""
 "Deze combinatie van (fromeditype,frommessagetype,alt,frompartner,topartner) "
 "bestaat al."
 
-#: admin.py:140
+#: admin.py:167
 msgid "Advanced - multiple translations per editype/messagetype"
 msgstr "Geavanceerd - meerdere vertalingen per editype/berichttype"
 
@@ -996,27 +1010,25 @@ msgstr ""
 #: models.py:10 templates/bots/detail.html:27 templates/bots/incoming.html:35
 #: templates/bots/process.html:24 templates/bots/reports.html:22
 msgid "Error"
-msgstr ""
+msgstr "Fout"
 
 #: models.py:11
 msgid "Stuck"
-msgstr ""
+msgstr "Vastgelopen"
 
 #: models.py:12
 msgid "Done"
-msgstr ""
+msgstr "Gedaan"
 
 #: models.py:16
-#, fuzzy
 msgid "Rereceive"
 msgstr "Ontvangen"
 
 #: models.py:21
 msgid "process"
-msgstr ""
+msgstr "proces"
 
 #: models.py:22
-#, fuzzy
 msgid "FileRecieve"
 msgstr "Ontvangen"
 
@@ -1045,9 +1057,8 @@ msgid "Translate"
 msgstr ""
 
 #: models.py:29
-#, fuzzy
 msgid "Parsed"
-msgstr "Pagina"
+msgstr ""
 
 #: models.py:30
 msgid "Splitup"
@@ -1106,9 +1117,8 @@ msgid "idoc"
 msgstr ""
 
 #: models.py:46 models.py:68
-#, fuzzy
 msgid "database"
-msgstr "Datum/tijd"
+msgstr ""
 
 #: models.py:47
 msgid "xmlnocheck"
@@ -1127,9 +1137,8 @@ msgid "tradacoms"
 msgstr ""
 
 #: models.py:51
-#, fuzzy
 msgid "email-confirmation"
-msgstr "Bevestigd"
+msgstr "email bevestiging"
 
 #: models.py:54 viewlib.py:160
 msgid "in"
@@ -1137,11 +1146,11 @@ msgstr ""
 
 #: models.py:55 viewlib.py:166
 msgid "out"
-msgstr ""
+msgstr "uit"
 
 #: models.py:58 templates/bots/filer.html:25
 msgid "file"
-msgstr ""
+msgstr "bestand"
 
 #: models.py:59
 msgid "smtp"
@@ -1203,220 +1212,219 @@ msgstr ""
 msgid "all"
 msgstr ""
 
-#: models.py:79 models.py:98 models.py:241
+#: models.py:79 models.py:122 models.py:265
 msgid "route"
 msgstr ""
 
-#: models.py:80 models.py:99 models.py:186
+#: models.py:80 models.py:123 models.py:210
 msgid "channel"
-msgstr ""
+msgstr "kanaal"
 
 #: models.py:81
 msgid "frompartner"
-msgstr ""
+msgstr "VanPartner"
 
 #: models.py:82
 msgid "topartner"
-msgstr ""
+msgstr "NaarPartner"
 
 #: models.py:83 templates/bots/filer.html:23
 msgid "messagetype"
-msgstr ""
+msgstr "berichttype"
 
-#: models.py:108
-#, fuzzy
+#: models.py:132
 msgid "confirm rule"
-msgstr "Bevestigd"
+msgstr "Regel voor bevestigen"
 
-#: models.py:110 models.py:119
+#: models.py:134 models.py:143
 msgid "type code"
 msgstr ""
 
-#: models.py:116
+#: models.py:140
 msgid "user code type"
 msgstr ""
 
-#: models.py:134
+#: models.py:158
 msgid "user code"
 msgstr ""
 
-#: models.py:138
+#: models.py:162
 msgid "in/out"
 msgstr ""
 
-#: models.py:144
+#: models.py:168
 msgid "password"
-msgstr ""
+msgstr "wachtwoord"
 
-#: models.py:145
+#: models.py:169
 msgid "Do not check if an incoming email addresses exist in bots."
-msgstr ""
+msgstr "Geen controle op inkomend email adres."
 
-#: models.py:147
+#: models.py:171
 msgid ""
 "For in-channels: remove the edi files after succesful reading. Note: in "
 "production you do want to remove the edi files, else these are read over and "
 "over again!"
 msgstr ""
 
-#: models.py:149
+#: models.py:173
 msgid ""
 "For \"type\" ftp and file; read or write this filename. Wildcards allowed, "
 "eg \"*.edi\". Note for out-channels: if no wildcard is used, all edi message "
 "are written to one file."
 msgstr ""
 
-#: models.py:150
+#: models.py:174
 msgid ""
 "When reading or writing edi files in this directory use this file to "
 "indicate a directory lock."
 msgstr ""
 
-#: models.py:151
+#: models.py:175
 msgid ""
 "Use system file locking for reading & writing edi files on windows, *nix."
 msgstr ""
 
-#: models.py:159
+#: models.py:183
 msgid "Archive path"
-msgstr ""
+msgstr "Pad voor archivering"
 
-#: models.py:159
+#: models.py:183
 msgid ""
 "Write incoming or outgoing edi files to an archive. Use absolute or relative "
 "path; relative path is relative to bots directory. Eg: \"botssys/archive/"
 "mychannel\"."
 msgstr ""
 
-#: models.py:168
+#: models.py:192
 msgid "partner identification"
-msgstr ""
+msgstr "partneridentificatie"
 
-#: models.py:185
+#: models.py:209
 msgid "partner"
 msgstr ""
 
-#: models.py:194 models.py:195
+#: models.py:218 models.py:219
 msgid "email address per channel"
-msgstr ""
+msgstr "emailadres per kanaal"
 
-#: models.py:201
+#: models.py:225
 msgid "Editype to translate from."
 msgstr ""
 
-#: models.py:202
+#: models.py:226
 msgid "Messagetype to translate from."
 msgstr ""
 
-#: models.py:203
+#: models.py:227
 msgid "Alternative translation"
 msgstr ""
 
-#: models.py:203
+#: models.py:227
 msgid "Do this translation only for this alternative translation."
 msgstr ""
 
-#: models.py:204
+#: models.py:228
 msgid "Do this translation only for this frompartner."
 msgstr ""
 
-#: models.py:205
+#: models.py:229
 msgid "Do this translation only for this topartner."
 msgstr ""
 
-#: models.py:206
+#: models.py:230
 msgid "User mapping script to use for translation."
 msgstr ""
 
-#: models.py:207
+#: models.py:231
 msgid "Editype to translate to."
-msgstr ""
+msgstr "Editype waar naar vertaald wordt."
 
-#: models.py:208
+#: models.py:232
 msgid "Messagetype to translate to."
-msgstr ""
+msgstr "Berichttype waar naar vertaald wordt."
 
-#: models.py:214
+#: models.py:238
 msgid "translation"
-msgstr ""
+msgstr "vertaling"
 
-#: models.py:219
+#: models.py:243
 msgid ""
 "identification of route; one route can consist of multiple parts having the "
 "same \"idroute\"."
 msgstr ""
 
-#: models.py:220
+#: models.py:244
 msgid ""
 "for routes consisting of multiple parts, \"seq\" indicates the order these "
 "parts are run."
 msgstr ""
 
-#: models.py:222
+#: models.py:246
 msgid "incoming channel"
-msgstr ""
+msgstr "inkomend kanaal"
 
-#: models.py:223
+#: models.py:247
 msgid "the editype of the incoming edi files."
 msgstr ""
 
-#: models.py:224
+#: models.py:248
 msgid ""
 "the messagetype of incoming edi files. For edifact: messagetype=edifact; for "
 "x12: messagetype=x12."
 msgstr ""
 
-#: models.py:225
+#: models.py:249
 msgid "outgoing channel"
-msgstr ""
+msgstr "uitgaand kanaal"
 
-#: models.py:226
+#: models.py:250
 msgid "Only edi files with this editype to this outgoing channel."
 msgstr ""
 
-#: models.py:227
+#: models.py:251
 msgid "Only edi files of this messagetype to this outgoing channel."
 msgstr ""
 
-#: models.py:228
+#: models.py:252
 msgid ""
 "Only use if there is more than one \"translation\" for the same editype and "
 "messagetype. Advanced use, seldom needed."
 msgstr ""
 
-#: models.py:229
+#: models.py:253
 msgid "The frompartner of the incoming edi files. Seldom needed."
-msgstr ""
+msgstr "Ken VanPartner toe aan het edi bestand. Zelden nodig."
 
-#: models.py:230
+#: models.py:254
 msgid "The topartner of the incoming edi files. Seldom needed."
 msgstr ""
 
-#: models.py:231
+#: models.py:255
 msgid "Only edi files from this partner/partnergroup for this outgoing channel"
 msgstr ""
 
-#: models.py:232
+#: models.py:256
 msgid "Only edi files to this partner/partnergroup to this channel"
 msgstr ""
 
-#: models.py:233
+#: models.py:257
 msgid "Only edi files with this testindicator to this outgoing channel."
-msgstr ""
+msgstr "Filter de berichten voor dit uitgaand kanaal op testindicatie."
 
-#: models.py:234
+#: models.py:258
 msgid "Do a translation in this route."
-msgstr ""
+msgstr "Vertaal in deze route."
 
-#: models.py:235
+#: models.py:259
 msgid ""
 "Do not use this route in a normal run. Advanced, related to scheduling "
 "specific routes or not."
 msgstr ""
 
-#: models.py:369
+#: models.py:393
 msgid "counter"
-msgstr ""
+msgstr "teller"
 
 #: node.py:106
 msgid "must be dict, list or tuple: enhancedget($mpath)"
@@ -1701,8 +1709,8 @@ msgid "Found no content in mailbag."
 msgstr "Leeg bestand."
 
 #: transform.py:74
-msgid "Envelope niet goed afgesloten."
-msgstr ""
+msgid "Found no valid envelope trailer in mailbag."
+msgstr "Leeg bestand."
 
 #: transform.py:163
 msgid ""
@@ -1765,7 +1773,7 @@ msgstr "Extern bestand; kan niet getoond worden."
 
 #: views.py:333
 msgid "External file. Can not be displayed. Use \"previous\"."
-msgstr "Extern bestand; kan net getoond worden."
+msgstr "Extern bestand; kan niet getoond worden."
 
 #: views.py:336
 msgid "File has error status and does not exist. Use \"previous\"."
@@ -1876,7 +1884,6 @@ msgid "Bots web server started."
 msgstr "Bots webserver is gestart."
 
 #: webserver.py:80
-#, fuzzy, python-format
 msgid "Python version: \"%s\"."
 msgstr "python versie: \"%s\"."
 
@@ -1895,11 +1902,11 @@ msgstr "Bots documentatie"
 
 #: templates/bots/about.html:10
 msgid "Bots mailing list"
-msgstr "Bots email lijst"
+msgstr "Bots email forum"
 
 #: templates/bots/about.html:11
 msgid "Commercial support by EbbersConsult"
-msgstr "Commerciële ondersteuning door Ebbersonsult (Nederlandstalig)."
+msgstr "Commerciele ondersteuning door Ebbersonsult (Nederlandstalig)."
 
 #: templates/bots/confirm.html:6 templates/bots/detail.html:5
 #: templates/bots/document.html:6 templates/bots/incoming.html:6
@@ -2240,18 +2247,16 @@ msgid "All runs"
 msgstr "Alle runs"
 
 #: templates/bots/menu.html:29 templates/bots/menu.html.py:38
-#, fuzzy
 msgid "Confirmations"
-msgstr "Bevestigd"
+msgstr "Bevestigingen"
 
 #: templates/bots/menu.html:32
 msgid "Select"
 msgstr "Selecties"
 
 #: templates/bots/menu.html:42
-#, fuzzy
 msgid "Configuration"
-msgstr "Bevestigd"
+msgstr "Configuratie"
 
 #: templates/bots/menu.html:43
 msgid "Routes"
@@ -2270,9 +2275,8 @@ msgid "Partners &amp; groups"
 msgstr "Partner en groepen"
 
 #: templates/bots/menu.html:47
-#, fuzzy
 msgid "Confirmrules"
-msgstr "Bevestigd"
+msgstr "Regels voor bevestigingen"
 
 #: templates/bots/menu.html:48
 msgid "User Codes as list"
@@ -2306,7 +2310,9 @@ msgstr "Maak codelijst plugin"
 msgid ""
 "Are you sure you want to delete all transactions?\\nThis action can not be "
 "undone!"
-msgstr "Weet u zeker dat u alle transacties wilt verwijderen?\\nVerwijderen is definitief."
+msgstr ""
+"Weet u zeker dat u alle transacties wilt verwijderen?\\nVerwijderen is "
+"definitief."
 
 #: templates/bots/menu.html:60
 msgid "Delete transactions"
@@ -2366,7 +2372,7 @@ msgstr "Zend test rapportage"
 
 #: templates/bots/menu.html:74
 msgid "Run engine"
-msgstr ""
+msgstr "Run"
 
 #: templates/bots/menu.html:75
 msgid "Run only new"
@@ -2387,7 +2393,7 @@ msgstr ""
 
 #: templates/bots/menu.html:84
 msgid "Javascript is not enabled. Bots works beter with javascript."
-msgstr "Javasscript staat uit. Bots werkt beter met Javascript aan."
+msgstr "Javascript staat uit. Bots werkt beter met Javascript aan."
 
 #: templates/bots/outgoing.html:20 templates/bots/outgoing.html.py:45
 msgid "Resend"
@@ -2435,7 +2441,7 @@ msgstr "Bekijk procesfouten"
 
 #: templates/bots/reports.html:34
 msgid "View file errors"
-msgstr "Beijk files met fouten"
+msgstr "Bekijk files met fouten"
 
 #: templates/bots/reports.html:50
 msgid "files with errors"

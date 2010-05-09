@@ -1,45 +1,76 @@
 import django
 from django.contrib import admin
 from django.utils.translation import ugettext as _
+from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.contrib.admin.util import unquote, flatten_fieldsets, get_deleted_objects, model_ngettext, model_format_dict
+from django.core.exceptions import PermissionDenied
+from django.utils.encoding import force_unicode
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
+from django.utils.text import capfirst, get_text_list
 #***********
 import models
 import botsglobal
 
-screen_limit = botsglobal.ini.getint('settings','limit',30)
+admin.site.disable_action('delete_selected')
 
-def activate(ding, request, queryset):
-    ''' admin action for several models.'''
-    for obj in queryset:
-        obj.active = not obj.active
-        obj.save()
-activate.short_description = _(u'(de)activate')
+
+class BotsAdmin(admin.ModelAdmin):
+    screen_limit = botsglobal.ini.getint('settings','limit',30)
+
+    def delete_view(self, request, object_id, extra_context=None):
+        ''' copy from admin.ModelAdmin; adapted: do not checkl references: no cascading deletes; no confirmation.'''
+        opts = self.model._meta
+        app_label = opts.app_label
+        try:
+            obj = self.queryset(request).get(pk=unquote(object_id))
+        except self.model.DoesNotExist:
+            obj = None
+        if not self.has_delete_permission(request, obj):
+            raise PermissionDenied
+        if obj is None:
+            raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_unicode(opts.verbose_name), 'key': escape(object_id)})
+        obj_display = force_unicode(obj)
+        self.log_deletion(request, obj, obj_display)
+        obj.delete()
+
+        self.message_user(request, _('The %(name)s "%(obj)s" was deleted successfully.') % {'name': force_unicode(opts.verbose_name), 'obj': force_unicode(obj_display)})
+
+        if not self.has_change_permission(request, None):
+            return HttpResponseRedirect("../../../../")
+        return HttpResponseRedirect("../../")
+    def activate(self, request, queryset):
+        ''' admin action.'''
+        for obj in queryset:
+            obj.active = not obj.active
+            obj.save()
+    activate.short_description = _(u'(de)activate')
+    def bulk_delete(self, request, queryset):
+        ''' admin action.'''
+        for obj in queryset:
+            obj.delete()
+    bulk_delete.short_description = _(u'delete selected')
 
 #*****************************************************************************************************
-class CcodeAdmin(admin.ModelAdmin):
+class CcodeAdmin(BotsAdmin):
     list_display = ('ccodeid','leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8')
     list_display_links = ('ccodeid',)
     list_filter = ('ccodeid',)
-    list_per_page = screen_limit
     ordering = ('ccodeid','leftcode')
+    actions = ('bulk_delete',)
 admin.site.register(models.ccode,CcodeAdmin)
 
-#~ class CcodeInline(admin.TabularInline):
-    #~ model = models.ccode
-    #~ extra = 1
-    #~ ordering = ('leftcode',)
-
-class CcodetriggerAdmin(admin.ModelAdmin):
+class CcodetriggerAdmin(BotsAdmin):
     list_display = ('ccodeid','ccodeid_desc',)
     list_display_links = ('ccodeid',)
-    list_per_page = screen_limit
-    #~ inlines = (CcodeInline,)
+    actions = ('bulk_delete',)
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
-class ChannelAdmin(admin.ModelAdmin):
+class ChannelAdmin(BotsAdmin):
     list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename',  'remove', 'archivepath', 'charset')
     list_filter = ('inorout','type')
-    list_per_page = screen_limit
     ordering = ('idchannel',)
+    actions = ('bulk_delete',)
     fieldsets = (
         (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset','desc')
                         }),
@@ -52,13 +83,12 @@ class ChannelAdmin(admin.ModelAdmin):
     )
 admin.site.register(models.channel,ChannelAdmin)
 
-class ConfirmruleAdmin(admin.ModelAdmin):
+class ConfirmruleAdmin(BotsAdmin):
     save_as = True
     list_display = ('active','negativerule','confirmtype','ruletype', 'frompartner', 'topartner','idroute','idchannel','editype','messagetype')
     list_display_links = ('confirmtype',)
     list_filter = ('active','confirmtype','ruletype')
-    list_per_page = screen_limit
-    actions = (activate,)
+    actions = ('activate','bulk_delete')
     ordering = ('confirmtype','ruletype')
     fieldsets = (
         (None, {'fields': ('active','negativerule','confirmtype','ruletype','frompartner', 'topartner','idroute','idchannel',('editype','messagetype'))}),
@@ -80,7 +110,7 @@ class MyPartnerAdminForm(django.forms.ModelForm):
             raise django.forms.util.ValidationError(_(u'A group can not be part of a group.'))
         return self.cleaned_data
 
-class PartnerAdmin(admin.ModelAdmin):
+class PartnerAdmin(BotsAdmin):
     form = MyPartnerAdminForm
     inlines = (MailInline,)
     fields = ('active', 'isgroup', 'idpartner', 'name','mail','cc','group')
@@ -88,18 +118,16 @@ class PartnerAdmin(admin.ModelAdmin):
     list_display_links = ('idpartner',)
     list_filter = ('active','isgroup')
     filter_horizontal = ('group',)
-    list_per_page = screen_limit
-    actions = (activate,)
+    actions = ('bulk_delete','activate')
 admin.site.register(models.partner,PartnerAdmin)
 
-class RoutesAdmin(admin.ModelAdmin):
+class RoutesAdmin(BotsAdmin):
     save_as = True
     list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
     list_display_links = ('idroute',)
     list_filter = ('active','fromeditype','testindicator')
     ordering = ('idroute','seq')
-    actions = (activate,)
-    list_per_page = screen_limit
+    actions = ('bulk_delete','activate')
     fieldsets = (
         (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc')}),
         (_(u'Filtering for outchannel'),{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
@@ -126,14 +154,13 @@ class MyTranslateAdminForm(django.forms.ModelForm):
             raise django.forms.util.ValidationError(_(u'Combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists.'))
         return self.cleaned_data
 
-class TranslateAdmin(admin.ModelAdmin):
+class TranslateAdmin(BotsAdmin):
     form = MyTranslateAdminForm
     save_as = True
     list_display = ('active', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'tscript', 'toeditype', 'tomessagetype')
     list_display_links = ('fromeditype',)
     list_filter = ('active','fromeditype','toeditype')
-    actions = (activate,)
-    list_per_page = screen_limit
+    actions = ('bulk_delete','activate')
     fieldsets = (
         (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype','desc'))
                     }),
@@ -143,10 +170,9 @@ class TranslateAdmin(admin.ModelAdmin):
     )
 admin.site.register(models.translate,TranslateAdmin)
 
-class UniekAdmin(admin.ModelAdmin):     #AKA counters
+class UniekAdmin(BotsAdmin):     #AKA counters
     list_display = ('domein', 'nummer')
     list_editable = ('nummer',)
-    list_per_page = screen_limit
     ordering = ('domein',)
     actions = None
 admin.site.register(models.uniek,UniekAdmin)
