@@ -15,3 +15,5 @@ syntax: regexp
 ^bots/usersys/\w+/.*
 #^bots/media/img.*
 #^bots/media/js.*
+glob:MANIFEST.in
+relre:^bots/installwin/*

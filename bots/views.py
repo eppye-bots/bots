@@ -97,23 +97,23 @@ def incoming(request,*kw,**kwargs):
             elif 'retransmit' in request.POST:        #coming from ViewIncoming
                 idta,reportidta = request.POST[u'retransmit'].split('-')
                 filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
-                filereport.retransmit = 1
+                filereport.retransmit = not filereport.retransmit
                 filereport.save()
-            elif 'retry' in request.POST:        #coming from ViewIncoming
-                idta,reportidta = request.POST[u'retry'].split('-')
-                filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
-                filereport.retransmit = 2
-                filereport.save()
-            elif 'retrycommunication' in request.POST:        #coming from ViewIncoming
-                idta,reportidta = request.POST[u'retrycommunication'].split('-')
-                filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
-                filereport.retransmit = 3
-                filereport.save()
-            elif 'noretry' in request.POST:        #coming from ViewIncoming
-                idta,reportidta = request.POST[u'noretry'].split('-')
-                filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
-                filereport.retransmit = 0
-                filereport.save()
+            #~ elif 'retry' in request.POST:        #coming from ViewIncoming
+                #~ idta,reportidta = request.POST[u'retry'].split('-')
+                #~ filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
+                #~ filereport.retransmit = 2
+                #~ filereport.save()
+            #~ elif 'retrycommunication' in request.POST:        #coming from ViewIncoming
+                #~ idta,reportidta = request.POST[u'retrycommunication'].split('-')
+                #~ filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
+                #~ filereport.retransmit = 3
+                #~ filereport.save()
+            #~ elif 'noretry' in request.POST:        #coming from ViewIncoming
+                #~ idta,reportidta = request.POST[u'noretry'].split('-')
+                #~ filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
+                #~ filereport.retransmit = 0
+                #~ filereport.save()
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
@@ -418,13 +418,13 @@ def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
             #~ logger = logging.getLogger('bots')
         if os.name=='nt':
-            scriptpath = os.path.normpath(os.path.join(sys.prefix,'Scripts','bots-engine'))
-        elif os.path.exists(os.path.join(sys.prefix,'bin','bots-engine.py')):
-            scriptpath = os.path.normpath(os.path.join(sys.prefix,'bin','bots-engine.py'))
-        elif os.path.exists(os.path.join(sys.prefix,'local/bin','bots-engine.py')):
-            scriptpath = os.path.normpath(os.path.join(sys.prefix,'local/bin','bots-engine.py'))
+            scriptpath = os.path.normpath(os.path.join(sys.prefix,'Scripts','botsengine'))
+        elif os.path.exists(os.path.join(sys.prefix,'bin','botsengine.py')):
+            scriptpath = os.path.normpath(os.path.join(sys.prefix,'bin','botsengine.py'))
+        elif os.path.exists(os.path.join(sys.prefix,'local/bin','botsengine.py')):
+            scriptpath = os.path.normpath(os.path.join(sys.prefix,'local/bin','botsengine.py'))
         else:
-            request.user.message_set.create(message=_(u'Bots can not find executable for bots-engine.'))
+            request.user.message_set.create(message=_(u'Bots can not find executable for botsengine.'))
             #~ logger.info('Bots can not find executable for bots-engine.')
             return django.shortcuts.redirect('/home')
             
@@ -434,11 +434,11 @@ def runengine(request,*kw,**kwargs):
                 lijst.append(request.GET['clparameter'])
             #~ logger.info('Run bots-engine with parameters: "%s"',str(lijst))
             terug = subprocess.Popen(lijst).pid
-            request.user.message_set.create(message=_(u'Bots-engine is started.'))
+            request.user.message_set.create(message=_(u'Botsengine is started.'))
             #~ logger.info('Bots-engine is started.')
         except:
             print botslib.txtexc()
-            request.user.message_set.create(message=_(u'Errors while trying to run bots-engine.'))
+            request.user.message_set.create(message=_(u'Errors while trying to run botsengine.'))
             #~ logger.info('Errors while trying to run bots-engine.')
     return django.shortcuts.redirect('/home')
 

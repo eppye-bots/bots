@@ -193,4 +193,7 @@ def start():
         else:
             sys.exit(0) #OK
             
+        
+if __name__=='__main__':
+    start()
 

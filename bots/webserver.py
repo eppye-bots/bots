@@ -84,3 +84,5 @@ def start():
     cherrypy.engine.start()
     cherrypy.engine.block()
         
+if __name__=='__main__':
+    start()

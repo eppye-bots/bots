@@ -1,21 +1,40 @@
-import subprocess
-import os
 import sys
+import os
+import tarfile
+import glob
 import shutil
+import subprocess
 import traceback
 import bots.botsglobal as botsglobal
+
 
 def join(path,*paths):
     return os.path.normpath(os.path.join(path,*paths))
 
-def txtexc():
-    ''' Get text from last exception    '''
-    return traceback.format_exc(0)
+
 
 #******************************************************************************
-#***    install shortcuts/links in menu ***************************************
+#***    start                     *********************************************
 #******************************************************************************
-def installshortcuts(scriptpath):
+def start():
+    #python version dependencies
+    version = str(sys.version_info[0]) + str(sys.version_info[1])
+    if version == '24':
+        pass
+    elif version == '25':
+        pass
+    elif version == '26':
+        pass
+    else:
+        raise Exception('Wrong python version, use python 2.4.*, 2.5.* or 2.6.*')
+        
+    botsdir = os.path.dirname(botsglobal.__file__)
+    print '    Installed Bots in "%s".'%(botsdir)
+
+#******************************************************************************
+#***    shortcuts       *******************************************************
+#******************************************************************************
+    scriptpath = join(sys.prefix,'Scripts')
     shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots2.0')
     try:
         os.mkdir(shortcutdir)
@@ -25,65 +44,43 @@ def installshortcuts(scriptpath):
         directory_created(shortcutdir)
         
     try:
-        create_shortcut(join(scriptpath,'bots-engine'),'Bots open source EDI translator',join(shortcutdir,'Bots-engine.lnk'))
+        create_shortcut(join(scriptpath,'botsengine'),'Bots open source EDI translator',join(shortcutdir,'Bots-engine.lnk'))
         file_created(join(shortcutdir,'Bots-engine.lnk'))
-        create_shortcut(join(scriptpath,'bots-webserver'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'))
+        create_shortcut(join(scriptpath,'botswebserver'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'))
         file_created(join(shortcutdir,'Bots-webserver.lnk'))
     except: 
         print '    Failed to install shortcuts/links for Bots in your menu.'
     else:
-        print '    Installed shortcuts/links for Bots in your menu.'
-
-
-def start():
-    botsdir = os.path.dirname(botsglobal.__file__)
-    scriptpath = join(sys.prefix,'Scripts')
-    installfromdir = 'installwin'
-    optioninstallfrom = '-f' + join(botsdir,installfromdir)
-    
-    lijst =['CherryPy',
-            'kid',
-            'SQLAlchemy',
-            'django',
-            ]
-    lijst24 =['elementtree','celementtree']
-    lijst25 =['simplejson']
-    
-    #python version dependencies
-    version = str(sys.version_info[0]) + str(sys.version_info[1])
-    if version == '24':
-        lijst = lijst24 + lijst25 + lijst
-    elif version == '25':
-        lijst = lijst25 + lijst
-    else:
-        raise Exception('Wrong python version, use python 2.4.*, 2.5.* or 2.6.*')
-
-#******************************************************************************
-#***    start install             *********************************************
-#******************************************************************************
-    print 'Start bots postinstallation.'
-    print '    Bots is installed in: "%s".'%(botsdir)
-    installshortcuts(scriptpath)
+        print '    Installed shortcuts in "Program Files".'
     
 #******************************************************************************
 #***    install libraries, dependencies  ***************************************
 #******************************************************************************
-    for item in lijst:
-        if subprocess.call([join(scriptpath,'easy_install'), '-q','-Z','--allow-hosts=None',optioninstallfrom,item]):
-            raise Exception('failed to install "%s".'%item)
+    for library in glob.glob(join(botsdir,'installwin','*.gz')):
+        tar = tarfile.open(library)
+        tar.extractall(path=os.path.dirname(library))
+        tar.close()
+        untar_dir = library[:-len('.tar.gz')]
+        subprocess.call([join(sys.prefix,'python'), 'setup.py','install'],cwd=untar_dir,stdout=open(os.devnull,'w'),stderr=open(os.devnull,'w'))
+        shutil.rmtree(untar_dir, ignore_errors=True)
+    print '    Installed needed libraries.'
 
 #******************************************************************************
-#***    install configuration files, database; upgrade existing db ************
+#***    install configuration files      **************************************
 #******************************************************************************
-    if os.path.exists(join(botsdir,'config','bots.ini')):    #use this to see if this is an existing installation
+    if os.path.exists(join(botsdir,'config','settings.py')):    #use this to see if this is an existing installation
         print '    Found existing configuration files'
-        print '        Configuration files bots.ini and botstg.cfg not overwritten.'
+        print '        Configuration files bots.ini and settings.py not overwritten.'
         print '        Manual action is needed.'
         print '        See bots web site-documentation-migrate for more info.'
     else:
         shutil.copy(join(botsdir,'install','bots.ini'),join(botsdir,'config','bots.ini'))
-        shutil.copy(join(botsdir,'install','botstg.cfg'),join(botsdir,'config','botstg.cfg'))
+        shutil.copy(join(botsdir,'install','settings.py'),join(botsdir,'config','settings.py'))
+        print '    Installed configuration files'
         
+#******************************************************************************
+#***    install database; upgrade existing db *********************************
+#******************************************************************************
     sqlitedir = join(botsdir,'botssys','sqlitedb')
     if os.path.exists(join(sqlitedir,'botsdb')):    #use this to see if this is an existing installation
         print '    Found existing database file botssys/sqlitedb/botsdb'
@@ -93,18 +90,8 @@ def start():
         if not os.path.exists(sqlitedir):    #use this to see if this is an existing installation
             os.makedirs(sqlitedir)
         shutil.copy(join(botsdir,'install','botsdb'),join(sqlitedir,'botsdb'))
+        print '    Installed SQLite database'
 
-#******************************************************************************
-#***    install pysqlite2; installing this earlier caused problems  ***********
-#******************************************************************************
-    if version == '24':
-        try:
-            from pysqlite2 import dbapi2 as sqlite
-        except:
-            if subprocess.call(join(botsdir,installfromdir,'pysqlite-2.5.5.win32-py2.4.exe'),cwd=join(botsdir,installfromdir),bufsize=-1):
-                raise Exception('could not install "pysqlite".')
-
-    print '    Installed required python packages.'
 
 #******************************************************************************
 #******************************************************************************
@@ -114,7 +101,7 @@ if __name__=='__main__':
         try:
             start()
         except:
-            print txtexc()
+            print traceback.format_exc(0)
             print
             print 'Bots installation failed.'
         else:

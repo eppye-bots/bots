@@ -11,12 +11,6 @@ STATUST = [
     (2, _(u'Stuck')),
     (3, _(u'Done')),
     ]
-RETRANSMIT = [
-    (0, '---'),
-    (1, _(u'Rereceive')),
-    #~ (2, _(u'Retry')),
-    #~ (3, _(u'RetryComm.')),
-    ]
 STATUS = [
     (1,_(u'process')),
     (200,_(u'FileRecieve')),
@@ -275,7 +269,7 @@ class filereport(botsmodel):
     idta = models.IntegerField(db_index=True)
     reportidta = models.IntegerField(db_index=True)
     statust = models.IntegerField(choices=STATUST)
-    retransmit = models.IntegerField(choices=RETRANSMIT)
+    retransmit = models.IntegerField()
     idroute = models.CharField(max_length=35)
     fromchannel = models.CharField(max_length=35)
     tochannel = models.CharField(max_length=35)

@@ -18,7 +18,10 @@ if os.name == 'nt':
     import msvcrt
 elif os.name == 'posix':
     import fcntl
-import simplejson
+try:
+    import json as simplejson
+except ImportError:
+    import simplejson
 import smtplib
 import poplib
 import ftplib

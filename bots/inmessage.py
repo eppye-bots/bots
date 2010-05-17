@@ -12,6 +12,10 @@ except ImportError:
             import cElementTree as ET
         except ImportError:
                 import elementtree.ElementTree as ET
+try:
+    import json as simplejson
+except ImportError:
+    import simplejson
 from django.utils.translation import ugettext as _
 import botslib
 import botsglobal
@@ -933,7 +937,6 @@ class xmlnocheck(xml):
 
 class json(var):
     def initfromfile(self):
-        import simplejson
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
         self._readcontent_edifile()

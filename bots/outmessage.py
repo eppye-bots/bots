@@ -13,6 +13,10 @@ try:
     from xml.etree import ElementInclude as ETI
 except ImportError:
     import elementtree.ElementInclude as ETI
+try:
+    import json as simplejson
+except ImportError:
+    import simplejson
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
@@ -569,7 +573,6 @@ class json(Outmessage):
         ''' convert node tree to appropriate python objecct.
             python objects are written to json by simplejson.
         '''
-        import simplejson
         if self.nrmessagewritten:
             self._outstream.write(u',')
         jsonobject = {node.record['BOTSID']:self._node2json(node)}
