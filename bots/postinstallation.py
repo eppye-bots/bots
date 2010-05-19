@@ -17,6 +17,7 @@ def join(path,*paths):
 #***    start                     *********************************************
 #******************************************************************************
 def start():
+    print 'Installation of Bots open source EDI translator.'
     #python version dependencies
     version = str(sys.version_info[0]) + str(sys.version_info[1])
     if version == '24':
@@ -44,14 +45,13 @@ def start():
         directory_created(shortcutdir)
         
     try:
-        create_shortcut(join(scriptpath,'botsengine'),'Bots open source EDI translator',join(shortcutdir,'Bots-engine.lnk'))
-        file_created(join(shortcutdir,'Bots-engine.lnk'))
-        create_shortcut(join(scriptpath,'botswebserver'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'))
+        #~ create_shortcut(join(scriptpath,'botswebserver'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'))
+        create_shortcut(join(sys.prefix,'python'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'),join(scriptpath,'bots-webserver.py'))
         file_created(join(shortcutdir,'Bots-webserver.lnk'))
     except: 
-        print '    Failed to install shortcuts/links for Bots in your menu.'
+        print '    Failed to install shortcut/link for Bots in your menu.'
     else:
-        print '    Installed shortcuts in "Program Files".'
+        print '    Installed shortcut in "Program Files".'
     
 #******************************************************************************
 #***    install libraries, dependencies  ***************************************
@@ -61,7 +61,7 @@ def start():
         tar.extractall(path=os.path.dirname(library))
         tar.close()
         untar_dir = library[:-len('.tar.gz')]
-        subprocess.call([join(sys.prefix,'python'), 'setup.py','install'],cwd=untar_dir,stdout=open(os.devnull,'w'),stderr=open(os.devnull,'w'))
+        subprocess.call([join(sys.prefix,'pythonw'), 'setup.py','install'],cwd=untar_dir,stdin=open(os.devnull,'r'),stdout=open(os.devnull,'w'),stderr=open(os.devnull,'w'))
         shutil.rmtree(untar_dir, ignore_errors=True)
     print '    Installed needed libraries.'
 

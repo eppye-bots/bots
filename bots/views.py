@@ -418,27 +418,26 @@ def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
             #~ logger = logging.getLogger('bots')
         if os.name=='nt':
-            scriptpath = os.path.normpath(os.path.join(sys.prefix,'Scripts','botsengine'))
-        elif os.path.exists(os.path.join(sys.prefix,'bin','botsengine.py')):
-            scriptpath = os.path.normpath(os.path.join(sys.prefix,'bin','botsengine.py'))
-        elif os.path.exists(os.path.join(sys.prefix,'local/bin','botsengine.py')):
-            scriptpath = os.path.normpath(os.path.join(sys.prefix,'local/bin','botsengine.py'))
+            lijst = [sys.executable, os.path.normpath(os.path.join(sys.prefix,'Scripts','bots-engine.py'))]
+        elif os.path.exists(os.path.join(sys.prefix,'bin','bots-engine.py')):
+            lijst = [os.path.normpath(os.path.join(sys.prefix,'bin','bots-engine.py'))]
+        elif os.path.exists(os.path.join(sys.prefix,'local/bin','bots-engine.py')):
+            lijst = [os.path.normpath(os.path.join(sys.prefix,'local/bin','bots-engine.py'))]
         else:
-            request.user.message_set.create(message=_(u'Bots can not find executable for botsengine.'))
+            request.user.message_set.create(message=_(u'Bots can not find executable for bots-engine.'))
             #~ logger.info('Bots can not find executable for bots-engine.')
             return django.shortcuts.redirect('/home')
             
         try:
-            lijst = [scriptpath,]
             if 'clparameter' in request.GET:
                 lijst.append(request.GET['clparameter'])
             #~ logger.info('Run bots-engine with parameters: "%s"',str(lijst))
             terug = subprocess.Popen(lijst).pid
-            request.user.message_set.create(message=_(u'Botsengine is started.'))
+            request.user.message_set.create(message=_(u'Bots-engine is started.'))
             #~ logger.info('Bots-engine is started.')
         except:
             print botslib.txtexc()
-            request.user.message_set.create(message=_(u'Errors while trying to run botsengine.'))
+            request.user.message_set.create(message=_(u'Errors while trying to run bots-FFengine.'))
             #~ logger.info('Errors while trying to run bots-engine.')
     return django.shortcuts.redirect('/home')
 

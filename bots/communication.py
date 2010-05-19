@@ -25,6 +25,7 @@ except ImportError:
 import smtplib
 import poplib
 import ftplib
+import xmlrpclib
 from django.utils.translation import ugettext as _
 #Bots modules
 import botslib
@@ -41,8 +42,16 @@ def run(idchannel,idroute=''):
                                 WHERE idchannel=%(idchannel)s''',
                                 {'idchannel':idchannel}):
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
-        classtocall = globals()[channeldict['type']]
-        classtocall(channeldict,idroute) #call the class for this type of channel
+        botsglobal.logger.debug(u'(try) to read user communicationscript channel "%s".',channeldict['idchannel'])
+        try:
+            userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
+        except ImportError:
+            userscript = scriptname = None
+        if hasattr(userscript,'UserCommunicationClass'):
+            classtocall = getattr(userscript,'UserCommunicationClass')
+        else:
+            classtocall = globals()[channeldict['type']]
+        classtocall(channeldict,idroute,userscript,scriptname) #call the class for this type of channel
         botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
     else:
@@ -55,16 +64,12 @@ class _comsession(object):
         Often 'idroute' is passed as a parameter. This is ONLY because of the @botslib.log_session-wrapper!
         use self.idroute!!
     '''
-    def __init__(self,channeldict,idroute):
+    def __init__(self,channeldict,idroute,userscript,scriptname):
         ''' All communication is performed in init.'''
         self.channeldict=channeldict
         self.idroute=idroute
-        try:
-            botsglobal.logger.debug(u'(try) to read user communicationscript channel "%s".',self.channeldict['idchannel'])
-            self.userscript,self.scriptname = botslib.botsimport('communicationscripts',self.channeldict['idchannel'])
-        except ImportError:
-            self.userscript = self.scriptname = None
-        #other errors, eg syntax errors are just passed
+        self.userscript=userscript
+        self.scriptname=scriptname
         if self.channeldict['inorout']=='out':
             nroffiles = self.precommunicate(FILEOUT,RAWOUT)
             if self.countoutfiles() > 0 : #for out-comm: send if something to send 
@@ -877,6 +882,71 @@ class ftp(_comsession):
         except:
             self.session.close()
         botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
+
+class xmlrpc(_comsession):
+    scheme = 'http'
+    def connect(self):
+        self.uri = botslib.Uri(scheme=self.scheme,username=self.channeldict['username'],password=self.channeldict['secret'],host=self.channeldict['host'],port=self.channeldict['port'],path=self.channeldict['path'])
+        self.session = xmlrpclib.ServerProxy(self.uri.uri)
+
+
+    @botslib.log_session
+    def outcommunicate(self):
+        ''' do xml-rpc: send files. To be used via receive-dispatcher.
+            each to be send file is transaction.
+            each send file is transaction.
+        '''
+        for row in botslib.query('''SELECT idta,filename,charset
+                                    FROM ta
+                                    WHERE tochannel=%(tochannel)s
+                                      AND status=%(status)s
+                                      AND statust=%(statust)s
+                                      AND idta>%(rootidta)s
+                                        ''',
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    'status':RAWOUT,'statust':OK}):
+            try:
+                ta_from = botslib.OldTransaction(row['idta'])
+                ta_to =   ta_from.copyta(status=EXTERNOUT)
+                self.checkcharset(row['charset'])
+                fromfile = botslib.opendata(row['fromfilename'], 'rb',row['charset'])
+                content = fromfile.read()
+                fromfile.close()
+                tocall = getattr(self.session,self.channeldict['filename'])
+                filename = tocall(content)
+            except:
+                txt=botslib.txtexc()
+                ta_to.update(statust=ERROR,errortext=txt)
+            else:
+                ta_from.update(statust=DONE)
+                ta_to.update(statust=DONE,filename=self.uri.update(path=self.channeldict['path'],filename=str(filename)))
+
+
+    @botslib.log_session
+    def incommunicate(self):
+        while (True):
+            try:
+                tocall = getattr(self.session,self.channeldict['path'])
+                content = tocall()
+                if content is None:
+                    break   #nothing (more) to receive.
+                ta_from = botslib.NewTransaction(filename=self.uri.update(path=self.channeldict['path'],filename=self.channeldict['filename']),
+                                                    status=EXTERNIN,
+                                                    fromchannel=self.channeldict['idchannel'],
+                                                    charset=self.channeldict['charset'],idroute=self.idroute)
+                ta_to =   ta_from.copyta(status=RAWIN)
+                tofilename = str(ta_to.idta)
+                tofile = botslib.opendata(tofilename, 'wb')
+                simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
+                tofile.close()
+            except:
+                txt=botslib.txtexc()
+                botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt)
+                ta_from.delete()
+                ta_to.delete()    #is not received
+            else:
+                ta_from.update(statust=DONE)
+                ta_to.update(filename=tofilename,statust=OK)
 
 
 class intercommit(_comsession):

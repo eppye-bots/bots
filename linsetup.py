@@ -2,6 +2,11 @@ import os
 import sys
 from distutils.core import setup
 #~ from setuptools import setup
+from distutils.command.install import INSTALL_SCHEMES
+
+#install data file in the same way as *.py
+for scheme in INSTALL_SCHEMES.values():
+    scheme['data'] = scheme['purelib'] 
 
 
 def fullsplit(path, result=None):
@@ -32,16 +37,10 @@ for dirpath, dirnames, filenames in os.walk('bots'):
         if dirname.startswith('.'): del dirnames[i]
     if '__init__.py' in filenames:
         packages.append('.'.join(fullsplit(dirpath)))
-        data_files.append([dirpath, [os.path.join(dirpath, f) for f in filenames if not f.endswith('.pyc')]])
+        if len(filenames) > 1:
+            data_files.append([dirpath, [os.path.join(dirpath, f) for f in filenames if not f.endswith('.pyc') and not f.endswith('.py')]])
     elif filenames:
-        data_files.append([dirpath, [os.path.join(dirpath, f) for f in filenames if not f.endswith('.pyc')]])
-
-#~ # Small hack for working with bdist_wininst.
-#~ # See http://mail.python.org/pipermail/distutils-sig/2004-August/004134.html
-#~ if len(sys.argv) > 1 and 'bdist_wininst' in sys.argv[1:]:
-if len(sys.argv) > 1 and 'bdist_wininst' in sys.argv[1:]:
-    for file_info in data_files:
-        file_info[0] = '\\PURELIB\\%s' % file_info[0]
+        data_files.append([dirpath, [os.path.join(dirpath, f) for f in filenames if not f.endswith('.pyc') and not f.endswith('.py')]])
 
 
 setup(
@@ -50,7 +49,7 @@ setup(
     author = "eppye",
     author_email = "eppye.bots@gmail.com",
     url = "http://bots.sourceforge.net/",
-    description="Bots open source Edi software",
+    description="Bots open source Edi translator software",
     long_description = "Bots is complete software for EDI (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml",
     platforms="OS Independent (Written in an interpreted language)",
     license="GNU General Public License (GPL)",
@@ -68,8 +67,7 @@ setup(
     ],
     scripts = [ 'bots/bots-webserver.py',
             'bots/bots-engine.py',
-            'bots/postinstallation.py',
-            #~ 'bots/botsgrammarcheck.py',
+            'bots/botsgrammarcheck.py',
             #~ 'bots/bots-updatedb.py',
             ],
     packages = packages,

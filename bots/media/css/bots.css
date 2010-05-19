@@ -121,6 +121,7 @@ div#changelist-filter:hover ul {
 	cursor:				pointer;
 	white-space:		nowrap;
 	color: 				#000000;
+	background:			#FFFFFF;
 	}
 p.botsheader2	{
 	border-style:		none;
@@ -129,6 +130,7 @@ p.botsheader2	{
 	white-space:		nowrap;
 	color: 				#000000;
 	font-weight:		normal;
+	background:			#FFFFFF;
 	}
 a.botslink	{
 	cursor:				pointer;
