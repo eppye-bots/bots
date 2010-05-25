@@ -48,9 +48,6 @@ def set_minta4query():
     else:
         botsglobal.minta4query = _Transaction.processlist[1]  #set root-idta of current run
 
-def set_minta4query_recommunicate(minta4query):
-    botsglobal.minta4query = minta4query
-
 def set_minta4query_retry():
     for row in query('''SELECT idta
                         FROM  filereport
@@ -78,18 +75,18 @@ def set_minta4query_crashrecovery():
         return botsglobal.minta4query
     return 0
 
-def set_minta4query_retrycommunication():
-    #bad query....
-    for row in query('''SELECT min(idta) as min
-                        FROM  ta
-                        WHERE statust = %(statust)s
-                        AND   status = %(status)s ''',
-                        {'statust':OK, 'status':RAWOUT}):
-        if row['min'] is None:
-            return 0
-        botsglobal.minta4query = row['min'] -1
-        return botsglobal.minta4query
-    return 0    #if no error found.
+#~ def set_minta4query_retrycommunication():
+    #~ #bad query....
+    #~ for row in query('''SELECT min(idta) as min
+                        #~ FROM  ta
+                        #~ WHERE statust = %(statust)s
+                        #~ AND   status = %(status)s ''',
+                        #~ {'statust':OK, 'status':RAWOUT}):
+        #~ if row['min'] is None:
+            #~ return 0
+        #~ botsglobal.minta4query = row['min'] -1
+        #~ return botsglobal.minta4query
+    #~ return 0    #if no error found.
 
 def getlastrun():
     return _Transaction.processlist[1]  #get root-idta of last run
