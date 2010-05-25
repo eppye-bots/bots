@@ -66,7 +66,7 @@
 		<li><a href="/admin/bots/uniek/" >{% trans 'View/edit counters' %}</a></li>
 		<li>-----</li>
 		<li><a href="/unlock/" >{% trans 'Unlock database' %}</a></li>
-		<li><a href="/runengine/?clparameter=--retrylastrun"  OnClick = "return confirm('{% trans 'Only needed in case of database lock/crash recovery. Are you sure?' %}');">{% trans 'Run forced retry of last run' %}</a></li>
+		<li><a href="/runengine/?clparameter=--crashrecovery"  OnClick = "return confirm('{% trans 'Only needed in case of database lock/crash recovery. Are you sure?' %}');">{% trans 'Run forced retry of last run' %}</a></li>
 		<li><a href="/sendtestmail/">{% trans 'Send test report' %}</a></li>
 	</ul>
     {% endif %}

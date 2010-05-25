@@ -42,12 +42,14 @@ def get_minta4query():
     ''' get the first idta for queries etc.'''
     return botsglobal.minta4query
 
-#~ def set_min_idtatoquery():
 def set_minta4query():
     if botsglobal.minta4query:    #if already set, do nothing
         return
     else:
         botsglobal.minta4query = _Transaction.processlist[1]  #set root-idta of current run
+
+def set_minta4query_recommunicate(minta4query):
+    botsglobal.minta4query = minta4query
 
 def set_minta4query_retry():
     for row in query('''SELECT idta
@@ -64,9 +66,8 @@ def set_minta4query_retry():
             return botsglobal.minta4query
     return 0    #if no error found.
 
-def set_minta4query_retrylastrun():
-    ''' get the idat of last run (that is suppossed to have crashed'''
-    #removed the 'AND status = PROCESS rule; if script=0 then status as always process and key is on script
+def set_minta4query_crashrecovery():
+    ''' set/return rootidta of last run - that is supposed to crashed'''
     for row in query('''SELECT max(idta) as max
                         FROM  ta
                         WHERE script= 0

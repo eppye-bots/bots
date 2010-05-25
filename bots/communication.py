@@ -43,6 +43,13 @@ def run(idchannel,idroute=''):
                                 {'idchannel':idchannel}):
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         botsglobal.logger.debug(u'(try) to read user communicationscript channel "%s".',channeldict['idchannel'])
+        #update communication/run process with idchannel
+        ta_run = botslib.OldTransaction(botslib._Transaction.processlist[-1])
+        if channeldict['inorout'] == 'in':
+            ta_run.update(fromchannel=channeldict['idchannel'])
+        else:
+            ta_run.update(tochannel=channeldict['idchannel'])
+            
         try:
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
         except ImportError:
@@ -650,6 +657,8 @@ class smtpstarttls(smtp):
 class file(_comsession):
     def connect(self):
         #set up directory-lockfile
+        #~ if self.channeldict['inorout'] == 'out':
+            #~ raise Exception('test')
         if self.channeldict['lockname']:
             lockname = botslib.join(self.channeldict['path'],self.channeldict['lockname'])
             lock = os.open(lockname,os.O_WRONLY | os.O_CREAT | os.O_EXCL)

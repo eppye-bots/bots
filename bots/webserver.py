@@ -12,14 +12,14 @@ import botsglobal
 import botsinit
 
 def showusage():
-    usage = _('''
+    usage = '''
     This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
     The %(name)s is the web server for bots; the interface (bots-monitor) can be accessed in a btrowser, eg 'http://localhost:8080'.
     Usage:
         %(name)s  -c<directory>
     Options:
         -c<directory>   directory for configuration files (default: config).
-    ''')%{'name':os.path.basename(sys.argv[0])}
+    '''%{'name':os.path.basename(sys.argv[0])}
     print usage
     sys.exit(0)
 
@@ -37,7 +37,7 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print _('Configuration directory indicated, but no directory name.')
+                print 'Configuration directory indicated, but no directory name.'
                 sys.exit(1)
         elif arg in ["?", "/?"] or arg.startswith('-'):
             showusage()

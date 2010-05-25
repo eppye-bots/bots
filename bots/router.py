@@ -1,3 +1,4 @@
+import sys
 from django.utils.translation import ugettext as _
 #bots-modules
 import communication
@@ -48,10 +49,57 @@ def prepareretransmit():
 
 
 @botslib.log_session
+def preparerecommunication():
+    #for each out-communication process that went wrong:
+    retransmit = False  #indicate retransmit
+    for row in botslib.query('''SELECT idta,tochannel
+                                FROM  ta
+                                WHERE statust!=%(statust)s
+                                AND status=%(status)s
+                                AND retransmit=%(retransmit)s ''',
+                                {'status':PROCESS,'retransmit':True,'statust':DONE}):
+        run_outgoing = botslib.OldTransaction(row['idta'])
+        run_outgoing.update(retransmit=False)     #set retransmit back to False
+        #get rootidta of run where communication failed
+        for row2 in botslib.query('''SELECT max(idta) as rootidta
+                                    FROM  ta
+                                    WHERE script=%(script)s
+                                    AND idta<%(thisidta)s ''',
+                                    {'script':0,'thisidta':row['idta']}):
+            rootidta = row2['rootidta']
+        #get endidta of run where communication failed
+        for row3 in botslib.query('''SELECT min(idta) as endidta
+                            FROM  ta
+                            WHERE script=%(script)s
+                            AND idta>%(thisidta)s ''',
+                            {'script':0,'thisidta':row['idta']}):
+            endidta = row3['endidta']
+        if not endidta:
+            endidta = sys.maxint - 1
+        #reinject
+        for row4 in botslib.query('''SELECT idta
+                                    FROM  ta
+                                    WHERE idta<%(endidta)s
+                                    AND idta>%(rootidta)s 
+                                    AND   status=%(status)s 
+                                    AND   statust=%(statust)s
+                                    AND   tochannel=%(tochannel)s ''',
+                                    {'statust':OK,'status':RAWOUT,'rootidta':rootidta,'endidta':endidta,'tochannel':row['tochannel']}):
+            retransmit = True
+            ta_outgoing = botslib.OldTransaction(row4['idta'])
+            ta_outgoing_copy = ta_outgoing.copyta(status=RAWOUT,statust=OK)
+            ta_outgoing.update(statust=DONE)
+    return retransmit
+
+
+@botslib.log_session
 def routedispatcher(routestorun,type=None):
     ''' run all route(s). '''
     if type == '--retransmit':
         if not prepareretransmit():
+            return 0
+    elif type == '--retrycommunication':
+        if not preparerecommunication():
             return 0
     stuff2evaluate = botslib.getlastrun()
     botslib.set_minta4query()
@@ -77,18 +125,16 @@ def routedispatcher(routestorun,type=None):
                                         AND   active=%(active)s
                                         ORDER BY seq''',
                                         {'idroute':route,'active':True}):
-            botslib.setrouteid(routedict['idroute'])
             botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),{'idroute':routedict['idroute'],'seq':routedict['seq']})
+            botslib.setrouteid(routedict['idroute'])
             foundroute=True
-            if type =='--retrycommunication':
-                router_communicationretry(routedict)
-            else:
-                router(routedict)
+            router(routedict)
             botslib.setrouteid('')
             botsglobal.logger.debug(u'finished route %s %s',routedict['idroute'],routedict['seq'])
         if not foundroute:
             botsglobal.logger.warning(_(u'there is no (active) route "%s".'),route)
     return stuff2evaluate
+
 
 @botslib.log_session
 def router(routedict):
@@ -178,21 +224,3 @@ def router(routedict):
         botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)
     
     botslib.tryrunscript(userscript,scriptname,'end',routedict=routedict)
-        
-@botslib.log_session
-def router_communicationretry(routedict):
-    #is there a user route script?
-    try:
-        botsglobal.logger.debug(u'(try) to read user routescript route "%s".',routedict['idroute'])
-        userscript,scriptname = botslib.botsimport('routescripts',routedict['idroute'])
-    except ImportError: #other errors, eg syntax errors are just passed
-        userscript = scriptname = None
-        
-    #run outgoing channel
-    if routedict['tochannel']:   #do outgoing part of route
-        botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
-        communication.run(idchannel=routedict['tochannel'],idroute=routedict['idroute'])    #communication.run outcommunication
-        botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)
-    
-    botslib.tryrunscript(userscript,scriptname,'end',routedict=routedict)
-        

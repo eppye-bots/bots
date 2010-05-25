@@ -20,29 +20,29 @@ from botsconfig import *
 
 
 def showusage():
-    usage = _('''
+    usage = '''
     This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
     The %(name)s does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
     Usage:
         %(name)s  [run-options] [config-option] [routes]
 
-    Run-options (can be combined):
+    Run-options (can be combined, except for crashrecovery):
         --new                recieve new edi files (default: if no run-option given: run as new).
-        --retransmit         resend and rerececieve.
+        --retransmit         resend and rerececieve as indicated by user.
         --retry              retry previous errors.
-        --retrylastrun       retry last run (crash recovery).
-        --retrycommunication retry only outgoing communication errors.
+        --crashrecovery      retry last run (crash recovery).
+        --retrycommunication retry outgoing communication process errors as indicated by user.
         --cleanup            remove older data from database.
     Config-option:
         -c<directory>        directory for configuration files (default: config).
     Routes: list of routes to run. Default: all active routes (in the database)
 
-    ''')%{'name':os.path.basename(sys.argv[0])}
+    '''%{'name':os.path.basename(sys.argv[0])}
     print usage
     
 def start():
     #********command line arguments**************************
-    commandspossible = ['--new','--retry','--retransmit','--cleanup','--retrylastrun','--retrycommunication']
+    commandspossible = ['--new','--retry','--retransmit','--cleanup','--crashrecovery','--retrycommunication']
     commandstorun = []
     routestorun = []    #list with routes to run
     configdir = 'config'
@@ -52,7 +52,7 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print _('Configuration directory indicated, but no directory name.')
+                print 'Configuration directory indicated, but no directory name.'
                 sys.exit(1)
         elif arg in commandspossible:
             commandstorun.append(arg)
@@ -96,10 +96,10 @@ def start():
     #What to do? 
     #first: check ts of database lock. If below a certain value (set in bots.ini) we assume an other instance is running. Exit quietly - no errors, no logging.
     #                                  else: Warn user, give advise on what to do. gather data: nr files in, errors.
-    #next:  warn with report & logging. advise a retrylastrun.
+    #next:  warn with report & logging. advise a crashrecovery.
     if not botslib.set_database_lock():
-        if '--retrylastrun' in commandstorun:    #user starts recovery operation; the databaselock is ignored; the databaselock is unlocked when routes have run.
-            commandstorun = ['--retrylastrun']  #is an exclusive option!
+        if '--crashrecovery' in commandstorun:    #user starts recovery operation; the databaselock is ignored; the databaselock is unlocked when routes have run.
+            commandstorun = ['--crashrecovery']  #is an exclusive option!
         else:
             #when scheduling bots it is possible that the last run is still running. Check if maxruntime has passed:
             vanaf = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntime',60))
@@ -113,7 +113,7 @@ def start():
                 botsglobal.logger.info(_(u'Database is locked, but "maxruntime" has not been exceeded.'))
                 exit(0)
     else:
-        if '--retrylastrun' in commandstorun:    #user starts recovery operation but there is no databaselock.
+        if '--crashrecovery' in commandstorun:    #user starts recovery operation but there is no databaselock.
             warn = _(u'User started a forced retry of the last run.\nOnly use this when the database is locked.\nThe database was not locked (database is OK).\nSo Bots has done nothing now.')
             botsglobal.logger.error(warn)
             botslib.sendbotserrorreport(_(u'[Bots Error Report] User started a forced retry of last run, but this was not needed'),warn)
@@ -135,29 +135,29 @@ def start():
     #routestorun is now either a list with routes from comandline, or the list of active routes for the routes tabel in the db.
     #**************run the routes for retry, retransmit and new runs*************************************
     try: 
-        #commandstorun determines to type of runs
+        #commandstorun determines the type(s) of run
         #routes to run is a listof the routes that are runs (for each command to run
-        #botsglobal.incommunicate is used to control if there is communication in; eg retry and retransmit do not incommunicate.
+        #botsglobal.incommunicate is used to control if there is communication in; only 'new' incommunicates.
         #botsglobal.minta4query controls which ta's are queried by the routes.
         #stuff2evaluate controls what is evaluated in automatic maintenance.
         #~ timer = botslib.Timer('../timer.txt')
-        errorinrun = 0      #detect if there has been some error. Only used here for good exit code
+        errorinrun = 0      #detect if there has been some error. Only used for good exit() code
         botsglobal.incommunicate = False
-        if '--retrycommunication' in commandstorun:
-            botsglobal.logger.info(_(u'Run communication retry.'))
-            if botslib.set_minta4query_retrycommunication():
-                stuff2evaluate = router.routedispatcher(routestorun,'--retrycommunication')
-                errorinrun +=  automaticmaintenance.evaluate('--retrycommunication',stuff2evaluate)
-            else:
-                botsglobal.logger.info(_(u'Run retrycommunication: nothing to retry.'))
-        if '--retrylastrun' in commandstorun:
-            botsglobal.logger.info(_(u'Run retry of the last run (crash recovery).'))
-            stuff2evaluate = botslib.set_minta4query_retrylastrun()
+        if '--crashrecovery' in commandstorun:
+            botsglobal.logger.info(_(u'Run crash recovery.'))
+            stuff2evaluate = botslib.set_minta4query_crashrecovery()
             if stuff2evaluate:
                 router.routedispatcher(routestorun)
-                errorinrun +=  automaticmaintenance.evaluate('--retrylastrun',stuff2evaluate)
+                errorinrun +=  automaticmaintenance.evaluate('--crashrecovery',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'No retry of the last run - there was no last run.'))
+        if '--retrycommunication' in commandstorun:
+            botsglobal.logger.info(_(u'Run communication retry.'))
+            stuff2evaluate = router.routedispatcher(routestorun,'--retrycommunication')
+            if stuff2evaluate:
+                errorinrun +=  automaticmaintenance.evaluate('--retrycommunication',stuff2evaluate)
+            else:
+                botsglobal.logger.info(_(u'Run recommunicate: nothing to recommunicate.'))
         if '--retry' in commandstorun:
             botsglobal.logger.info(u'Run retry.')
             if botslib.set_minta4query_retry():

@@ -15,6 +15,8 @@
         {% endfor %}
         <thead>
             <tr>
+                <th></th>
+                <th><button class="botsheader" type="submit" name="order" value="retry" title="Retry">{% trans 'Retry' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'State' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="idroute" />{% trans 'Route' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
@@ -27,6 +29,16 @@
         <tbody>
         {% for row in queryset.object_list %}
             <tr class="{% cycle 'row1' 'row2' %}">
+                <td>
+                    <div class="dropdown"><img class="action" src="/media/images/star.png" />
+                    {% if row.tochannel %}
+                        <ul>
+                            <li><button class="botsheader" type="submit" name="retry" value="{{row.idta}}" />{% trans 'Retry communication' %}</button></li>
+                        </ul>
+                    {% endif %}
+                    </div>
+                </td>
+                <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
                 <td>{{row.get_statust_display}}</td>
                 <td>{{row.idroute}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>

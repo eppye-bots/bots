@@ -218,6 +218,11 @@ def process(request,*kw,**kwargs):
             if not formin.is_valid():
                 return viewlib.render(request,formin)
         else:
+            if 'retry' in request.POST:
+                idta = request.POST[u'retry']
+                ta = models.ta.objects.get(idta=int(idta))
+                ta.retransmit = not ta.retransmit
+                ta.save()
             formin = forms.ViewProcess(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
