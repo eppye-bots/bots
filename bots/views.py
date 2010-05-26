@@ -442,7 +442,7 @@ def runengine(request,*kw,**kwargs):
             #~ logger.info('Bots-engine is started.')
         except:
             print botslib.txtexc()
-            request.user.message_set.create(message=_(u'Errors while trying to run bots-FFengine.'))
+            request.user.message_set.create(message=_(u'Errors while trying to run bots-engine.'))
             #~ logger.info('Errors while trying to run bots-engine.')
     return django.shortcuts.redirect('/home')
 

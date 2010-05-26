@@ -22,6 +22,12 @@ div#container {
 	position:	absolute;
 	top:		5.5em;
 	}
+div.help {
+	position:	absolute;
+	top:		5em;
+	left:		5em;
+	color:#000000;
+	}
 div#content {
 	margin: 0;
 	}
