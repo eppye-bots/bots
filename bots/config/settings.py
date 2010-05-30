@@ -30,7 +30,7 @@ ADMIN_MEDIA_PREFIX = '/media/'
 #~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
 ROOT_URLCONF = 'bots.urls'
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/home/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_URL = '/logout/'
 #~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
 TEMPLATE_DIRS = (
@@ -119,6 +119,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #~ 'django.middleware.csrf.CsrfViewMiddleware',     #needed for django >= 1.2.*
     )
 INSTALLED_APPS = (
     'django.contrib.auth',

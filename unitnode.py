@@ -2,7 +2,6 @@ import os
 import unittest
 import shutil
 import filecmp 
-import simplejson
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage
 import bots.botslib as botslib
@@ -106,6 +105,7 @@ class Testnode(unittest.TestCase):
         first=True
         for t in out.getloop({'BOTSID':'UNB'}):
             if first:
+                self.assertEqual('15',t.getcountsum({'BOTSID':'UNB'},{'BOTSID':'UNH'},{'BOTSID':'LIN','1082':None}),'Cmplines')
                 self.assertEqual('8',t.getcountsum({'BOTSID':'UNB'},{'BOTSID':'UNH'},{'BOTSID':'LIN'},{'BOTSID':'QTY','C186.6063':'47','C186.6060':None}),'Cmplines')
                 self.assertEqual('0',t.getcountsum({'BOTSID':'UNB'},{'BOTSID':'UNH'},{'BOTSID':'LIN'},{'BOTSID':'QTY','C186.6063':'12','C186.6060':None}),'Cmplines')
                 self.assertEqual('54.4',t.getcountsum({'BOTSID':'UNB'},{'BOTSID':'UNH'},{'BOTSID':'LIN'},{'BOTSID':'MOA','C516.5025':'203','C516.5004':None}),'Cmplines')

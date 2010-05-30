@@ -9,8 +9,8 @@ staff_required = user_passes_test(lambda u: u.is_staff)
 superuser_required = user_passes_test(lambda u: u.is_superuser)
 
 urlpatterns = patterns('',
-    (r'^login.*', 'django.contrib.auth.views.login'),
-    (r'^logout.*', 'django.contrib.auth.views.logout',{'next_page': '/home/'}),
+    (r'^login.*', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
+    (r'^logout.*', 'django.contrib.auth.views.logout',{'next_page': '/'}),
     #login required
     (r'^about.*', login_required(views.about)),
     (r'^help.*', login_required(views.help)),

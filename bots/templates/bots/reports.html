@@ -4,7 +4,7 @@
 {% block content %}
 <form action="{{ form.action }}" method="post">
     <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
-    <input type="submit" name="toselect" value="{% trans 'Change selection' %}" />
+    <input type="submit" name="2select" value="{% trans 'Change selection' %}" />
     {% include "bots/paginator.html" %}
 
     <table id="botstable">

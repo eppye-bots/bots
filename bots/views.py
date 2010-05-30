@@ -373,12 +373,12 @@ def plugin(request,*kw,**kwargs):
                 request.FILES['file'].close()
             else:
                  request.user.message_set.create(message=_(u'No plugin read.'))
-        return django.shortcuts.redirect('/bots')
+        return django.shortcuts.redirect('/')
     
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
-        #~ filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function'])
-        filename = os.path.abspath(request.GET['function'])
+        filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function'])
+        #~ filename = os.path.abspath(request.GET['function'])
         botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
         try:
             pluglib.dump(filename,request.GET['function'])
@@ -388,7 +388,7 @@ def plugout(request,*kw,**kwargs):
         else:
             botsglobal.logger.info(_(u'Plugin "%s" created succesful.'),filename)
             request.user.message_set.create(message=_(u'Plugin %s created succesful.')%filename)
-    return django.shortcuts.redirect('/bots')
+    return django.shortcuts.redirect('/')
 
 def delete(request,*kw,**kwargs):
     if request.method == 'GET':
@@ -416,7 +416,7 @@ def delete(request,*kw,**kwargs):
             models.ccode.objects.all().delete()
             models.ccodetrigger.objects.all().delete()
             request.user.message_set.create(message=_(u'All user code lists are deleted.'))
-    return django.shortcuts.redirect('/home')
+    return django.shortcuts.redirect('/')
 
 
 def runengine(request,*kw,**kwargs):
@@ -431,7 +431,7 @@ def runengine(request,*kw,**kwargs):
         else:
             request.user.message_set.create(message=_(u'Bots can not find executable for bots-engine.'))
             #~ logger.info('Bots can not find executable for bots-engine.')
-            return django.shortcuts.redirect('/home')
+            return django.shortcuts.redirect('/')
             
         try:
             if 'clparameter' in request.GET:
@@ -444,13 +444,13 @@ def runengine(request,*kw,**kwargs):
             print botslib.txtexc()
             request.user.message_set.create(message=_(u'Errors while trying to run bots-engine.'))
             #~ logger.info('Errors while trying to run bots-engine.')
-    return django.shortcuts.redirect('/home')
+    return django.shortcuts.redirect('/')
 
 def unlock(request,*kw,**kwargs):
     if request.method == 'GET':
         models.mutex.objects.get(mutexk=1).delete()
         request.user.message_set.create(message=_(u'Unlocked database.'))
-    return django.shortcuts.redirect('/home')
+    return django.shortcuts.redirect('/')
 
 def sendtestmailmanagers(request,*kw,**kwargs):
     try:
@@ -459,14 +459,14 @@ def sendtestmailmanagers(request,*kw,**kwargs):
         sendornot = False
     if not sendornot:
         request.user.message_set.create(message=_(u'In bots.ini, section [settings], "sendreportiferror" is not set (to "True").'))
-        return django.shortcuts.redirect('/home')
+        return django.shortcuts.redirect('/')
             
     from django.core.mail import mail_managers
     try:
         mail_managers(_(u'testsubject'), _(u'test content of report'))
     except:
         request.user.message_set.create(message=_(u'Sending test report failed: "%s".')%botslib.txtexc())
-        return django.shortcuts.redirect('/home')
+        return django.shortcuts.redirect('/')
     request.user.message_set.create(message=_(u'Sending test report succeeded.'))
-    return django.shortcuts.redirect('/home')
+    return django.shortcuts.redirect('/')
 
