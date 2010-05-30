@@ -17,3 +17,7 @@ syntax: regexp
 #^bots/media/js.*
 glob:MANIFEST.in
 relre:^bots/installwin/*
+glob:bots-2.0.RC.tar.gz
+glob:bots-2.0.RC.win32-py2.6.exe
+glob:libiconv-2.dll
+glob:libintl-2.dll
