@@ -873,7 +873,7 @@ class ftp(_comsession):
                     fromfile = botslib.opendata(row['filename'], 'rb')
                     self.session.storbinary(mode + tofilename, fromfile)
                 else:
-                    self.channeldict['charset'] = 'us-ascii'
+                    #~ self.channeldict['charset'] = 'us-ascii'
                     self.checkcharset(row['charset'])
                     fromfile = botslib.opendata(row['filename'], 'r')
                     self.session.storlines(mode + tofilename, fromfile)

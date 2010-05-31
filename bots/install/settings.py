@@ -9,9 +9,9 @@ MANAGERS = (    #bots will send error reports to the MANAGERS
 #~ EMAIL_HOST = 'smtp.gmail.com'             #Default: 'localhost'
 #~ EMAIL_PORT = '587'             #Default: 25
 #~ EMAIL_USE_TLS = True       #Default: False
-#~ EMAIL_HOST_USER = 'hjebbers@gmail.com'        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
+#~ EMAIL_HOST_USER = 'user@gmail.com'        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
 #~ EMAIL_HOST_PASSWORD = ''    #Default: ''. PASSWORD to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
-#~ SERVER_EMAIL = 'hjebbers@gmail.com'           #Sender of bots error reports. Default: 'root@localhost'
+#~ SERVER_EMAIL = 'user@gmail.com'           #Sender of bots error reports. Default: 'root@localhost'
 #~ EMAIL_SUBJECT_PREFIX = ''   #This is prepended on email subject.
 
 #*********path settings*************************advised is not to change these values!!
@@ -119,6 +119,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #~ 'django.middleware.csrf.CsrfViewMiddleware',     #needed for django >= 1.2.*
     )
 INSTALLED_APPS = (
     'django.contrib.auth',
