@@ -6,15 +6,16 @@
 <h2>Introduction: bots open source translator consists of 2 parts</h2>
 <ul>
     <li>Bots-engine: the part that does the translations and communication.<br/>
-        The results of translations and communications can be viewed in this interface.</li>
+        The results of translations and communications can be viewed in this interface.<br/>
+        The engine can be run manualy (the 'run' menu) or scheduled.</li>
     <li>Bots monitor (GUI); this is where you are now. <br/>
         Bots-monitor is used to eg:
     <ul>
         <li>Set up configuration (what to translate to what, how to communicate, etc.)</li>
         <li>Monitor incoming/outgoing edi messages; view results of translations.</li>
-        <li>Check if edi message have bee confimed by the receiver.</li>
-        <li>Indicate edi messages should be resend.</li>
-        <li>Indicate edi messages should be received.</li>
+        <li>Check if edi message have been confimed by the receiver.</li>
+        <li>Indicate resend of an edi message.</li>
+        <li>Indicate rereceive of edi message.</li>
         <li>Indicate a retry for failed outgoing communication.</li>
         <li>Maintain code translations.</li>
         <li>Manually start the bots-engine.</li>
@@ -52,7 +53,7 @@
             <ul>
                 <li>For edi files with errors, or stuck files: indicate you want to rereceive specific edi files (and Run user-indicated retransmits).<br/>
                     Remark: if you have not changed the configuration the same error will occur again....of course.</li>
-                <li>For outgoing communication precess errors: indicate you want to retry specific process errors (and Retry user-indicated outgoing communication errors)</li>
+                <li>For outgoing communication process errors: indicate you want to retry specific process errors (and Retry user-indicated outgoing communication errors)</li>
             </ul>
             </li>
         </ul>

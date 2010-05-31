@@ -62,18 +62,31 @@ def start():
     myroot = Root()
     myappl = cherrypy.tree.mount(myroot, '/media', conf)    #myappl is needed to set logging 
 
-    # Make RotatingFileHandler for the error log.
+
+
+    botsglobal.logger = logging.getLogger('webserver')
+    botsglobal.logger.setLevel(logging.DEBUG)
     h = logging.handlers.TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'),when='midnight', backupCount=10)
+    fileformat = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s : %(message)s",'%Y%m%d %H:%M:%S')
+    h.setFormatter(fileformat)
+    # add rotating file handler to main logger
+    botsglobal.logger.addHandler(h)
+    
+
+
+
+    # Make RotatingFileHandler for the error log.
+    #~ h = logging.handlers.TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'),when='midnight', backupCount=10)
     #~ fileformat = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s : %(message)s",'%Y%m%d %H:%M:%S')
-    h.setLevel(logging.INFO)
+    #~ h.setLevel(logging.INFO)
     #~ h.setFormatter(fileformat)
-    myappl.log.error_log.addHandler(h)
+    #~ myappl.log.error_log.addHandler(h)
 
     # MakeRotatingFileHandler for the access log.
     #~ h = logging.handlers.TimedRotatingFileHandler(os.path.normpath(os.path.join(botsglobal.ini.get('directories','botspath'), 'botssys/logging/webserver.log')),when='midnight', backupCount=10)
     #~ h.setLevel(logging.DEBUG)
-    myappl.log.access_log.addHandler(h)
-    botsglobal.logger = myappl.log.access_log 
+    #~ myappl.log.access_log.addHandler(h)
+    #~ botsglobal.logger = myappl.log.access_log 
     
     #write start info to cherrypy log********************************************
     botsglobal.logger.info(_(u'Bots web server started.'))

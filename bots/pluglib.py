@@ -92,9 +92,9 @@ def writetodatabase(orgpluglist):
     
     for plug in pluglist:
         botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
-        print '\nstart plug', plug
+        #~ print '\nstart plug', plug
         table = django.db.models.get_model('bots',plug['plugintype'])
-        print table
+        #~ print table
         
         #delete fields not in model (create compatibility plugin-version)
         loopdictionary = plug.keys()
@@ -139,8 +139,8 @@ def writetodatabase(orgpluglist):
             except:
                 print 'no field column for',fieldname
                 
-        print 'plug attr',plug
-        print '**sleutel',sleutelorg
+        #~ print 'plug attr',plug
+        #~ print '**sleutel',sleutelorg
         
         if sleutelorg:  #translate and confirmrule have empty 'sleutel'
             checkifexistsindb = table.objects.filter(**sleutelorg).all()
@@ -148,7 +148,7 @@ def writetodatabase(orgpluglist):
                 raise Exception('not unique?')
             elif len(checkifexistsindb)==1:
                 checkifexistsindb[0].delete()
-                print 'deleted old enty'
+                #~ print 'deleted old enty'
             botsglobal.logger.info(_(u'        Existing entry in database is deleted.'))
             
         dbobject = table(**sleutel)   #create db-object

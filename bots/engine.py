@@ -30,7 +30,7 @@ def showusage():
         --new                recieve new edi files (default: if no run-option given: run as new).
         --retransmit         resend and rerececieve as indicated by user.
         --retry              retry previous errors.
-        --crashrecovery      retry last run (crash recovery).
+        --crashrecovery      reruns the run where the crash occurred. (when database is locked).
         --retrycommunication retry outgoing communication process errors as indicated by user.
         --cleanup            remove older data from database.
     Config-option:
