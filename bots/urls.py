@@ -37,3 +37,5 @@ urlpatterns = patterns('',
     #catch-all
     (r'^.*', 'bots.views.index'), 
     )
+
+handler500='bots.views.server_error'

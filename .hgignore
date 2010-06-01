@@ -21,3 +21,5 @@ glob:bots-2.0.RC.tar.gz
 glob:bots-2.0.RC.win32-py2.6.exe
 glob:libiconv-2.dll
 glob:libintl-2.dll
+glob:dist/bots-2.0.0.tar.gz
+glob:dist/bots-2.0.0.win32-py2.6.exe

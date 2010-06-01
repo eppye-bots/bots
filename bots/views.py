@@ -11,6 +11,18 @@ import pluglib
 import botsglobal
 from botsconfig import *
 
+def server_error(request, template_name='500.html'):
+    """
+    500 error handler.
+
+    Templates: `500.html`
+    Context: None
+    """
+    import traceback
+    exc_info = traceback.format_exc(None).decode('utf-8','ignore')
+
+    t = django.template.loader.get_template(template_name) # You need to create a 500.html template.
+    return django.http.HttpResponseServerError(t.render(django.template.Context({'exc_info':exc_info})))
 
 def index(request,*kw,**kwargs):
     return django.shortcuts.render_to_response('admin/base.html', {},context_instance=django.template.RequestContext(request))
