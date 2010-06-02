@@ -1,0 +1,159 @@
+div#logo {
+	position:	absolute;
+	left:		0%;
+	width:		51em;
+	top:		0em;
+	height:		3.9em;
+	}
+div#logo>img {
+	position:	absolute;
+	left:		0%;
+	width:		100%;
+	top:		0%;
+	height:		100%;
+	}
+div#menu {
+	position:	absolute;
+	top:		4.0em;
+	height:		1.5em;
+    z-index:	4;
+	}
+div#container {
+	position:	absolute;
+	top:		5.5em;
+	}
+div.help {
+	position:	absolute;
+	top:		5em;
+	left:		5em;
+	color:#000000;
+	}
+div#content {
+	margin: 0;
+	}
+table#about {
+	position:	absolute;
+	left:		10%;
+	top:		7em;
+	}
+/***********************************************************************/
+/**MENU*****************************************************************/
+div#menu a {
+	color:      #000000;
+	text-decoration:none;
+	white-space:		nowrap;
+	}
+div#menu ul {
+	width:      8em;
+	float:      left;
+	margin:     0;
+	padding:    0;
+    }
+div#menu ul li {
+	list-style: none;
+	display:    none;
+	}
+div#menu ul:hover li, 
+div#menu ul:hover li a {
+	display:    block;
+	width:      20em;
+	background:#F1FBFF;
+	padding:    0;
+	margin:     0;
+	text-transform:		capitalize;
+	}
+div#menu ul:hover li a:hover, 
+div#menu ul:hover a {
+	background: #BCCCE3;
+    }
+div#menu ul:hover li a:hover, 
+div#menu ul:hover li a:hover {
+    cursor:     pointer;
+    }
+/***********************************************************************/
+/**ACTION**************************************************************/
+div.dropdown {
+	position:relative;
+	float:left;
+	}
+div.dropdown  ul {
+	list-style-type:none;
+	margin:0;
+	padding:0;
+	position:absolute;
+	visibility:hidden;
+	z-index:598;
+	left:99%;
+	top:1px;
+	background:#F1FBFF;
+	}
+div.dropdown:hover  ul {
+	visibility:visible;
+	}
+div.dropdown  ul  li {
+	list-style: none;
+    }
+div.dropdown:hover button{
+	background-color:#F1FBFF;
+	}
+div.dropdown:hover >button,
+div.dropdown  ul li:hover,
+div.dropdown  ul li button:hover{
+	background: #BCCCE3;
+	}
+/***********************************************************************/
+/**FILTER***************************************************************/
+.change-list .filtered {
+    background: none !important;
+    }
+.change-list .filtered .paginator,
+.filtered .actions {
+    margin-right:0 !important;
+    }
+div#changelist-filter h3, 
+div#changelist-filter ul {
+    display: none;
+    }
+div#changelist-filter:hover h3, 
+div#changelist-filter:hover ul {
+    display: block;
+    }
+/***********************************************************************/
+/**other ***************************************************************/
+.botsheader	{
+	border-style:		none;
+	margin:				0em;
+	padding:		    0em;
+	cursor:				pointer;
+	white-space:		nowrap;
+	color: 				#000000;
+	background:			#FFFFFF;
+	}
+p.botsheader2	{
+	border-style:		none;
+	margin:				0em;
+	padding:		    0em;
+	white-space:		nowrap;
+	color: 				#000000;
+	font-weight:		normal;
+	background:			#FFFFFF;
+	}
+a.botslink	{
+	cursor:				pointer;
+	white-space:		nowrap;
+	text-decoration:	none;
+	color: 				#000000;
+	}
+.nowrap	{
+	white-space:		nowrap;
+	}
+table#botstable {
+	border-collapse: collapse;
+	border-width: 0;
+	}
+img.action {
+	width: 1em;
+	}
+table#botstable td {
+	line-height: 1em;
+	}

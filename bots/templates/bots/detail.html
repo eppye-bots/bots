@@ -1,0 +1,64 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
+    <table>
+        <tr><td>{% trans 'Date/time' %}</td><td class="nowrap">{{rootta.ts|date:"Y-m-d H:i:s"}}</td></tr>
+        <tr><td>{% trans 'State' %}</td><td>{{rootta.get_statust_display}}</td></tr>
+        <tr><td>{% trans 'Route' %}</td><td>{{rootta.idroute}}</td></tr>
+</table>
+    <table id="botstable">
+        <thead>
+            <tr>
+                <th></th>
+                <th><button class="botsheader" />{% trans 'Phase' %}</button></th>
+                <th><button class="botsheader" />{% trans 'State' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Channel' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Editype' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Messagetype' %}</button></th>
+                <th><button class="botsheader" />{% trans 'FromPartner' %}</button></th>
+                <th><button class="botsheader" />{% trans 'ToPartner' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Reference' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Test' %}</button></th>
+                <th><button class="botsheader" />{% trans 'File' %}</button></th>
+                <th><button class="botsheader" />{% trans '#mes' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Error' %}</button></th>
+                <th><button class="botsheader" />{% trans 'FromMail' %}</button></th>
+                <th><button class="botsheader" />{% trans 'ToMail' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Charset' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Contenttype' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Alt' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Mapping' %}</button></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in detaillist %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td>{{row.ind}}</td>
+                <td>{{row.get_status_display}}</td>
+                <td>{{row.get_statust_display}}</td>
+                <td>{{row.channel}}</td>
+                <td>{{row.editype}}</td>
+                <td>{{row.messagetype}}</td>
+                <td>{{row.frompartner}}</td>
+                <td>{{row.topartner}}</td>
+                <td>{{row.reference}}</td>
+                <td>{{row.testindicator}}</td>
+                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.filename}}</a></td>
+                <td>{{row.nrmessages}}</td>
+                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td style="white-space: pre;">{{row.errortext}}</td>
+                <td>{{row.frommail}}</td>
+                <td>{{row.tomail}}</td>
+                <td>{{row.charset}}</td>
+                <td>{{row.contenttype}}</td>
+                <td>{{row.alt}}</td>
+                <td>{{row.divtext}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+

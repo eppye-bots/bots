@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="help">
+<h2>Introduction: bots open source translator consists of 2 parts</h2>
+<ul>
+    <li>Bots-engine: the part that does the translations and communication.<br/>
+        The results of translations and communications can be viewed in this interface.<br/>
+        The engine can be run manualy (the 'run' menu) or scheduled.</li>
+    <li>Bots monitor (GUI); this is where you are now. <br/>
+        Bots-monitor is used to eg:
+    <ul>
+        <li>Set up configuration (what to translate to what, how to communicate, etc.)</li>
+        <li>Monitor incoming/outgoing edi messages; view results of translations.</li>
+        <li>Check if edi message have been confimed by the receiver.</li>
+        <li>Indicate resend of an edi message.</li>
+        <li>Indicate rereceive of edi message.</li>
+        <li>Indicate a retry for failed outgoing communication.</li>
+        <li>Maintain code translations.</li>
+        <li>Manually start the bots-engine.</li>
+    </ul>
+    </li>
+</ul>
+<h2>Information about menu</h2>
+<ul>
+    <li>Home: default start page and general information.</li>
+    <li>Last run: view results of last run: report, incoming, outgoing, etc</li>
+    <li>All runs: view results of all runs: reports, incoming, outgoing, etc</li>
+    <li>Select: selects the view/results you want to see using criteria.<br/>
+        Select screen can also be reached using 'select'button in other views.<br/>
+        Note that selection citeria are remembered.
+        </li>
+    <li>Configuration (administrators only): main configuration of the edi setup.</li>
+    <li>System tasks (superuser only): read plugins, create plugins, maintain users, unlock database, etc.</li>
+    <li>Run (administrators only): manually start a run of bots-engine:<br/>
+        <ul>
+        <li>Run (only new): receive, translate, and send new edi messages.<br/>
+            This is what you normally will do.</li>
+        <li>Retry user-indicated outgoing communication errors:<br/>
+            outgoing communication can fail (processerror) if eg internet is not reachable, service is out, etc.<br/>
+            The user can indicate to 'retry the communication' for a process error (Process Error-view).<br/>
+            This type of run will handle all user indicated retries of communication errors; no new edi files will be processed.
+            </li>
+        <li>Run user-indicated retransmits:<br/>
+            a user can indicate to rereceive or resend an edi file (incoming and outgoing views).<br/>
+            This type of run will handle all user indicated resends and rereceives; no new edi files will be processed.<br/>
+            </li>
+        <li>Retry all previous errors:<br/>
+            bots will try to process all edi files that have not been completely processed.<br/>
+            This might be to coarse as ALL previous errors are retried.<br/>
+            If you want more fine-grained control:
+            <ul>
+                <li>For edi files with errors, or stuck files: indicate you want to rereceive specific edi files (and Run user-indicated retransmits).<br/>
+                    Remark: if you have not changed the configuration the same error will occur again....of course.</li>
+                <li>For outgoing communication process errors: indicate you want to retry specific process errors (and Retry user-indicated outgoing communication errors)</li>
+            </ul>
+            </li>
+        </ul>
+    </li>
+</ul>
+<h2>User interface tips</h2>
+<ul>
+    <li>You can use tabbed browsing with bots.</li>
+    <li>In view screens, you can see the contents of an edi file if you click on the file name.</li>
+    <li>When viewing an edi file, you can go backwards and forwards viewing the steps of processing the file.</li>
+    <li>View screens often have a star at the beginning of each line; moving over the star will show possible actions.</li>
+    <li>If you have not been active for a while, bots requires you log in again.</li>
+    <li>There are 3 levels of user rights: normal users/viewers, administators and superuser. This can be configured in systasks--users.</li>
+</ul>
+
+
+</div>
+{% endblock %}
+

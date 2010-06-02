@@ -1,0 +1,19 @@
+syntax: glob
+*.pyo
+*.pyc
+*.dll
+test*
+copy*
+
+syntax: regexp
+#^bots/botssys.*
+^bots/botssys/data.*
+^bots/botssys/infile.*
+^bots/botssys/outfile.*
+^bots/botssys/logging.*
+^bots/botssys/archive.*
+^bots/botssys/archive.*
+^bots/djangolink.*
+^dist.*
+^bots/installwin.*
+^bots/usersys/\w+/.*

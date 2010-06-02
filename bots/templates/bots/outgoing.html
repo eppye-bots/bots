@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<form action="{{ form.action }}" method="post">
+    <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
+    <input type="submit" name="2select" value="{% trans 'Change selection' %}" />
+    <input type="submit" name="2incoming" value="{% trans 'Incoming (same selection)' %}" />
+    <input type="submit" name="2process" value="{% trans 'Process Errors (same selection)' %}" />
+    <input type="submit" name="2confirm" value="{% trans 'Confirm (same selection)' %}" />
+    {% include "bots/paginator.html" %}
+
+    <table id="botstable">
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        <thead>
+            <tr>
+                <th></th>
+                <th><button class="botsheader" type="submit" name="order" value="retransmit" title="Resend">{% trans 'Resend' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" >{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="nrmessages" >{% trans '#messages' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="filename" >{% trans 'OutFile' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="idroute" >{% trans 'Route' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="tochannel" >{% trans 'ToChannel' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="frompartner" >{% trans 'FromPartner' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="topartner" >{% trans 'ToPartner' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="frommail" >{% trans 'FromMail' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="tomail" >{% trans 'ToMail' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="editype" >{% trans 'Editype' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="messagetype" >{% trans 'Messagetype' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="testindicator" >{% trans 'Test' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="contenttype" >{% trans 'Contenttype' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="charset" >{% trans 'Charset' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="reference" >{% trans 'Reference' %}</button></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in queryset.object_list %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td>
+                    <div class="dropdown"><img class="action" src="/media/images/star.png" />
+                        <ul>
+                            <li><a href="/detail/?outidta={{row.idta}}" class="botslink">{% trans 'View detail' %}</a></li>
+                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}" />{% trans 'Resend' %}</button></li>
+                        </ul>
+                    </div>
+                </td>
+                <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
+                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td>{{row.nrmessages}}</td>
+                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.filename}}</a></td>
+                <td>{{row.idroute}}</td>
+                <td>{{row.tochannel}}</td>
+                <td>{{row.frompartner}}</td>
+                <td>{{row.topartner}}</td>
+                <td>{{row.frommail}}</td>
+                <td>{{row.tomail}}</td>
+                <td>{{row.editype}}</td>
+                <td>{{row.messagetype}}</td>
+                <td>{{row.testindicator}}</td>
+                <td>{{row.contenttype}}</td>
+                <td>{{row.charset}}</td>
+                <td>{{row.reference}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</form>
+{% endblock %}
+

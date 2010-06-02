@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<table id="about">
+    <tr>
+        <td>
+        <h1>{% trans 'Bots Open Source EDI translator' %}</h1>
+        <a target="_blank" href="http://bots.sourceforge.net">{% trans 'Bots documentation' %}</a>.<br/>
+        <a target="_blank" href="http://groups.google.com/group/botsmail">{% trans 'Bots mailing list' %}</a>.<br/>
+        <a target="_blank" href="www.ebbersconsult.com">{% trans 'Commercial support by EbbersConsult' %}</a>.
+        </td>
+    </tr>
+    <tr></tr>
+    {% for key, value in botsinfo %}
+        <tr>
+            <td>{{ key }}</td><td>{{ value }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}
+
