@@ -78,12 +78,13 @@ class _comsession(object):
         self.userscript=userscript
         self.scriptname=scriptname
         if self.channeldict['inorout']=='out':
-            nroffiles = self.precommunicate(FILEOUT,RAWOUT)
-            if self.countoutfiles() > 0 : #for out-comm: send if something to send 
-                self.connect()
-                self.outcommunicate()
-                self.disconnect()
-                self.outarchive()
+            if not self.channeldict['defer']:
+                nroffiles = self.precommunicate(FILEOUT,RAWOUT)
+                if self.countoutfiles() > 0 : #for out-comm: send if something to send 
+                    self.connect()
+                    self.outcommunicate()
+                    self.disconnect()
+                    self.outarchive()
         else:   #incommunication
             if botsglobal.incommunicate: #for in-communication: only communicate for new run
                 self.connect()
@@ -148,7 +149,7 @@ class _comsession(object):
     @botslib.log_session
     def precommunicate(self,fromstatus,tostatus):
         ''' transfer communication-file from status FILEOUT to RAWOUT'''
-        return botslib.addinfo(change={'status':tostatus},where={'status':fromstatus,'tochannel':self.channeldict['idchannel'],'idroute':self.idroute})
+        return botslib.addinfo(change={'status':tostatus},where={'status':fromstatus,'tochannel':self.channeldict['idchannel']})
 
     def file2mime(self,fromstatus,tostatus):
         ''' transfer communication-file from status FILEOUT to RAWOUT and convert to mime.

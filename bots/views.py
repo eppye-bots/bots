@@ -173,7 +173,7 @@ def outgoing(request,*kw,**kwargs):
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
                 
-    query = models.ta.objects.filter(status=EXTERNOUT).all()
+    query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE).all()
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewOutgoing(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
