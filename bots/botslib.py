@@ -9,6 +9,8 @@ import datetime
 import socket   #to set a time-out for connections
 import shutil
 import string
+import urlparse
+import urllib
 import platform
 import django
 from django.utils.translation import ugettext as _
@@ -701,6 +703,43 @@ def checkconfirmrules(confirmtype,**kwargs):
 #**********************************************************/**
 #***************###############  misc.   #############
 #**********************************************************/**
+class Uri(object):
+    ''' generate uri from parts. '''
+    def __init__(self,**kw):
+        self.uriparts = dict(scheme='',username='',password='',host='',port='',path='',parameters='',filename='',query={},fragment='')
+        self.uriparts.update(**kw)
+    def update(self,**kw):
+        self.uriparts.update(kw)
+        return self.uri
+    @property   #the getter
+    def uri(self):
+        if not self.uriparts['scheme']:
+            raise Exception('No scheme in uri.')
+        #assemble complete host name
+        fullhost = ''
+        if self.uriparts['username']:   #always use both?
+            fullhost += self.uriparts['username'].strip()
+            if self.uriparts['password']:   #always use both?
+                fullhost += ':' + self.uriparts['password'].strip()
+            fullhost += '@'
+        if self.uriparts['host']:
+            fullhost += self.uriparts['host'].strip()
+        if self.uriparts['port']:
+            fullhost += ':' + str(self.uriparts['port']).strip()
+        #assemble complete path
+        if self.uriparts['path'].strip().endswith('/'):
+            fullpath = self.uriparts['path'].strip() + self.uriparts['filename'].strip()
+        else:
+            fullpath = self.uriparts['path'].strip() + '/' + self.uriparts['filename'].strip()
+        if fullpath.endswith('/'):
+            fullpath = fullpath[:-1]
+            
+        _uri = urlparse.urlunparse((self.uriparts['scheme'],fullhost,fullpath,self.uriparts['parameters'],urllib.urlencode(self.uriparts['query']),self.uriparts['fragment']))
+        if not _uri:
+            raise Exception('Uri is empty.')
+        return _uri
+    
+    
 def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
 

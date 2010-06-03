@@ -9,6 +9,7 @@ import viewlib
 import botslib
 import pluglib
 import botsglobal
+import glob
 from botsconfig import *
 
 def server_error(request, template_name='500.html'):
@@ -173,7 +174,7 @@ def outgoing(request,*kw,**kwargs):
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
                 
-    query = models.ta.objects.filter(status=EXTERNOUT).all()
+    query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE).all()
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewOutgoing(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
@@ -416,6 +417,23 @@ def delete(request,*kw,**kwargs):
             #~ models.report.objects.all().delete()
             transaction.commit_unless_managed()
             request.user.message_set.create(message=_(u'All transactions are deleted.'))
+            try:
+                frompath = botslib.join(botsglobal.ini.get('directories','data','botssys/data'),'*')
+                for filename in glob.glob(frompath):
+                    if os.path.isdir(filename):
+                        frompath2 = botslib.join(filename,'*')
+                        emptydir=True
+                        for filename2 in glob.glob(frompath2): 
+                            if os.path.isdir(filename2):
+                                emptydir = False
+                            else:
+                                os.remove(filename2)
+                        if emptydir:
+                            os.rmdir(filename)
+                    else:
+                        os.remove(filename2)
+            except:
+                pass
         elif 'configuration' in request.GET:
             models.confirmrule.objects.all().delete()
             models.channel.objects.all().delete()

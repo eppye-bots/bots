@@ -123,7 +123,7 @@ admin.site.register(models.partner,PartnerAdmin)
 
 class RoutesAdmin(BotsAdmin):
     save_as = True
-    list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
+    list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun', 'defer')
     list_display_links = ('idroute',)
     list_filter = ('active','fromeditype','testindicator')
     ordering = ('idroute','seq')
@@ -133,7 +133,7 @@ class RoutesAdmin(BotsAdmin):
         (_(u'Filtering for outchannel'),{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
                     'classes':  ('collapse',)
                     }),
-        (_(u'Advanced'),{'fields':  ('alt', 'frompartner', 'topartner', 'notindefaultrun'),
+        (_(u'Advanced'),{'fields':  ('alt', 'frompartner', 'topartner', 'notindefaultrun','defer'),
                      'classes': ('collapse',) 
                     }),
     )
