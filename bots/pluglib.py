@@ -78,6 +78,11 @@ def writetodatabase(orgpluglist):
             plug['errortext'] = plug['errortext'][:2047]
         elif plug['plugintype'] == 'routes':
             plug['active'] = False
+            if not 'defer' in plug:
+                plug['defer'] = False
+            else:
+                if plug['defer'] is None:
+                    plug['defer'] = False
         elif plug['plugintype'] == 'confirmrule':
             plug.pop('id', None)       #id is an artificial key, delete,
         elif plug['plugintype'] not in lijst: #filter

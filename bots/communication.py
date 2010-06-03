@@ -79,14 +79,13 @@ class _comsession(object):
         self.scriptname=scriptname
         if self.channeldict['inorout']=='out':
             #routes can have the same outchannel.
-            #the different outchannels can be 'direct' or deffered
-            if not self.channeldict['defer']: #for out-comm: send if communication is not deffered
-                nroffiles = self.precommunicate(FILEOUT,RAWOUT)
-                if self.countoutfiles() > 0: #for out-comm: send if something to send
-                    self.connect()
-                    self.outcommunicate()
-                    self.disconnect()
-                    self.outarchive()
+            #the different outchannels can be 'direct' or deffered (in route)
+            nroffiles = self.precommunicate(FILEOUT,RAWOUT)
+            if self.countoutfiles() > 0: #for out-comm: send if something to send
+                self.connect()
+                self.outcommunicate()
+                self.disconnect()
+                self.outarchive()
         else:   #incommunication
             if botsglobal.incommunicate: #for in-communication: only communicate for new run
                 self.connect()
@@ -136,7 +135,6 @@ class _comsession(object):
                                     AND   status=%(status)s
                                     AND   statust=%(statust)s
                                     AND   tochannel=%(tochannel)s
-                                    AND   idroute=%(idroute)s 
                                     ''',
                                     {'idroute':self.idroute,'status':RAWOUT,'statust':OK,
                                     'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query()}):
@@ -520,6 +518,11 @@ class _comsession(object):
             return codec_out
         except:
             return codec_in
+    def connect(self):
+        pass
+    def disconnect(self):
+        pass
+
 
 class pop3(_comsession):
     def connect(self):

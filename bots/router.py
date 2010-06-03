@@ -119,7 +119,8 @@ def routedispatcher(routestorun,type=None):
                                                  frompartner_tochannel_id,
                                                  topartner_tochannel_id,
                                                  testindicator,
-                                                 translateind
+                                                 translateind,
+                                                 defer
                                         FROM routes
                                         WHERE idroute=%(idroute)s
                                         AND   active=%(active)s
@@ -219,8 +220,9 @@ def router(routedict):
         toset={'tochannel':routedict['tochannel'],'status':FILEOUT}
         botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
         
-        botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
-        communication.run(idchannel=routedict['tochannel'],idroute=routedict['idroute'])    #communication.run outcommunication
-        botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)
+        if not routedict['defer']:   #do outgoing part of route
+            botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
+            communication.run(idchannel=routedict['tochannel'],idroute=routedict['idroute'])    #communication.run outcommunication
+            botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)
     
     botslib.tryrunscript(userscript,scriptname,'end',routedict=routedict)
