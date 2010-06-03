@@ -36,7 +36,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
             ta_intermediate = ta_org.copyta(status=MAILBAGPARSED)
             edifile = botslib.readdata(filename=row['filename'],charset=row['charset'])
             botsglobal.logmap.debug(u'Start parsing mailbag file "%s".',row['filename'])
-            header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(UNB).{1}(.{4}).{1}(.{1}))',re.DOTALL)
+            header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))',re.DOTALL)
             #           group:    1   2       3  4            5        6         7
             startpos=0
             while (1):
@@ -69,7 +69,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                         field_sep = '+'
                         record_sep = "'"
                         headpos=startpos+ found.start(5)
-                    foundtrailer = re.search(re.escape(record_sep)+'\s*UNZ'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
+                    foundtrailer = re.search(re.escape(record_sep)+'\s*U\s*N\s*Z\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
                 if not foundtrailer:
                     raise botslib.InMessageError(_(u'Found no valid envelope trailer in mailbag.'))
                 endpos = headpos+foundtrailer.end()

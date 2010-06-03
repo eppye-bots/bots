@@ -78,9 +78,11 @@ class _comsession(object):
         self.userscript=userscript
         self.scriptname=scriptname
         if self.channeldict['inorout']=='out':
-            if not self.channeldict['defer']:
+            #routes can have the same outchannel.
+            #the different outchannels can be 'direct' or deffered
+            if not self.channeldict['defer']: #for out-comm: send if communication is not deffered
                 nroffiles = self.precommunicate(FILEOUT,RAWOUT)
-                if self.countoutfiles() > 0 : #for out-comm: send if something to send 
+                if self.countoutfiles() > 0: #for out-comm: send if something to send
                     self.connect()
                     self.outcommunicate()
                     self.disconnect()

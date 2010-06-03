@@ -57,6 +57,7 @@ CHANNELTYPE = (
     ('pop3s', _(u'pop3s')),
     ('pop3apop', _(u'pop3apop')),
     ('ftp', _(u'ftp')),
+    ('xmlrpc', _(u'xmlrpc')),
     ('mimefile', _(u'mimefile')),
     ('intercommit', _(u'intercommit')),
     ('database', _(u'database')),
@@ -270,6 +271,7 @@ class routes(botsmodel):
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    defer = models.BooleanField(null=True,default=False,blank=True,help_text=_(u'Set ready for communication, but defer actual communication (this is done in another route)'))                        #added 20100601
     class Meta:
         db_table = 'routes'
         verbose_name = _(u'route')
