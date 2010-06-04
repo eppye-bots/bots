@@ -596,7 +596,8 @@ class smtp(_comsession):
     def login(self):
         if self.channeldict['username'] and self.channeldict['secret']:
             try: 
-                self.session.login(self.channeldict['username'],self.channeldict['secret'])
+                #error in python 2.6.4....user and password can not be unicode
+                self.session.login(str(self.channeldict['username']),str(self.channeldict['secret']))
             except smtplib.SMTPAuthenticationError:
                 raise botslib.CommunicationOutError(_(u'SMTP server did not accept user/password combination.'))
             except:

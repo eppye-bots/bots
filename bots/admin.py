@@ -17,6 +17,7 @@ admin.site.disable_action('delete_selected')
 
 class BotsAdmin(admin.ModelAdmin):
     screen_limit = botsglobal.ini.getint('settings','limit',30)
+    save_as = True
 
     def delete_view(self, request, object_id, extra_context=None):
         ''' copy from admin.ModelAdmin; adapted: do not checkl references: no cascading deletes; no confirmation.'''
@@ -84,7 +85,6 @@ class ChannelAdmin(BotsAdmin):
 admin.site.register(models.channel,ChannelAdmin)
 
 class ConfirmruleAdmin(BotsAdmin):
-    save_as = True
     list_display = ('active','negativerule','confirmtype','ruletype', 'frompartner', 'topartner','idroute','idchannel','editype','messagetype')
     list_display_links = ('confirmtype',)
     list_filter = ('active','confirmtype','ruletype')
@@ -122,7 +122,6 @@ class PartnerAdmin(BotsAdmin):
 admin.site.register(models.partner,PartnerAdmin)
 
 class RoutesAdmin(BotsAdmin):
-    save_as = True
     list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'defer', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
     list_display_links = ('idroute',)
     list_filter = ('active','fromeditype','testindicator')
@@ -156,7 +155,6 @@ class MyTranslateAdminForm(django.forms.ModelForm):
 
 class TranslateAdmin(BotsAdmin):
     form = MyTranslateAdminForm
-    save_as = True
     list_display = ('active', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'tscript', 'toeditype', 'tomessagetype')
     list_display_links = ('fromeditype',)
     list_filter = ('active','fromeditype','toeditype')

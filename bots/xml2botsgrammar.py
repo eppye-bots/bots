@@ -1,5 +1,6 @@
 import os
 import sys
+import copy
 import inmessage
 import outmessage
 import botslib
@@ -16,57 +17,87 @@ def treewalker(node,mpath):
     mpath.append({'BOTSID':node.record['BOTSID']})
     for childnode in node.children:
         yield childnode,mpath[:]
-        for terug in treewalker(childnode,mpath):
-            yield terug 
+        for terugnode,terugmpath in treewalker(childnode,mpath):
+            yield terugnode,terugmpath 
     mpath.pop()
     
 
 def writefields(tree,node,mpath):
+    putmpath = copy.deepcopy(mpath)
+    #~ print mpath
+    #~ print node.record
     for key in node.record.keys():
+        #~ print key
         if key != 'BOTSID':
-            mpath[-1][key]=u'dummy'
-            tree.put(*mpath)
-            del mpath[-1][key]
+            putmpath[-1][key]=u'dummy'
+            #~ print 'mpath used',mpath
+            #~ putmpath = copy.deepcopy(mpath)
+    tree.put(*putmpath)
+            #~ del mpath[-1][key]
+    #~ print '\n'
         
 def tree2grammar(node,structure,recorddefs):
     structure.append({ID:node.record['BOTSID'],MIN:0,MAX:99999,LEVEL:[]})
     recordlist = []
     for key in node.record.keys():
         recordlist.append([key, 'C', 256, 'AN'])
-    recorddefs[node.record['BOTSID']] = recordlist
+    if node.record['BOTSID'] in recorddefs:
+        recorddefs[node.record['BOTSID']] = removedoublesfromlist(recorddefs[node.record['BOTSID']] + recordlist)
+        #~ recorddefs[node.record['BOTSID']].extend(recordlist)
+    else:
+        recorddefs[node.record['BOTSID']] = recordlist
     for childnode in node.children:
         tree2grammar(childnode,structure[-1][LEVEL],recorddefs)
 
-def formatrecorddefs(recorddefs):
+def recorddefs2string(recorddefs,sortedstructurelist):
     recorddefsstring = "{\n"
-    for key, value in recorddefs.items():
-        recorddefsstring += "    '%s':\n        [\n"%key
-        for field in value:
+    for i in sortedstructurelist:
+    #~ for key, value in recorddefs.items():
+        recorddefsstring += "    '%s':\n        [\n"%i
+        for field in recorddefs[i]:
             if field[0]=='BOTSID':
                 field[1]='M'
                 recorddefsstring += "        %s,\n"%field
                 break
-        for field in value:
+        for field in recorddefs[i]:
             if '__' in field[0]:
                 recorddefsstring += "        %s,\n"%field
-        for field in value:
+        for field in recorddefs[i]:
             if field[0]!='BOTSID' and '__' not in field[0]:
                 recorddefsstring += "        %s,\n"%field
         recorddefsstring += "        ],\n"
     recorddefsstring += "    }\n"
     return recorddefsstring
     
-def formatstructure(structure,level=0):
+def structure2string(structure,level=0):
     structurestring = ""
     for i in structure:
         structurestring += level*"    " + "{ID:'%s',MIN:%s,MAX:%s"%(i[ID],i[MIN],i[MAX])
-        recursivestructurestring = formatstructure(i[LEVEL],level+1)
+        recursivestructurestring = structure2string(i[LEVEL],level+1)
         if recursivestructurestring:
             structurestring += ",LEVEL:[\n" + recursivestructurestring + level*"    " + "]},\n"
         else:
             structurestring += "},\n"
     return structurestring
+
+def structure2list(structure):
+    structurelist = structure2listcore(structure)
+    return removedoublesfromlist(structurelist)
     
+def removedoublesfromlist(orglist):
+    list2return = []
+    for e in orglist:
+        if e not in list2return:
+            list2return.append(e)
+    return list2return
+
+def structure2listcore(structure):
+    structurelist = []
+    for i in structure:
+        structurelist.append(i[ID])
+        structurelist.extend(structure2listcore(i[LEVEL]))
+    return structurelist
+
 def showusage():
     print
     print 'Usage:'
@@ -105,22 +136,23 @@ def start():
         showusage()
 
     #********end handling command line arguments**************************
-    
+    editype='xmlnocheck'
+    messagetype='xmlnocheckxxxtemporaryforxml2grammar'
     mpath = []
-    structure = []
-    recorddefs = {}
     
     botsinit.generalinit(configdir)
     os.chdir(botsglobal.ini.get('directories','botspath'))
     botsinit.initenginelogging()
     
-    #~ botslib.initconfigurationfile(botsinifile)
-    #~ botslib.initbotscharsets()
-    #~ botslib.initlogging()
-    
-    inn = inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename=edifile)
-    out = outmessage.outmessage_init(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    #make outmessage object
+    #the xml file is parsed as an xmlnocheck message....so a (temp) xmlnocheck grammar is needed....without content... this file is not removed....
+    tmpgrammarfile = botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars',editype,messagetype+'.py')
+    f = open(tmpgrammarfile,'w')
+    f.close()
+
+    inn = inmessage.edifromfile(editype=editype,messagetype=messagetype,filename=edifile)
     #~ inn.root.display()
+    out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    #make outmessage object
+    
     #handle root
     rootmpath = [{'BOTSID':inn.root.record['BOTSID']}]
     out.put(*rootmpath)
@@ -132,16 +164,23 @@ def start():
             out.put(*mpath)
         writefields(out,node,mpath)
         
-    #out-tree is finished; represents ' normalised' tree suited for writing as a grammar
-    tree2grammar(out.root,structure,recorddefs)
-    recorddefsstring = formatrecorddefs(recorddefs)
-    structurestring = formatstructure(structure)
+    out.root.display()
     
-    #~ out.root.display()
+    #out-tree is finished; represents ' normalised' tree suited for writing as a grammar
+    structure = []
+    recorddefs = {}
+    tree2grammar(out.root,structure,recorddefs)
+    #~ for key,value in recorddefs.items():
+        #~ print key,value
+        #~ print '\n'
+    sortedstructurelist = structure2list(structure)
+    recorddefsstring = recorddefs2string(recorddefs,sortedstructurelist)
+    structurestring = structure2string(structure)
+    
     #write grammar file
     grammar = open(grammarfile,'wb')
     grammar.write('#grammar automatically generated by bots open source edi software.')
-    grammar.write('\n\n')
+    grammar.write('\n')
     grammar.write('from bots.botsconfig import *')
     grammar.write('\n\n')
     grammar.write('syntax = {}')
