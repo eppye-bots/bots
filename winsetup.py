@@ -70,6 +70,7 @@ setup(
             'bots-engine.py',
             'postinstallation.py',
             'bots-grammarcheck.py',
+            'bots-xml2botsgrammar.py',
             #~ 'bots/bots-updatedb.py',
             ],
     packages = packages,

@@ -137,7 +137,7 @@ class confirmrule(botsmodel):
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
     def __unicode__(self):
-        return self.confirmtype + ' ' + self.ruletype
+        return unicode(self.confirmtype) + u' ' + unicode(self.ruletype)
     class Meta:
         db_table = 'confirmrule'
         verbose_name = _(u'confirm rule')
@@ -145,7 +145,7 @@ class ccodetrigger(botsmodel):
     ccodeid = StripCharField(primary_key=True,max_length=35,verbose_name=_(u'type code'))
     ccodeid_desc = StripCharField(max_length=35,null=True,blank=True)
     def __unicode__(self):
-        return self.ccodeid
+        return unicode(self.ccodeid)
     class Meta:
         db_table = 'ccodetrigger'
         verbose_name = _(u'user code type')
@@ -163,7 +163,7 @@ class ccode(botsmodel):
     attr7 = StripCharField(max_length=35,blank=True)
     attr8 = StripCharField(max_length=35,blank=True)
     def __unicode__(self):
-        return self.ccodeid + ' ' + self.leftcode + ' ' + self.rightcode
+        return unicode(self.ccodeid) + u' ' + unicode(self.leftcode) + u' ' + unicode(self.rightcode)
     class Meta:
         db_table = 'ccode'
         verbose_name = _(u'user code')
@@ -196,7 +196,7 @@ class channel(botsmodel):
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
     def __unicode__(self):
-        return self.idchannel
+        return unicode(self.idchannel)
     class Meta:
         db_table = 'channel'
 class partner(botsmodel):
@@ -211,7 +211,7 @@ class partner(botsmodel):
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
     def __unicode__(self):
-        return self.idpartner
+        return unicode(self.idpartner)
     class Meta:
         db_table = 'partner'
         
@@ -229,7 +229,7 @@ class chanpar(botsmodel):
         verbose_name = _(u'email address per channel')
         verbose_name_plural = _(u'email address per channel')
     def __unicode__(self):
-        return self.idpartner + ' ' + self.idchannel + ' ' + self.mail
+        return unicode(self.idpartner) + ' ' + unicode(self.idchannel) + ' ' + unicode(self.mail)
 class translate(botsmodel):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
@@ -248,7 +248,7 @@ class translate(botsmodel):
         db_table = 'translate'
         verbose_name = _(u'translation')
     def __unicode__(self):
-        return self.fromeditype + ' ' + self.frommessagetype + ' ' + str(self.alt) + ' ' + str(self.frompartner) + ' ' + str(self.topartner)
+        return unicode(self.fromeditype) + u' ' + unicode(self.frommessagetype) + u' ' + unicode(self.alt) + u' ' + unicode(self.frompartner) + u' ' + unicode(self.topartner)
 class routes(botsmodel):  
     #~ id = models.IntegerField(primary_key=True)
     idroute = StripCharField(max_length=35,db_index=True,help_text=_(u'identification of route; one route can consist of multiple parts having the same "idroute".'))
@@ -277,7 +277,7 @@ class routes(botsmodel):
         verbose_name = _(u'route')
         unique_together = (("idroute","seq"),)
     def __unicode__(self):
-        return self.idroute + ' ' + str(self.seq)
+        return unicode(self.idroute) + u' ' + unicode(self.seq)
 
 #***********************************************************************************
 #******** written by engine ********************************************************
