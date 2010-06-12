@@ -3,15 +3,15 @@ import StringIO
 import time
 import sys
 try:
-    from xml.etree import cElementTree as ET
+    import cElementTree as ET
 except ImportError:
     try:
-        from xml.etree import ElementTree as ET
+        import elementtree.ElementTree as ET
     except ImportError:
         try:
-            import cElementTree as ET
+            from xml.etree import cElementTree as ET
         except ImportError:
-                import elementtree.ElementTree as ET
+            from xml.etree import ElementTree as ET
 try:
     import json as simplejson
 except ImportError:

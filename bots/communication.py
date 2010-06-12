@@ -216,7 +216,7 @@ class _comsession(object):
                     if attachmentfilename:  #if None or empty string: not an attachment
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
                     #end set attachmentname
-                    charset = self.codeccanonicalname(row['charset'])
+                    charset = self.convertcodecformime(row['charset'])
                     message.add_header('Content-Type',row['contenttype'].lower(),charset=charset)          #contenttype is set in grammar.syntax
                     #*******set attachment/payload*************************
                     #~ content = botslib.readdata(contentfilename,charset)     #get attachment (the data file); read is using the right charset
@@ -483,46 +483,25 @@ class _comsession(object):
             else:
                 raise botslib.CommunicationOutError(_(u'No mail-address for partner "$partner" (channel "$idchannel").'),partner=idpartner,idchannel=self.channeldict['idchannel'])
 
-    def checkcharset(self,charset):
-        ''' if charset (of edifile) is compatible with charset of channel: OK; else: raise exception
-        '''
-        #some codecs are upward compable (subsets); charsetcompatible is used to check if charsets are upward compatibel with each other.
-        #some charset are 1 byte (ascii, ISO-8859-*). others are more bytes (UTF-16, utf-32. UTF-8 is more bytes, but is ascii compatible.
-        charsetcompatible = {
-            'UNOA':['UNOB','UNOC','us-ascii','utf-8','iso-8859-1','cp1252','iso-8859-15'],
-            'UNOB':['UNOC','us-ascii','utf-8','iso-8859-1','cp1252','iso-8859-15'],
-            'UNOC':['iso-8859-1','cp1252','iso-8859-15'],
-            'us-ascii':['utf-8','iso-8859-1','cp1252','iso-8859-15'],
-            'ascii':['utf-8','iso-8859-1','cp1252','iso-8859-15'],
-            }
-        if codecs.getdecoder(self.channeldict['charset']) != codecs.getdecoder(charset):
-            if charset in charsetcompatible:
-                for c in charsetcompatible[charset]:
-                    if codecs.getdecoder(self.channeldict['charset']) == codecs.getdecoder(c):
-                        break
-                else:
-                    raise botslib.CommunicationOutError(_(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.'),charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
-            else:
-                raise botslib.CommunicationOutError(_(u'Charset "$charset1" for channel "$channel" not matching with charset "$charset2" for edi-file.'),charset1=self.channeldict['charset'],channel=self.channeldict['idchannel'],charset2=charset)
+    def connect(self):
+        pass
+        
+    def disconnect(self):
+        pass
 
     @staticmethod
-    def codeccanonicalname(codec_in):
+    def convertcodecformime(codec_in):
         convertdict = {
             'unoa' : 'us-ascii',
             'unob' : 'us-ascii',
             'unoc' : 'iso-8859-1',
             }
         codec_in = codec_in.lower().replace('_','-')
-        try:
-            codec_out = convertdict[codec_in]
-            return codec_out
-        except:
+        if codec_in in convertdict:
+            return convertdict[codec_in]
+        else:
             return codec_in
-    def connect(self):
-        pass
-    def disconnect(self):
-        pass
-
+            
 
 class pop3(_comsession):
     def connect(self):
@@ -745,7 +724,7 @@ class file(_comsession):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                self.checkcharset(row['charset'])
+                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 #open tofile, incl syslock if indicated
                 unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
                 if self.channeldict['filename']:
@@ -876,12 +855,12 @@ class ftp(_comsession):
                 if self.userscript and hasattr(self.userscript,'filename'):
                     tofilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta_from)
                 if self.channeldict['ftpbinary']:
-                    self.checkcharset(row['charset'])
+                    botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                     fromfile = botslib.opendata(row['filename'], 'rb')
                     self.session.storbinary(mode + tofilename, fromfile)
                 else:
                     #~ self.channeldict['charset'] = 'us-ascii'
-                    self.checkcharset(row['charset'])
+                    botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                     fromfile = botslib.opendata(row['filename'], 'r')
                     self.session.storlines(mode + tofilename, fromfile)
                 fromfile.close()
@@ -924,7 +903,7 @@ class xmlrpc(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                self.checkcharset(row['charset'])
+                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 fromfile = botslib.opendata(row['fromfilename'], 'rb',row['charset'])
                 content = fromfile.read()
                 fromfile.close()
@@ -1044,7 +1023,7 @@ class intercommit(_comsession):
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
                 #check encoding for outchannel
-                self.checkcharset(row['charset'])
+                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 #create unique for filenames of xml-header file and contentfile
                 uniquepart = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for fielanmes
                 statusfilename = self.channeldict['filename'].replace('*',uniquepart) #filename is filename in channel where '*' is replaced by idta
@@ -1286,7 +1265,7 @@ class communicationscript(_comsession):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                self.checkcharset(row['charset'])
+                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 #open tofile, incl syslock if indicated
                 unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
                 if self.channeldict['filename']:
