@@ -111,6 +111,7 @@ class MyPartnerAdminForm(django.forms.ModelForm):
         return self.cleaned_data
 
 class PartnerAdmin(BotsAdmin):
+    save_as = True
     form = MyPartnerAdminForm
     inlines = (MailInline,)
     fields = ('active', 'isgroup', 'idpartner', 'name','mail','cc','group')

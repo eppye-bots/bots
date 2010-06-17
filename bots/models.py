@@ -196,7 +196,7 @@ class channel(botsmodel):
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
     def __unicode__(self):
-        return unicode(self.idchannel)
+        return self.idchannel
     class Meta:
         db_table = 'channel'
 class partner(botsmodel):
@@ -229,7 +229,7 @@ class chanpar(botsmodel):
         verbose_name = _(u'email address per channel')
         verbose_name_plural = _(u'email address per channel')
     def __unicode__(self):
-        return unicode(self.idpartner) + ' ' + unicode(self.idchannel) + ' ' + unicode(self.mail)
+        return str(self.idpartner) + ' ' + str(self.idchannel) + ' ' + str(self.mail)
 class translate(botsmodel):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)

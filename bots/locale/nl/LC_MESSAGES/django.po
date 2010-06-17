@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bots Open Source EDI Translator 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-26 14:31+0200\n"
+"POT-Creation-Date: 2010-06-17 16:48+0200\n"
 "PO-Revision-Date: 2010-05-26\n"
 "Last-Translator: henk-jan ebbers <eppye.bots@gmail.com>\n"
 "Language-Team: Dutch <LL@li.org>\n"
@@ -15,29 +15,29 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admin.py:32
+#: admin.py:33
 #, python-format
 msgid "%(name)s object with primary key %(key)r does not exist."
 msgstr ""
 
-#: admin.py:37
+#: admin.py:38
 #, python-format
 msgid "The %(name)s \"%(obj)s\" was deleted successfully."
 msgstr ""
 
-#: admin.py:47
+#: admin.py:48
 msgid "(de)activate"
 msgstr "(de)activeer"
 
-#: admin.py:52
+#: admin.py:53
 msgid "delete selected"
 msgstr "verwijder selectie"
 
-#: admin.py:77
+#: admin.py:78
 msgid "FTP specific data"
 msgstr "FTP specifieke gegevens"
 
-#: admin.py:80 admin.py:136
+#: admin.py:81 admin.py:136
 msgid "Advanced"
 msgstr "Geavanceerd"
 
@@ -57,7 +57,7 @@ msgstr ""
 "Deze combinatie van (fromeditype,frommessagetype,alt,frompartner,topartner) "
 "bestaat al."
 
-#: admin.py:167
+#: admin.py:166
 msgid "Advanced - multiple translations per editype/messagetype"
 msgstr "Geavanceerd - meerdere vertalingen per editype/berichttype"
 
@@ -69,96 +69,96 @@ msgstr "Fout in automatic maintenance."
 msgid "MaintenanceRetry: could not find transaction \"$txt\"."
 msgstr ""
 
-#: automaticmaintenance.py:131
+#: automaticmaintenance.py:133
 msgid "In generate report: could not find report?"
 msgstr ""
 
-#: automaticmaintenance.py:132
+#: automaticmaintenance.py:134
 #, python-format
 msgid "[Bots Error Report] %(time)s"
 msgstr "[Bots Rapportage] %(time)s"
 
-#: automaticmaintenance.py:133
+#: automaticmaintenance.py:135
 #, python-format
 msgid "Bots Report; type: %(type)s, time: %(time)s\n"
 msgstr "Bots rapportage; soort: %(type)s, tijdstip: %(time)s\n"
 
-#: automaticmaintenance.py:134
+#: automaticmaintenance.py:136
 #, python-format
 msgid "    %d files received/processed in run.\n"
 msgstr "    %d files ontvangen en verwerkt in deze run.\n"
 
-#: automaticmaintenance.py:136
+#: automaticmaintenance.py:138
 #, python-format
 msgid "    %d files without errors,\n"
 msgstr "    %d files zonder fouten,\n"
 
-#: automaticmaintenance.py:138
+#: automaticmaintenance.py:140
 #, python-format
 msgid "; %d file errors"
 msgstr "; %d file fouten"
 
-#: automaticmaintenance.py:139
+#: automaticmaintenance.py:141
 #, python-format
 msgid "    %d files with errors,\n"
 msgstr "    %d files met fouten,\n"
 
-#: automaticmaintenance.py:141
+#: automaticmaintenance.py:143
 #, python-format
 msgid "; %d files stuck"
 msgstr "; %d files vastgelopen"
 
-#: automaticmaintenance.py:142
+#: automaticmaintenance.py:144
 #, python-format
 msgid "    %d files got stuck,\n"
 msgstr "    %d files vastgelopen,\n"
 
-#: automaticmaintenance.py:144
+#: automaticmaintenance.py:146
 #, python-format
 msgid "; %d system errors"
 msgstr "; %d system fouten"
 
-#: automaticmaintenance.py:145
+#: automaticmaintenance.py:147
 #, python-format
 msgid "    %d system errors,\n"
 msgstr "    %d system fouten,\n"
 
-#: automaticmaintenance.py:147
+#: automaticmaintenance.py:149
 #, python-format
 msgid "; %d process errors"
 msgstr "; %d proces fouten"
 
-#: automaticmaintenance.py:148
+#: automaticmaintenance.py:150
 #, python-format
 msgid "    %d errors in processes.\n"
 msgstr "    %d fouten in processen.\n"
 
-#: automaticmaintenance.py:149
+#: automaticmaintenance.py:151
 #, python-format
 msgid "    %d files send in run.\n"
 msgstr "    %d files als output in deze run.\n"
 
-#: automaticmaintenance.py:237
+#: automaticmaintenance.py:266
 msgid ""
 "OK but child is DONE (idta: $idta). Changing setup while errors are pending?"
 msgstr ""
 
-#: automaticmaintenance.py:239
+#: automaticmaintenance.py:268
 msgid ""
 "OK but child is OK (idta: $idta). Changing setup while errors are pending?"
 msgstr ""
 
-#: automaticmaintenance.py:241
+#: automaticmaintenance.py:270
 msgid "OK but file is not processed further (idta: $idta)."
-msgstr ""
+msgstr "OK maar file is niet verder verwerkt (idta: $idta)."
 
-#: automaticmaintenance.py:244
+#: automaticmaintenance.py:273
 msgid ""
 "ERROR but has child(ren) (idta: $idta). Changing setup while errors are "
 "pending?"
 msgstr ""
 
-#: automaticmaintenance.py:249
+#: automaticmaintenance.py:278
 msgid "Severe error: found statust (idta: $idta)."
 msgstr ""
 
@@ -174,73 +174,81 @@ msgstr ""
 msgid "Could not find database file for SQLite"
 msgstr "Kan geen database voor SQLite vinden"
 
-#: botslib.py:21
+#: botslib.py:23
 msgid "platform"
 msgstr "besturingssysteem"
 
-#: botslib.py:22
+#: botslib.py:24
 msgid "machine"
 msgstr "computer"
 
-#: botslib.py:23
+#: botslib.py:25
 msgid "python version"
 msgstr "python versie"
 
-#: botslib.py:24
+#: botslib.py:26
 msgid "django version"
 msgstr "django versie"
 
-#: botslib.py:25
+#: botslib.py:27
 msgid "bots version"
 msgstr "bots versie"
 
-#: botslib.py:26
+#: botslib.py:28
 msgid "bots installation path"
 msgstr "bots installatie pad"
 
-#: botslib.py:27
+#: botslib.py:29
 msgid "config path"
 msgstr "pad voor configuratie files"
 
-#: botslib.py:28
+#: botslib.py:30
 msgid "botssys path"
 msgstr "pad voor botsssys"
 
-#: botslib.py:29
+#: botslib.py:31
 msgid "usersys path"
 msgstr "pad voor usersys"
 
-#: botslib.py:379
+#: botslib.py:381
 msgid "change not valid: expect status to be an integer. Programming error."
 msgstr ""
 
-#: botslib.py:544
+#: botslib.py:546
 msgid "Import file: \"$filename\", error: $txt"
 msgstr ""
 
-#: botslib.py:643 botslib.py:658
+#: botslib.py:645 botslib.py:660
 msgid "Script file \"$filename\": \"$txt\"."
 msgstr ""
 
-#: botslib.py:667
+#: botslib.py:669
 msgid "error running extern program \"$program\": $txt"
 msgstr ""
 
+#: botslib.py:725
+msgid ""
+"Charset \"$charset2\" for channel not matching with charset \"$charset1\" "
+"for edi-file."
+msgstr ""
+"Tekenset \"$charset2\" voor kanaal komt niet overeen met tekenset \"$charset1\" "
+"van het edi-bestand."
+
 #: cleanup.py:54 cleanup.py:68
 msgid "Cleanup could not remove file"
-msgstr ""
+msgstr "Cleanup kan een bestand niet verwijderen."
 
 #: cleanup.py:73
-msgid "Cleanup could not remove directory"
+msgid "Cleanup kan een directory."
 msgstr ""
 
 #: communication.py:65
 msgid "Channel \"$idchannel\" is unknown."
-msgstr ""
+msgstr "Kanaal \"$idchannel\" is onbekend."
 
 #: communication.py:301
 msgid "Received email-MDN with errors."
-msgstr ""
+msgstr "Ontvangen email-MDN bevat fouten."
 
 #: communication.py:411
 msgid ""
@@ -249,7 +257,7 @@ msgstr ""
 
 #: communication.py:433
 msgid "No valid attachment in received email"
-msgstr ""
+msgstr "Geen (valide) attachment in ontvangen email."
 
 #: communication.py:460
 msgid ""
@@ -261,31 +269,25 @@ msgstr ""
 msgid "No mail-address for partner \"$partner\" (channel \"$idchannel\")."
 msgstr ""
 
-#: communication.py:503 communication.py:505
-msgid ""
-"Charset \"$charset1\" for channel \"$channel\" not matching with charset "
-"\"$charset2\" for edi-file."
-msgstr ""
-
-#: communication.py:595
+#: communication.py:580
 msgid "SMTP server did not accept user/password combination."
 msgstr ""
 
-#: communication.py:598
+#: communication.py:583
 msgid "SMTP login failed: \"$txt\"."
 msgstr ""
 
-#: communication.py:759
+#: communication.py:744
 msgid "Can not do a systemlock on this platform"
 msgstr ""
 
-#: communication.py:1021
+#: communication.py:1006
 msgid ""
 "channel \"$channel\" needs unique filenames (no queue-file); use eg *.edi as "
 "value for \"filename\""
 msgstr ""
 
-#: communication.py:1109
+#: communication.py:1094
 msgid "No function \"$function\" in imported script \"$script\"."
 msgstr ""
 
@@ -1079,7 +1081,7 @@ msgstr ""
 msgid "idoc"
 msgstr ""
 
-#: models.py:40 models.py:62
+#: models.py:40 models.py:63
 msgid "database"
 msgstr ""
 
@@ -1144,248 +1146,258 @@ msgid "ftp"
 msgstr ""
 
 #: models.py:60
-msgid "mimefile"
+msgid "xmlrpc"
 msgstr ""
 
 #: models.py:61
+msgid "mimefile"
+msgstr ""
+
+#: models.py:62
 msgid "intercommit"
 msgstr ""
 
-#: models.py:63
+#: models.py:64
 msgid "communicationscript"
 msgstr ""
 
-#: models.py:66
+#: models.py:67
 msgid "ask-email-MDN"
 msgstr ""
 
-#: models.py:67
+#: models.py:68
 msgid "send-email-MDN"
 msgstr ""
 
-#: models.py:68
+#: models.py:69
 msgid "ask-x12-997"
 msgstr ""
 
-#: models.py:69
+#: models.py:70
 msgid "send-x12-997"
 msgstr ""
 
-#: models.py:72
+#: models.py:73
 msgid "all"
 msgstr ""
 
-#: models.py:73 models.py:116 models.py:259
+#: models.py:74 models.py:133 models.py:277
 msgid "route"
 msgstr ""
 
-#: models.py:74 models.py:117 models.py:204
+#: models.py:75 models.py:134 models.py:221
 msgid "channel"
 msgstr "kanaal"
 
-#: models.py:75
+#: models.py:76
 msgid "frompartner"
 msgstr "VanPartner"
 
-#: models.py:76
+#: models.py:77
 msgid "topartner"
 msgstr "NaarPartner"
 
-#: models.py:77 templates/bots/filer.html:23
+#: models.py:78 templates/bots/filer.html:23
 msgid "messagetype"
 msgstr "berichttype"
 
-#: models.py:126
+#: models.py:143
 msgid "confirm rule"
 msgstr "Regel voor bevestigen"
 
-#: models.py:128 models.py:137
+#: models.py:145 models.py:154
 msgid "type code"
 msgstr ""
 
-#: models.py:134
+#: models.py:151
 msgid "user code type"
 msgstr ""
 
-#: models.py:152
+#: models.py:169
 msgid "user code"
 msgstr ""
 
-#: models.py:156
+#: models.py:173
 msgid "in/out"
 msgstr ""
 
-#: models.py:162
+#: models.py:179
 msgid "password"
 msgstr "wachtwoord"
 
-#: models.py:163
+#: models.py:180
 msgid "Do not check if an incoming email addresses exist in bots."
 msgstr "Geen controle op inkomend email adres."
 
-#: models.py:165
+#: models.py:182
 msgid ""
 "For in-channels: remove the edi files after succesful reading. Note: in "
 "production you do want to remove the edi files, else these are read over and "
 "over again!"
 msgstr ""
 
-#: models.py:167
+#: models.py:184
 msgid ""
 "For \"type\" ftp and file; read or write this filename. Wildcards allowed, "
 "eg \"*.edi\". Note for out-channels: if no wildcard is used, all edi message "
 "are written to one file."
 msgstr ""
 
-#: models.py:168
+#: models.py:185
 msgid ""
 "When reading or writing edi files in this directory use this file to "
 "indicate a directory lock."
 msgstr ""
 
-#: models.py:169
+#: models.py:186
 msgid ""
 "Use system file locking for reading & writing edi files on windows, *nix."
 msgstr ""
 
-#: models.py:177
+#: models.py:194
 msgid "Archive path"
 msgstr "Pad voor archivering"
 
-#: models.py:177
+#: models.py:194
 msgid ""
 "Write incoming or outgoing edi files to an archive. Use absolute or relative "
 "path; relative path is relative to bots directory. Eg: \"botssys/archive/"
 "mychannel\"."
 msgstr ""
 
-#: models.py:186
+#: models.py:203
 msgid "partner identification"
 msgstr "partneridentificatie"
 
-#: models.py:203
+#: models.py:220
 msgid "partner"
 msgstr ""
 
-#: models.py:212 models.py:213
+#: models.py:229 models.py:230
 msgid "email address per channel"
 msgstr "emailadres per kanaal"
 
-#: models.py:219
+#: models.py:236
 msgid "Editype to translate from."
 msgstr ""
 
-#: models.py:220
+#: models.py:237
 msgid "Messagetype to translate from."
 msgstr ""
 
-#: models.py:221
+#: models.py:238
 msgid "Alternative translation"
 msgstr ""
 
-#: models.py:221
+#: models.py:238
 msgid "Do this translation only for this alternative translation."
 msgstr ""
 
-#: models.py:222
+#: models.py:239
 msgid "Do this translation only for this frompartner."
 msgstr ""
 
-#: models.py:223
+#: models.py:240
 msgid "Do this translation only for this topartner."
 msgstr ""
 
-#: models.py:224
+#: models.py:241
 msgid "User mapping script to use for translation."
 msgstr ""
 
-#: models.py:225
+#: models.py:242
 msgid "Editype to translate to."
 msgstr "Editype waar naar vertaald wordt."
 
-#: models.py:226
+#: models.py:243
 msgid "Messagetype to translate to."
 msgstr "Berichttype waar naar vertaald wordt."
 
-#: models.py:232
+#: models.py:249
 msgid "translation"
 msgstr "vertaling"
 
-#: models.py:237
+#: models.py:254
 msgid ""
 "identification of route; one route can consist of multiple parts having the "
 "same \"idroute\"."
 msgstr ""
 
-#: models.py:238
+#: models.py:255
 msgid ""
 "for routes consisting of multiple parts, \"seq\" indicates the order these "
 "parts are run."
 msgstr ""
 
-#: models.py:240
+#: models.py:257
 msgid "incoming channel"
 msgstr "inkomend kanaal"
 
-#: models.py:241
+#: models.py:258
 msgid "the editype of the incoming edi files."
 msgstr ""
 
-#: models.py:242
+#: models.py:259
 msgid ""
 "the messagetype of incoming edi files. For edifact: messagetype=edifact; for "
 "x12: messagetype=x12."
 msgstr ""
 
-#: models.py:243
+#: models.py:260
 msgid "outgoing channel"
 msgstr "uitgaand kanaal"
 
-#: models.py:244
+#: models.py:261
 msgid "Only edi files with this editype to this outgoing channel."
 msgstr ""
 
-#: models.py:245
+#: models.py:262
 msgid "Only edi files of this messagetype to this outgoing channel."
 msgstr ""
 
-#: models.py:246
+#: models.py:263
 msgid ""
 "Only use if there is more than one \"translation\" for the same editype and "
 "messagetype. Advanced use, seldom needed."
 msgstr ""
 
-#: models.py:247
+#: models.py:264
 msgid "The frompartner of the incoming edi files. Seldom needed."
 msgstr "Ken VanPartner toe aan het edi bestand. Zelden nodig."
 
-#: models.py:248
+#: models.py:265
 msgid "The topartner of the incoming edi files. Seldom needed."
 msgstr ""
 
-#: models.py:249
+#: models.py:266
 msgid "Only edi files from this partner/partnergroup for this outgoing channel"
 msgstr ""
 
-#: models.py:250
+#: models.py:267
 msgid "Only edi files to this partner/partnergroup to this channel"
 msgstr ""
 
-#: models.py:251
+#: models.py:268
 msgid "Only edi files with this testindicator to this outgoing channel."
 msgstr "Filter de berichten voor dit uitgaand kanaal op testindicatie."
 
-#: models.py:252
+#: models.py:269
 msgid "Do a translation in this route."
 msgstr "Vertaal in deze route."
 
-#: models.py:253
+#: models.py:270
 msgid ""
 "Do not use this route in a normal run. Advanced, related to scheduling "
 "specific routes or not."
 msgstr ""
 
-#: models.py:387
+#: models.py:274
+msgid ""
+"Set ready for communication, but defer actual communication (this is done in "
+"another route)"
+msgstr ""
+
+#: models.py:405
 msgid "counter"
 msgstr "teller"
 
@@ -1529,54 +1541,54 @@ msgstr ""
 msgid "error in root putloop \"$mpath\"."
 msgstr ""
 
-#: outmessage.py:36
+#: outmessage.py:41
 msgid "Unknown editype for outgoing message: $editype"
 msgstr ""
 
-#: outmessage.py:100 outmessage.py:385
+#: outmessage.py:105 outmessage.py:390
 msgid "No outgoing message"
 msgstr ""
 
-#: outmessage.py:190 outmessage.py:204 outmessage.py:220
+#: outmessage.py:195 outmessage.py:209 outmessage.py:225
 msgid "record \"$mpath\" field \"$field\" too big (max $max): \"$content\"."
 msgstr ""
 
-#: outmessage.py:201
+#: outmessage.py:206
 msgid "record \"$mpath\" field \"$field\" no valid date: \"$content\"."
 msgstr ""
 
-#: outmessage.py:206 outmessage.py:222
+#: outmessage.py:211 outmessage.py:227
 msgid "record \"$mpath\" field \"$field\" too small (min $min): \"$content\"."
 msgstr ""
 
-#: outmessage.py:217
+#: outmessage.py:222
 msgid "record \"$mpath\" field \"$field\" no valid time: \"$content\"."
 msgstr ""
 
-#: outmessage.py:232
+#: outmessage.py:237
 msgid ""
 "record \"$mpath\" field \"$field\" numerical format not valid: \"$content\"."
 msgstr ""
 
-#: outmessage.py:273
+#: outmessage.py:278
 msgid "record \"$mpath\" field \"$field\": content to large: \"$content\"."
 msgstr ""
 
-#: outmessage.py:285
+#: outmessage.py:290
 msgid "Chars in outmessage not in charset \"$char\": $content"
 msgstr ""
 
-#: outmessage.py:328
+#: outmessage.py:333
 msgid ""
 "Character \"$char\" is in use as separator in this x12 file. Field: \"$data"
 "\"."
 msgstr ""
 
-#: outmessage.py:648 outmessage.py:658
+#: outmessage.py:646 outmessage.py:656
 msgid "While templating \"$editype.$messagetype\": $txt"
 msgstr ""
 
-#: outmessage.py:659
+#: outmessage.py:657
 #, python-format
 msgid "End writing to file \"%s\"."
 msgstr ""
@@ -1595,75 +1607,75 @@ msgstr ""
 msgid "\"plugintype\" missing in: \"%s\". Nothing is written."
 msgstr ""
 
-#: pluglib.py:152
+#: pluglib.py:157
 msgid "        Existing entry in database is deleted."
 msgstr ""
 
-#: pluglib.py:160
+#: pluglib.py:165
 msgid "        Write to database is OK."
 msgstr ""
 
-#: pluglib.py:168
+#: pluglib.py:173
 msgid "Plugin is not a valid file."
 msgstr ""
 
-#: pluglib.py:179
+#: pluglib.py:184
 #, python-format
 msgid "Error in plugin. Nothing is written. Error: \"%s\""
 msgstr ""
 
-#: pluglib.py:181
+#: pluglib.py:186
 msgid ""
 "Plugin is OK.\n"
 "Start writing to database."
 msgstr ""
 
-#: pluglib.py:210
+#: pluglib.py:215
 #, python-format
 msgid "    Start writing file: \"%s\"."
 msgstr ""
 
-#: pluglib.py:213
+#: pluglib.py:218
 #, python-format
 msgid "        Create directory \"%s\"."
 msgstr ""
 
-#: pluglib.py:220
+#: pluglib.py:225
 #, python-format
 msgid "        Renamed existing file \"%(from)s\" to \"%(to)s\"."
 msgstr ""
 
-#: pluglib.py:227
+#: pluglib.py:232
 #, python-format
 msgid "        File written: \"%s\"."
 msgstr ""
 
-#: pluglib.py:231
+#: pluglib.py:236
 #, python-format
 msgid ""
 "Error writing files to system. Nothing is written to database. Error: \"%s\""
 msgstr ""
 
-#: pluglib.py:234
+#: pluglib.py:239
 msgid "Writing files to filesystem is OK."
 msgstr ""
 
-#: pluglib.py:326
+#: pluglib.py:331
 #, python-format
 msgid "    write file \"%s\"."
 msgstr ""
 
-#: router.py:128
+#: router.py:129
 #, python-format
 msgid "running route %(idroute)s %(seq)s"
 msgstr ""
 
-#: router.py:135
+#: router.py:136
 #, python-format
 msgid "there is no (active) route \"%s\"."
 msgstr ""
 
-#: router.py:159
+#: router.py:160
 msgid "Route \"$route\" is empty: no script, not enough parameters."
 msgstr ""
 
@@ -1726,119 +1738,144 @@ msgstr "splitsen>>"
 msgid "merge<<<"
 msgstr "samenvoegen<<<"
 
-#: views.py:299
+#: views.py:312
 msgid "No such file."
 msgstr "Kan bestand niet vinden."
 
-#: views.py:336
+#: views.py:349
 msgid "External file. Can not be displayed. Use \"next\"."
 msgstr "Extern bestand; kan niet getoond worden."
 
-#: views.py:338
+#: views.py:351
 msgid "External file. Can not be displayed. Use \"previous\"."
 msgstr "Extern bestand; kan niet getoond worden."
 
-#: views.py:341
+#: views.py:354
 msgid "File has error status and does not exist. Use \"previous\"."
 msgstr "Bestand heeft foutstatus en bestaat niet."
 
-#: views.py:344
+#: views.py:357
 msgid "File can not be displayed."
 msgstr "Bestand kan niet getoond worden."
 
-#: views.py:363
+#: views.py:376
 #, python-format
 msgid "Start reading plugin \"%s\"."
 msgstr "Start inlezen plugin \"%s\"."
 
-#: views.py:371
+#: views.py:384
 #, python-format
 msgid "Plugin \"%s\" read succesful."
 msgstr "Plugin \"%s\" ingelezen: OK."
 
-#: views.py:375
+#: views.py:388
 msgid "No plugin read."
 msgstr "Geen plugin ingelezen."
 
-#: views.py:382
+#: views.py:395
 #, python-format
 msgid "Start writing plugin \"%s\"."
 msgstr "Start het aanmaken van de plugin \"%s\"."
 
-#: views.py:389
+#: views.py:402
 #, python-format
 msgid "Plugin \"%s\" created succesful."
 msgstr "Plugin \"%s\" gemaakt."
 
-#: views.py:390
+#: views.py:403
 #, python-format
 msgid "Plugin %s created succesful."
 msgstr "Plugin %s gemaakt."
 
-#: views.py:406
+#: views.py:419
 msgid "All transactions are deleted."
 msgstr "Alle transactie zijn verwijderd."
 
-#: views.py:414
+#: views.py:444
 msgid "All configuration is deleted."
 msgstr "Alle configuratie is verwijderd."
 
-#: views.py:418
+#: views.py:448
 msgid "All user code lists are deleted."
 msgstr "Alle code lijsten zijn verwijderd."
 
-#: views.py:432
+#: views.py:462
 msgid "Bots can not find executable for bots-engine."
 msgstr "bots-engine kan niet gevonden worden op uw systeem."
 
-#: views.py:441
+#: views.py:471
 msgid "Bots-engine is started."
 msgstr "Bots-engine is gestart."
 
-#: views.py:445
+#: views.py:475
 msgid "Errors while trying to run bots-engine."
 msgstr "Starten van bots-engine niet gelukt."
 
-#: views.py:452
+#: views.py:482
 msgid "Unlocked database."
 msgstr "Database ontgrendeld."
 
-#: views.py:461
+#: views.py:491
 msgid ""
 "In bots.ini, section [settings], \"sendreportiferror\" is not set (to \"True"
 "\")."
 msgstr ""
 
-#: views.py:466
+#: views.py:496
 msgid "testsubject"
 msgstr ""
 
-#: views.py:466
+#: views.py:496
 msgid "test content of report"
 msgstr ""
 
-#: views.py:468
+#: views.py:498
 #, python-format
 msgid "Sending test report failed: \"%s\"."
 msgstr "Zenden van test rapportage mislukt: \"%s\"."
 
-#: views.py:470
+#: views.py:500
 msgid "Sending test report succeeded."
 msgstr "Zenden van test rapportage is gelukt."
 
-#: webserver.py:79
+#: webserver.py:92
 msgid "Bots web server started."
 msgstr "Bots webserver is gestart."
 
-#: webserver.py:80
+#: webserver.py:93
 #, python-format
 msgid "Python version: \"%s\"."
 msgstr "python versie: \"%s\"."
 
-#: webserver.py:81
+#: webserver.py:94
 #, python-format
 msgid "Django version: \"%s\"."
 msgstr "Django versie: \"%s\"."
+
+#: templates/404.html:4 templates/404.html.py:8
+msgid "Page not found"
+msgstr ""
+
+#: templates/404.html:10
+msgid "We're sorry, but the requested page could not be found."
+msgstr ""
+
+#: templates/500.html:4 templates/bots/menu.html:5
+#: templates/bots/menu.html.py:6
+msgid "Home"
+msgstr "Start"
+
+#: templates/500.html:4
+msgid "Server error"
+msgstr ""
+
+#: templates/500.html:6
+msgid "Server error (500)"
+msgstr ""
+
+#: templates/500.html:9
+msgid "Server Error (500)"
+msgstr ""
 
 #: templates/bots/about.html:8
 msgid "Bots Open Source EDI translator"
@@ -2122,17 +2159,6 @@ msgstr ""
 msgid "Rerecieve"
 msgstr "Herontvangen"
 
-#: templates/bots/menu.html:5 templates/bots/menu.html.py:6
-#: templates/registration/logged_out.html:4
-#: templates/registration/password_change_done.html:4
-#: templates/registration/password_change_form.html:4
-#: templates/registration/password_reset_complete.html:4
-#: templates/registration/password_reset_confirm.html:4
-#: templates/registration/password_reset_done.html:4
-#: templates/registration/password_reset_form.html:4
-msgid "Home"
-msgstr "Start"
-
 #: templates/bots/menu.html:7
 msgid "About Bots"
 msgstr "Over bots"
@@ -2142,14 +2168,10 @@ msgid "Help"
 msgstr ""
 
 #: templates/bots/menu.html:9
-#: templates/registration/password_change_done.html:3
-#: templates/registration/password_change_form.html:3
 msgid "Log out"
 msgstr "Log uit"
 
 #: templates/bots/menu.html:10
-#: templates/registration/password_change_done.html:3
-#: templates/registration/password_change_form.html:3
 msgid "Change password"
 msgstr "Wijzig wachtwoord"
 
@@ -2345,8 +2367,7 @@ msgstr ""
 msgid "Retry all previous errors"
 msgstr "Start run voor alle eerder opgetreden fouten"
 
-#: templates/bots/menu.html:82 templates/registration/login.html:26
-#: templates/registration/password_reset_complete.html:14
+#: templates/bots/menu.html:82
 msgid "Log in"
 msgstr ""
 
@@ -2429,170 +2450,3 @@ msgstr "Procesfouten"
 #: templates/bots/selectform.html:6
 msgid "Show selection"
 msgstr "Bekijk selectie"
-
-#: templates/registration/logged_out.html:8
-msgid "Thanks for spending some quality time with the Web site today."
-msgstr ""
-
-#: templates/registration/logged_out.html:10
-msgid "Log in again"
-msgstr ""
-
-#: templates/registration/login.html:19
-msgid "Username:"
-msgstr "Gebruiker"
-
-#: templates/registration/login.html:22
-msgid "Password:"
-msgstr "Wachtwoord"
-
-#: templates/registration/password_change_done.html:3
-#: templates/registration/password_change_form.html:3
-msgid "Documentation"
-msgstr ""
-
-#: templates/registration/password_change_done.html:4
-#: templates/registration/password_change_form.html:4
-#: templates/registration/password_change_form.html:6
-#: templates/registration/password_change_form.html:10
-msgid "Password change"
-msgstr ""
-
-#: templates/registration/password_change_done.html:6
-#: templates/registration/password_change_done.html:10
-msgid "Password change successful"
-msgstr ""
-
-#: templates/registration/password_change_done.html:12
-msgid "Your password was changed."
-msgstr ""
-
-#: templates/registration/password_change_form.html:12
-msgid ""
-"Please enter your old password, for security's sake, and then enter your new "
-"password twice so we can verify you typed it in correctly."
-msgstr ""
-
-#: templates/registration/password_change_form.html:17
-msgid "Old password:"
-msgstr ""
-
-#: templates/registration/password_change_form.html:19
-#: templates/registration/password_reset_confirm.html:18
-msgid "New password:"
-msgstr ""
-
-#: templates/registration/password_change_form.html:21
-#: templates/registration/password_reset_confirm.html:20
-msgid "Confirm password:"
-msgstr ""
-
-#: templates/registration/password_change_form.html:23
-#: templates/registration/password_reset_confirm.html:21
-msgid "Change my password"
-msgstr ""
-
-#: templates/registration/password_reset_complete.html:4
-#: templates/registration/password_reset_confirm.html:6
-#: templates/registration/password_reset_done.html:4
-#: templates/registration/password_reset_form.html:4
-#: templates/registration/password_reset_form.html:6
-#: templates/registration/password_reset_form.html:10
-msgid "Password reset"
-msgstr ""
-
-#: templates/registration/password_reset_complete.html:6
-#: templates/registration/password_reset_complete.html:10
-msgid "Password reset complete"
-msgstr ""
-
-#: templates/registration/password_reset_complete.html:12
-msgid "Your password has been set.  You may go ahead and log in now."
-msgstr ""
-
-#: templates/registration/password_reset_confirm.html:4
-msgid "Password reset confirmation"
-msgstr ""
-
-#: templates/registration/password_reset_confirm.html:12
-msgid "Enter new password"
-msgstr ""
-
-#: templates/registration/password_reset_confirm.html:14
-msgid ""
-"Please enter your new password twice so we can verify you typed it in "
-"correctly."
-msgstr ""
-
-#: templates/registration/password_reset_confirm.html:26
-msgid "Password reset unsuccessful"
-msgstr ""
-
-#: templates/registration/password_reset_confirm.html:28
-msgid ""
-"The password reset link was invalid, possibly because it has already been "
-"used.  Please request a new password reset."
-msgstr ""
-
-#: templates/registration/password_reset_done.html:6
-#: templates/registration/password_reset_done.html:10
-msgid "Password reset successful"
-msgstr ""
-
-#: templates/registration/password_reset_done.html:12
-msgid ""
-"We've e-mailed you instructions for setting your password to the e-mail "
-"address you submitted. You should be receiving it shortly."
-msgstr ""
-
-#: templates/registration/password_reset_email.html:2
-msgid "You're receiving this e-mail because you requested a password reset"
-msgstr ""
-
-#: templates/registration/password_reset_email.html:3
-#, python-format
-msgid "for your user account at %(site_name)s"
-msgstr ""
-
-#: templates/registration/password_reset_email.html:5
-msgid "Please go to the following page and choose a new password:"
-msgstr ""
-
-#: templates/registration/password_reset_email.html:9
-msgid "Your username, in case you've forgotten:"
-msgstr ""
-
-#: templates/registration/password_reset_email.html:11
-msgid "Thanks for using our site!"
-msgstr ""
-
-#: templates/registration/password_reset_email.html:13
-#, python-format
-msgid "The %(site_name)s team"
-msgstr ""
-
-#: templates/registration/password_reset_form.html:12
-msgid ""
-"Forgotten your password? Enter your e-mail address below, and we'll e-mail "
-"instructions for setting a new one."
-msgstr ""
-
-#: templates/registration/password_reset_form.html:16
-msgid "E-mail address:"
-msgstr ""
-
-#: templates/registration/password_reset_form.html:16
-msgid "Reset my password"
-msgstr ""
-
-#~ msgid "Reports"
-#~ msgstr "Rapportages"
-
-#~ msgid "Run engine"
-#~ msgstr "Run"
-
-#~ msgid "Run only retry"
-#~ msgstr "Run opnieuw"
-
-#~ msgid "Rereceive"
-#~ msgstr "Ontvangen"
