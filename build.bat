@@ -17,7 +17,8 @@ REM ~ RMDIR /s /q "C:\Documents and Settings\hje\My Documents\botsup2\build"
 REM ~ RMDIR /s /q "C:\Documents and Settings\hje\My Documents\botsup2\bots.egg-info"
 REM ~ DEL /Q "C:\Documents and Settings\hje\My Documents\botsup2\MANIFEST"
 
-c:\python26\python setup.py --quiet bdist_wininst  --target-version=2.6 --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=auto --bitmap=botslogo.bmp --title="Bots open source edi translator"
+REM ~ c:\python26\python setup.py --quiet bdist_wininst  --target-version=2.6 --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=auto --bitmap=botslogo.bmp --title="Bots open source edi translator"
+c:\python26\python setup.py --quiet bdist_wininst   --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=auto --bitmap=botslogo.bmp --title="Bots open source edi translator"
 REM ~ c:\python26\python setup.py --quiet bdist_wininst  --install-script=postinstallation.py 
 
 RMDIR /s /q "C:\Documents and Settings\hje\My Documents\botsup2\build"
@@ -32,7 +33,7 @@ COPY /Y "C:\Documents and Settings\hje\My Documents\botsup2\bots\install\bots.in
 COPY /Y "C:\Documents and Settings\hje\My Documents\botsup2\bots\install\botsdb"       "C:\Documents and Settings\hje\My Documents\botsup2\bots\botssys\sqlitedb"
 
 ECHO build source distr
-c:\python26\python setup.py --quiet sdist  --formats=gztar
+c:\python26\python setup.py --quiet sdist
 RMDIR /s /q "C:\Documents and Settings\hje\My Documents\botsup2\build"
 REM keep egg-info (tg-admin usess it)!
 DEL /Q "C:\Documents and Settings\hje\My Documents\botsup2\MANIFEST"
