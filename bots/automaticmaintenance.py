@@ -3,7 +3,7 @@ import botslib
 import botsglobal
 from botsconfig import *
 from django.utils.translation import ugettext as _
-tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext'
+tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script'
 
 
 def evaluate(type,stuff2evaluate):
@@ -22,7 +22,7 @@ def evaluaterun(type,stuff2evaluate):
         Write a filereport for each file,
         and writes a report for the run.
     '''
-    resultlast={OPEN:0,ERROR:0,OK:0,DONE:0}
+    resultlast={OPEN:0,ERROR:0,OK:0,DONE:0}     #gather results of all filereports for runreport
     #look at infiles from this run; trace them to determine their tracestatus.
     for tadict in botslib.query('''SELECT ''' + tavars + '''
                                 FROM  ta
@@ -60,6 +60,8 @@ def evaluateretryrun(type,stuff2evaluate):
             mytrace.errortext = ''
         #~ mytrace.ta.update(tracestatus=mytrace.statusttree)
         insert_filereport(mytrace)
+        del mytrace.ta
+        del mytrace
     if not didretry:
         return 0    #no error
     return finish_evaluation(stuff2evaluate,resultlast,type)
@@ -164,32 +166,59 @@ class Trace(object):
         realdict = dict([(key,tadict[key]) for key in tadict.keys()])
         self.ta=botslib.OldTransaction(**realdict)
         self.rootidta = stuff2evaluate
-        self._build(self.ta)
+        self._buildevaluationstructure(self.ta)
+        #~ self.display(self.ta)
         self._evaluatestatus()
-        self._getfilereport()
+        self._gatherfilereportdata()
 
-    def _build(self,tacurrent):
+    def display(self,currentta,level=0):
+        print level*'    ',currentta.idta,currentta.statust,currentta.talijst
+        for ta in currentta.talijst:
+            self.display(ta,level+1)
+        
+    def _buildevaluationstructure(self,tacurrent):
         ''' recursive,for each db-ta:
             -   fill global talist with the children (and children of children, etc)
         '''
-        if tacurrent.child:
+        #gather next steps/ta's for tacurrent; 
+        if tacurrent.child: #find successor by using child relation ship
             for row in botslib.query('''SELECT ''' + tavars + '''
                                          FROM  ta
                                          WHERE idta=%(child)s''',
                                         {'child':tacurrent.child}):
                 realdict = dict([(key,row[key]) for key in row.keys()])
                 tacurrent.talijst = [botslib.OldTransaction(**realdict)]
-                break   #there is only one child
         else:   #find successor by using parent-relationship; mostly this relation except for merge operations
+            talijst = []
             for row in botslib.query('''SELECT ''' + tavars + '''
                                         FROM  ta
                                         WHERE idta > %(currentidta)s
                                         AND parent=%(currentidta)s ''',      #adding the idta > %(parent)s to selection speeds up a lot.
                                         {'currentidta':tacurrent.idta}):
                 realdict = dict([(key,row[key]) for key in row.keys()])
-                tacurrent.talijst.append(botslib.OldTransaction(**realdict))
+                talijst.append(botslib.OldTransaction(**realdict))
+            #filter: 
+            #one ta might have multiple children; 2 possible reasons for that:
+            #1. split up 
+            #2. error is processing the file; and retried
+            #Here case 2 (error/retry) is filtered; it is not interesting to evaluate the older errors!
+            #So: if the same filename and different script: use newest idta
+            #shortcut: when an error occurs in a split all is turned back.
+            #so: split up is OK as a whole or because of retries.
+            #so: if split, and different scripts: split is becaue of retires: use newest idta.
+            #~ print tacurrent.talijst
+            if len(talijst) > 1 and talijst[0].script != talijst[1].script:
+                #find higest idta
+                highest_ta = talijst[0]
+                for ta in talijst[1:]:
+                    if ta.idta > highest_ta.idta:
+                        highest_ta = ta
+                tacurrent.talijst = [highest_ta]
+            else:
+                tacurrent.talijst = talijst
+        #recursive build:
         for child in tacurrent.talijst:
-            self._build(child)
+            self._buildevaluationstructure(child)
 
     def _evaluatestatus(self):
         self.done = False
@@ -215,17 +244,17 @@ class Trace(object):
             -   one db-ta can have more children; each of these children has to evaluated
             -   not possible is:       DONE->   ERROR (because there should always be statust OK)
         '''
-        statustcount = [0,0,0,0]  #count of statust
+        statustcount = [0,0,0,0]  #count of statust: number of OPEN, ERROR, OK, DONE
         for child in tacurrent.talijst:
             if child.idta > self.rootidta:
                 self.done = True
             statustcount[self._evaluatetreestatus(child)]+=1
-        else:   #evaluate & return statusttree of db-ta & children;
+        else:   #evaluate & return statust of current ta & children;
             if tacurrent.statust==DONE:
-                if statustcount[DONE]:
-                    return DONE #all is OK
-                elif statustcount[OK]:
+                if statustcount[OK]:
                     return OK   #at least one of the child-trees is not DONE
+                elif statustcount[DONE]:
+                    return DONE #all is OK
                 elif statustcount[ERROR]:
                     raise botslib.TraceError(-(u'DONE but no child is DONE or OK (idta: $idta).'),idta=tacurrent.idta)
                 else:   #if no ERROR and has no children: end of trace
@@ -248,8 +277,8 @@ class Trace(object):
             else:   #tacurrent.statust==OPEN
                 raise botslib.TraceError(_(u'Severe error: found statust (idta: $idta).'),idta=tacurrent.idta)
 
-    def _getfilereport(self):
-        ''' Walk the ta-tree again in order to retrieve information belonging to incoming file.
+    def _gatherfilereportdata(self):
+        ''' Walk the ta-tree again in order to retrieve information/data belonging to incoming file; statust (OK, DONE, ERROR etc) is NOT done here.
             If information is different in different ta's: place '*'
             Start 'root'-ta; a file coming in; status=EXTERNIN. Retrieve as much information from ta's as possible for the filereport.
         '''

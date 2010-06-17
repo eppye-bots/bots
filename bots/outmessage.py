@@ -1,15 +1,19 @@
 import time
 try:
     import cElementTree as ET
+    #~ print 'imported cElementTree'
 except ImportError:
     try:
         import elementtree.ElementTree as ET
+        #~ print 'imported elementtree.ElementTree'
     except ImportError:
         try:
             from xml.etree import cElementTree as ET
+            #~ print 'imported xml.etree.cElementTree'
         except ImportError:
             from xml.etree import ElementTree as ET
-print ET.VERSION
+            #~ print 'imported xml.etree.ElementTree'
+#~ print ET.VERSION
 try:
     import elementtree.ElementInclude as ETI
 except ImportError:
@@ -417,7 +421,7 @@ class xml(Outmessage):
         #syntax parameter controls if stand-alone is used within prolog.
         #in ET 1.3.0: if standalone is to be used: should surpress ET-generated prolog - explicit parameter
         #in ET 1.2.6: always generates prolog if encoding != utf-8/ascii. SO: can not use stadnalone for encoding !=utf-8,ascii
-        if ET.VERSION > '1.2.6' or self.ta_info['charset'] in ['us-ascii','utf-8']:
+        if ET.VERSION not in ['1.2.6','1.0.6'] or self.ta_info['charset'] in ['us-ascii','utf-8']:
             if self.ta_info['standalone']:
                 standalonestring = 'standalone="%s" '%(self.ta_info['standalone'])
             else:

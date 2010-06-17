@@ -246,10 +246,9 @@ class _comsession(object):
             -   save 'attachments' as files
             -   generate MDN if asked and OK from bots-configuration
         '''
-        use_multipart=['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822']
-        use_major=['text','application']
-        nouse_contenttype=['text/html','text/enriched','text/rtf','text/richtext','application/postscript']
-        nrmimesaved=[0]
+        whitelist_multipart=['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822']
+        whitelist_major=['text','application']
+        blacklist_contenttype=['text/html','text/enriched','text/rtf','text/richtext','application/postscript']
         def savemime(msg):
             ''' save contents of email as seperate files.
                 is a nested function.
@@ -258,35 +257,35 @@ class _comsession(object):
                 -   whitelist of body-contentmajor
                 -   blacklist of body-contentytpe
             '''
-            nrmimesaved[0]=0
-            contenttype=msg.get_content_type()
+            nrmimesaved = 0
             if msg.is_multipart():
-                if contenttype in use_multipart:
+                if contenttype in whitelist_multipart:
                     for part in msg.get_payload():
-                        savemime(part)
+                        nrmimesaved += savemime(part)
             else:    #is not a multipart
-                if msg.get_content_maintype() not in use_major or contenttype in nouse_contenttype:
-                    return
+                if msg.get_content_maintype() not in whitelist_major or contenttype in blacklist_contenttype:
+                    return 0
                 content = msg.get_payload(decode=True)
                 if not content or content.isspace():
-                    return
+                    return 0
                 charset=msg.get_content_charset('')
                 if not charset:
                     charset = self.channeldict['charset']
                 if self.userscript and hasattr(self.userscript,'accept_incoming_attachment'):
                     accept_attachment = botslib.runscript(self.userscript,self.scriptname,'accept_incoming_attachment',channeldict=self.channeldict,ta=ta_mime,charset=charset,content=content,contenttype=contenttype)
                     if accept_attachment == False:
-                        return
+                        return 0
                 ta_file = ta_mime.copyta(status=tostatus)
                 outfilename = str(ta_file.idta)
                 outfile = botslib.opendata(outfilename, 'wb')
                 outfile.write(content)
                 outfile.close()
-                nrmimesaved[0]+=1
+                nrmimesaved+=1
                 ta_file.update(statust=OK,
                                 contenttype=contenttype,
                                 charset=charset,
                                 filename=outfilename)
+            return nrmimesaved
         #*****************end of nested function savemime***************************
         @botslib.log_session
         def mdnreceive():
@@ -429,9 +428,9 @@ class _comsession(object):
                             confirmtype = 'send-email-MDN'
                             confirmed = True
                             confirmasked = True
-                    savemime(msg)
-                    if not nrmimesaved[0]:
-                        raise botslib.CommunicationInError (_(u'No valid attachment in received email'))
+                nrmimesaved = savemime(msg)
+                if not nrmimesaved:
+                    raise botslib.CommunicationInError (_(u'No valid attachment in received email'))
             except:
                 txt=botslib.txtexc()
                 ta_mime.failure()
