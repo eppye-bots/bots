@@ -132,6 +132,7 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'178E+4',tfield2,testdummy)   #too big with exp
         tfield4 = ['TEST1', 'M', 80,   'N', True,   3,      0,'N']
         #~ print self.edi._formatfield('12345678901234560',tfield4,testdummy)  #goes wrong!! one number less, and OK?
+        print self.edi._formatfield('12345678901234560',tfield4,testdummy)
         self.assertEqual(self.edi._formatfield('12345678901234560',tfield4,testdummy), '12345678901234560.000','lot of digits')
 
     def test_out_formatfield_var_I(self):
@@ -746,7 +747,7 @@ class TestFormatFieldInmessage(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    botsinit.generalinit('/home/hje/botsup/bots/config')
+    botsinit.generalinit('config')
     #~ botslib.initbotscharsets()
     botsinit.initenginelogging()
     unittest.main()

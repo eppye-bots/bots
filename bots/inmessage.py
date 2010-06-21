@@ -916,10 +916,8 @@ class xml(var):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
         filename=botslib.abspathdata(self.ta_info['filename'])
         parser = ET.XMLParser()
-        version = str(sys.version_info[0]) + str(sys.version_info[1])
-        if version != '24':
-            for key,value in self.ta_info['extra_character_entity'].items():
-                parser.entity[key] = value
+        for key,value in self.ta_info['extra_character_entity'].items():
+            parser.entity[key] = value
         e =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite simular to bots-node trees but some conversions is needed
         e.parse(filename, parser)
         return e

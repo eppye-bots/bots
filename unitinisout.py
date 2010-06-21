@@ -4,7 +4,10 @@ import shutil
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage
 import filecmp 
-import simplejson
+try:
+    import json as simplejson
+except ImportError:
+    import simplejson
 import bots.botslib as botslib
 import bots.botsinit as botsinit
 import utilsunit
@@ -139,7 +142,7 @@ class Testinisoutcsv(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    botsinit.generalinit('/home/hje/botsup/bots/config')
+    botsinit.generalinit('config')
     #~ botslib.initbotscharsets()
     botsinit.initenginelogging()
     shutil.rmtree('bots/botssys/infile/unitinisout/output',ignore_errors=True)    #remove whole output directory

@@ -51,18 +51,18 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #is not there. gives no error...
 
-    #~ def testcodeconversion(self):
-        #~ self.assertEqual('TESTOUT',transform.codeconversion('aperakrff2qualifer','TESTIN'),'basis')
-        #~ self.assertRaises(botslib.CodeConversionError,transform.codeconversion,'aperakrff2qualifer','TESTINNOT') 
-        #~ self.assertEqual('TESTIN',transform.rcodeconversion('aperakrff2qualifer','TESTOUT'),'basis')
-        #~ self.assertRaises(botslib.CodeConversionError,transform.rcodeconversion,'aperakrff2qualifer','TESTINNOT') 
+    def testcodeconversion(self):
+        self.assertEqual('TESTOUT',transform.codeconversion('aperakrff2qualifer','TESTIN'),'basis')
+        self.assertRaises(botslib.CodeConversionError,transform.codeconversion,'aperakrff2qualifer','TESTINNOT') 
+        self.assertEqual('TESTIN',transform.rcodeconversion('aperakrff2qualifer','TESTOUT'),'basis')
+        self.assertRaises(botslib.CodeConversionError,transform.rcodeconversion,'aperakrff2qualifer','TESTINNOT') 
         
-        #~ #need article in ccodelist: 
-        #~ self.assertEqual('TESTOUT',transform.codetconversion('artikel','TESTIN'),'basis')
-        #~ self.assertRaises(botslib.CodeConversionError,transform.codetconversion,'artikel','TESTINNOT') 
-        #~ self.assertEqual('TESTIN',transform.rcodetconversion('artikel','TESTOUT'),'basis')
-        #~ self.assertRaises(botslib.CodeConversionError,transform.rcodetconversion,'artikel','TESTINNOT') 
-        #~ self.assertEqual('TESTATTR1',transform.codetconversion('artikel','TESTIN','attr1'),'basis')
+        #need article in ccodelist: 
+        self.assertEqual('TESTOUT',transform.codetconversion('artikel','TESTIN'),'basis')
+        self.assertRaises(botslib.CodeConversionError,transform.codetconversion,'artikel','TESTINNOT') 
+        self.assertEqual('TESTIN',transform.rcodetconversion('artikel','TESTOUT'),'basis')
+        self.assertRaises(botslib.CodeConversionError,transform.rcodetconversion,'artikel','TESTINNOT') 
+        self.assertEqual('TESTATTR1',transform.codetconversion('artikel','TESTIN','attr1'),'basis')
 
     def testunique(self):
         newdomain = 'test' + transform.unique('test')
@@ -114,8 +114,7 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(False,transform.checkean('123456789012345677'),'UPC')
 
 if __name__ == '__main__':
-    botsinit.generalinit('/home/hje/botsup/bots/config')
-    #~ botslib.initbotscharsets()
+    botsinit.generalinit('config')
     botsinit.initenginelogging()
     botsinit.connect() 
     try:

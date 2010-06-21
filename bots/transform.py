@@ -283,7 +283,7 @@ def codetconversion(ccodeid,leftcode,field='rightcode'):
                                  'leftcode':leftcode,
                                 }):
         return row[field]
-    raise botslib.CodeConversionError(_(u'Value "$value" not in codetconversions, user table "$table".'),value=rightcode,tabel=ccodeid)
+    raise botslib.CodeConversionError(_(u'Value "$value" not in codetconversions, user table "$table".'),value=leftcode,tabel=ccodeid)
 
 def safercodetconversion(ccodeid,rightcode,field='leftcode'):
     ''' as codetconversion but reverses the dictionary first'''

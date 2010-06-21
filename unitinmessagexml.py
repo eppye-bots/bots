@@ -137,18 +137,20 @@ class Testinisoutxml(unittest.TestCase):
     def testxml05(self):
         ''' test xml;  iso-8859-1'''
         filenamein='botssys/infile/unitinmessagexml/xml/inisout03.xml'
+        filenamecmp='botssys/infile/unitinmessagexml/xml/inisoutcompare05.xml'
         filenameout='botssys/infile/unitinmessagexml/output/inisout05.xml'
         utilsunit.readwrite(editype='xml',messagetype='testxml',filenamein=filenamein,filenameout=filenameout,charset='ISO-8859-1')
-        self.failUnless(filecmp.cmp('bots/' + filenameout,'bots/' + filenamein))
+        self.failUnless(filecmp.cmp('bots/' + filenameout,'bots/' + filenamecmp))
         
     def testxml06(self):
         ''' test xmlnocheck; iso-8859-1'''
         filenamein='botssys/infile/unitinmessagexml/xml/inisout03.xml'
         filenametmp='botssys/infile/unitinmessagexml/output/inisout05tmp.xml'
+        filenamecmp='botssys/infile/unitinmessagexml/xml/inisoutcompare05.xml'
         filenameout='botssys/infile/unitinmessagexml/output/inisout05a.xml'
         utilsunit.readwrite(editype='xmlnocheck',messagetype='xmlnocheck',filenamein=filenamein,filenameout=filenametmp,charset='ISO-8859-1')
         utilsunit.readwrite(editype='xml',messagetype='testxml',filenamein=filenametmp,filenameout=filenameout,charset='ISO-8859-1')
-        self.failUnless(filecmp.cmp('bots/' + filenameout,'bots/' + filenamein))
+        self.failUnless(filecmp.cmp('bots/' + filenameout,'bots/' + filenamecmp))
         
     def testxml09(self):
         ''' BOM;; BOM is not written....'''
@@ -264,7 +266,7 @@ class Testinisoutxml(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    botsinit.generalinit('/home/hje/botsup/bots/config')
+    botsinit.generalinit('config')
     #~ botslib.initbotscharsets()
     botsinit.initenginelogging()
     shutil.rmtree('bots/botssys/infile/unitinmessagexml/output',ignore_errors=True)    #remove whole output directory

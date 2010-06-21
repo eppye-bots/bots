@@ -82,7 +82,6 @@ class TestInmessage(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    botsinit.generalinit('/home/hje/botsup/bots/config')
-    #~ botslib.initbotscharsets()
+    botsinit.generalinit('config')
     botsinit.initenginelogging()
     unittest.main()

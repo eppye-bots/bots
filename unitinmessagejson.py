@@ -4,7 +4,10 @@ import shutil
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage
 import filecmp 
-import simplejson
+try:
+    import json as simplejson
+except ImportError:
+    import simplejson
 import bots.botslib as botslib
 import bots.botsinit as botsinit
 import utilsunit
@@ -237,175 +240,11 @@ class InmessageJson(unittest.TestCase):
         inn2 = inmessage.edifromfile(filename=filein,editype='json',messagetype='jsoninvoic')
         self.failUnless(utilsunit.comparenode(inn1.root,inn2.root))
 
-#************************************************************************
-#************************************************************************
-#************************************************************************
-#************************************************************************
-#************************************************************************
-    #~ def testxml01(self):
-        #~ ''' check  01.xml the same after rad&write/check '''
-        #~ filein = 'botssys/infile/unitinmessagejson/org/01.xml'
-        #~ fileout = 'botssys/infile/unitinmessagejson/output/01.xml'
-        #~ utilsunit.readwrite(editype='xml',messagetype='articles',filenamein=filein,filenameout=fileout)
-        #~ self.failUnless(filecmp.cmp(filein,fileout))
-        
-    #~ def testxmlnocheck01(self):
-        #~ ''' check  01.xml the same after rad&write/nocheck '''
-        #~ filein = 'botssys/infile/unitinmessagejson/org/01.xml'
-        #~ fileout = 'botssys/infile/unitinmessagejson/output/02.xml'
-        #~ utilsunit.readwrite(editype='xmlnocheck',messagetype='articles',filenamein=filein,filenameout=fileout)
-        #~ self.failUnless(filecmp.cmp(filein,fileout))
-        
-    #~ def testjson2xml(self):          
-        #~ ''' check json->xml same output'''
-        #~ filein = 'botssys/infile/unitinmessagejson/org/01.jsn'
-        #~ fileout = 'botssys/infile/unitinmessagejson/output/02.xml'
-        #~ filecomp = 'botssys/infile/unitinmessagejson/org/01.xml'
-        #~ inn = inmessage.edifromfile(filename=filein,editype='json',messagetype='articles')
-        #~ out = outmessage.outmessage_init(filename=fileout,editype='xml',messagetype='articles',divtext='',topartner='')    #make outmessage object
-        #~ out.root = inn.root
-        #~ out.writeall()
-        #~ self.failUnless(filecmp.cmp(filecomp,fileout))
-
-    #~ def testjsonnocheck2xmlnocheck11(self):
-        #~ ''' check json->xml same output'''
-        #~ filein = 'botssys/infile/unitinmessagejson/org/11.jsn'
-        #~ fileout = 'botssys/infile/unitinmessagejson/output/12.xml'
-        #~ filecomp = 'botssys/infile/unitinmessagejson/org/11.xml'
-        #~ inn = inmessage.edifromfile(filename=filein,editype='jsonnocheck',messagetype='articles')
-        #~ out = outmessage.outmessage_init(filename=fileout,editype='xmlnocheck',messagetype='articles',divtext='',topartner='')    #make outmessage object
-        #~ out.root = inn.root
-        #~ out.writeall()
-        #~ self.failUnless(filecmp.cmp(filecomp,fileout))
-
-    #~ def testxml2json(self):
-        #~ ''' check xml -> json same output'''
-        #~ filein = 'botssys/infile/unitinmessagejson/org/01.xml'
-        #~ fileout = 'botssys/infile/unitinmessagejson/output/02.jsn'
-        #~ fileout2 = 'botssys/infile/unitinmessagejson/output/03.xml'
-        #~ inn = inmessage.edifromfile(filename=filein,editype='xml',messagetype='articles')
-        #~ out = outmessage.outmessage_init(filename=fileout,editype='json',messagetype='articles',divtext='',topartner='')    #make outmessage object
-        #~ out.root = inn.root
-        #~ out.writeall()
-        #~ inn = inmessage.edifromfile(filename=fileout,editype='json',messagetype='articles')
-        #~ out = outmessage.outmessage_init(filename=fileout2,editype='xml',messagetype='articles',divtext='',topartner='')    #make outmessage object
-        #~ out.root = inn.root
-        #~ out.writeall()
-        #~ self.failUnless(filecmp.cmp(filein,fileout2))
-
-    #~ def testxmlnocheck2jsonnocheck(self):
-        #~ ''' check xml -> json same output'''
-        #~ filein = 'botssys/infile/unitinmessagejson/org/01.xml'
-        #~ fileout = 'botssys/infile/unitinmessagejson/output/02.jsn'
-        #~ fileout2 = 'botssys/infile/unitinmessagejson/output/03.xml'
-        #~ inn = inmessage.edifromfile(filename=filein,editype='xmlnocheck',messagetype='articles')
-        #~ out = outmessage.outmessage_init(filename=fileout,editype='jsonnocheck',messagetype='articles',divtext='',topartner='')    #make outmessage object
-        #~ out.root = inn.root
-        #~ out.writeall()
-        #~ inn = inmessage.edifromfile(filename=fileout,editype='jsonnocheck',messagetype='articles')
-        #~ out = outmessage.outmessage_init(filename=fileout2,editype='xmlnocheck',messagetype='articles',divtext='',topartner='')    #make outmessage object
-        #~ out.root = inn.root
-        #~ out.writeall()
-        #~ self.failUnless(filecmp.cmp(filein,fileout2))
-        
-    #~ def testjsonnocheck2xmlnocheck(self):
-        #~ ''' check json->xml same output'''
-        #~ filein = 'botssys/infile/unitinmessagejson/org/01.jsn'
-        #~ fileout = 'botssys/infile/unitinmessagejson/output/02.xml'
-        #~ filecomp = 'botssys/infile/unitinmessagejson/org/01.xml'
-        #~ inn = inmessage.edifromfile(filename=filein,editype='jsonnocheck',messagetype='articles')
-        #~ out = outmessage.outmessage_init(filename=fileout,editype='xmlnocheck',messagetype='articles',divtext='',topartner='')    #make outmessage object
-        #~ out.root = inn.root
-        #~ out.writeall()
-        #~ self.failUnless(filecmp.cmp(filecomp,fileout))
-
 
 
 if __name__ == '__main__':
-    botsinit.generalinit('/home/hje/botsup/bots/config')
-    #~ botslib.initbotscharsets()
+    botsinit.generalinit('config')
     botsinit.initenginelogging()
     shutil.rmtree('bots/botssys/infile/unitinmessagejson/output/',ignore_errors=True)    #remove whole output directory
     os.mkdir('bots/botssys/infile/unitinmessagejson/output')
     unittest.main()
-
-'''
-JSON-object: either object or array
-    
-Object/dict:
-    'root' has ONE key/value pair
-Array/list:
-    
-Bots2JSON:
--   recordid (BOTSID) is always extracted from record and used 1 level up.
--   So: BOTSID from botsroot is always extracted separate.
--   objects always in array. Is root a exception?    
-JSON2Bots:
--   recordid (BOTSID) is always extracted from record and used 1 level up.
--   So: BOTSID from botsroot is always extracted separate.
--   objects always in array. Is root a exception?    
-#############################
-#####1 list of eg article####
-Bots:
-    {'BOTSID': 'articles'}
-        {'BOTSID': 'article', 'ccodeid': 'artikel', 'leftcode': 'leftcode2','rightcode': 'rightcode'}
-        {'BOTSID': 'article', 'ccodeid': 'artikel', 'leftcode': 'leftcode2','rightcode': 'rightcode'}
-JSON var1 - OK, use like it is.
-    {'articles': 
-        [{'article': 
-            [
-            {'ccodeid': 'artikel', 'leftcode': 'leftcode', 'rightcode': 'rightcode'}, 
-            {'ccodeid': 'artikel', 'leftcode': 'leftcode2', 'rightcode': 'rightcode'},
-            ]
-        }]
-    }
-JSON var2
-read: create dummy root with root-BOTSID default or from syntax
-write: syntax: skiproot=1
-    {'article': 
-        [
-        {'ccodeid': 'artikel', 'leftcode': 'leftcode', 'rightcode': 'rightcode'}, 
-        {'ccodeid': 'artikel', 'leftcode': 'leftcode2', 'rightcode': 'rightcode'},
-        ]
-    }
-JSON var3 - Not advised structure... 
-read create dummy root. Create root BOTSID (default, from syntax) and level 1 ROOT (default & from syntax)
-write: syntax: skiproot=2
-
-    [
-    {'ccodeid': 'artikel', 'leftcode': 'leftcode', 'rightcode': 'rightcode'}, 
-    {'ccodeid': 'artikel', 'leftcode': 'leftcode2', 'rightcode': 'rightcode'},
-    ]
-#############################
-#####2 messagee####
-Bots:
-    {'BOTSID': 'message','sender':'sender','receiver':'receiver'
-        {'BOTSID': 'line', 'lineid': '1', 'article': '8712345678906','qty': '1'}
-        {'BOTSID': 'line', 'lineid': '2', 'article': '8712345678911','qty': '1'}
-JSON var1 - OK, use like it is.
-    {'message': 
-     'line': 
-            [
-            {'lineid': '1', 'article': '8712345678906','qty': '1'}, 
-            {'lineid': '2', 'article': '8712345678911','qty': '1'},
-            ]
-        }]
-    }
-JSON var2
-read: create dummy root with root-BOTSID default or from syntax
-write: syntax: skiproot=1
-    {'article': 
-        [
-        {'ccodeid': 'artikel', 'leftcode': 'leftcode', 'rightcode': 'rightcode'}, 
-        {'ccodeid': 'artikel', 'leftcode': 'leftcode2', 'rightcode': 'rightcode'},
-        ]
-    }
-JSON var3 - Not advised structure... 
-read create dummy root. Create root BOTSID (default, from syntax) and level 1 ROOT (default & from syntax)
-write: syntax: skiproot=2
-
-    [
-    {'ccodeid': 'artikel', 'leftcode': 'leftcode', 'rightcode': 'rightcode'}, 
-    {'ccodeid': 'artikel', 'leftcode': 'leftcode2', 'rightcode': 'rightcode'},
-    ]
-'''

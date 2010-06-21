@@ -124,8 +124,7 @@ class Testnode(unittest.TestCase):
 
 if __name__ == '__main__':
     import datetime
-    botsinit.generalinit('/home/hje/botsup/bots/config')
-    #~ botslib.initbotscharsets()
+    botsinit.generalinit('config')
     botsinit.initenginelogging()
     shutil.rmtree('bots/botssys/infile/unitnode/output',ignore_errors=True)    #remove whole output directory
     os.mkdir('bots/botssys/infile/unitnode/output')

@@ -15,8 +15,7 @@ use for each database connection in configuration file
 def start():
 
     try:
-        botsinit.generalinit('/home/hje/botsup/bots/config')
-        #~ botslib.initbotscharsets()
+        botsinit.generalinit('config')
         botsinit.initenginelogging()
     except:
         print 'Error reading bots.ini (before database connection).'

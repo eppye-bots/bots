@@ -221,7 +221,7 @@ class TestGrammar(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    botsinit.generalinit('/home/hje/botsup/bots/config')
+    botsinit.generalinit('config')
     #~ botslib.initbotscharsets()
     botsinit.initenginelogging()
     unittest.main()
