@@ -262,11 +262,11 @@ def database2indexfile(filename,function):
         if function=='snapshot':
             db_objects += \
                 list(models.uniek.objects.all()) + \
-                list(models.persist.objects.all()) + \
                 list(models.mutex.objects.all()) + \
                 list(models.ta.objects.all()) + \
                 list(models.filereport.objects.all()) + \
                 list(models.report.objects.all())
+                #~ list(models.persist.objects.all()) + \
     orgplugs = serializers.serialize("python", db_objects)
     #~ print orgpluglist
     convertedplugs = []
@@ -303,8 +303,8 @@ def files2plugin(pluginzipfilehandler,function):
         data = botsglobal.ini.get('directories','data')
         files2pluginbydir(function,pluginzipfilehandler,data,'botssys/data')
         #get log files
-        log_file = botsglobal.ini.get('directories','config')
-        files2pluginbydir(function,pluginzipfilehandler,os.path.dirname(log_file),'botssys/logging')
+        log_file = botsglobal.ini.get('directories','logging')
+        files2pluginbydir(function,pluginzipfilehandler,log_file,'botssys/logging')
         #get sqlite database
         files2pluginbydir(function,pluginzipfilehandler,os.path.join(botssys,'sqlitedb'),'botssys/sqlitedb.copy')
     else:

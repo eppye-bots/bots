@@ -141,6 +141,7 @@ class confirmrule(botsmodel):
     class Meta:
         db_table = 'confirmrule'
         verbose_name = _(u'confirm rule')
+        ordering = ['confirmtype','ruletype']
 class ccodetrigger(botsmodel):
     ccodeid = StripCharField(primary_key=True,max_length=35,verbose_name=_(u'type code'))
     ccodeid_desc = StripCharField(max_length=35,null=True,blank=True)
@@ -149,6 +150,7 @@ class ccodetrigger(botsmodel):
     class Meta:
         db_table = 'ccodetrigger'
         verbose_name = _(u'user code type')
+        ordering = ['ccodeid']
 class ccode(botsmodel):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     ccodeid = models.ForeignKey(ccodetrigger,verbose_name=_(u'type code'))
@@ -168,6 +170,7 @@ class ccode(botsmodel):
         db_table = 'ccode'
         verbose_name = _(u'user code')
         unique_together = (('ccodeid','leftcode','rightcode'),)
+        ordering = ['ccodeid']
 class channel(botsmodel):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
@@ -195,10 +198,11 @@ class channel(botsmodel):
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    class Meta:
+        ordering = ['idchannel']
+        db_table = 'channel'
     def __unicode__(self):
         return self.idchannel
-    class Meta:
-        db_table = 'channel'
 class partner(botsmodel):
     idpartner = StripCharField(max_length=35,primary_key=True,verbose_name=_(u'partner identification'))
     active = models.BooleanField(default=False)
@@ -210,11 +214,11 @@ class partner(botsmodel):
     group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    class Meta:
+        ordering = ['idpartner']
+        db_table = 'partner'
     def __unicode__(self):
         return unicode(self.idpartner)
-    class Meta:
-        db_table = 'partner'
-        
 class chanpar(botsmodel):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idpartner = models.ForeignKey(partner,verbose_name=_(u'partner'))
@@ -247,6 +251,7 @@ class translate(botsmodel):
     class Meta:
         db_table = 'translate'
         verbose_name = _(u'translation')
+        ordering = ['fromeditype','frommessagetype']
     def __unicode__(self):
         return unicode(self.fromeditype) + u' ' + unicode(self.frommessagetype) + u' ' + unicode(self.alt) + u' ' + unicode(self.frompartner) + u' ' + unicode(self.topartner)
 class routes(botsmodel):  
@@ -276,6 +281,7 @@ class routes(botsmodel):
         db_table = 'routes'
         verbose_name = _(u'route')
         unique_together = (("idroute","seq"),)
+        ordering = ['idroute','seq']
     def __unicode__(self):
         return unicode(self.idroute) + u' ' + unicode(self.seq)
 
@@ -322,6 +328,8 @@ class mutex(botsmodel):
     class Meta:
         db_table = 'mutex'
 class persist(botsmodel):
+    #OK, this has gone wrong. There is no primary key here, so django generates this. But there is no ID in the custom sql. 
+    #Django still uses the ID in sql manager. This leads to an error in snapshot plugin. Disabled this in snapshot function; to fix this really database has to be changed.
     #specific SQL is used (database defaults are used)
     domein = StripCharField(max_length=35)
     botskey = StripCharField(max_length=35)
@@ -403,3 +411,4 @@ class uniek(botsmodel):
     class Meta:
         db_table = 'uniek'
         verbose_name = _(u'counter')
+        ordering = ['domein']

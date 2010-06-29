@@ -16,7 +16,7 @@ admin.site.disable_action('delete_selected')
 
 
 class BotsAdmin(admin.ModelAdmin):
-    screen_limit = botsglobal.ini.getint('settings','limit',30)
+    list_per_page = botsglobal.ini.getint('settings','limit',30)
     save_as = True
 
     def delete_view(self, request, object_id, extra_context=None):
@@ -57,7 +57,7 @@ class CcodeAdmin(BotsAdmin):
     list_display = ('ccodeid','leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8')
     list_display_links = ('ccodeid',)
     list_filter = ('ccodeid',)
-    ordering = ('ccodeid','leftcode')
+    #~ ordering = ('ccodeid','leftcode')
     actions = ('bulk_delete',)
 admin.site.register(models.ccode,CcodeAdmin)
 
@@ -70,7 +70,7 @@ admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 class ChannelAdmin(BotsAdmin):
     list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename',  'remove', 'archivepath', 'charset')
     list_filter = ('inorout','type')
-    ordering = ('idchannel',)
+    #~ ordering = ('idchannel',)
     actions = ('bulk_delete',)
     fieldsets = (
         (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset','desc')
@@ -89,7 +89,7 @@ class ConfirmruleAdmin(BotsAdmin):
     list_display_links = ('confirmtype',)
     list_filter = ('active','confirmtype','ruletype')
     actions = ('activate','bulk_delete')
-    ordering = ('confirmtype','ruletype')
+    #~ ordering = ('confirmtype','ruletype')
     fieldsets = (
         (None, {'fields': ('active','negativerule','confirmtype','ruletype','frompartner', 'topartner','idroute','idchannel',('editype','messagetype'))}),
         )
@@ -125,7 +125,6 @@ class RoutesAdmin(BotsAdmin):
     list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'defer', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
     list_display_links = ('idroute',)
     list_filter = ('active','fromeditype','testindicator')
-    ordering = ('idroute','seq')
     actions = ('bulk_delete','activate')
     fieldsets = (
         (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc')}),
@@ -171,7 +170,7 @@ admin.site.register(models.translate,TranslateAdmin)
 class UniekAdmin(BotsAdmin):     #AKA counters
     list_display = ('domein', 'nummer')
     list_editable = ('nummer',)
-    ordering = ('domein',)
+    #~ ordering = ('domein',)
     actions = None
 admin.site.register(models.uniek,UniekAdmin)
 
