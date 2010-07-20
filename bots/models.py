@@ -13,6 +13,7 @@ STATUST = [
     ]
 STATUS = [
     (1,_(u'process')),
+    (3,_(u'discarded')),
     (200,_(u'FileRecieve')),
     (210,_(u'RawInfile')),
     (215,_(u'Mimein')),
@@ -76,6 +77,11 @@ RULETYPE = (
     ('frompartner',_(u'frompartner')),
     ('topartner',_(u'topartner')),
     ('messagetype',_(u'messagetype')),
+    )
+ENCODE_MIME = (
+    ('always',_(u'always use base64')),
+    ('never',_(u'never encode')),
+    ('ascii',_(u'only encode if not ascii')),
     )
 
 
@@ -191,7 +197,7 @@ class channel(botsmodel):
     ftpaccount = StripCharField(max_length=35,blank=True)
     ftpactive = models.BooleanField(default=False)
     ftpbinary = models.BooleanField(default=False)
-    askmdn = StripCharField(max_length=17,blank=True)     #not used anymore 20091019
+    askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'),help_text=_(u'Should edi-files be base64-encoded in email. Using base64 for edi (default) is often a good choice.'))     #not used anymore 20091019: 20100703: used to indicate mime-encoding
     sendmdn = StripCharField(max_length=17,blank=True)    #not used anymore 20091019
     mdnchannel = StripCharField(max_length=35,blank=True)             #not used anymore 20091019
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".'))           #added 20091028
@@ -208,7 +214,7 @@ class partner(botsmodel):
     active = models.BooleanField(default=False)
     isgroup = models.BooleanField(default=False)
     name = StripCharField(max_length=256) #only used for user information
-    mail = models.EmailField(max_length=256,blank=True)
+    mail = StripCharField(max_length=256,blank=True)
     cc = models.EmailField(max_length=256,blank=True)
     mail2 = models.ManyToManyField(channel, through='chanpar',blank=True)
     group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
@@ -223,7 +229,7 @@ class chanpar(botsmodel):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idpartner = models.ForeignKey(partner,verbose_name=_(u'partner'))
     idchannel = models.ForeignKey(channel,verbose_name=_(u'channel'))
-    mail = models.EmailField(max_length=256)
+    mail = StripCharField(max_length=256)
     cc = models.EmailField(max_length=256,blank=True)           #added 20091111
     askmdn = models.BooleanField(default=False)     #not used anymore 20091019
     sendmdn = models.BooleanField(default=False)    #not used anymore 20091019

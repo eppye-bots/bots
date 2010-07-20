@@ -177,8 +177,13 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                     botsglobal.logger.debug(u'Script "%s" finished.',tscript)
                     if 'topartner' not in tomessage.ta_info:    #tomessage does not contain values from ta...... 
                         tomessage.ta_info['topartner']=inn.ta_info['topartner']
-                    botsglobal.logger.debug(u'Start writing output file editype "%s" messagetype "%s".',tomessage.ta_info['editype'],tomessage.ta_info['messagetype'])
-                    tomessage.writeall()   #write tomessage (result of translation).
+                    if tomessage.ta_info['statust'] == DONE:    #if indicated in user script the message should be discarded
+                        botsglobal.logger.debug(u'No output file because mapping script explicitly indicated this.')
+                        tomessage.ta_info['filename'] = ''
+                        tomessage.ta_info['status'] = DISCARD
+                    else:
+                        botsglobal.logger.debug(u'Start writing output file editype "%s" messagetype "%s".',tomessage.ta_info['editype'],tomessage.ta_info['messagetype'])
+                        tomessage.writeall()   #write tomessage (result of translation).
                     #problem is that not all values ta_tomes are know to to_message....
                     #~ print 'tomessage.ta_info',tomessage.ta_info
                     ta_tomes.update(**tomessage.ta_info) #update outmessage transaction with ta_info; 

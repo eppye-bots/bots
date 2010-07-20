@@ -171,6 +171,7 @@ class _comsession(object):
                 ta_to = ta_from.copyta(status=tostatus)
                 confirmtype = u''
                 confirmasked = False
+                charset = row['charset']
                 
                 if row['editype'] == 'email-confirmation': #outgoing MDN: message is already assembled
                     outfilename = row['filename']
@@ -222,7 +223,13 @@ class _comsession(object):
                     #~ content = botslib.readdata(contentfilename,charset)     #get attachment (the data file); read is using the right charset
                     #~ message.set_payload(content.encode(charset),str(charset))   #encode engain....basically just cheing the charset?.....str(charset) is because email-lib in python 2.4 wants this....
                     message.set_payload(content)   #do not use charset; this lead to unwanted encodings...bots always uses base64
-                    emailencoders.encode_base64(message)
+                    if self.channeldict['askmdn'] == 'never':
+                        emailencoders.encode_7or8bit(message)
+                    elif self.channeldict['askmdn'] == 'ascii' and charset=='us-ascii':
+                        pass
+                    else:
+                    #~ elif self.channeldict['askmdn'] in ['always',''] or (self.channeldict['askmdn'] == 'ascii' and charset!='us-ascii'):
+                        emailencoders.encode_base64(message)
                     #*******write email to file***************************
                     outfilename = str(ta_to.idta)
                     outfile = botslib.opendata(outfilename, 'wb')
@@ -235,7 +242,7 @@ class _comsession(object):
             else:
                 counter += 1
                 ta_from.update(statust=DONE)
-                ta_to.update(statust=OK,filename=outfilename,confirmtype=confirmtype,confirmasked=confirmasked)
+                ta_to.update(statust=OK,filename=outfilename,confirmtype=confirmtype,confirmasked=confirmasked,charset=charset)
         return counter
 
     def mime2file(self,fromstatus,tostatus):
@@ -491,15 +498,13 @@ class _comsession(object):
     @staticmethod
     def convertcodecformime(codec_in):
         convertdict = {
+            'ascii' : 'us-ascii',
             'unoa' : 'us-ascii',
             'unob' : 'us-ascii',
             'unoc' : 'iso-8859-1',
             }
         codec_in = codec_in.lower().replace('_','-')
-        if codec_in in convertdict:
-            return convertdict[codec_in]
-        else:
-            return codec_in
+        return convertdict.get(codec_in,codec_in)
             
 
 class pop3(_comsession):

@@ -11,6 +11,8 @@ DONE    = 3 #succesfull, and result is picked up by next step
 #for status in ta:
 PROCESS    = 1
 STATUSTMP= 2
+DISCARD= 3
+
 EXTERNIN  = 200      #transaction is OK; file is exported; out of reach
 RAWIN    = 210    #the file as received, unprocessed; eg mail is in email-format (headers, body, attachments)
 MIMEIN   = 215      #mime is checked and read; mime-info (sneder, receiver) is in db-ta
