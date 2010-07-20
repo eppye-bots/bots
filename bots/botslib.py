@@ -597,28 +597,29 @@ def abspathdata(filename):
         return join(directory,datasubdir,filename)
 
 def opendata(filename,mode,charset=None,errors=None):
-    ''' open internal data file raw (no encoding used).'''
+    ''' open internal data. if no encoding specified: read file raw/binary.'''
     filename = abspathdata(filename)
     if 'w' in mode:
         dirshouldbethere(os.path.dirname(filename))
     if charset:
-        return codecsopen(filename,mode,charset,errors)
+        return codecs.open(filename,mode,charset,errors)
     else:
         return open(filename,mode)
 
-def codecsopen(filename,mode,charset,errors):
-    ''' open (absolute!) file, use right encoding.'''
-    if not charset:
-        charset = botsglobal.ini.get('settings','charset','us-ascii')
-    return codecs.open(filename,mode,charset,errors)
+#~ def codecsopen(filename,mode,charset,errors):
+    #~ ''' open (absolute!) file, use right encoding.'''
+    #~ if not charset:
+        #~ charset = botsglobal.ini.get('settings','charset','us-ascii')
+    #~ return codecs.open(filename,mode,charset,errors)
 
 def readdata(filename,charset=None,errors=None):
     ''' read internal data file in memory using the right encoding or no encoding'''
-    filename = abspathdata(filename)
-    if charset:
-        f = codecsopen(filename,'r',charset,errors)
-    else:
-        f = open(filename,'rb')
+    f = opendata(filename,'rb',charset,errors)
+    #~ filename = abspathdata(filename)
+    #~ if charset:
+        #~ f = codecs.open(filename,'r',charset,errors)
+    #~ else:
+        #~ f = open(filename,'rb')
     content = f.read()
     f.close()
     return content
