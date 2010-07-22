@@ -45,7 +45,7 @@ class BotsAdmin(admin.ModelAdmin):
         for obj in queryset:
             obj.active = not obj.active
             obj.save()
-    activate.short_description = _(u'(de)activate')
+    activate.short_description = _(u'activate/de-activate')
     def bulk_delete(self, request, queryset):
         ''' admin action.'''
         for obj in queryset:
