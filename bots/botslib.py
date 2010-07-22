@@ -597,7 +597,7 @@ def abspathdata(filename):
         return join(directory,datasubdir,filename)
 
 def opendata(filename,mode,charset=None,errors=None):
-    ''' open internal data. if no encoding specified: read file raw/binary.'''
+    ''' open internal data file. if no encoding specified: read file raw/binary.'''
     filename = abspathdata(filename)
     if 'w' in mode:
         dirshouldbethere(os.path.dirname(filename))
