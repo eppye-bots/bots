@@ -591,10 +591,7 @@ class edifact(var):
             In sniff: determine charset; then decode according to charset
         '''
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
-        instream = botslib.opendata(self.ta_info['filename'],'rb')
-        self.rawinput = instream.read()
-        instream.close()
-
+        self.rawinput = botslib.readdata(filename=self.ta_info['filename'],errors=self.ta_info['checkcharsetin'])
 
     def _sniff(self):
         ''' examine a read file for syntax parameters and correctness of protocol
@@ -840,17 +837,63 @@ class tradacoms(var):
 class xml(var):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def initfromfile(self):
+        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        filename=botslib.abspathdata(self.ta_info['filename'])
+        
+        if self.ta_info['messagetype'] == 'mailbag':
+            ''' the messagetype is not know. 
+                bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
+                mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
+                'xpath' is a xpath to use on xml-file (using eleemnttree xpath functionality)
+                if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
+                if found, and no 'content' in the dict; set messagetype.
+            '''
+            try:
+                module,grammarname = botslib.botsimport('grammars','xml.mailbag')
+                mailbagsearch = getattr(module, 'mailbagsearch')
+            except AttributeError:
+                botsglobal.logger.error(u'missing mailbagsearch in mailbag definitions for xml.')
+                raise
+            except ImportError:
+                botsglobal.logger.error(u'missing mailbag definitions for xml, should be there.')
+                raise
+            parser = ET.XMLParser()
+            try:
+                extra_character_entity = getattr(module, 'extra_character_entity')
+                for key,value in extra_character_entity.items():
+                    parser.entity[key] = value
+            except AttributeError:
+                pass    #there is no extra_character_entity in the mailbag definitions, is OK.
+            etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite simular to bots-node trees but conversion is needed
+            etreeroot = etree.parse(filename, parser)
+            for item in mailbagsearch:
+                if 'xpath' not in item or 'messagetype' not in item:
+                    raise botslib.InMessageError(u'invalid search parameters in xml mailbag.')
+                #~ print 'search' ,item
+                found = etree.find(item['xpath'])
+                if found is not None:
+                    #~ print '    found'
+                    if 'content' in item and found.text != item['content']:
+                        continue
+                    self.ta_info['messagetype'] = item['messagetype']
+                    #~ print '    found right messagedefinition'
+                    #~ continue
+                    break
+            else:
+                raise botslib.InMessageError(u'could not find right xml messagetype for mailbag.')
+            
+            self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+            botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
+        else:
+            self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+            botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
+            parser = ET.XMLParser()
+            for key,value in self.ta_info['extra_character_entity'].items():
+                parser.entity[key] = value
+            etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite simular to bots-node trees but conversion is needed
+            etreeroot = etree.parse(filename, parser)
         self.stack = []
-        self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
-        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
-        etree = self._readcontent_edifile()
-        etreeroot = etree.getroot()                        #get the root of the xml-file
-        #~ try:
-            #~ q = etree.find('message/type')
-            #~ print q.tag, q.text
-        #~ except:
-            #~ print 'Caught',botslib.txtexc()
-        self.root = self.etree2botstree(etreeroot)
+        self.root = self.etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.normalisetree(self.root)
 
     def etree2botstree(self,xmlnode):
@@ -910,19 +953,6 @@ class xml(var):
             return True
         return False
         
-    def _readcontent_edifile(self):
-        ''' read content of edi file to memory.
-        '''
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
-        filename=botslib.abspathdata(self.ta_info['filename'])
-        parser = ET.XMLParser()
-        for key,value in self.ta_info['extra_character_entity'].items():
-            parser.entity[key] = value
-        e =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite simular to bots-node trees but some conversions is needed
-        e.parse(filename, parser)
-        return e
-
-
 class xmlnocheck(xml):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def normalisetree(self,node):

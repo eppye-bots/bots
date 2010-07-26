@@ -17,12 +17,25 @@ from botslib import addinfo,updateinfo,changestatustinfo,checkunique
 from envelope import mergemessages
 from communication import run 
 
+'''
+about auto-dectect/mailbag:
+- in US mailbag is used: one file for all received edi messages...appended in one file. I heard that edifact and x12 can be mixed,
+    but have actually never seen this.
+- bots needs and ' splitter': one edi-file, more interchanges. it is preferred to split these first.
+- auto-detect: is is x12, edifact, xml, or??
+
+the dumping of multiple files in one file is kind of obsolete (dirty old edi tricks).
+eg edifact with two different charsets in one 
+'''
+
 
 @botslib.log_session    
 def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
     ''' splits 'mailbag'files to seperate files each containging one interchange (ISA-IEA or UNA/UNB-UNZ).
         handles x12 and edifact; these can be mixed.
     '''
+    header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))',re.DOTALL)
+    #           group:    1   2       3  4            5        6         7
     for row in botslib.query(u'''SELECT idta,filename,charset
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
@@ -34,18 +47,24 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
         try:
             ta_org=botslib.OldTransaction(row['idta'])
             ta_intermediate = ta_org.copyta(status=MAILBAGPARSED)
-            edifile = botslib.readdata(filename=row['filename'],charset=row['charset'])
+            edifile = botslib.readdata(filename=row['filename'])    #read as binary...
             botsglobal.logmap.debug(u'Start parsing mailbag file "%s".',row['filename'])
-            header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))',re.DOTALL)
-            #           group:    1   2       3  4            5        6         7
             startpos=0
             while (1):
                 found = header.search(edifile[startpos:])
-                if found==None:
-                    if not startpos:
+                if found is None:
+                    if startpos:    #ISA/UNB have been found in file; no new ISA/UNB is found. So all processing is done.
+                        break
+                    #guess if this is an xml file.....
+                    sniffxml = edifile[:25]
+                    sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first ' real' data; some char are because of BOM, UTF-16 etc
+                    if sniffxml and sniffxml[0]=='<':
+                        ta_tomes=ta_intermediate.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
+                        ta_tomes.update(status=STATUSTMP,statust=OK,filename=row['filename'],editype='xml') #update outmessage transaction with ta_info;
+                        break;
+                    else:
                         raise botslib.InMessageError(_(u'Found no content in mailbag.'))
-                    break
-                if found.group(1):
+                elif found.group(1):
                     editype='x12'
                     headpos=startpos+ found.start(2)
                     count=0
@@ -78,7 +97,7 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                     #~ raise botslib.InMessageError(u'Error in mailbag format: found no valid envelope trailer.')
                 ta_tomes=ta_intermediate.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
                 tofilename = str(ta_tomes.idta)
-                tofile = botslib.opendata(tofilename,'wb',charset=row['charset'])
+                tofile = botslib.opendata(tofilename,'wb')
                 tofile.write(edifile[headpos:endpos])
                 tofile.close()
                 ta_tomes.update(status=STATUSTMP,statust=OK,filename=tofilename,editype=editype,messagetype=editype) #update outmessage transaction with ta_info; 
