@@ -189,7 +189,10 @@ class Outmessage(message.Message):
         '''
         #~ value = value[:]
         if grammarfield[BFORMAT] == 'A':
-            value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
+            if grammarfield[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
+                value = value.rjust(grammarfield[MINLENGTH])
+            else:
+                value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
             valuelength=len(value)
             if valuelength > grammarfield[LENGTH]:
                 raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])

@@ -335,6 +335,7 @@ class Grammar(object):
     formatconvert = {
         'A':'A',
         'AN':'A',
+        'AR':'A',       #right aligned alfanumerical field, used in fixed records.
         'D':'D',
         'DT':'D',
         'T':'T',

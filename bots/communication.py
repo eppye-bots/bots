@@ -799,7 +799,15 @@ class ftp(_comsession):
             each imported file is transaction.
         '''
         #'ls' to ftp-server; filter this list
-        lijst = fnmatch.filter(self.session.nlst(),self.channeldict['filename'])
+        #~ lijst = fnmatch.filter(self.session.nlst(),self.channeldict['filename'])
+        files = []
+        try:
+            files = self.session.nlst()
+        except (ftplib.error_perm,ftplib.error_temp),resp:
+            resp = str(resp).strip(' \t.').lower()  #'normalise' error
+            if resp not in ['550 no files found','450 no files found']:     #some ftp servers give errors when directory is empty. here these errors are catched
+                raise
+        lijst = fnmatch.filter(files,self.channeldict['filename'])
         for fromfilename in lijst:  #fetch messages from ftp-server.
             try:
                 ta_from = botslib.NewTransaction(filename='ftp:/'+posixpath.join(self.dirpath,fromfilename),
