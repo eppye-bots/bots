@@ -164,7 +164,7 @@ def start():
             out.put(*mpath)
         writefields(out,node,mpath)
         
-    out.root.display()
+    #~ out.root.display()
     
     #out-tree is finished; represents ' normalised' tree suited for writing as a grammar
     structure = []
