@@ -889,6 +889,28 @@ class ftp(_comsession):
         except:
             self.session.close()
         botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
+        
+class ftps(ftp):
+    def connect(self):
+        botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
+        if not hasattr(ftplib,'FTP_TLS'):
+            raise botslib.CommunicationError('FTPS is not supported by your python version, use >=2.7')
+        self.session = ftplib.FTP_TLS()
+        self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
+        self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
+        self.session.connect(host=self.channeldict['host'],port=int(self.channeldict['port']))
+        #support key files (PEM, cert)?
+        self.session.auth()
+        self.session.login(user=self.channeldict['username'],passwd=self.channeldict['secret'],acct=self.channeldict['ftpaccount'])
+        self.session.prot_p()
+        self.dirpath = self.session.pwd()
+        if self.channeldict['path']:
+            self.dirpath = posixpath.normpath(posixpath.join(self.dirpath,self.channeldict['path']))
+            try:
+                self.session.cwd(self.dirpath)           #set right path on ftp-server
+            except:
+                self.session.mkd(self.dirpath)           #set right path on ftp-server; no nested directories
+                self.session.cwd(self.dirpath)           #set right path on ftp-server
 
 class xmlrpc(_comsession):
     scheme = 'http'

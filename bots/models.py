@@ -58,6 +58,7 @@ CHANNELTYPE = (
     ('pop3s', _(u'pop3s')),
     ('pop3apop', _(u'pop3apop')),
     ('ftp', _(u'ftp')),
+    ('ftps', _(u'ftps')),
     ('xmlrpc', _(u'xmlrpc')),
     ('mimefile', _(u'mimefile')),
     ('intercommit', _(u'intercommit')),
