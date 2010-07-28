@@ -295,6 +295,18 @@ def safecodetconversion(ccodeid,leftcode,field='rightcode'):
         return row[field]
     return leftcode
 
+def getcodeset(ccodeid,leftcode,field='rightcode'):
+    '''
+       Get a code set 
+    '''
+    return list(botslib.query(u'''SELECT ''' +field+ '''
+                                FROM    ccode
+                                WHERE   ccodeid_id = %(ccodeid)s
+                                AND     leftcode = %(leftcode)s''',
+                                {'ccodeid':ccodeid,
+                                 'leftcode':leftcode,
+                                }))
+
 def codetconversion(ccodeid,leftcode,field='rightcode'):
     ''' converts code using a db-table.
         converted value is returned. 
