@@ -17,7 +17,7 @@ def prepareretransmit():
                                 FROM  filereport
                                 WHERE retransmit=%(retransmit)s ''',
                                 {'retransmit':True}):
-        retransmit = True 
+        retransmit = True
         botslib.change('''UPDATE filereport
                            SET retransmit=%(retransmit)s
                            WHERE idta=%(idta)s
@@ -93,6 +93,27 @@ def preparerecommunication():
 
 
 @botslib.log_session
+def prepareautomaticrecommunication():
+    ''' reinjects all files for which communication failed (status = RAWOUT)
+    '''
+    retransmit = False  #indicate retransmit
+    #bots keeps track of last time automaticretrycommunication was done; reason is mainly performance
+    startidta = botslib.handle_ta_automaticretrycommunication(botslib.getlastrun())
+    #reinject
+    for row4 in botslib.query('''SELECT idta
+                                FROM  ta
+                                WHERE idta>%(startidta)s
+                                AND   status=%(status)s 
+                                AND   statust=%(statust)s ''',
+                                {'statust':OK,'status':RAWOUT,'startidta':startidta}):
+        retransmit = True
+        ta_outgoing = botslib.OldTransaction(row4['idta'])
+        ta_outgoing_copy = ta_outgoing.copyta(status=RAWOUT,statust=OK)
+        ta_outgoing.update(statust=DONE)
+    return retransmit
+
+
+@botslib.log_session
 def routedispatcher(routestorun,type=None):
     ''' run all route(s). '''
     if type == '--retransmit':
@@ -100,6 +121,9 @@ def routedispatcher(routestorun,type=None):
             return 0
     elif type == '--retrycommunication':
         if not preparerecommunication():
+            return 0
+    elif type == '--automaticretrycommunication':
+        if not prepareautomaticrecommunication():
             return 0
     stuff2evaluate = botslib.getlastrun()
     botslib.set_minta4query()

@@ -467,6 +467,24 @@ def checkunique(domein, receivednumber):
     cursor.close()
     return terug
 
+
+def handle_ta_automaticretrycommunication(newlastta):
+    ''' get number of last ta usto check of received number is sequential: value is compare with earlier received value.
+        if domain not used before, initialize it . '1' is the first value expected.
+    '''
+    domein = 'botsautomaticretrycommunication'
+    cursor = botsglobal.db.cursor()
+    try:
+        cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
+        oldlastta = cursor.fetchone()['nummer']
+    except: # ???.DatabaseError; domein does not exist
+        cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
+        oldlastta = 1
+    cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':newlastta})
+    botsglobal.db.commit()
+    cursor.close()
+    return oldlastta
+
 #**********************************************************/**
 #*************************Logging, Error handling********************/**
 #**********************************************************/**

@@ -9,7 +9,7 @@ tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,toch
 def evaluate(type,stuff2evaluate):
     ''' catch errors in retry....this should of course not happen...always avoid this!'''
     try:
-        if type in ['--retry','--retrycommunication']:
+        if type in ['--retry','--retrycommunication','--automaticretrycommunication']:
             return evaluateretryrun(type,stuff2evaluate)
         else:
             return evaluaterun(type,stuff2evaluate)

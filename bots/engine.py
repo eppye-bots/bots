@@ -31,6 +31,7 @@ def showusage():
         --retransmit         resend and rerececieve as indicated by user.
         --retry              retry previous errors.
         --crashrecovery      reruns the run where the crash occurred. (when database is locked).
+        --automaticretrycommunication - automatically retry outgoing communication.
         --retrycommunication retry outgoing communication process errors as indicated by user.
         --cleanup            remove older data from database.
     Config-option:
@@ -42,7 +43,7 @@ def showusage():
     
 def start():
     #********command line arguments**************************
-    commandspossible = ['--new','--retry','--retransmit','--cleanup','--crashrecovery','--retrycommunication']
+    commandspossible = ['--new','--retry','--retransmit','--cleanup','--crashrecovery','--retrycommunication','--automaticretrycommunication']
     commandstorun = []
     routestorun = []    #list with routes to run
     configdir = 'config'
@@ -158,6 +159,13 @@ def start():
                 errorinrun +=  automaticmaintenance.evaluate('--retrycommunication',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'Run recommunicate: nothing to recommunicate.'))
+        if '--automaticretrycommunication' in commandstorun:
+            botsglobal.logger.info(_(u'Run automatic communication retry.'))
+            stuff2evaluate = router.routedispatcher(routestorun,'--automaticretrycommunication')
+            if stuff2evaluate:
+                errorinrun +=  automaticmaintenance.evaluate('--automaticretrycommunication',stuff2evaluate)
+            else:
+                botsglobal.logger.info(_(u'Run automatic recommunicate: nothing to recommunicate.'))
         if '--retry' in commandstorun:
             botsglobal.logger.info(u'Run retry.')
             if botslib.set_minta4query_retry():
