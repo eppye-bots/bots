@@ -20,14 +20,14 @@ def start():
     print 'Installation of Bots open source EDI translator.'
     #python version dependencies
     version = str(sys.version_info[0]) + str(sys.version_info[1])
-    if version == '24':
-        pass
-    elif version == '25':
+    if version == '25':
         pass
     elif version == '26':
         pass
+    elif version == '27':
+        pass
     else:
-        raise Exception('Wrong python version, use python 2.4.*, 2.5.* or 2.6.*')
+        raise Exception('Wrong python version, use python 2.5.*, 2.6.* or 2.7.*')
         
     botsdir = os.path.dirname(botsglobal.__file__)
     print '    Installed Bots in "%s".'%(botsdir)
