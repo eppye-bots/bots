@@ -112,21 +112,13 @@ def incoming(request,*kw,**kwargs):
                 filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
                 filereport.retransmit = not filereport.retransmit
                 filereport.save()
-            #~ elif 'retry' in request.POST:        #coming from ViewIncoming
-                #~ idta,reportidta = request.POST[u'retry'].split('-')
-                #~ filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
-                #~ filereport.retransmit = 2
-                #~ filereport.save()
-            #~ elif 'retrycommunication' in request.POST:        #coming from ViewIncoming
-                #~ idta,reportidta = request.POST[u'retrycommunication'].split('-')
-                #~ filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
-                #~ filereport.retransmit = 3
-                #~ filereport.save()
-            #~ elif 'noretry' in request.POST:        #coming from ViewIncoming
-                #~ idta,reportidta = request.POST[u'noretry'].split('-')
-                #~ filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
-                #~ filereport.retransmit = 0
-                #~ filereport.save()
+            elif 'delete' in request.POST:        #coming from ViewIncoming
+                idta = int(request.POST[u'delete'])
+                #~ query = models.filereport.objects.filter(idta=int(idta)).all().delete()
+                models.filereport.objects.filter(idta=idta).delete()
+                ta = models.ta.objects.get(idta=idta)
+                viewlib.gettrace(ta)
+                viewlib.trace2delete(ta)
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data

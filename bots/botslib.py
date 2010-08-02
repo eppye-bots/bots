@@ -51,6 +51,10 @@ def set_minta4query():
         botsglobal.minta4query = _Transaction.processlist[1]  #set root-idta of current run
 
 def set_minta4query_retry():
+    botsglobal.minta4query = get_idta_last_error()
+    return botsglobal.minta4query
+
+def get_idta_last_error():
     for row in query('''SELECT idta
                         FROM  filereport
                         GROUP BY idta
@@ -61,8 +65,7 @@ def set_minta4query_retry():
                             FROM  filereport
                             WHERE idta = %(idta)s ''',
                             {'idta':row['idta']}):
-            botsglobal.minta4query = row2['min']
-            return botsglobal.minta4query
+            return row2['min']
     return 0    #if no error found.
 
 def set_minta4query_crashrecovery():
@@ -468,11 +471,10 @@ def checkunique(domein, receivednumber):
     return terug
 
 
-def handle_ta_automaticretrycommunication(newlastta):
-    ''' get number of last ta usto check of received number is sequential: value is compare with earlier received value.
+def keeptrackoflastretry(domein,newlastta):
+    ''' keep track of last automaticretrycommunication/retry
         if domain not used before, initialize it . '1' is the first value expected.
     '''
-    domein = 'botsautomaticretrycommunication'
     cursor = botsglobal.db.cursor()
     try:
         cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})

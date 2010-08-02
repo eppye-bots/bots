@@ -1,4 +1,6 @@
 import time
+import decimal
+NODECIMAL = decimal.Decimal(1)
 try:
     import cElementTree as ET
     #~ print 'imported cElementTree'
@@ -229,58 +231,63 @@ class Outmessage(message.Message):
             if valuelength < grammarfield[MINLENGTH]:
                 raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too small (min $min): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
         else:   #numerics
-            #calculatelengthwithdecimalsign and calculatelengthwithminussign: used to calcute the right field length (instead of True,False use 1,0 for field lengths calculations
-            #self.ta_info['lengthnumericbare']: True: interpretate field elngths without (decimals sign, minus sign) 
-            if value or isinstance(self,fixed):    #empty string for non-fixed is returned. Later on, ta_info[stripemptyfield] determines what to do with them
+            if value or isinstance(self,fixed):    #if empty string for non-fixed: just return. Later on, ta_info[stripemptyfield] determines what to do with them
                 if not value:   #see last if; if a numerical fixed field has content '' , change this to '0' (init)
                     value='0'
-                try:
-                    fvalue = float(value)
-                except:
-                    raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-                if value[0]=='-':   
-                    if self.ta_info['lengthnumericbare']:
-                        calculatelengthwithminussign=1
-                    else:
-                        calculatelengthwithminussign=0
-                    if fvalue==0:   #make sure -0 stays negative. in python2.4 and 2.5 '-0' gets 0. in python 2.6 '-0' gets -0.
-                        fvalue = abs(fvalue)    #make sure -0 is 0 (correction for python 2.6)
-                        if not self.ta_info['lengthnumericbare']:
-                            calculatelengthwithminussign-=1         #dirty. as we will add the minus sign later
-                        iszeronegative = True
-                    else:
-                        iszeronegative = False
                 else:
-                    calculatelengthwithminussign = 0
-                    iszeronegative = False
-                if grammarfield[BFORMAT] == 'R':    #use all needed decimals
-                    lendecimal = len(value[value.find('.'):])-1
-                    if lendecimal and self.ta_info['lengthnumericbare']:
-                        calculatelengthwithdecimalsign=1
-                    else:
-                        calculatelengthwithdecimalsign=0
-                    value='%0*.*F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign+calculatelengthwithdecimalsign,lendecimal,round(fvalue,lendecimal))
+                    value = value.strip()
+                if value[0]=='-':
+                    minussign = '-'
+                    absvalue = value[1:]
+                else:
+                    minussign = ''
+                    absvalue = value
+                digits,decimalsign,decimals = absvalue.partition('.')
+                if not digits and not decimals:# and decimalsign:
+                    raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
+                if not digits:
+                    digits = '0'
+                    
+                lengthcorrection = 0        #for some formats (if self.ta_info['lengthnumericbare']=True; eg edifact) length is calculated without decimal sing and/or minus sign.
+                if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
+                    if self.ta_info['lengthnumericbare']:
+                        if minussign:
+                            lengthcorrection += 1
+                        if decimalsign:
+                            lengthcorrection += 1
+                    try:
+                        value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -len(decimals)))
+                    except:
+                        raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
+                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
-                elif grammarfield[BFORMAT] == 'N':  #fixed decimals
-                    if grammarfield[DECIMALS] and self.ta_info['lengthnumericbare']:
-                        calculatelengthwithdecimalsign=1
-                    else:
-                        calculatelengthwithdecimalsign=0
-                    value='%0*.*F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign+calculatelengthwithdecimalsign,grammarfield[DECIMALS],round(fvalue,grammarfield[DECIMALS]))
+                elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
+                    if self.ta_info['lengthnumericbare']:
+                        if minussign:
+                            lengthcorrection += 1
+                        if grammarfield[DECIMALS]:
+                            lengthcorrection += 1
+                    try:
+                        value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
+                    except:
+                        raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
+                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
                 elif grammarfield[BFORMAT] == 'I':  #implicit decimals
-                    calculatelengthwithdecimalsign=0
-                    fvalue = fvalue * 10**grammarfield[DECIMALS]
-                    value='%0*.0F'%(grammarfield[MINLENGTH]+calculatelengthwithminussign,round(fvalue,0))
-                    value = value.replace('.',u'',1)
-                if iszeronegative:
-                    value = '-' + value
-                    calculatelengthwithminussign+=1
-                #~ print value, len(value), calculatelengthwithdecimalsign,calculatelengthwithdecimalsign, grammarfield[LENGTH]
-                if len(value)-calculatelengthwithminussign-calculatelengthwithdecimalsign > grammarfield[LENGTH]:
+                    if self.ta_info['lengthnumericbare']:
+                        if minussign:
+                            lengthcorrection += 1
+                    try:
+                        d = decimal.Decimal(minussign + digits + decimalsign + decimals) * 10**grammarfield[DECIMALS]
+                    except:
+                        raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
+                    value = str(d.quantize(NODECIMAL ))
+                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                
+                if len(value)-lengthcorrection > grammarfield[LENGTH]:
                     raise botslib.OutMessageError(_(u'record "$mpath" field "$field": content to large: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
         return value
-
+                
 
     def _records2file(self):
         ''' convert self.records to a file.

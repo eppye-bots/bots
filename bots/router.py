@@ -98,7 +98,7 @@ def prepareautomaticrecommunication():
     '''
     retransmit = False  #indicate retransmit
     #bots keeps track of last time automaticretrycommunication was done; reason is mainly performance
-    startidta = botslib.handle_ta_automaticretrycommunication(botslib.getlastrun())
+    startidta = max(botslib.keeptrackoflastretry('bots__automaticretrycommunication',botslib.getlastrun()),botslib.get_idta_last_error())
     #reinject
     for row4 in botslib.query('''SELECT idta
                                 FROM  ta
@@ -114,6 +114,26 @@ def prepareautomaticrecommunication():
 
 
 @botslib.log_session
+def prepareretry():
+    ''' reinjects all files for which communication failed (status = RAWOUT)
+    '''
+    retransmit = False  #indicate retransmit
+    #bots keeps track of last time retry was done; reason is mainly performance
+    startidta = max(botslib.keeptrackoflastretry('bots__retry',botslib.getlastrun()),botslib.get_idta_last_error())
+    #reinject
+    for row4 in botslib.query('''SELECT idta,status
+                                FROM  ta
+                                WHERE idta>%(startidta)s
+                                AND   statust=%(statust)s ''',
+                                {'statust':OK,'startidta':startidta}):
+        retransmit = True
+        ta_outgoing = botslib.OldTransaction(row4['idta'])
+        ta_outgoing_copy = ta_outgoing.copyta(status=row4['status'],statust=OK)
+        ta_outgoing.update(statust=DONE)
+    return retransmit
+
+
+@botslib.log_session
 def routedispatcher(routestorun,type=None):
     ''' run all route(s). '''
     if type == '--retransmit':
@@ -124,6 +144,9 @@ def routedispatcher(routestorun,type=None):
             return 0
     elif type == '--automaticretrycommunication':
         if not prepareautomaticrecommunication():
+            return 0
+    elif type == '--retry':
+        if not prepareretry():
             return 0
     stuff2evaluate = botslib.getlastrun()
     botslib.set_minta4query()

@@ -151,7 +151,31 @@ def gettrace(ta):
         ta.talijst = list(models.ta.objects.filter(parent=ta.idta).all())
     for child in ta.talijst:
         gettrace(child)
-            
+
+def trace2delete(trace):
+    def gathermember(ta):
+        memberlist.append(ta)
+        for child in ta.talijst:
+            gathermember(child)
+    def gatherdelete(ta):
+        if ta.status==MERGED:
+            for includedta in models.ta.objects.filter(child=ta.idta,status=TRANSLATED).all():    #select all db-ta's included in MERGED ta
+                if includedta not in memberlist:
+                    #~ print 'not found idta',includedta.idta, 'not to deletelist:',ta.idta
+                    return
+        deletelist.append(ta)
+        for child in ta.talijst:
+            gatherdelete(child)
+    memberlist=[]
+    gathermember(trace)   #zet alle idta in memberlist
+    #~ printlijst(memberlist, 'memberlist')
+    #~ printlijst(deletelist, 'deletelist')
+    deletelist=[]
+    gatherdelete(trace)     #zet alle te deleten idta in deletelijst
+    #~ printlijst(deletelist, 'deletelist')
+    for ta in deletelist:
+        ta.delete()
+
 def trace2detail(ta):
     def newbranche(ta,level=0):
         def dota(ta, isfirststep = False):
@@ -224,7 +248,7 @@ def filterquery(query , org_cleaned_data, incoming=False):
     cleaned_data = copy.copy(org_cleaned_data)    #copy because it it destroyed in setting up query
     page = cleaned_data.pop('page')     #do not use this in query, use in paginator
     if 'dateuntil' in cleaned_data:
-        query = query.filter(ts__lte=cleaned_data.pop('dateuntil'))
+        query = query.filter(ts__lt=cleaned_data.pop('dateuntil'))
     if 'datefrom' in cleaned_data:
         query = query.filter(ts__gte=cleaned_data.pop('datefrom'))
     if 'botskey' in cleaned_data and cleaned_data['botskey']:

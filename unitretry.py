@@ -42,7 +42,7 @@ def scriptwrite(path,content):
     f.close()
 
 if __name__ == '__main__':
-    pythoninterpreter = 'C:/python26/python'
+    pythoninterpreter = 'C:/python27/python'
     newcommand = [pythoninterpreter,'bots-engine.py',]
     retrycommand = [pythoninterpreter,'bots-engine.py','--retry']
     

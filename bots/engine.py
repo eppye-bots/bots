@@ -166,10 +166,17 @@ def start():
                 errorinrun +=  automaticmaintenance.evaluate('--automaticretrycommunication',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'Run automatic recommunicate: nothing to recommunicate.'))
+        #~ if '--retry' in commandstorun:
+            #~ botsglobal.logger.info(u'Run retry.')
+            #~ if botslib.set_minta4query_retry():
+                #~ stuff2evaluate = router.routedispatcher(routestorun)
+                #~ errorinrun +=  automaticmaintenance.evaluate('--retry',stuff2evaluate)
+            #~ else:
+                #~ botsglobal.logger.info(_(u'Run retry: nothing to retry.'))
         if '--retry' in commandstorun:
             botsglobal.logger.info(u'Run retry.')
-            if botslib.set_minta4query_retry():
-                stuff2evaluate = router.routedispatcher(routestorun)
+            stuff2evaluate = router.routedispatcher(routestorun,'--retry')
+            if stuff2evaluate:
                 errorinrun +=  automaticmaintenance.evaluate('--retry',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'Run retry: nothing to retry.'))

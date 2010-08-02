@@ -63,15 +63,15 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.assertEqual(self.edi._formatfield('12345E+3',tfield2,testdummy), '12345000','do not count + and E')
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
         tfield3 = ['TEST1', 'M', 8,   'N', True,   3,      5,'R']
-        #print '>>>',self.edi._formatfield('12E-3',tfield3,testdummy)
-        #self.assertEqual(self.edi._formatfield('12E-3',tfield3,testdummy), '00.012','Exponent notation is possible')
-        # self.assertEqual(self.edi._formatfield('12e-3',tfield2,testdummy), '00.012','Exponent notation is possible; e->E')
-        # self.assertEqual(self.edi._formatfield('12345678E-3',tfield2,testdummy), '12345.678','do not count + and E')
-        # self.assertEqual(self.edi._formatfield('12345678E-7',tfield2,testdummy), '1.2345678','do not count + and E')
-        # self.assertEqual(self.edi._formatfield('123456E-7',tfield2,testdummy), '0.0123456','do not count + and E')
-        # self.assertEqual(self.edi._formatfield('1234567E-7',tfield2,testdummy), '0.1234567','do not count + and E')
-        # self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E-8',tfield2,testdummy)   #gets 0.12345678, is too big
-        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
+        #~ print '\n>>>',self.edi._formatfield('12E-3',tfield3,testdummy)
+        #~ self.assertEqual(self.edi._formatfield('12E-3',tfield3,testdummy), '00.012','Exponent notation is possible')
+        #~ self.assertEqual(self.edi._formatfield('12e-3',tfield2,testdummy), '00.012','Exponent notation is possible; e->E')
+        #~ self.assertEqual(self.edi._formatfield('12345678E-3',tfield2,testdummy), '12345.678','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('12345678E-7',tfield2,testdummy), '1.2345678','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('123456E-7',tfield2,testdummy), '0.0123456','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('1234567E-7',tfield2,testdummy), '0.1234567','do not count + and E')
+        #~ self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E-8',tfield2,testdummy)   #gets 0.12345678, is too big
+        #~ self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
         tfield4 = ['TEST1', 'M', 80,   'N', True,   3,      0,'R']
         self.assertEqual(self.edi._formatfield('12345678901234560',tfield4,testdummy), '12345678901234560','lot of digits')
         #test for lentgh checks if:
@@ -116,9 +116,13 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'.',tfield1,testdummy)   #no num
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'-',tfield1,testdummy)   #no num
         # #test filling up to min length
+        tfield23 = ['TEST1', 'M', 8,   'N', True,   0,      5,'N']
+        #~ print self.edi._formatfield('12345.5',tfield23,testdummy)
+        self.assertEqual(self.edi._formatfield('12345.5',tfield23,testdummy), '12346','just large enough')
         tfield2 = ['TEST1', 'M', 8,   'N', True,   2,      5,'N']
         self.assertEqual(self.edi._formatfield('123.45',tfield2,testdummy), '123.45','just large enough')
         self.assertEqual(self.edi._formatfield('123.4549',tfield2,testdummy), '123.45','just large enough')
+        #~ print self.edi._formatfield('123.455',tfield2,testdummy)
         self.assertEqual(self.edi._formatfield('123.455',tfield2,testdummy), '123.46','just large enough')
         self.assertEqual(self.edi._formatfield('0.1000',tfield2,testdummy), '000.10','keep zeroes after last dec.digit')
         self.assertEqual(self.edi._formatfield('00001',tfield2,testdummy), '001.00','keep leading zeroes')
@@ -131,9 +135,8 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.assertEqual(self.edi._formatfield('-178e-5',tfield2,testdummy), '-000.00','add leading zeroes')
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'178E+4',tfield2,testdummy)   #too big with exp
         tfield4 = ['TEST1', 'M', 80,   'N', True,   3,      0,'N']
-        #~ print self.edi._formatfield('12345678901234560',tfield4,testdummy)  #goes wrong!! one number less, and OK?
-        print self.edi._formatfield('12345678901234560',tfield4,testdummy)
         self.assertEqual(self.edi._formatfield('12345678901234560',tfield4,testdummy), '12345678901234560.000','lot of digits')
+        self.assertEqual(self.edi._formatfield('1234567890123456789012345',tfield4,testdummy), '1234567890123456789012345.000','lot of digits')
 
     def test_out_formatfield_var_I(self):
         self.edi.ta_info['lengthnumericbare']=True
@@ -305,14 +308,14 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.assertEqual(self.edi._formatfield('4567E+3',tfield2,testdummy), '04567000','do not count + and E')
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
         #~ #print '>>',self.edi._formatfield('12E-3',tfield2,testdummy)
-        #~ #self.assertEqual(self.edi._formatfield('12E-3',tfield2,testdummy),       '0000.012','Exponent notation is possible')
-        #self.assertEqual(self.edi._formatfield('12e-3',tfield2,testdummy),       '0000.012','Exponent notation is possible; e->E')
-        #self.assertEqual(self.edi._formatfield('1234567E-3',tfield2,testdummy),  '1234.567','do not count + and E')
-        #self.assertEqual(self.edi._formatfield('1234567E-6',tfield2,testdummy),  '1.234567','do not count + and E')
-        #self.assertEqual(self.edi._formatfield('123456E-6',tfield2,testdummy),   '0.123456','do not count + and E')
-        #self.assertEqual(self.edi._formatfield('-12345E-5',tfield2,testdummy), '-0.12345','do not count + and E')
-        #self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E-8',tfield2,testdummy)   #gets 0.12345678, is too big
-        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
+        #~ self.assertEqual(self.edi._formatfield('12E-3',tfield2,testdummy),       '0000.012','Exponent notation is possible')
+        #~ self.assertEqual(self.edi._formatfield('12e-3',tfield2,testdummy),       '0000.012','Exponent notation is possible; e->E')
+        #~ self.assertEqual(self.edi._formatfield('1234567E-3',tfield2,testdummy),  '1234.567','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('1234567E-6',tfield2,testdummy),  '1.234567','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('123456E-6',tfield2,testdummy),   '0.123456','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('-12345E-5',tfield2,testdummy), '-0.12345','do not count + and E')
+        #~ self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E-8',tfield2,testdummy)   #gets 0.12345678, is too big
+        #~ self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
         tfield4 = ['TEST1', 'M', 30,   'N', True,   3,      30,'R']
         self.assertEqual(self.edi._formatfield('12345678901234560',tfield4,testdummy), '000000000000012345678901234560','lot of digits')
         tfield5 = ['TEST1','M',4,'N',True,2,       4,       'N']
@@ -325,7 +328,6 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['lengthnumericbare']=False
         tfield1 = ['TEST1','M',5,'N',True,2,       5,       'N']
         #                    length    decimals minlength  format
-        # print '>>',self.edi._formatfield('.001',tfield1,testdummy)
         self.assertEqual(self.edi._formatfield('',tfield1,testdummy), '00.00','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '01.00', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '01.00', 'basic')
@@ -491,6 +493,25 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.assertEqual(self.edi._formatfield('ab   ',tfield1,testdummy), 'ab   ','basic')
         self.assertEqual(self.edi._formatfield('a	b',tfield1,testdummy), 'a	b  ','basic')
         self.assertEqual(self.edi._formatfield('a',tfield1,testdummy), 'a    ','basic')
+        self.assertEqual(self.edi._formatfield('  ',tfield1,testdummy), '     ','basic')
+        self.assertEqual(self.edi._formatfield('     ',tfield1,testdummy), '     ','basic')
+        self.assertEqual(self.edi._formatfield(' ',tfield1,testdummy), '     ','basic')
+        self.assertEqual(self.edi._formatfield('',tfield1,testdummy), '     ','basic')
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'abcdef',tfield1,testdummy) #no valid date
+    def test_out_formatfield_fixedAR(self):
+        tfield1 = ['TEST1', 'M', 5,   'AR', True,   0,      5,'A']
+        #                    length            decimals minlength 
+        self.assertEqual(self.edi._formatfield('abcde',tfield1,testdummy), 'abcde','basic')
+        self.assertEqual(self.edi._formatfield('',tfield1,testdummy), '     ','basic')
+        self.assertEqual(self.edi._formatfield('ab ',tfield1,testdummy), '  ab ','basic')
+        self.assertEqual(self.edi._formatfield('a	b',tfield1,testdummy), '  a	b','basic')
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'abcdef',tfield1,testdummy) #no valid date
+        tfield1 = ['TEST1', 'M', 5,   'AR', True,   0,      5,'A']
+        #                    length            decimals minlength 
+        self.assertEqual(self.edi._formatfield('abcde',tfield1,testdummy), 'abcde','basic')
+        self.assertEqual(self.edi._formatfield('ab ',tfield1,testdummy), '  ab ','basic')
+        self.assertEqual(self.edi._formatfield('a	b',tfield1,testdummy), '  a	b','basic')
+        self.assertEqual(self.edi._formatfield('a',tfield1,testdummy), '    a','basic')
         self.assertEqual(self.edi._formatfield('  ',tfield1,testdummy), '     ','basic')
         self.assertEqual(self.edi._formatfield('     ',tfield1,testdummy), '     ','basic')
         self.assertEqual(self.edi._formatfield(' ',tfield1,testdummy), '     ','basic')

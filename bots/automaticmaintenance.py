@@ -7,7 +7,7 @@ tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,toch
 
 
 def evaluate(type,stuff2evaluate):
-    ''' catch errors in retry....this should of course not happen...always avoid this!'''
+    # try: catch errors in retry....this should of course not happen...
     try:
         if type in ['--retry','--retrycommunication','--automaticretrycommunication']:
             return evaluateretryrun(type,stuff2evaluate)
@@ -53,12 +53,16 @@ def evaluateretryrun(type,stuff2evaluate):
             break
         else:   #there really should be a corresponding ta
             raise botslib.PanicError(_(u'MaintenanceRetry: could not find transaction "$txt".'),txt=row['idta'])
-        #~ tadict = dict(zip(tavars,row2))
         mytrace = Trace(tadict,stuff2evaluate)
         resultlast[mytrace.statusttree]+=1
         if mytrace.statusttree == DONE:
             mytrace.errortext = ''
         #~ mytrace.ta.update(tracestatus=mytrace.statusttree)
+        #ts for retried filereports is tricky: is this the time the file was originally received? best would be to use ts of prepare...
+        #that is quite difficult, so use time of this run
+        rootta=botslib.OldTransaction(stuff2evaluate)
+        rootta.syn('ts')    #get the timestamp of this run
+        mytrace.ts = rootta.ts
         insert_filereport(mytrace)
         del mytrace.ta
         del mytrace
