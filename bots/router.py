@@ -225,17 +225,8 @@ def router(routedict):
     if routedict['translateind']:
         #processes files with status FILEIN
         botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
-        if routedict['fromeditype'] == 'mailbag':
-            toset = {'status':MAILBAG}
-        else:
-            toset = {'status':TRANSLATE}
-        #~ botslib.addinfo(change=toset,where={'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']})
-        botslib.addinfo(change=toset,where={'status':FILEIN,'idroute':routedict['idroute']})
-        transform.splitmailbag(idroute=routedict['idroute'])
-        transform.translate(idroute=routedict['idroute'])
+        transform.transform(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
-    #~ import time
-    #~ time.sleep(5)
         
     #merge messags & communication.run outgoing channel
     if routedict['tochannel']:   #do outgoing part of route
