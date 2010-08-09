@@ -2,9 +2,7 @@
 <div id="menu">
 {% if user.is_authenticated %}
 	<ul>
-		<a href="/home">{% trans 'Home' %}</a>
-		<li><a href="/home">{% trans 'Home' %}</a></li>
-		<li><a href="/about/">{% trans 'About Bots' %}</a></li>
+		<a href="/about/">{% trans 'Home' %}</a>
 		<li><a href="/help/">{% trans 'Help' %}</a></li>
 		<li><a href="/logout/">{% trans 'Log out' %}</a></li>
 		<li><a href="/admin/password_change/">{% trans 'Change password' %}</a></li>
@@ -12,16 +10,16 @@
 		<li>{% trans 'Last login' %}: {{ user.last_login|date:"Y-m-d G:i" }}</li>
 	</ul>
 	<ul>
-		<a>{% trans 'Last run' %}</a>
+		<a href="/incoming/?last">{% trans 'Last run' %}</a>
 		<li><a href="/reports/?all" >{% trans 'Report (per run)' %}</a></li>
-		<li><a href="/incoming/?last" >{% trans 'Incoming' %}</a></li>
+		<li><a href="/incoming/?last" >{% trans 'Incoming *' %}</a></li>
 		<li><a href="/document/?last" >{% trans 'Document' %}</a></li>
 		<li><a href="/outgoing/?last" >{% trans 'Outgoing' %}</a></li>
 		<li><a href="/processes/?last" >{% trans 'Process Errors' %}</a></li>
 	</ul>
 	<ul>
-		<a>{% trans 'All runs' %}</a>
-		<li><a href="/reports/?all" >{% trans 'Report (per run)' %}</a></li>
+		<a href="/reports/?all">{% trans 'All runs' %}</a>
+		<li><a href="/reports/?all" >{% trans 'Report (per run) *' %}</a></li>
         <li><a href="/incoming/?all" >{% trans 'Incoming' %}</a></li>
 		<li><a href="/document/?all" >{% trans 'Document' %}</a></li>
 		<li><a href="/outgoing/?all" >{% trans 'Outgoing' %}</a></li>
@@ -29,7 +27,7 @@
 		<li><a href="/confirm/?all" >{% trans 'Confirmations' %}</a></li>
 	</ul>
 	<ul>
-		<a>{% trans 'Select' %}</a>
+		<a href="/document/?select">{% trans 'Select' %}</a>
 		<li><a href="/reports/?select" >{% trans 'Reports (per run)' %}</a></li>
         <li><a href="/incoming/?select" >{% trans 'Incoming' %}</a></li>
 		<li><a href="/document/?select" >{% trans 'Document' %}</a></li>
@@ -73,8 +71,8 @@
 	<ul>
 		<a>{% trans 'Run' %}</a>
 		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new)' %}</a></li>
-		<li><a href="/runengine/?clparameter=--retrycommunication" >{% trans 'Retry user-indicated outgoing communication errors' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retransmit" >{% trans 'Run user-indicated retransmits' %}</a></li>
+		<li><a href="/runengine/?clparameter=--retrycommunication" >{% trans 'Retry user-indicated comm errors' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retry"  OnClick = "return confirm('{% trans 'Are you sure you want to retry ALL previous errors?\n' %}');">{% trans 'Retry all previous errors' %}</a></li>
 	</ul>
 {% else %}

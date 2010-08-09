@@ -36,9 +36,13 @@
                     </div>
                 </td>
                 <td>{% if row.status %}
-                        <img src="/media/images/error.png" style="width: 1em;"/>
+                        {% if row.lasterror or row.lastok or row.lastopen %}
+                            <img src="/media/img/admin/icon_error.gif" style="width: 1em;"/>
+                        {% else %}
+                            <img src="/media/img/admin/icon_alert.gif" style="width: 1em;"/>
+                        {% endif %}
                     {% else %}
-                        <img src="/media/images/ok.png" style="width: 1em;"/>
+                        <img src="/media/img/admin/icon_success.gif" style="width: 1em;"/>
                     {% endif %}
                 </td>
                 <td>{{row.type}}</td>

@@ -4,19 +4,15 @@ import viewlib
 django.contrib.admin.widgets.AdminSplitDateTime
 HiddenInput = django.forms.widgets.HiddenInput
 DEFAULT_ENTRY = ('',"---------")
-editypelist=[DEFAULT_ENTRY] + models.EDITYPES
+editypelist=[DEFAULT_ENTRY] + sorted(models.EDITYPES)
 confirmtypelist=[DEFAULT_ENTRY] + models.CONFIRMTYPE
 
-
 def getroutelist():     #needed because the routeid is needed (and this is not theprimary key
-    #~ return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.routes.objects.values_list('idroute', flat=True).all())) ]
-    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(models.routes.objects.values_list('idroute', flat=True).distinct()) ]
+    return [DEFAULT_ENTRY]+[(l,l) for l in models.routes.objects.values_list('idroute', flat=True).order_by('idroute').distinct() ]
 def getinmessagetypes():
-    #~ return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.translate.objects.values_list('frommessagetype', flat=True).all())) ]
-    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(models.translate.objects.values_list('frommessagetype', flat=True).distinct()) ]
+    return [DEFAULT_ENTRY]+[(l,l) for l in models.translate.objects.values_list('frommessagetype', flat=True).order_by('frommessagetype').distinct() ]
 def getoutmessagetypes():
-    #~ return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(models.translate.objects.values_list('tomessagetype', flat=True).all())) ]
-    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(models.translate.objects.values_list('tomessagetype', flat=True).distinct()) ]
+    return [DEFAULT_ENTRY]+[(l,l) for l in models.translate.objects.values_list('tomessagetype', flat=True).order_by('tomessagetype').distinct() ]
 def getallmessagetypes():
     return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(list(models.translate.objects.values_list('tomessagetype', flat=True).all()) + list(models.translate.objects.values_list('frommessagetype', flat=True).all()) )) ]
 
@@ -43,7 +39,7 @@ class ViewReports(View):
     template = 'bots/reports.html'
     action = '/reports/'
     status = django.forms.IntegerField(required=False,initial='',widget=HiddenInput())
-    
+
 class SelectIncoming(Select):
     template = 'bots/selectform.html'
     action = '/incoming/'
@@ -169,7 +165,7 @@ class ViewConfirm(View):
     topartner = django.forms.CharField(required=False,widget=HiddenInput())
     fromchannel = django.forms.CharField(required=False,widget=HiddenInput())
     tochannel = django.forms.CharField(required=False,widget=HiddenInput())
-    
+
 class UploadFileForm(django.forms.Form):
     file  = django.forms.FileField(label='Plugin to read',required=True,widget=django.forms.widgets.FileInput(attrs={'size':'100'}))
 
