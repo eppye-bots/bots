@@ -83,7 +83,9 @@ def _cleantransactions():
     vanaf = datetime.datetime.today() - datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
     lijst = list( botslib.query('''SELECT idta FROM report WHERE ts < %(vanaf)s''',{'vanaf':vanaf}))
     for rootta in lijst:
-        botslib.change('''DELETE FROM filereport WHERE idta = %(rootta)s''',{'rootta':rootta['idta']})
+        botslib.change('''DELETE FROM filereport WHERE reportidta = %(rootta)s''',{'rootta':rootta['idta']})
+        botslib.change('''DELETE FROM report WHERE idta = %(rootta)s''',{'rootta':rootta['idta']})
+        #~ botslib.change('''DELETE FROM filereport WHERE idta = %(rootta)s''',{'rootta':rootta['idta']})
     for index in range(1,len(lijst)):
         botslib.change('''DELETE FROM ta WHERE idta >= %(minrootta)s
                                          AND idta < %(maxrootta)s''',
