@@ -502,7 +502,7 @@ class xml(Outmessage):
         #~ print '    rec_att_mark',attributemarker
         for key,value in noderecord.items():    #find attributes belonging to xml-'record' and store in attributedict
             if key.startswith(attributemarker):
-                print '    record attribute',key,value
+                #~ print '    record attribute',key,value
                 attributedict[key[len(attributemarker):]] = value
         xmlrecord = ET.Element(recordtag,attributedict) #make the xml ET node
         if 'BOTSCONTENT' in noderecord:     #BOTSCONTENT is used to store the value/text of the xml-record itself.
