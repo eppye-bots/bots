@@ -28,7 +28,7 @@ def server_error(request, template_name='500.html'):
 def index(request,*kw,**kwargs):
     return django.shortcuts.render_to_response('admin/base.html', {},context_instance=django.template.RequestContext(request))
 
-def about(request,*kw,**kwargs):
+def home(request,*kw,**kwargs):
     return django.shortcuts.render_to_response('bots/about.html', {'botsinfo':botslib.botsinfo()},context_instance=django.template.RequestContext(request))
 
 def help(request,*kw,**kwargs):

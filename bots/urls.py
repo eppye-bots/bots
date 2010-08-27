@@ -12,7 +12,7 @@ urlpatterns = patterns('',
     (r'^login.*', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
     (r'^logout.*', 'django.contrib.auth.views.logout',{'next_page': '/'}),
     #login required
-    (r'^about.*', login_required(views.about)),
+    (r'^home.*', login_required(views.home)),
     (r'^help.*', login_required(views.help)),
     (r'^incoming.*', login_required(views.incoming)),
     (r'^detail.*', login_required(views.detail)),
@@ -23,8 +23,8 @@ urlpatterns = patterns('',
     (r'^confirm.*', login_required(views.confirm)),
     (r'^filer.*', login_required(views.filer)),
     #only staff
-    (r'^admin/$', 'bots.views.index'),  #do not show django admin root page
-    (r'^admin/bots/$', 'bots.views.index'),  #do not show django admin root page
+    (r'^admin/$', 'bots.views.home'),  #do not show django admin root page
+    (r'^admin/bots/$', 'bots.views.home'),  #do not show django admin root page
     (r'^admin/bots/uniek/.+$', redirect_to, {'url': '/admin/bots/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages. 
     (r'^admin/(.*)', staff_required(admin.site.root)),
     (r'^runengine.+', staff_required(views.runengine)),
