@@ -269,7 +269,11 @@ def database2indexfile(filename,function):
                 #~ list(models.persist.objects.all()) + \
     orgplugs = serializers.serialize("python", db_objects)
     #~ print orgpluglist
-    convertedplugs = []
+    #convertedplugs = []
+    f = open(filename + '.py','wb')
+    f.write('import datetime\n')
+    f.write('version = 2\n')
+    f.write('plugins = [\n')
     for plug in orgplugs:
         app,tablename = plug['model'].split('.',1)
         plug['fields']['plugintype'] = tablename
@@ -277,16 +281,14 @@ def database2indexfile(filename,function):
         pk = table._meta.pk.name
         if pk != 'id':
             plug['fields'][pk] = plug['pk']
-        convertedplugs.append(plug['fields'])
+        #convertedplugs.append(plug['fields'])
+        f.write(repr(plug['fields'])+',\n')
         botsglobal.logger.info(u'    write in index: %s',plug['fields'])
         #check confirmrule: id is non-artificla key?
-    f = open(filename + '.py','wb')
-    f.write('import datetime\n')
-    f.write('version = 2\n')
-    f.write('plugins = ')
-    f.write(repr(convertedplugs))
+    #f.write(repr(convertedplugs))
+    f.write(']\n')
     f.close()
-
+    
 def files2plugin(pluginzipfilehandler,function):
     if function=='codelist':
         return
