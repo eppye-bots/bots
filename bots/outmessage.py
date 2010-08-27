@@ -495,14 +495,17 @@ class xml(Outmessage):
         ''' fields in a node are written to xml fields; output is sorted according to grammar
         '''
         #first generate the xml-'record'
+        #~ print 'record',noderecord['BOTSID']
         attributedict = {}
         recordtag = noderecord['BOTSID']
-        attributemarker = recordtag + self.ta_info['attributemarker'] 
-        for key,value in noderecord.items():    #find the attributes for the xml-record, put these in attributedict
+        attributemarker = recordtag + self.ta_info['attributemarker']       #attributemarker is a marker in the fieldname used to find out if field is an attribute of either xml-'record' or xml-element
+        #~ print '    rec_att_mark',attributemarker
+        for key,value in noderecord.items():    #find attributes belonging to xml-'record' and store in attributedict
             if key.startswith(attributemarker):
+                print '    record attribute',key,value
                 attributedict[key[len(attributemarker):]] = value
         xmlrecord = ET.Element(recordtag,attributedict) #make the xml ET node
-        if 'BOTSCONTENT' in noderecord:
+        if 'BOTSCONTENT' in noderecord:     #BOTSCONTENT is used to store the value/text of the xml-record itself.
             xmlrecord.text = noderecord['BOTSCONTENT']
             del noderecord['BOTSCONTENT']
         for key in attributedict.keys():  #remove used fields
@@ -512,10 +515,13 @@ class xml(Outmessage):
         for field_def in self.defmessage.recorddefs[recordtag]:  #loop over fields in 'record'
             if field_def[ID] not in noderecord: #if field not in outmessage: skip
                 continue
+            #~ print '    field',field_def
             attributedict = {}
             attributemarker = field_def[ID] + self.ta_info['attributemarker'] 
+            #~ print '    field_att_mark',attributemarker
             for key,value in noderecord.items():
                 if key.startswith(attributemarker):
+                    print '        field attribute',key,value
                     attributedict[key[len(attributemarker):]] = value
             ET.SubElement(xmlrecord, field_def[ID],attributedict).text=noderecord[field_def[ID]]    #add xml element to xml record
             for key in attributedict.keys():  #remove used fields
