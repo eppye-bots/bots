@@ -177,9 +177,9 @@ def document(request,*kw,**kwargs):
             formout = forms.SelectDocument()
             return viewlib.render(request,formout)
         elif 'all' in request.GET:             #via menu, go to all runs
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':True}
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
         else:                              #via menu, go to view form for last run
-            cleaned_data = {'page':1,'lastrun':True,'sortedby':'idta','sortedasc':True}
+            cleaned_data = {'page':1,'lastrun':True,'sortedby':'idta','sortedasc':False}
     else:                                  # request.method == 'POST'
         if 'fromselect' in request.POST:        #coming from select criteria screen
             formin = forms.SelectDocument(request.POST)
@@ -192,6 +192,11 @@ def document(request,*kw,**kwargs):
             elif '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
                 formout = forms.SelectDocument(formin.cleaned_data)
                 return viewlib.render(request,formout)
+            elif 'retransmit' in request.POST:        #coming from Documents, no reportidta
+                idta = request.POST[u'retransmit']
+                filereport = models.filereport.objects.get(idta=int(idta),statust=DONE)
+                filereport.retransmit = not filereport.retransmit
+                filereport.save()
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
