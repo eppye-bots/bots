@@ -223,9 +223,11 @@ def router(routedict):
     
     #communication.run translation
     if routedict['translateind']:
-        #processes files with status FILEIN
         botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
-        transform.transform(idroute=routedict['idroute'])
+        if botslib.addinfo(change={'status':MAILBAG},where={'status':FILEIN,'idroute':routedict['idroute'],'editype':'MAILBAG'})
+            transform.splitmailbag(idroute=routedict['idroute'])
+        botslib.addinfo(change={'status':TRANSLATE},where={'status':FILEIN,'idroute':routedict['idroute']})
+        transform.translate(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
         
     #merge messags & communication.run outgoing channel
