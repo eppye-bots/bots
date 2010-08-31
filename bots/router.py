@@ -224,7 +224,7 @@ def router(routedict):
     #communication.run translation
     if routedict['translateind']:
         botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
-        if botslib.addinfo(change={'status':MAILBAG},where={'status':FILEIN,'idroute':routedict['idroute'],'editype':'MAILBAG'})
+        if botslib.addinfo(change={'status':MAILBAG},where={'status':FILEIN,'idroute':routedict['idroute'],'editype':'mailbag'}):
             transform.splitmailbag(idroute=routedict['idroute'])
         botslib.addinfo(change={'status':TRANSLATE},where={'status':FILEIN,'idroute':routedict['idroute']})
         transform.translate(idroute=routedict['idroute'])
