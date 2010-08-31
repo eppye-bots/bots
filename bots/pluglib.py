@@ -283,7 +283,7 @@ def database2indexfile(filename,function):
             plug['fields'][pk] = plug['pk']
         #convertedplugs.append(plug['fields'])
         f.write(repr(plug['fields'])+',\n')
-        botsglobal.logger.info(u'    write in index: %s',plug['fields'])
+        botsglobal.logger.debug(u'    write in index: %s',plug['fields'])
         #check confirmrule: id is non-artificla key?
     #f.write(repr(convertedplugs))
     f.write(']\n')
@@ -330,5 +330,5 @@ def files2pluginbydir(function,pluginzipfilehandler,dirname,defaultdirname):
             if ext in ['.pyc','.pyo'] or bestand in ['__init__.py']:
                 continue
             pluginzipfilehandler.write(os.path.join(root,bestand),os.path.join(rootinplugin,bestand))
-            botsglobal.logger.info(_(u'    write file "%s".'),os.path.join(rootinplugin,bestand))
+            botsglobal.logger.debug(_(u'    write file "%s".'),os.path.join(rootinplugin,bestand))
 
