@@ -521,7 +521,7 @@ class xml(Outmessage):
             #~ print '    field_att_mark',attributemarker
             for key,value in noderecord.items():
                 if key.startswith(attributemarker):
-                    print '        field attribute',key,value
+                    #~ print '        field attribute',key,value
                     attributedict[key[len(attributemarker):]] = value
             ET.SubElement(xmlrecord, field_def[ID],attributedict).text=noderecord[field_def[ID]]    #add xml element to xml record
             for key in attributedict.keys():  #remove used fields

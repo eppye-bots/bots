@@ -325,6 +325,7 @@ class Inmessage(message.Message):
                     oldkriterium = kriterium
                 elif kriterium != oldkriterium:
                     ta_info = self.ta_info.copy()
+                    ta_info.update(oldline.queries)        #update ta_info with information (from previous line) 20100905
                     #~ ta_info['botsroot']=self.root   #give mapping script access to all information in edi file: all records
                     yield _edifromparsed(self.__class__.__name__,newroot,ta_info)
                     newroot = node.Node()  #make new empty root node.
@@ -332,9 +333,11 @@ class Inmessage(message.Message):
                 else:
                     pass    #if kriterium is the same
                 newroot.append(line)
+                oldline = line #save line 20100905
             else:
                 if not first:
                     ta_info = self.ta_info.copy()
+                    ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
                     #~ ta_info['botsroot']=self.root
                     yield _edifromparsed(self.__class__.__name__,newroot,ta_info)
         else:   #no split up indicated in grammar; s
