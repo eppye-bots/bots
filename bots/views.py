@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 import subprocess
 import django
 from django.utils.translation import ugettext as _
@@ -387,7 +388,7 @@ def plugin(request,*kw,**kwargs):
     
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
-        filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function'])
+        filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function']) + time.strftime('_%Y%m%d')
         #~ filename = os.path.abspath(request.GET['function'])
         botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
         try:

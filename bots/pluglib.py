@@ -242,7 +242,7 @@ def load(pathzipfile):
 def dump(filename,function):    #filename is without extension!
     database2indexfile(filename,function)
     pluginzipfilehandler = zipfile.ZipFile(filename+'.zip', 'w')
-    pluginzipfilehandler.write(filename+'.py','botsindex.py')   #write index file to pluginfile
+    pluginzipfilehandler.write(filename+'.py','botsindex.py',zipfile.ZIP_DEFLATED)   #write index file to pluginfile
     os.remove(filename+'.py')
     files2plugin(pluginzipfilehandler,function)
     pluginzipfilehandler.close()
@@ -329,6 +329,6 @@ def files2pluginbydir(function,pluginzipfilehandler,dirname,defaultdirname):
             ext = os.path.splitext(bestand)[1]
             if ext in ['.pyc','.pyo'] or bestand in ['__init__.py']:
                 continue
-            pluginzipfilehandler.write(os.path.join(root,bestand),os.path.join(rootinplugin,bestand))
+            pluginzipfilehandler.write(os.path.join(root,bestand),os.path.join(rootinplugin,bestand),zipfile.ZIP_DEFLATED)
             botsglobal.logger.debug(_(u'    write file "%s".'),os.path.join(rootinplugin,bestand))
 
