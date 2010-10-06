@@ -260,12 +260,16 @@ class Inmessage(message.Message):
         ''' extract information from edifile using QUERIES in grammar.structure; information will be placed in ta_info and in db-ta
         '''
         if QUERIES in trecord:
+            #~ print 'Print QUERIES'
             tmpdict = {}
+            #~ print trecord[QUERIES]
             for key,value in trecord[QUERIES].items():
                 found = node.enhancedget(value)   #search in last added node
-                #~ print 'query',found,value
                 if found:
+                    #~ print '  found',found,value
                     tmpdict[key] = found    #copy key to avoid memory problems
+                #~ else:
+                    #~ print '    not found',value
             node.queries = tmpdict
 
     def _readcontent_edifile(self):
