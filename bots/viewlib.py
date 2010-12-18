@@ -208,7 +208,8 @@ def trace2detail(ta):
     return detaillist
 
 def datetimefrom():
-    terug = datetime.datetime.today()-datetime.timedelta(1860)
+    #~ terug = datetime.datetime.today()-datetime.timedelta(1860)
+    terug = datetime.datetime.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
     return terug.strftime('%Y-%m-%d %H:%M:%S')
 
 def datetimeuntil():
