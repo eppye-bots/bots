@@ -476,8 +476,12 @@ def runengine(request,*kw,**kwargs):
 
 def unlock(request,*kw,**kwargs):
     if request.method == 'GET':
-        models.mutex.objects.get(mutexk=1).delete()
-        request.user.message_set.create(message=_(u'Unlocked database.'))
+        lijst = list(models.mutex.objects.filter(mutexk=1).all())
+        if lijst:
+            lijst[0].delete()
+            request.user.message_set.create(message=_(u'Unlocked database.'))
+        else:
+            request.user.message_set.create(message=_(u'Database was not locked.'))
     return django.shortcuts.redirect('/')
 
 def sendtestmailmanagers(request,*kw,**kwargs):

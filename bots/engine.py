@@ -122,6 +122,7 @@ def start():
             sys.exit(1)
             
     #*************get list of routes to run****************************************
+    #~ raise Exception('locked database')       #for testing database lock: abort, database will be locked
     if routestorun: 
         botsglobal.logger.info(u'Run routes from command line: "%s".',str(routestorun))
     else:   # no routes from command line parameters: fetch all active routes from database
