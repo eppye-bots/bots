@@ -293,12 +293,26 @@ class Outmessage(message.Message):
         ''' convert self.records to a file.
             using the right editype (edifact, x12, etc) and charset.
         '''
-        for record in self.records:     #loop all records
-            try:
-                self._outstream.write(self._record2string(record))
-            except UnicodeEncodeError, flup:
-                raise botslib.OutMessageError(_(u'Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=flup)
-                #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
+        try:
+            wrap_length = int(self.ta_info['wrap_length'])
+        except:
+            wrap_length = 0
+        if wrap_length:
+            s = ''.join(self.records)
+            #~ for record in self.records: # join all records
+                #~ s = s + self._record2string(record)
+            for i in range(0,len(s),wrap_length): # then split in fixed lengths
+                try:
+                    self._outstream.write(s[i:i+wrap_length] + '\r\n')
+                except UnicodeEncodeError, flup:
+                    raise botslib.OutMessageError(_(u'Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=flup)
+        else:
+            for record in self.records:     #loop all records
+                try:
+                    self._outstream.write(self._record2string(record))
+                except UnicodeEncodeError, flup:
+                    raise botslib.OutMessageError(_(u'Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=flup)
+                    #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
 
     def _record2string(self,record):
         ''' write (all fields of) a record using the right separators, escape etc

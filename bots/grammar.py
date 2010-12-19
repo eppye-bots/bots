@@ -386,6 +386,7 @@ class csv(Grammar):
         'skip_firstline':False,
         'stripfield_sep':False, #safe choice, as csv is no real standard
         'triad':'',
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         }
         
 class fixed(Grammar):
@@ -419,6 +420,7 @@ class fixed(Grammar):
         'startrecordID':0,
         'stripfield_sep':False,
         'triad':'',
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         }
         
 class idoc(fixed):
@@ -453,6 +455,7 @@ class idoc(fixed):
         'startrecordID':0,
         'stripfield_sep':False,
         'triad':'',
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         'MANDT':'0',
         'DOCNUM':'0',
         }
@@ -596,6 +599,7 @@ class edifact(Grammar):
         'stripfield_sep':True,
         'triad':'',
         'version':'3',
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         'UNB.S002.0007':'14',
         'UNB.S003.0007':'14',
         'UNB.0026':'',
@@ -637,6 +641,7 @@ class x12(Grammar):
         'stripfield_sep':True,
         'triad':'',
         'version':'00403',
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         'ISA01':'00',
         'ISA02':'          ',
         'ISA03':'00',
@@ -764,6 +769,7 @@ class tradacoms(Grammar):
         'skip_char':'\r\n',
         'stripfield_sep':True,
         'triad':'',
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         'STX.STDS1':'ANA',
         'STX.STDS2':'1',
         'STX.FROM.02':'',
