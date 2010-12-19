@@ -59,6 +59,7 @@ class CcodeAdmin(BotsAdmin):
     list_filter = ('ccodeid',)
     #~ ordering = ('ccodeid','leftcode')
     actions = ('bulk_delete',)
+    search_fields = ('leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8')
 admin.site.register(models.ccode,CcodeAdmin)
 
 class CcodetriggerAdmin(BotsAdmin):
