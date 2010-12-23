@@ -21,14 +21,16 @@ exeptions:
 - translate: may be confusing. But anyway, no existing translate will be overwritten....
 '''
 
-#lijst is used for filtering and sorting the plugins. 
-lijst = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','chanpar','translate','routes','confirmrule']
+#plugincomparelist is used for filtering and sorting the plugins. 
+plugincomparelist = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','chanpar','translate','routes','confirmrule']
 
 
 def pluglistcmp(key1,key2):
-    return lijst.index(key1) - lijst.index(key2)
+    #sort by plugincomparelist
+    return plugincomparelist.index(key1) - plugincomparelist.index(key2)
 
 def pluglistcmpisgroup(plug1,plug2):
+    #sort partnergroups befoe parters
     if plug1['plugintype'] == 'partner' and plug2['plugintype'] == 'partner':
         return  int(plug2['isgroup']) - int(plug1['isgroup'])
     else:
@@ -48,8 +50,10 @@ def writetodatabase(orgpluglist):
                 raise botslib.PluginError(_('key of dict is not a string: "%s". Nothing is written.')%(plug))
         if 'plugintype' not in plug:
             raise botslib.PluginError(_(u'"plugintype" missing in: "%s". Nothing is written.')%(plug))
-            
+           
+    #special case: compatibility with bots 1.* plugins.
     #in bots 1.*, partnrgroup was in seperate tabel; in bots 2.* partnergroup is in partner
+    #later on, partnergroup will get filtered
     for plug in orgpluglist[:]:
         if plug['plugintype'] == 'partnergroup':
             for plugpartner in orgpluglist:
@@ -63,7 +67,7 @@ def writetodatabase(orgpluglist):
     #copy & filter orgpluglist; do plugtype specific adaptions
     pluglist = []
     for plug in orgpluglist:
-        if plug['plugintype'] == 'ccode':   #add ccodetrigger.
+        if plug['plugintype'] == 'ccode':   #add ccodetrigger. #20101223: this is NOT needed; codetrigger shoudl be in plugin.
             for seachccodetriggerplug in pluglist:
                 if seachccodetriggerplug['plugintype']=='ccodetrigger' and seachccodetriggerplug['ccodeid']==plug['ccodeid']:
                     break
@@ -85,18 +89,20 @@ def writetodatabase(orgpluglist):
                     plug['defer'] = False
         elif plug['plugintype'] == 'confirmrule':
             plug.pop('id', None)       #id is an artificial key, delete,
-        elif plug['plugintype'] not in lijst: #filter
+        elif plug['plugintype'] not in plugincomparelist:   #if not in plugincomparelist: do not use
             continue
         pluglist.append(plug)
     #sort pluglist: this is needed for relationships
     pluglist.sort(cmp=pluglistcmp,key=operator.itemgetter('plugintype'))
-    #2nd sort: 
+    #2nd sort: sort partenergroups before partners
     pluglist.sort(cmp=pluglistcmpisgroup)
     #~ for plug in pluglist:
         #~ print 'list:',plug
     
     for plug in pluglist:
         botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
+        #remember the plugintype
+        plugintype = plug['plugintype']
         #~ print '\nstart plug', plug
         table = django.db.models.get_model('bots',plug['plugintype'])
         #~ print table
@@ -108,7 +114,8 @@ def writetodatabase(orgpluglist):
                 table._meta.get_field(key)
             except django.db.models.fields.FieldDoesNotExist:
                 del plug[key]
-        #make right key(s)fields (in dict 'sleutel')
+                
+        #get key(s), put in dict 'sleutel'
         pk = table._meta.pk.name
         if pk == 'id':
             sleutel = {}
@@ -117,23 +124,25 @@ def writetodatabase(orgpluglist):
                     sleutel[key]=plug.pop(key)
         else:
             sleutel = {pk:plug.pop(pk)}
+            
         #now we have:
         #- sleutel: unique key fields. mind: translate and confirmrule have empty 'sleutel' now
         #- plug: rest of database fields
+        sleutelorg = sleutel.copy()     #make a copy of the original sleutel; this is needed later
         
-        #get real column names for fields: for relational fields 
+        #get real column names for fields in plug
         loopdictionary = plug.keys()
         for fieldname in loopdictionary:
             fieldobject = table._meta.get_field_by_name(fieldname)[0]
             try:
-                if fieldobject.column != fieldname:
-                    plug[fieldobject.column] = plug[fieldname]
-                    del plug[fieldname]
+                if fieldobject.column != fieldname:     #if name in plug is not the real field name (in database)
+                    plug[fieldobject.column] = plug[fieldname]  #add new key in plug
+                    del plug[fieldname]                         #delete old key in plug
                     #~ print 'replace _id for:',fieldname
             except:
-                print 'no field column for:',fieldname
-        #get real column names for fields in sleutel
-        sleutelorg = sleutel.copy()
+                print 'no field column for:',fieldname          #should this be raised?
+                
+        #get real column names for fields in sleutel; basically the same loop but now for sleutel
         loopdictionary = sleutel.keys()
         for fieldname in loopdictionary:
             fieldobject = table._meta.get_field_by_name(fieldname)[0]
@@ -143,21 +152,32 @@ def writetodatabase(orgpluglist):
                     del sleutel[fieldname]
             except:
                 print 'no field column for',fieldname
+        #now we have:
+        #- sleutel: unique key fields. mind: translate and confirmrule have empty 'sleutel' now
+        #- sleutelorg: original key fields
+        #- plug: rest of database fields
+        #- plugintype
+        #all fields have the right database name 
                 
         #~ print 'plug attr',plug
         #~ print '**sleutel',sleutelorg
         
-        if sleutelorg:  #translate and confirmrule have empty 'sleutel'
-            checkifexistsindb = table.objects.filter(**sleutelorg).all()
-            if len(checkifexistsindb)>1:
-                raise Exception('not unique?')
-            elif len(checkifexistsindb)==1:
-                checkifexistsindb[0].delete()
-                #~ print 'deleted old enty'
+        #existing ccodetriggers are not overwritten (as deleting ccodetrigger also deletes ccodes)
+        if plugintype == 'ccodetrigger':
+            listexistingentries = table.objects.filter(**sleutelorg).all()
+            if len(listexistingentries) >= 1:
+                continue
+        #now find the entry using the keys in sleutelorg; delete the existing entry.
+        if sleutelorg:  #not for translate and confirmrule; these have an have an empty 'sleutel'
+            listexistingentries = table.objects.filter(**sleutelorg).all()
+            if len(listexistingentries)>1:
+                raise Exception('not unique?')      #this should not be possible: sleutelorg is the key.
+            elif len(listexistingentries)==1:
+                listexistingentries[0].delete()
             botsglobal.logger.info(_(u'        Existing entry in database is deleted.'))
             
         dbobject = table(**sleutel)   #create db-object
-        if 'idpartner'in sleutel:   #for partners, first the partner needs to be saved before groups can be made
+        if plugintype == 'partner':   #for partners, first the partner needs to be saved before groups can be made
             dbobject.save()
         for key,value in plug.items():
             setattr(dbobject,key,value)
