@@ -13,14 +13,14 @@ def showusage():
     print "        -c<directory>   directory for configuration files (default: config)."
     
 
-def start(botsinifile = 'config'):
+def start(configdir = 'config'):
     #********command line arguments**************************
     for arg in sys.argv[1:]:
         if not arg:
             continue
         if arg.startswith('-c'):
-            botsinifile = arg[2:]
-            if not botsinifile:
+            configdir = arg[2:]
+            if not configdir:
                 print 'Indicated Bots should use specific .ini file but no file name was given.'
                 sys.exit(1)
         elif arg in ["?", "/?"] or arg.startswith('-'):
@@ -30,7 +30,7 @@ def start(botsinifile = 'config'):
             showusage()
     #**************initialise configuration file******************************
     try:
-        botslib.initconfigurationfile(botsinifile)
+        botsinit.generalinit(configdir)
         botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #
     except:
         traceback.print_exc()
@@ -38,7 +38,7 @@ def start(botsinifile = 'config'):
         sys.exit(1)
     #**************initialise logging******************************
     try:
-        botslib.initlogging()
+        botsinit.initenginelogging()
     except:
         traceback.print_exc()
         print 'Error in initialising logging system.'

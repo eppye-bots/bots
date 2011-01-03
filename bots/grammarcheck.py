@@ -19,9 +19,10 @@ def showusage():
     sys.exit(0)
 
 def startmulti(grammardir,editype):
+    ''' used in seperate tool for bulk checking of gramamrs while developing edifact->botsgramamrs '''
     import glob
-    botslib.initconfigurationfile('config')
-    botslib.initlogging()
+    botslib.generalinit('config')
+    botslib.initenginelogging()
     for g in glob.glob(grammardir):
         g1 = os.path.basename(g)
         g2 = os.path.splitext(g1)[0]
@@ -44,13 +45,13 @@ def start():
     #********command line arguments**************************
     editype =''
     messagetype = ''
-    botsinifile = 'config'
+    configdir = 'config'
     for arg in sys.argv[1:]:
         if not arg:
             continue
         if arg.startswith('-c'):
-            botsinifile = arg[2:]
-            if not botsinifile:
+            configdir = arg[2:]
+            if not configdir:
                 print '    !!Indicated Bots should use specific .ini file but no file name was given.'
                 showusage()
         elif arg in ["?", "/?"] or arg.startswith('-'):
@@ -66,8 +67,8 @@ def start():
     #********end handling command line arguments**************************
 
     try:
-        botslib.initconfigurationfile(botsinifile)
-        botslib.initlogging()
+        botsinit.generalinit(configdir)
+        botsinit.initenginelogging()
         grammar.grammarread(editype,messagetype)
     except:
         print 'Found error in grammar:'
