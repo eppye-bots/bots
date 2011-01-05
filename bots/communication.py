@@ -404,6 +404,7 @@ class _comsession(object):
                 if not self.channeldict['starttls']:    #reusing old datbase name; 'no check on "from:" email adress'
                     frompartner = self.mailaddress2idpartner(frommail)
                 topartner = ''  #initialise topartner
+                tomail = ''  #initialise tomail
                 if not self.channeldict['apop']:    #reusing old datbase name; 'no check on "to:" email adress'
                     for toname,tomail_tmp in tos:   #all tos-addresses are checked; only one needs to be authorised.
                         try:
