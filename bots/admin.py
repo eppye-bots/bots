@@ -79,7 +79,7 @@ class ChannelAdmin(BotsAdmin):
         (_(u'FTP specific data'),{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
                          'classes': ('collapse',)
                         }),
-        (_(u'Advanced'),{'fields': (('lockname', 'syslock'), 'parameters', 'starttls','askmdn'),
+        (_(u'Advanced'),{'fields': (('lockname', 'syslock'), 'parameters', 'starttls','apop','askmdn'),
                          'classes': ('collapse',)
                         }),
     )

@@ -400,22 +400,22 @@ class _comsession(object):
                 subject         = msg['subject']
                 contenttype     = msg.get_content_type()
                 #authorize: find the frompartner for the email addresses in the message
+                frompartner = ''
                 if not self.channeldict['starttls']:    #reusing old datbase name; 'no check on "from:" email adress'
                     frompartner = self.mailaddress2idpartner(frommail)
-                else:
-                    frompartner = ''
                 topartner = ''  #initialise topartner
-                for toname,tomail_tmp in tos:   #all tos-addresses are checked; inly one needs to be authorised.
-                    try:
-                        topartner =  self.mailaddress2idpartner(tomail_tmp)
-                        tomail = tomail_tmp
-                        break
-                    except botslib.CommunicationInError:
-                        pass
-                else:
-                    if not topartner:
-                        emailtos = [address[1] for address in tos]
-                        raise botslib.CommunicationInError(_(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").'),email=emailtos,idchannel=self.channeldict['idchannel'])
+                if not self.channeldict['apop']:    #reusing old datbase name; 'no check on "to:" email adress'
+                    for toname,tomail_tmp in tos:   #all tos-addresses are checked; only one needs to be authorised.
+                        try:
+                            topartner =  self.mailaddress2idpartner(tomail_tmp)
+                            tomail = tomail_tmp
+                            break
+                        except botslib.CommunicationInError:
+                            pass
+                    else:
+                        if not topartner:
+                            emailtos = [address[1] for address in tos]
+                            raise botslib.CommunicationInError(_(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").'),email=emailtos,idchannel=self.channeldict['idchannel'])
                         
                 
                 #update transaction of mail with information found in mail
