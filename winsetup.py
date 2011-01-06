@@ -4,6 +4,11 @@ from distutils.core import setup
 #~ from setuptools import setup
 
 
+
+
+
+
+
 def fullsplit(path, result=None):
     """
     Split a pathname into components (the opposite of os.path.join) in a
@@ -46,16 +51,16 @@ if len(sys.argv) > 1 and 'bdist_wininst' in sys.argv[1:]:
 
 setup(
     name="bots",
-    version="2.0.2",
+    version="2.0.3",
     author = "eppye",
     author_email = "eppye.bots@gmail.com",
     url = "http://bots.sourceforge.net/",
-    description="Bots open source Edi software",
+    description="Bots open source Edi translator",
     long_description = "Bots is complete software for EDI (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml",
     platforms="OS Independent (Written in an interpreted language)",
     license="GNU General Public License (GPL)",
     classifiers = [
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'License :: OSI Approved :: GNU General Public License (GPL)',
@@ -76,4 +81,3 @@ setup(
     packages = packages,
     data_files = data_files,
     )
-
