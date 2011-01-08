@@ -298,9 +298,9 @@ class Outmessage(message.Message):
         except:
             wrap_length = 0
         if wrap_length:
-            s = ''.join(self.records)
-            #~ for record in self.records: # join all records
-                #~ s = s + self._record2string(record)
+            #~ s = ''.join(self.records)
+            for record in self.records: # join all records
+                s = s + self._record2string(record)
             for i in range(0,len(s),wrap_length): # then split in fixed lengths
                 try:
                     self._outstream.write(s[i:i+wrap_length] + '\r\n')
