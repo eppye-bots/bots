@@ -3,6 +3,10 @@ import StringIO
 import time
 import sys
 try:
+    import cPickle as pickle
+except:
+    import pickle
+try:
     import cElementTree as ET
 except ImportError:
     try:
@@ -1052,3 +1056,15 @@ class jsonnocheck(json):
 
 class database(jsonnocheck):
     pass
+
+class db(Inmessage):
+    ''' the database-object is unpickled, and passed to the mapping script.
+    '''
+    def initfromfile(self):
+        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        f = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
+        self.root = pickle.load(f)
+        f.close()
+        
+    def nextmessage(self):
+        yield self

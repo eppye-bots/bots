@@ -1,5 +1,8 @@
 '''module contains the functions to be called from user scripts'''
-import pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import re
 import copy
 from django.utils.translation import ugettext as _

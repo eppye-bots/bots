@@ -1,5 +1,9 @@
 import os
 import posixpath
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import email
 import email.Utils
 #~ import email.Header
@@ -1115,7 +1119,9 @@ class intercommit(_comsession):
 
 
 class database(_comsession):
-    ''' communicate with a database; directly read or write from a database.
+    ''' this class is obsolete and only heere for compatibility reasons.
+        this calls is repalced by class db
+        communicate with a database; directly read or write from a database.
         the user HAS to provide a script that does the actual import/export using SQLalchemy API.
         use of channel parameters:
         - path: contains the connection string (a sqlachlemy db uri)
@@ -1191,6 +1197,84 @@ class database(_comsession):
     def disconnect(self):
         self.session.close()
         #~ pass
+
+class db(_comsession):
+    ''' communicate with a database; directly read or write from a database.
+        the user HAS to provide a script file in usersys/communicationscripts that does the actual import/export using **some** python database library.
+        Other parameters are passed, use them for your own convenience.
+        Bots 'pickles' the results returned from the user scripts.
+    '''
+    def connect(self):
+        botsglobal.logger.debug(u'(try) to read user databasescript channel "%s".',self.channeldict['idchannel'])
+        self.dbscript,self.dbscriptname = botslib.botsimport('communicationscripts',self.channeldict['idchannel']) #get the dbconnector-script
+        if not hasattr(self.dbscript,'connect'):
+            raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='connect',script=self.dbscript)
+        if self.channeldict['inorout']=='in' and not hasattr(self.dbscript,'incommunicate'):
+            raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='incommunicate',script=self.dbscript)
+        if self.channeldict['inorout']=='out' and not hasattr(self.dbscript,'outcommunicate'):
+            raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='outcommunicate',script=self.dbscript)
+        if not hasattr(self.dbscript,'disconnect'):
+            raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='disconnect',script=self.dbscript)
+            
+        self.dbconnection = botslib.runscript(self.dbscript,self.dbscriptname,'connect',channeldict=self.channeldict)
+
+    @botslib.log_session
+    def incommunicate(self):
+        ''' read data from database.
+            returns db_objects;
+            if this is None, do nothing
+            if this is a list, treat each member of the list as a seperate 'message'
+        '''
+        db_objects = botslib.runscript(self.dbscript,self.dbscriptname,'incommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection)
+        if not db_objects:
+            return
+        if not isinstance(db_objects,list):
+            db_objects = [db_objects]
+        
+        for db_object in db_objects:
+            ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
+                                                status=EXTERNIN,
+                                                fromchannel=self.channeldict['idchannel'],
+                                                charset=self.channeldict['charset'],
+                                                idroute=self.idroute)
+            ta_to = ta_from.copyta(status=RAWIN)
+            tofilename = str(ta_to.idta)
+            tofile = botslib.opendata(tofilename,'wb')
+            pickle.dump(db_object, tofile,2)
+            tofile.close()
+            ta_from.update(statust=DONE)
+            ta_to.update(filename=tofilename,statust=OK)
+
+    @botslib.log_session
+    def outcommunicate(self):
+        ''' write data to database.
+        '''
+        for row in botslib.query('''SELECT idta,filename
+                                    FROM  ta
+                                    WHERE idta>%(rootidta)s
+                                        AND status=%(status)s
+                                        AND statust=%(statust)s
+                                        AND tochannel=%(tochannel)s
+                                        ''',
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    'status':RAWOUT,'statust':OK}):
+            try:
+                ta_from = botslib.OldTransaction(row['idta'])
+                ta_to = ta_from.copyta(status=EXTERNOUT)
+                fromfile = botslib.opendata(row['filename'], 'rb')
+                db_object = pickle.load(fromfile)
+                fromfile.close()
+                botslib.runscript(self.dbscript,self.dbscriptname,'outcommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection,db_object=db_object)
+            except:
+                txt=botslib.txtexc()
+                ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'])
+            else:
+                ta_from.update(statust=DONE)
+                ta_to.update(statust=DONE,filename=self.channeldict['path'])
+        
+    def disconnect(self):
+        botslib.runscript(self.dbscript,self.dbscriptname,'disconnect',channeldict=self.channeldict,dbconnection=self.dbconnection)
+
 
 
 class communicationscript(_comsession):

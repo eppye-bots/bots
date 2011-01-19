@@ -39,6 +39,7 @@ EDITYPES = [
     ('mailbag', _(u'mailbag')),
     ('idoc', _(u'idoc')),
     ('database', _(u'database')),
+    ('db', _(u'db')),
     ('xmlnocheck', _(u'xmlnocheck')),
     ('jsonnocheck', _(u'jsonnocheck')),
     ('template', _(u'template')),
@@ -63,6 +64,7 @@ CHANNELTYPE = (
     ('mimefile', _(u'mimefile')),
     ('intercommit', _(u'intercommit')),
     ('database', _(u'database')),
+    ('db', _(u'db')),
     ('communicationscript', _(u'communicationscript')),
     )
 CONFIRMTYPE = [

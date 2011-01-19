@@ -1,4 +1,8 @@
 import time
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import decimal
 NODECIMAL = decimal.Decimal(1)
 try:
@@ -690,3 +694,19 @@ class template(Outmessage):
 class database(jsonnocheck):
     pass
     
+class db(Outmessage):
+    ''' out.root is pickled, and saved.
+    '''
+    def __init__(self,ta_info):
+        super(db,self).__init__(ta_info)
+        self.root = None    #make root None; root is not a Node-object anyway; None can easy be tested when writing.
+
+    def writeall(self):
+        if self.root is None:
+            raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
+        botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+        self._outstream = botslib.opendata(self.ta_info['filename'],'wb')
+        db_object = pickle.dump(self.root,self._outstream,2)
+        self._outstream.close()
+        botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
+        self.ta_info['envelope'] = 'db'     #use right enveloping for db: no coping etc, use same file.

@@ -445,3 +445,9 @@ class myxmlenvelop(xml):
         for filename in ta_list:
             self.out.put({'BOTSID':'root'},{'BOTSID':include,include + '__parse':'xml',include + '__href':filename})
         self.out.envelopewrite(self.out.root)   #'resolves' the included xml files 
+
+class db(Envelope):
+    ''' Only copies the input files to one output file.'''
+    def run(self):
+        botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
+        self.ta_info['filename'] = self.ta_list[0]
