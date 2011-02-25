@@ -4,6 +4,7 @@ try:
     import cPickle as pickle
 except:
     import pickle
+import time
 import email
 import email.Utils
 #~ import email.Header
@@ -89,48 +90,50 @@ class _comsession(object):
                 self.connect()
                 self.outcommunicate()
                 self.disconnect()
-                self.outarchive()
+                self.archive()
         else:   #incommunication
             if botsglobal.incommunicate: #for in-communication: only communicate for new run
                 self.connect()
                 self.incommunicate()
                 self.disconnect()
             self.postcommunicate(RAWIN,FILEIN)
-            self.inarchive()
+            self.archive()
 
-
-    def inarchive(self):
-        '''archive received files; archive only if receive is correct.'''
+    def archive(self):
+        '''archive received or send files; archive only if receive is correct.'''
         if not self.channeldict['archivepath']:
             return
-        for row in botslib.query('''SELECT filename
+        if self.channeldict['inorout'] == 'in':
+            status = FILEIN
+            statust = OK
+            channel = 'fromchannel'
+        else:
+            status = FILEOUT
+            statust = DONE
+            channel = 'tochannel'
+           
+        if self.userscript and hasattr(self.userscript,'archivepath'):
+            archivepath = botslib.runscript(self.userscript,self.scriptname,'archivepath',channeldict=self.channeldict)
+        else:
+            archivepath = botslib.join(self.channeldict['archivepath'],time.strftime('%Y%m%d'))
+        botslib.dirshouldbethere(archivepath)
+        for row in botslib.query('''SELECT filename,idta
                                     FROM  ta
                                     WHERE idta>%(rootidta)s
                                     AND   status=%(status)s
                                     AND   statust=%(statust)s
-                                    AND   fromchannel=%(idchannel)s
+                                    AND   ''' + channel + '''=%(idchannel)s
                                     AND   idroute=%(idroute)s
                                     ''',
-                                    {'idchannel':self.channeldict['idchannel'],'status':FILEIN,
-                                    'statust':OK,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
-            botslib.archivefile(self.channeldict['archivepath'],row['filename'])
+                                    {'idchannel':self.channeldict['idchannel'],'status':status,
+                                    'statust':statust,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
+            absfilename = botslib.abspathdata(row['filename'])
+            if self.userscript and hasattr(self.userscript,'archivename'):
+                archivename = botslib.runscript(self.userscript,self.scriptname,'archivename',channeldict=self.channeldict,idta=row['idta'],filename=absfilename)
+                shutil.copy(absfilename,botslib.join(archivepath,archivename))
+            else:
+                shutil.copy(absfilename,archivepath)
 
-    def outarchive(self):
-        '''archive send files; archive only if send is correct.'''
-        if not self.channeldict['archivepath']:
-            return
-        for row in botslib.query('''SELECT filename
-                                    FROM  ta
-                                    WHERE idta>%(rootidta)s
-                                    AND   status=%(status)s
-                                    AND   statust=%(statust)s
-                                    AND   tochannel=%(idchannel)s
-                                    AND   idroute=%(idroute)s
-                                    ''',
-                                    {'idchannel':self.channeldict['idchannel'],'status':FILEOUT,
-                                    'statust':DONE,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
-            botslib.archivefile(self.channeldict['archivepath'],row['filename'])
-        
     def countoutfiles(self):
         ''' counts the number of edifiles to be transmitted.'''
         for row in botslib.query('''SELECT COUNT(*) as count

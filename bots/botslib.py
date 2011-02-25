@@ -644,12 +644,6 @@ def readdata(filename,charset=None,errors=None):
     f.close()
     return content
 
-def archivefile(archivedir,fileforarchive):
-    archivedir = join(archivedir,time.strftime('%Y%m%d'))
-    dirshouldbethere(archivedir)
-    absfilename = abspathdata(fileforarchive)
-    shutil.copy(absfilename,archivedir)
-
 #**********************************************************/**
 #*************************calling modules, programs***********************/**
 #**********************************************************/**
