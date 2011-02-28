@@ -920,6 +920,152 @@ class ftps(ftp):
                 self.session.mkd(self.dirpath)           #set right path on ftp-server; no nested directories
                 self.session.cwd(self.dirpath)           #set right path on ftp-server
 
+class sftp(_comsession):
+    # for sftp channel type, requires paramiko and pycrypto to be installed
+    # based on class ftp and ftps above with code from demo_sftp.py which is included with paramiko
+    # Mike Griffin 16/10/2010
+    def connect(self):
+        # check dependencies
+        try:
+            import paramiko
+            from Crypto import Cipher
+        except:
+            raise botslib.CommunicationError('Dependency failure: communicationtype "sftp" requires "paramiko" and "pycrypto". Please install these python libraries first.')
+        # setup logging if required
+        ftpdebug = botsglobal.ini.getint('settings','ftpdebug',0)
+        if ftpdebug > 0:
+            log_file = botslib.join(botsglobal.ini.get('directories','logging'),'sftp.log')
+            # Convert ftpdebug to paramiko logging level (1=20=info, 2=10=debug)
+            paramiko.util.log_to_file(log_file, 30-(ftpdebug*10))
+
+        # Get hostname and port to use
+        hostname = self.channeldict['host']
+        try:
+            port = int(self.channeldict['port'])
+        except:
+            port = 22 # default port for sftp
+
+        # get host key, if we know one
+        # (I have not tested this, just copied from demo)
+        hostkeytype = None
+        hostkey = None
+        try:
+            host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
+        except IOError:
+            try: # try ~/ssh/ too, because windows can't have a folder named ~/.ssh/
+                host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/ssh/known_hosts'))
+            except IOError:
+                host_keys = {}
+                botsglobal.logger.debug(u'No host keys found for sftp')
+        if host_keys.has_key(hostname):
+            hostkeytype = host_keys[hostname].keys()[0]
+            hostkey = host_keys[hostname][hostkeytype]
+            botsglobal.logger.debug(u'Using host key of type "%s" for sftp',hostkeytype)
+
+        # now, connect and use paramiko Transport to negotiate SSH2 across the connection
+        transport = paramiko.Transport((hostname,port))
+        transport.connect(username=self.channeldict['username'],password=self.channeldict['secret'],hostkey=hostkey)
+        self.session = paramiko.SFTPClient.from_transport(transport)
+        channel = self.session.get_channel()
+        channel.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
+
+        self.session.chdir('.') # getcwd does not work without this chdir first!
+        self.dirpath = self.session.getcwd()
+
+        #set right path on ftp-server
+        if self.channeldict['path']:
+            self.dirpath = posixpath.normpath(posixpath.join(self.dirpath,self.channeldict['path']))
+            try:
+                self.session.chdir(self.dirpath)
+            except:
+                self.session.mkdir(self.dirpath)
+                self.session.chdir(self.dirpath)
+
+    def disconnect(self):
+        self.session.close()
+
+    @botslib.log_session
+    def incommunicate(self):
+        ''' do ftp: receive files. To be used via receive-dispatcher.
+            each to be imported file is transaction.
+            each imported file is transaction.
+        '''
+        files = []
+        try:
+            files = self.session.listdir('.')
+        except:
+            raise
+        lijst = fnmatch.filter(files,self.channeldict['filename'])
+        for fromfilename in lijst:  #fetch messages from sftp-server.
+            try:
+                ta_from = botslib.NewTransaction(filename='ftp:/'+posixpath.join(self.dirpath,fromfilename),
+                                                    status=EXTERNIN,
+                                                    fromchannel=self.channeldict['idchannel'],
+                                                    charset=self.channeldict['charset'],idroute=self.idroute)
+                ta_to =   ta_from.copyta(status=RAWIN)
+                tofilename = str(ta_to.idta)
+
+                # SSH treats all files as binary
+                tofile = botslib.opendata(tofilename, 'wb')
+                tofile.write(self.session.open(fromfilename, 'r').read())
+                tofile.close()
+
+                if self.channeldict['remove']:
+                    self.session.remove(fromfilename)
+            except:
+                txt=botslib.txtexc()
+                botslib.ErrorProcess(functionname='sftp-incommunicate',errortext=txt)
+                ta_from.delete()
+                ta_to.delete()    #is not received
+            else:
+                ta_from.update(statust=DONE)
+                ta_to.update(filename=tofilename,statust=OK)
+
+    @botslib.log_session
+    def outcommunicate(self):
+        ''' do ftp: send files. To be used via receive-dispatcher.
+            each to be send file is transaction.
+            each send file is transaction.
+        '''
+        #check if one file or queue of files with unique names
+        if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
+            mode = 'a'  #fixed filename; not unique: append to file
+        else:
+            mode = 'w'  #unique filenames; (over)write
+        for row in botslib.query('''SELECT idta,filename,charset
+                                    FROM ta
+                                    WHERE idta>%(rootidta)s
+                                      AND status=%(status)s
+                                      AND statust=%(statust)s
+                                      AND tochannel=%(tochannel)s
+                                        ''',
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    'status':RAWOUT,'statust':OK}):
+            try:
+                ta_from = botslib.OldTransaction(row['idta'])
+                ta_to = ta_from.copyta(status=EXTERNOUT)
+                unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
+                if self.channeldict['filename']:
+                    tofilename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
+                else:
+                    tofilename = unique
+                if self.userscript and hasattr(self.userscript,'filename'):
+                    tofilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta_from)
+
+                # SSH treats all files as binary
+                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
+                fromfile = botslib.opendata(row['filename'], 'rb')
+                self.session.open(tofilename, mode).write(fromfile.read())
+                fromfile.close()
+
+            except:
+                txt=botslib.txtexc()
+                ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename))
+            else:
+                ta_from.update(statust=DONE)
+                ta_to.update(statust=DONE,filename='sftp:/'+posixpath.join(self.dirpath,tofilename))
+
+
 class xmlrpc(_comsession):
     scheme = 'http'
     def connect(self):

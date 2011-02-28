@@ -60,12 +60,13 @@ CHANNELTYPE = (
     ('pop3apop', _(u'pop3apop')),
     ('ftp', _(u'ftp')),
     ('ftps', _(u'ftps')),
+    ('sftp', _(u'sftp')),
     ('xmlrpc', _(u'xmlrpc')),
     ('mimefile', _(u'mimefile')),
-    ('intercommit', _(u'intercommit')),
+    ('communicationscript', _(u'communicationscript')),
     ('database', _(u'database')),
     ('db', _(u'db')),
-    ('communicationscript', _(u'communicationscript')),
+    ('intercommit', _(u'intercommit')),
     )
 CONFIRMTYPE = [
     ('ask-email-MDN',_(u'ask-email-MDN')),
