@@ -90,6 +90,12 @@ def start():
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
+    #initialise user exits for the whole bots-engine (this script file)
+    try:
+        userscript,scriptname = botslib.botsimport('routescripts','botsengine')
+    except ImportError:
+        userscript = scriptname = None
+        
     #**************handle database lock****************************************
     #try to set a lock on the database; if this is not possible, the database is already locked. Either:
     #1 another instance bots bots-engine is (still) running
@@ -194,6 +200,8 @@ def start():
             botsglobal.minta4query = 0  #meaning: reset. the actual value is set later (in routedispatcher)
             stuff2evaluate = router.routedispatcher(routestorun)
             errorinrun +=  automaticmaintenance.evaluate('--new',stuff2evaluate)
+            if userscript and hasattr(userscript,'postnewrun'):
+                botslib.runscript(userscript,scriptname,'postnewrun',routestorun)
         if '--cleanup' in commandstorun or botsglobal.ini.get('settings','whencleanup','always')=='always':
             botsglobal.logger.debug(u'Do cleanup.')
             cleanup.cleanup()
