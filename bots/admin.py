@@ -125,7 +125,7 @@ admin.site.register(models.partner,PartnerAdmin)
 class RoutesAdmin(BotsAdmin):
     list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'defer', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
     list_display_links = ('idroute',)
-    list_filter = ('active','fromeditype','testindicator')
+    list_filter = ('idroute','active','fromeditype','testindicator')
     actions = ('bulk_delete','activate')
     fieldsets = (
         (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc')}),
