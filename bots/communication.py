@@ -190,14 +190,17 @@ class _comsession(object):
                     #~ message.set_type(contenttype)                               #contenttype is set in grammar.syntax
                     frommail,ccfrom = self.idpartner2mailaddress(row['frompartner'])    #lookup email address for partnerID
                     message.add_header('From', frommail)
-                    tomail,ccto = self.idpartner2mailaddress(row['topartner'])          #lookup email address for partnerID
+                    ta_to.synall()  #get all parameters of ta_to from database; ta_to is send to user script
+                    if self.userscript and hasattr(self.userscript,'getmailaddressforreceiver'):
+                        tomail,ccto = botslib.runscript(self.userscript,self.scriptname,'getmailaddressforreceiver',channeldict=self.channeldict,ta=ta_to)
+                    else:
+                        tomail,ccto = self.idpartner2mailaddress(row['topartner'])          #lookup email address for partnerID
                     message.add_header('To',tomail)
                     if ccto:
                         message.add_header('CC',ccto)
                     reference=email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
                     message.add_header('Message-ID',reference)
                     ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use corect&updated ta_to in user script)
-                    ta_to.synall()  #get all parameters of ta_to from database; ta_to is send to user script
                     
                     message.add_header("Date",email.Utils.formatdate(localtime=True))
                     #should a MDN be asked?
