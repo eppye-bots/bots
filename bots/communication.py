@@ -116,7 +116,7 @@ class _comsession(object):
             archivepath = botslib.runscript(self.userscript,self.scriptname,'archivepath',channeldict=self.channeldict)
         else:
             archivepath = botslib.join(self.channeldict['archivepath'],time.strftime('%Y%m%d'))
-        botslib.dirshouldbethere(archivepath)
+        checkedifarchivepathisthere = False  #for a outchannel that is less used, lots of empty dirs will be created. This var is used to check within loop if dir exist, but this is only checked one time.
         for row in botslib.query('''SELECT filename,idta
                                     FROM  ta
                                     WHERE idta>%(rootidta)s
@@ -127,6 +127,9 @@ class _comsession(object):
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':status,
                                     'statust':statust,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
+            if not checkedifarchivepathisthere:
+                botslib.dirshouldbethere(archivepath)
+                checkedifarchivepathisthere = True
             absfilename = botslib.abspathdata(row['filename'])
             if self.userscript and hasattr(self.userscript,'archivename'):
                 archivename = botslib.runscript(self.userscript,self.scriptname,'archivename',channeldict=self.channeldict,idta=row['idta'],filename=absfilename)
