@@ -934,9 +934,14 @@ class sftp(_comsession):
         # check dependencies
         try:
             import paramiko
+        except:
+            txt=botslib.txtexc()
+            raise ImportError('Dependency failure: communicationtype "sftp" requires python library "paramiko". Please install this library. Error: $txt',txt=txt)
+        try:
             from Crypto import Cipher
         except:
-            raise botslib.CommunicationError('Dependency failure: communicationtype "sftp" requires "paramiko" and "pycrypto". Please install these python libraries first.')
+            txt=botslib.txtexc()
+            raise ImportError('Dependency failure: communicationtype "sftp" requires python library "pycrypto". Please install this libraries. Error: $txt',txt=txt)
         # setup logging if required
         ftpdebug = botsglobal.ini.getint('settings','ftpdebug',0)
         if ftpdebug > 0:
@@ -1290,7 +1295,11 @@ class database(_comsession):
         if not hasattr(self.dbscript,'main'):
             raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='main',script=self.dbscript)
         
-        import sqlalchemy
+        try:
+            import sqlalchemy
+        except:
+            txt=botslib.txtexc()
+            raise ImportError('Dependency failure: communication type "database" requires python library "sqlalchemy". Please install this library. Error: $txt',txt=txt)
         from sqlalchemy.orm import sessionmaker
         engine = sqlalchemy.create_engine(self.channeldict['path'],strategy='threadlocal') 
         self.metadata = sqlalchemy.MetaData()

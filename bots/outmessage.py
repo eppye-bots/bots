@@ -668,8 +668,12 @@ class template(Outmessage):
         ''' Very different writeall:
             there is no tree of nodes; there is no grammar.structure/recorddefs; kid opens file by itself.
         '''
-        import kid
-        #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
+        try:
+            import kid
+        except:
+            txt=botslib.txtexc()
+            raise ImportError('Dependency failure: editype "template" requires python library "kid". Please install this library. Error: $txt',txt=txt)
+       #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templates',self.ta_info['template'])
         try:

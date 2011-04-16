@@ -303,7 +303,11 @@ class template(Envelope):
             Uses a kid-template for the enveloping/merging.
             use kid to write; no envelope grammar is used
         '''
-        import kid
+        try:
+            import kid
+        except:
+            txt=botslib.txtexc()
+            raise ImportError('Dependency failure: editype "template" requires python library "kid". Please install this library. Error: $txt',txt=txt)
         defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed beause we do not know envelope; read syntax for editype/messagetype
         self.ta_info.update(defmessage.syntax)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
