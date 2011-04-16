@@ -266,7 +266,7 @@ class _comsession(object):
             -   save 'attachments' as files
             -   generate MDN if asked and OK from bots-configuration
         '''
-        whitelist_multipart=['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822']
+        whitelist_multipart=['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822','multipart/alternative']
         whitelist_major=['text','application']
         blacklist_contenttype=['text/html','text/enriched','text/rtf','text/richtext','application/postscript']
         def savemime(msg):

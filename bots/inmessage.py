@@ -524,7 +524,14 @@ class var(Inmessage):
                 raise botslib.InMessageError(_(u'translation problem; probably a seperator-problem, or extra characters after interchange'))
 
     def _striprecord(self,recordEdiFile):
-        return [field[VALUE] for field in recordEdiFile]
+        #~ return [field[VALUE] for field in recordEdiFile]
+        terug = ''
+        for field in recordEdiFile:
+            terug += field[VALUE] + ' '
+        if len(terug) > 35:
+            terug = terug[:35] + ' (etc)'
+        return terug
+            
 
     def _parsefields(self,recordEdiFile,trecord):
         ''' Check all fields in message-record with field-info in grammar
@@ -565,7 +572,7 @@ class var(Inmessage):
         for tfield in trecord:
             if tfield[ISFIELD]:  #tfield is normal field (not a composite)
                 if tfield[MANDATORY]==u'M' and tfield[ID] not in recorddict:
-                    raise botslib.InMessageError(_(u'line:$line mandatory field "$field" not in record.'),line=recordEdiFile[0][LIN],field=tfield[ID])
+                    raise botslib.InMessageError(_(u'line:$line mandatory field "$field" not in record "$record".'),line=recordEdiFile[0][LIN],field=tfield[ID],record=self._striprecord(recordEdiFile))
             else:
                 compositefilled = False
                 for sfield in tfield[SUBFIELDS]:  #t[2]: subfields in grammar
@@ -575,9 +582,9 @@ class var(Inmessage):
                 if compositefilled:
                     for sfield in tfield[SUBFIELDS]:  #t[2]: subfields in grammar
                         if sfield[MANDATORY]==u'M' and sfield[ID] not in recorddict:
-                            raise botslib.InMessageError(_(u'line:$line mandatory subfield "$field" not in composite.'),line=recordEdiFile[0][LIN],field=sfield[ID])
+                            raise botslib.InMessageError(_(u'line:$line mandatory subfield "$field" not in composite, record "$record".'),line=recordEdiFile[0][LIN],field=sfield[ID],record=self._striprecord(recordEdiFile))
                 if not compositefilled and tfield[MANDATORY]==u'M':
-                    raise botslib.InMessageError(_(u'line:$line mandatory composite "$field" not in record.'),line=recordEdiFile[0][LIN],field=tfield[ID])
+                    raise botslib.InMessageError(_(u'line:$line mandatory composite "$field" not in record "$record".'),line=recordEdiFile[0][LIN],field=tfield[ID],record=self._striprecord(recordEdiFile))
         return recorddict
 
 
