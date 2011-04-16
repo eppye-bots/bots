@@ -115,11 +115,6 @@ class Grammar(object):
         if not isinstance(self.recorddefs,dict):
             raise botslib.GrammarError(_(u'Grammar "$grammar": recorddefs is not a dict{}.'),grammar=self.grammarname)
         for recordID ,fields in self.recorddefs.iteritems():
-            for field in fields:    #check if field 'BOTSID' is present:
-                if field[ID] == 'BOTSID':
-                    break
-            else:   #so there is no field 'BOTSID' in record
-                raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": no field BOTSID.'),grammar=self.grammarname,record=recordID)
             if not isinstance(recordID,basestring):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": is not a string.'),grammar=self.grammarname,record=recordID)
             if not recordID:
@@ -132,11 +127,27 @@ class Grammar(object):
             else:
                 if len (fields) < 2:
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": too few fields.'),grammar=self.grammarname,record=recordID)
+                    
+            hasBOTSID = False   #to check if BOTSID is present
+            fieldnamelist = []  #to check for double fieldnames
             for field in fields:
                 self._checkfield(field,recordID)
                 if not field[ISFIELD]:  # if composite
                     for sfield in field[SUBFIELDS]:
                         self._checkfield(sfield,recordID)
+                        if sfield[ID] in fieldnamelist:
+                            raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": field "$field" appears twice. Field names should be unique within a record.'),grammar=self.grammarname,record=recordID,field=sfield[ID])
+                        fieldnamelist.append(sfield[ID])
+                else:
+                    if field[ID] == 'BOTSID':
+                        hasBOTSID = True
+                    if field[ID] in fieldnamelist:
+                        raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": field "$field" appears twice. Field names should be unique within a record.'),grammar=self.grammarname,record=recordID,field=field[ID])
+                    fieldnamelist.append(field[ID])
+                
+            if not hasBOTSID:   #there is no field 'BOTSID' in record
+                raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": no field BOTSID.'),grammar=self.grammarname,record=recordID)
+                
         #~ recorddefset.add(id(self.recorddefs))    #remember that this recorddef has already been checked
         
     def _checkfield(self,field,recordID):
