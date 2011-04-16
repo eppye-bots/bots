@@ -56,16 +56,16 @@
 		<li><a href="/plugout/?function=snapshot" >{% trans 'Make snapshot plugin' %}</a></li>
 		<li><a href="/plugout/?function=codelist" >{% trans 'Make codelist plugin' %}</a></li>
 		<li>-----</li>
-		<li><a href="/delete/?transactions" OnClick = "return confirm('{% trans 'Are you sure you want to delete all transactions?\nThis action can not be undone!' %}');" >{% trans 'Delete transactions' %}</a></li>
-		<li><a href="/delete/?configuration" OnClick = "return confirm('{% trans 'Are you sure you want to delete all configuration?\nThis action can not be undone!' %}');">{% trans 'Delete configuration' %}</a></li>
-		<li><a href="/delete/?codelists" OnClick = "return confirm('{% trans 'Are you sure you want to delete all user maintained codes?\nThis action can not be undone!' %}');">{% trans 'Delete code lists' %}</a></li>
+		<script><li><a href="/delete/?transactions" OnClick = "return confirm('{% trans 'Are you sure you want to delete all transactions?\nThis action can not be undone!' %}');" >{% trans 'Delete transactions' %}</a></li></script>
+		<script><li><a href="/delete/?configuration" OnClick = "return confirm('{% trans 'Are you sure you want to delete all configuration?\nThis action can not be undone!' %}');">{% trans 'Delete configuration' %}</a></li></script>
+		<script><li><a href="/delete/?codelists" OnClick = "return confirm('{% trans 'Are you sure you want to delete all user maintained codes?\nThis action can not be undone!' %}');">{% trans 'Delete code lists' %}</a></li></script>
 		<li>-----</li>
 		<li><a href="/admin/auth/user/" >{% trans 'Users' %}</a></li>
 		<li><a href="/admin/auth/user/" >{% trans 'UserGroups' %}</a></li>
 		<li><a href="/admin/bots/uniek/" >{% trans 'View/edit counters' %}</a></li>
 		<li>-----</li>
 		<li><a href="/unlock/" >{% trans 'Unlock database' %}</a></li>
-		<li><a href="/runengine/?clparameter=--crashrecovery"  OnClick = "return confirm('{% trans 'Only needed in case of database lock/crash recovery.\n Are you sure?' %}');">{% trans 'Run crash recovery' %}</a></li>
+		<script><li><a href="/runengine/?clparameter=--crashrecovery"  OnClick = "return confirm('{% trans 'Only needed in case of database lock/crash recovery.\n Are you sure?' %}');">{% trans 'Run crash recovery' %}</a></li></script>
 		<li><a href="/sendtestmail/">{% trans 'Send test report' %}</a></li>
 	</ul>
     {% endif %}
@@ -74,12 +74,12 @@
 		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new) *' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retransmit" >{% trans 'Run user-indicated retransmits' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retrycommunication" >{% trans 'Retry user-indicated comm errors' %}</a></li>
-		<li><a href="/runengine/?clparameter=--retry"  OnClick = "return confirm('{% trans 'Are you sure you want to retry ALL previous errors?\n' %}');">{% trans 'Retry all previous errors' %}</a></li>
+		<script><li><a href="/runengine/?clparameter=--retry"  OnClick = "return confirm('{% trans 'Are you sure you want to retry ALL previous errors?\n' %}');">{% trans 'Retry all previous errors' %}</a></li></script>
 	</ul>
 {% else %}
 	<ul>
 		<a href="/login/">{% trans 'Log in' %}</a>
 	</ul>
 {% endif %}
-		<noscript>{% trans 'Javascript is not enabled. Bots works beter with javascript.' %}</noscript>
+		<noscript>{% trans '*****Javascript is not enabled. Bots works beter with javascript*****' %}</noscript>
 </div>
