@@ -1,6 +1,9 @@
+import time
 import django
 import models
 import viewlib
+import botslib
+import botsglobal
 django.contrib.admin.widgets.AdminSplitDateTime
 HiddenInput = django.forms.widgets.HiddenInput
 DEFAULT_ENTRY = ('',"---------")
@@ -187,3 +190,18 @@ class ViewConfirm(View):
 class UploadFileForm(django.forms.Form):
     file  = django.forms.FileField(label='Plugin to read',required=True,widget=django.forms.widgets.FileInput(attrs={'size':'100'}))
 
+class PlugoutForm(django.forms.Form):
+    databaseconfiguration = django.forms.BooleanField(required=False,initial=True,help_text='Routes, channels, translations, partners, etc.')
+    umlists = django.forms.BooleanField(required=False,initial=True,label='User maintained code lists',help_text='')
+    fileconfiguration = django.forms.BooleanField(required=False,initial=True,help_text='Grammars, mapping scrips, routes scripts, etc. (bots/usersys)')
+    infiles = django.forms.BooleanField(required=False,initial=True,help_text='Examples edi file in bots/botssys/infile')
+    charset = django.forms.BooleanField(required=False,initial=False,label='(Edifact) files with character sets',help_text='seldom needed.')
+    databasetransactions = django.forms.BooleanField(required=False,initial=False,help_text='From the database: Runs, incoming files, outgoing files, documents;  only for support purposes, on request.')
+    data = django.forms.BooleanField(required=False,initial=False,label='All transaction files',help_text='bots/botssys/data; only for support purposes, on request.')
+    logfiles = django.forms.BooleanField(required=False,initial=False,label='Log files',help_text='bots/botssys/logging; only for support purposes, on request.')
+    config = django.forms.BooleanField(required=False,initial=False,label='configuration files',help_text='bots/config; only for support purposes, on request.')
+    database = django.forms.BooleanField(required=False,initial=False,label='SQLite database',help_text='Only for support purposes, on request.')
+    filename = django.forms.CharField(required=True,label='Plugin filename',max_length=250)
+    def __init__(self, *args, **kwargs):
+        super(PlugoutForm, self).__init__(*args, **kwargs)
+        self.fields['filename'].initial = botslib.join(botsglobal.ini.get('directories','botssys'),'myplugin' + time.strftime('_%Y%m%d') + '.zip')

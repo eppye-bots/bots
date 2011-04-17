@@ -259,19 +259,26 @@ def load(pathzipfile):
         botsglobal.logger.info(_(u'Writing files to filesystem is OK.'))
         return warnrenamed
 
-def dump(filename,function):    #filename is without extension!
-    database2indexfile(filename,function)
-    pluginzipfilehandler = zipfile.ZipFile(filename+'.zip', 'w')
-    pluginzipfilehandler.write(filename+'.py','botsindex.py',zipfile.ZIP_DEFLATED)   #write index file to pluginfile
-    os.remove(filename+'.py')
-    files2plugin(pluginzipfilehandler,function)
+#*************************************************************
+# generate a plugin (plugout)
+#*************************************************************
+def plugoutcore(cleaned_data):
+    pluginzipfilehandler = zipfile.ZipFile(cleaned_data['filename'], 'w', zipfile.ZIP_DEFLATED)
+    
+    tmpbotsindex = plugout_database(cleaned_data)
+    pluginzipfilehandler.writestr('botsindex.py',tmpbotsindex)      #write index file to pluginfile
+    
+    files4plugin = plugout_files(cleaned_data)
+    for dirname, defaultdirname in files4plugin:
+        pluginzipfilehandler.write(dirname,defaultdirname)
+        botsglobal.logger.debug(_(u'    write file "%s".'),defaultdirname)
+        
     pluginzipfilehandler.close()
 
-def database2indexfile(filename,function):
-    db_objects = \
-            list(models.ccodetrigger.objects.all()) + \
-            list(models.ccode.objects.all())
-    if function in ['configuration','snapshot']:
+def plugout_database(cleaned_data):
+    #collect all database objects
+    db_objects = []
+    if cleaned_data['databaseconfiguration']:
         db_objects += \
             list(models.channel.objects.all()) + \
             list(models.partner.objects.all()) + \
@@ -279,21 +286,22 @@ def database2indexfile(filename,function):
             list(models.translate.objects.all()) +  \
             list(models.routes.objects.all()) +  \
             list(models.confirmrule.objects.all())
-        if function=='snapshot':
-            db_objects += \
-                list(models.uniek.objects.all()) + \
-                list(models.mutex.objects.all()) + \
-                list(models.ta.objects.all()) + \
-                list(models.filereport.objects.all()) + \
-                list(models.report.objects.all())
-                #~ list(models.persist.objects.all()) + \
+    if cleaned_data['umlists']:
+        db_objects += \
+            list(models.ccodetrigger.objects.all()) + \
+            list(models.ccode.objects.all())
+    if cleaned_data['databasetransactions']:
+        db_objects += \
+            list(models.uniek.objects.all()) + \
+            list(models.mutex.objects.all()) + \
+            list(models.ta.objects.all()) + \
+            list(models.filereport.objects.all()) + \
+            list(models.report.objects.all())
+            #~ list(models.persist.objects.all()) + \       #commetned out......does this need testing?
+    #serialize database objects
     orgplugs = serializers.serialize("python", db_objects)
-    #~ print orgpluglist
-    #convertedplugs = []
-    f = open(filename + '.py','wb')
-    f.write('import datetime\n')
-    f.write('version = 2\n')
-    f.write('plugins = [\n')
+    #write serialized objects to str/buffer
+    tmpbotsindex = u'import datetime\nversion = 2\nplugins = [\n'
     for plug in orgplugs:
         app,tablename = plug['model'].split('.',1)
         plug['fields']['plugintype'] = tablename
@@ -301,54 +309,53 @@ def database2indexfile(filename,function):
         pk = table._meta.pk.name
         if pk != 'id':
             plug['fields'][pk] = plug['pk']
-        #convertedplugs.append(plug['fields'])
-        f.write(repr(plug['fields'])+',\n')
+        tmpbotsindex += repr(plug['fields']) + u',\n'
         botsglobal.logger.debug(u'    write in index: %s',plug['fields'])
         #check confirmrule: id is non-artificla key?
-    #f.write(repr(convertedplugs))
-    f.write(']\n')
-    f.close()
+    tmpbotsindex += u']\n'
+    return tmpbotsindex
     
-def files2plugin(pluginzipfilehandler,function):
-    if function=='codelist':
-        return
-    #get usersys files
+def plugout_files(cleaned_data):
+    files2return = []
     usersys = botsglobal.ini.get('directories','usersysabs')
-    files2pluginbydir(function,pluginzipfilehandler,usersys,'usersys')
-    
     botssys = botsglobal.ini.get('directories','botssys')
-    if function=='snapshot':
-        #get config files
+    if cleaned_data['fileconfiguration']:
+        files2return.extend(plugout_files_bydir(usersys,'usersys'))
+        if not cleaned_data['charset']:     #if edifact charsets are not needed: remove them. These are included in default bots installation. Is that wise?
+            charsetdirs = plugout_files_bydir(os.path.join(usersys,'charsets'),'usersys/charsets')
+            for charset in charsetdirs:
+                try:
+                    index = files2return.index(charset)
+                    files2return.pop(index)
+                except ValueError:
+                    pass
+    if cleaned_data['config']:
         config = botsglobal.ini.get('directories','config')
-        files2pluginbydir(function,pluginzipfilehandler,config,'config')
-        #get data files
+        files2return.extend(plugout_files_bydir(config,'config'))
+    if cleaned_data['data']:
         data = botsglobal.ini.get('directories','data')
-        files2pluginbydir(function,pluginzipfilehandler,data,'botssys/data')
-        #get log files
+        files2return.extend(plugout_files_bydir(data,'botssys/data'))
+    if cleaned_data['database']:
+        files2return.extend(plugout_files_bydir(os.path.join(botssys,'sqlitedb'),'botssys/sqlitedb.copy'))  #yeah...readign a plugin with a new database will cause a crash...do this manually...
+    if cleaned_data['infiles']:
+        files2return.extend(plugout_files_bydir(os.path.join(botssys,'infile'),'botssys/infile'))
+    if cleaned_data['logfiles']:
         log_file = botsglobal.ini.get('directories','logging')
-        files2pluginbydir(function,pluginzipfilehandler,log_file,'botssys/logging')
-        #get sqlite database
-        files2pluginbydir(function,pluginzipfilehandler,os.path.join(botssys,'sqlitedb'),'botssys/sqlitedb.copy')
-    else:
-        files2pluginbydir(function,pluginzipfilehandler,os.path.join(botssys,'infile'),'botssys/infile')
+        files2return.extend(plugout_files_bydir(log_file,'botssys/logging'))
+    return files2return
 
-
-def files2pluginbydir(function,pluginzipfilehandler,dirname,defaultdirname):
-    onlysnapshotdirs = [os.path.normpath(x) for x in ['usersys/charsets']]
+def plugout_files_bydir(dirname,defaultdirname):
+    files2return = []
     for root, dirs, files in os.walk(dirname):
         head, tail = os.path.split(root)
         if tail in ['.svn']:
             del dirs[:]     #os.walk will not look in subdirecties 
             continue        #skip this .svn directory
         rootinplugin = root.replace(dirname,defaultdirname,1)
-        if function != 'snapshot':
-            if rootinplugin in onlysnapshotdirs:    #do not use charsets in configuration plugin
-                del dirs[:]
-                continue
         for bestand in files:
             ext = os.path.splitext(bestand)[1]
             if ext in ['.pyc','.pyo'] or bestand in ['__init__.py']:
                 continue
-            pluginzipfilehandler.write(os.path.join(root,bestand),os.path.join(rootinplugin,bestand),zipfile.ZIP_DEFLATED)
-            botsglobal.logger.debug(_(u'    write file "%s".'),os.path.join(rootinplugin,bestand))
+            files2return.append([os.path.join(root,bestand),os.path.join(rootinplugin,bestand)])
+    return files2return
 

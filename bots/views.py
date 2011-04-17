@@ -388,17 +388,21 @@ def plugin(request,*kw,**kwargs):
     
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
-        filename = botslib.join(botsglobal.ini.get('directories','botssys'),request.GET['function']) + time.strftime('_%Y%m%d')
-        #~ filename = os.path.abspath(request.GET['function'])
-        botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
-        try:
-            pluglib.dump(filename,request.GET['function'])
-        except botslib.PluginError, txt:
-            botsglobal.logger.info(u'%s',str(txt))
-            request.user.message_set.create(message='%s'%txt)
-        else:
-            botsglobal.logger.info(_(u'Plugin "%s" created succesful.'),filename)
-            request.user.message_set.create(message=_(u'Plugin %s created succesful.')%filename)
+        form = forms.PlugoutForm()
+        return  django.shortcuts.render_to_response('bots/plugout.html', {'form': form},context_instance=django.template.RequestContext(request))
+    else:
+        if 'submit' in request.POST: 
+            form = forms.PlugoutForm(request.POST)
+            if form.is_valid():
+                botsglobal.logger.info(_(u'Start writing plugin "%s".'),form.cleaned_data['filename'])
+                try:
+                    pluglib.plugoutcore(form.cleaned_data)
+                except botslib.PluginError, txt:
+                    botsglobal.logger.info(u'%s',str(txt))
+                    request.user.message_set.create(message='%s'%txt)
+                else:
+                    botsglobal.logger.info(_(u'Plugin "%s" created succesful.'),form.cleaned_data['filename'])
+                    request.user.message_set.create(message=_(u'Plugin %s created succesful.')%form.cleaned_data['filename'])
     return django.shortcuts.redirect('/')
 
 def delete(request,*kw,**kwargs):
