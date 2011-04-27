@@ -164,7 +164,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                                 WHERE   frommessagetype = %(frommessagetype)s
                                                 AND     fromeditype = %(fromeditype)s
                                                 AND     active=%(booll)s
-                                                AND     (alt='' OR alt=%(alt)s)
+                                                AND     alt=%(alt)s
                                                 AND     (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
                                                                                                                             FROM partnergroup
                                                                                                                             WHERE from_partner_id=%(frompartner)s ))
