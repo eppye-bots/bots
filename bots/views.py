@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import shutil
 import subprocess
 import django
 from django.utils.translation import ugettext as _
@@ -407,47 +408,70 @@ def plugout(request,*kw,**kwargs):
 
 def delete(request,*kw,**kwargs):
     if request.method == 'GET':
-        if 'transactions' in request.GET:
-            #while testing with very big loads, deleting transaction when wrong. Using raw SQL solved this.
-            from django.db import connection, transaction
-            cursor = connection.cursor()
-            cursor.execute("DELETE FROM ta")
-            cursor.execute("DELETE FROM filereport")
-            cursor.execute("DELETE FROM report")
-            #~ models.ta.objects.all().delete()
-            #~ models.filereport.objects.all().delete()
-            #~ models.report.objects.all().delete()
-            transaction.commit_unless_managed()
-            request.user.message_set.create(message=_(u'All transactions are deleted.'))
-            try:
-                frompath = botslib.join(botsglobal.ini.get('directories','data','botssys/data'),'*')
-                for filename in glob.glob(frompath):
-                    if os.path.isdir(filename):
-                        frompath2 = botslib.join(filename,'*')
-                        emptydir=True
-                        for filename2 in glob.glob(frompath2): 
-                            if os.path.isdir(filename2):
-                                emptydir = False
-                            else:
-                                os.remove(filename2)
-                        if emptydir:
-                            os.rmdir(filename)
-                    else:
-                        os.remove(filename2)
-            except:
-                pass
-        elif 'configuration' in request.GET:
-            models.confirmrule.objects.all().delete()
-            models.channel.objects.all().delete()
-            models.chanpar.objects.all().delete()
-            models.partner.objects.all().delete()
-            models.translate.objects.all().delete()
-            models.routes.objects.all().delete()
-            request.user.message_set.create(message=_(u'All configuration is deleted.'))
-        elif 'codelists' in request.GET:
-            models.ccode.objects.all().delete()
-            models.ccodetrigger.objects.all().delete()
-            request.user.message_set.create(message=_(u'All user code lists are deleted.'))
+        form = forms.DeleteForm()
+        return  django.shortcuts.render_to_response('bots/delete.html', {'form': form},context_instance=django.template.RequestContext(request))
+    else:
+        if 'submit' in request.POST: 
+            form = forms.DeleteForm(request.POST)
+            if form.is_valid():
+                botsglobal.logger.info(_(u'Start deleting from configuration".'))
+                if form.cleaned_data['deltransactions']:
+                    #while testing with very big loads, deleting transaction when wrong. Using raw SQL solved this.
+                    from django.db import connection, transaction
+                    cursor = connection.cursor()
+                    cursor.execute("DELETE FROM ta")
+                    cursor.execute("DELETE FROM filereport")
+                    cursor.execute("DELETE FROM report")
+                    transaction.commit_unless_managed()
+                    request.user.message_set.create(message=_(u'Transactions are deleted.'))
+                    #clean data files
+                    deletefrompath = botsglobal.ini.get('directories','data','botssys/data')
+                    shutil.rmtree(deletefrompath,ignore_errors=True)
+                    botslib.dirshouldbethere(deletefrompath)
+                    request.user.message_set.create(message=_(u'Transactions are deleted.'))
+                if form.cleaned_data['delconfiguration']:
+                    models.confirmrule.objects.all().delete()
+                    models.channel.objects.all().delete()
+                    models.chanpar.objects.all().delete()
+                    models.partner.objects.all().delete()
+                    models.translate.objects.all().delete()
+                    models.routes.objects.all().delete()
+                    request.user.message_set.create(message=_(u'Configuration is deleted.'))
+                if form.cleaned_data['delcodelists']:
+                    models.ccode.objects.all().delete()
+                    models.ccodetrigger.objects.all().delete()
+                    request.user.message_set.create(message=_(u'User code lists are deleted.'))
+                if form.cleaned_data['delinfile']:
+                    deletefrompath = botslib.join(botsglobal.ini.get('directories','botssys','botssys'),'infile')
+                    shutil.rmtree('bots/botssys/infile',ignore_errors=True)
+                    request.user.message_set.create(message=_(u'Files in botssys/infile are deleted.'))
+                if form.cleaned_data['deloutfile']:
+                    deletefrompath = botslib.join(botsglobal.ini.get('directories','botssys','botssys'),'outfile')
+                    shutil.rmtree('bots/botssys/outfile',ignore_errors=True)
+                    request.user.message_set.create(message=_(u'Files in botssys/outfile are deleted.'))
+                if form.cleaned_data['deluserscripts']:
+                    deletefrompath = botsglobal.ini.get('directories','usersysabs')
+                    for root, dirs, files in os.walk(deletefrompath):
+                        head, tail = os.path.split(root)
+                        if tail == 'charsets':
+                            del dirs[:]
+                            continue
+                        for bestand in files:
+                            if bestand != '__init__.py':
+                                os.remove(os.path.join(root,bestand))
+                    request.user.message_set.create(message=_(u'Userscripts are deleted.'))
+                elif form.cleaned_data['delbackup']:
+                    deletefrompath = botsglobal.ini.get('directories','usersysabs')
+                    for root, dirs, files in os.walk(dirname):
+                        head, tail = os.path.split(root)
+                        if tail == 'charsets':
+                            del dirs[:]
+                            continue
+                        for bestand in files:
+                            name,ext = os.path.splitext(bestand)
+                            if ext and len(ext) == 15 and ext[1:].isdigit() :
+                                os.remove(os.path.join(root,bestand))
+                    request.user.message_set.create(message=_(u'Backupped userscripts are deleted.'))
     return django.shortcuts.redirect('/')
 
 
