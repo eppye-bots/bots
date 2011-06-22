@@ -403,9 +403,9 @@ def calceancheckdigit(ean):
     ''' input: EAN without checkdigit; returns the checkdigit'''
     try:
         if not ean.isdigit():
-            raise botslib.EanError(_(u'EAN "$ean" should be string with only numericals'),ean=ean)
+            raise botslib.EanError(_(u'GTIN "$ean" should be string with only numericals'),ean=ean)
     except AttributeError:
-        raise botslib.EanError(_(u'EAN "$ean" should be string, but is a "$type"'),ean=ean,type=type(ean))
+        raise botslib.EanError(_(u'GTIN "$ean" should be string, but is a "$type"'),ean=ean,type=type(ean))
     sum1=sum([int(x)*3 for x in ean[-1::-2]]) + sum([int(x) for x in ean[-2::-2]])
     return str((1000-sum1)%10)
 

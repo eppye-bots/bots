@@ -207,6 +207,8 @@ def document(request,*kw,**kwargs):
     pquery = viewlib.filterquery(query,cleaned_data)
     viewlib.trace_document(pquery)
     formout = forms.ViewDocument(initial=cleaned_data)
+    #~ from django.db import connections
+    #~ print django.db.connection.queries
     return viewlib.render(request,formout,pquery)
 
 def process(request,*kw,**kwargs):
