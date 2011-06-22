@@ -278,6 +278,7 @@ class _comsession(object):
                 -   blacklist of body-contentytpe
             '''
             nrmimesaved = 0
+            contenttype     = msg.get_content_type()
             if msg.is_multipart():
                 if contenttype in whitelist_multipart:
                     for part in msg.get_payload():
