@@ -80,7 +80,8 @@ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
                         elif count==106:
                             record_sep = c
                             break
-                    foundtrailer = re.search(re.escape(record_sep)+'\s*IEA'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
+                    #~ foundtrailer = re.search(re.escape(record_sep)+'\s*IEA'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
+                    foundtrailer = re.search(re.escape(record_sep)+'\s*I\s*E\s*A\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
                 elif found.group(3):
                     editype='edifact'
                     if found.group(4):
