@@ -563,7 +563,7 @@ def botsbaseimport(modulename):
         raise
     except:             #other errors
         txt=txtexc()
-        raise ScriptImportError(_(u'Import file: "$filename", error: $txt'),filename=modulename,txt=txt)
+        raise ScriptImportError(u'Import file: "%s, error: %s'%(modulename,txt))
     else:
         return module
 
