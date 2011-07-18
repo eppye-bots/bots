@@ -23,10 +23,10 @@ urlpatterns = patterns('',
     (r'^confirm.*', login_required(views.confirm)),
     (r'^filer.*', login_required(views.filer)),
     #only staff
-    (r'^admin/$', 'bots.views.home'),  #do not show django admin root page
-    (r'^admin/bots/$', 'bots.views.home'),  #do not show django admin root page
+    (r'^admin/$', login_required(views.home)),  #do not show django admin root page
+    (r'^admin/bots/$', login_required(views.home)),  #do not show django admin root page
     (r'^admin/bots/uniek/.+$', redirect_to, {'url': '/admin/bots/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages. 
-    (r'^admin/(.*)', staff_required(admin.site.root)),
+    (r'^admin/', include(admin.site.urls)), 
     (r'^runengine.+', staff_required(views.runengine)),
     #only superuser
     (r'^delete.*', superuser_required(views.delete)),

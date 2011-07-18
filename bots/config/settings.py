@@ -1,6 +1,14 @@
 # Django settings for bots project.
 import os
 import bots
+#do some testing for django versions; eg for differnt template directories
+import django
+if django.VERSION[0] < 1 or (django.VERSION[0] == 1 and django.VERSION[1] == 0): #django.VERSION is tuple: major version, minor version, etc
+    print 'bots needs django > 1.1; you use version', django.VERSION
+if django.VERSION[0] == 1 and django.VERSION[1] == 1:
+    bots_templates = 'templates'
+else:
+    bots_templates = 'templates1.2'
 
 #*******settings for bots error reports**********************************
 MANAGERS = (    #bots will send error reports to the MANAGERS
@@ -33,8 +41,9 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_URL = '/logout/'
 #~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
+
 TEMPLATE_DIRS = (
-    os.path.join(PROJECT_PATH, 'templates'),
+    os.path.join(PROJECT_PATH, bots_templates),
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -104,7 +113,6 @@ ADMINS = (
     )
 
 
-
 #save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
 FILE_UPLOAD_HANDLERS = (
     "django.core.files.uploadhandler.TemporaryFileUploadHandler",
@@ -119,13 +127,14 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #~ 'django.contrib.auth.middleware.MessageMiddleware',
     #~ 'django.middleware.csrf.CsrfViewMiddleware',     #needed for django >= 1.2.*
     )
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    #~ 'django.contrib.messages',
     'django.contrib.sessions',
-    #~ 'django.contrib.sites',
     'django.contrib.admin',
     'bots',
     )
@@ -135,4 +144,5 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
+    #~ "django.contrib.messages.context_processors.messages",
     )
