@@ -400,6 +400,10 @@ def rcodeconversion(modulename,value):
     except KeyError:
         raise botslib.CodeConversionError(_(u'Value "$value" not in file for reversed codeconversion "$filename".'),value=value,filename=filename)
 
+#*********************************************************************
+#*** utily functions for calculationg/generating/checking EAN/GTIN/GLN
+#*********************************************************************
+
 def calceancheckdigit(ean):
     ''' input: EAN without checkdigit; returns the checkdigit'''
     try:
@@ -410,6 +414,16 @@ def calceancheckdigit(ean):
     sum1=sum([int(x)*3 for x in ean[-1::-2]]) + sum([int(x) for x in ean[-2::-2]])
     return str((1000-sum1)%10)
 
+def calceancheckdigit2(ean):
+    ''' just for fun: slightly different algoritm for calculating the ean checkdigit. same results; is 10% faster.
+    '''
+    sum1 = 0
+    factor = 3
+    for i in ean[-1::-1]:
+        sum1 += int(i) * factor
+        factor = 4 - factor         #factor flip-flops between 3 and 1...
+    return str(((1000 - sum1) % 10))
+    
 def checkean(ean):
     ''' input: EAN; returns: True (valid EAN) of False (EAN not valid)'''
     return (ean[-1] == calceancheckdigit(ean[:-1]))
@@ -417,7 +431,6 @@ def checkean(ean):
 def addeancheckdigit(ean):
     ''' input: EAN without checkdigit; returns EAN with checkdigit'''
     return ean+calceancheckdigit(ean)
-
 
 def unique(domein):
     ''' generate unique number within range domein.
