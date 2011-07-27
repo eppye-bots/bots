@@ -60,6 +60,10 @@ class CcodeAdmin(BotsAdmin):
     #~ ordering = ('ccodeid','leftcode')
     actions = ('bulk_delete',)
     search_fields = ('leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8')
+    def lookup_allowed(self, lookup, *args, **kwargs):
+        if lookup.startswith('ccodeid'):
+            return True
+        return super(CcodeAdmin, self).lookup_allowed(lookup, *args, **kwargs)
 admin.site.register(models.ccode,CcodeAdmin)
 
 class CcodetriggerAdmin(BotsAdmin):
@@ -120,6 +124,7 @@ class PartnerAdmin(BotsAdmin):
     list_filter = ('active','isgroup')
     filter_horizontal = ('group',)
     actions = ('bulk_delete','activate')
+    search_fields = ('idpartner','name')
 admin.site.register(models.partner,PartnerAdmin)
 
 class RoutesAdmin(BotsAdmin):

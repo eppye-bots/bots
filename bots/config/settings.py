@@ -127,6 +127,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'bots.persistfilters.FilterPersistMiddleware',
     #~ 'django.contrib.auth.middleware.MessageMiddleware',
     #~ 'django.middleware.csrf.CsrfViewMiddleware',     #needed for django >= 1.2.*
     )
