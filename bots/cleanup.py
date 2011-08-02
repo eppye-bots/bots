@@ -80,17 +80,21 @@ def _cleanpersist():
     
     
 def _cleantransactions():
+    ''' delete records from report, filereport and ta.
+        best indexes are on idta/reportidta; this should go fast.
+    '''
     vanaf = datetime.datetime.today() - datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
-    lijst = list( botslib.query('''SELECT idta FROM report WHERE ts < %(vanaf)s''',{'vanaf':vanaf}))
-    for rootta in lijst:
-        botslib.change('''DELETE FROM filereport WHERE reportidta = %(rootta)s''',{'rootta':rootta['idta']})
-        botslib.change('''DELETE FROM report WHERE idta = %(rootta)s''',{'rootta':rootta['idta']})
-        #~ botslib.change('''DELETE FROM filereport WHERE idta = %(rootta)s''',{'rootta':rootta['idta']})
-    for index in range(1,len(lijst)):
-        botslib.change('''DELETE FROM ta WHERE idta >= %(minrootta)s
-                                         AND idta < %(maxrootta)s''',
-                                         {'minrootta':lijst[index-1]['idta'],'maxrootta':lijst[index]['idta']})
-        #and yes, I leave the last one. 
+    for row in botslib.query('''SELECT max(idta) as max FROM report WHERE ts < %(vanaf)s''',{'vanaf':vanaf}):
+        maxidta = row['max']
+        break
+    else:       #if there is no maxidta to delete, do nothing
+        return
+    botslib.change('''DELETE FROM report WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
+    botslib.change('''DELETE FROM filereport WHERE reportidta < %(maxidta)s''',{'maxidta':maxidta})
+    botslib.change('''DELETE FROM ta WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
+    #the most recent run that is older than maxdays is kept (using < instead of <=). 
+    #Reason: when deleting in ta this would leave the ta-records of the most recent run older than maxdays (except the first ta-record).
+    #this will not lead to problems.
 
 
 def _cleanprocessnothingreceived():
