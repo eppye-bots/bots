@@ -931,6 +931,7 @@ class sftp(_comsession):
     # for sftp channel type, requires paramiko and pycrypto to be installed
     # based on class ftp and ftps above with code from demo_sftp.py which is included with paramiko
     # Mike Griffin 16/10/2010
+    # Henk-jan ebbers 20110802: when testing I found that the transport also needs to be closed. So changed transport ->self.transport, and close this in disconnect
     def connect(self):
         # check dependencies
         try:
@@ -975,9 +976,9 @@ class sftp(_comsession):
             botsglobal.logger.debug(u'Using host key of type "%s" for sftp',hostkeytype)
 
         # now, connect and use paramiko Transport to negotiate SSH2 across the connection
-        transport = paramiko.Transport((hostname,port))
-        transport.connect(username=self.channeldict['username'],password=self.channeldict['secret'],hostkey=hostkey)
-        self.session = paramiko.SFTPClient.from_transport(transport)
+        self.transport = paramiko.Transport((hostname,port))
+        self.transport.connect(username=self.channeldict['username'],password=self.channeldict['secret'],hostkey=hostkey)
+        self.session = paramiko.SFTPClient.from_transport(self.transport)
         channel = self.session.get_channel()
         channel.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
 
@@ -995,6 +996,7 @@ class sftp(_comsession):
 
     def disconnect(self):
         self.session.close()
+        self.transport.close()
 
     @botslib.log_session
     def incommunicate(self):
@@ -1010,7 +1012,7 @@ class sftp(_comsession):
         lijst = fnmatch.filter(files,self.channeldict['filename'])
         for fromfilename in lijst:  #fetch messages from sftp-server.
             try:
-                ta_from = botslib.NewTransaction(filename='ftp:/'+posixpath.join(self.dirpath,fromfilename),
+                ta_from = botslib.NewTransaction(filename='sftp:/'+posixpath.join(self.dirpath,fromfilename),
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
                                                     charset=self.channeldict['charset'],idroute=self.idroute)
