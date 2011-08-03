@@ -70,6 +70,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
             innerqueryparameters.update(outerqueryparameters)
             ta_list=[]
             #gather individual idta and filenames
+            #explicitly allow formpartner/topartner to be None/NULL
             for row2 in botslib.query(u'''SELECT idta, filename
                                                     FROM ta
                                                     WHERE idta>%(rootidta)s
@@ -78,8 +79,8 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
                                                     AND merge=%(merge)s
                                                     AND editype=%(editype)s
                                                     AND messagetype=%(messagetype)s
-                                                    AND frompartner=%(frompartner)s
-                                                    AND topartner=%(topartner)s
+                                                    AND (frompartner=%(frompartner)s OR frompartner IS NULL)
+                                                    AND (topartner=%(topartner)s OR topartner IS NULL)
                                                     AND tochannel=%(tochannel)s
                                                     AND testindicator=%(testindicator)s
                                                     AND charset=%(charset)s
@@ -190,6 +191,9 @@ class csvheader(Envelope):
 class edifact(Envelope):
     ''' Generate UNB and UNZ segment; fill with data, write to interchange-file.'''
     def run(self):
+        if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
+            raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "$ta_info".'),ta_info=self.ta_info)
+            
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -257,6 +261,8 @@ class edifact(Envelope):
 class tradacoms(Envelope):
     ''' Generate STX and END segment; fill with approrioriate data, write to interchange-file.'''
     def run(self):
+        if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
+            raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "$ta_info".'),ta_info=self.ta_info)
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -338,6 +344,8 @@ class orders2printenvelope(template):
 class x12(Envelope):
     ''' Generate envelope segments; fill with approrioriate data, write to interchange-file.'''
     def run(self):
+        if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
+            raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "$ta_info".'),ta_info=self.ta_info)
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
         self.ta_info.update(self.out.ta_info)
         #need to know the functionalgroup code:

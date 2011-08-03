@@ -403,7 +403,7 @@ class edifact(var):
         if self.ta_info['version']>='4':
             terug += self.ta_info['reserve']
         return terug
-
+        
 class tradacoms(var):
     def getescapechars(self):
         terug = self.ta_info['record_sep']+self.ta_info['field_sep']+self.ta_info['sfield_sep']+self.ta_info['escape']+self.ta_info['record_tag_sep']
@@ -426,14 +426,13 @@ class tradacoms(var):
         self._closewrite()
         self.ta_info['nrmessages'] = self.nrmessagewritten
 
-
 class x12(var):
     def getescapechars(self):
         terug = self.ta_info['record_sep']+self.ta_info['field_sep']+self.ta_info['sfield_sep']
         if self.ta_info['version']>='00403':
             terug += self.ta_info['reserve']
         return terug
-
+        
 
 class xml(Outmessage):
     def _write(self,node):
