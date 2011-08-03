@@ -518,10 +518,19 @@ class var(Inmessage):
                 continue
             value += c    #just a char: append char to value
         #end of for-loop.
+        if mode_inrecord:       #this  would  indicate  a record is not terminated correctly.
+            if isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
+                #force the closing of the  last record.
+                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
+                self.records += [record]    #write record to recordlist
+                record=[]
+                value = u''
+            else:
+                raise botslib.InMessageError(_(u'translation problem with lexing; last record was not closed properly'))
         if value:
             value = value.strip('\x00\x1a')
             if value:
-                raise botslib.InMessageError(_(u'translation problem; probably a seperator-problem, or extra characters after interchange'))
+                raise botslib.InMessageError(_(u'translation problem with lexing; probably a seperator-problem, or extra characters after interchange'))
 
     def _striprecord(self,recordEdiFile):
         #~ return [field[VALUE] for field in recordEdiFile]

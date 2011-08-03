@@ -373,6 +373,7 @@ class csv(Grammar):
     defaultsyntax = {
         'acceptspaceinnumfield':True,   #only really used in fixed formats
         'add_crlfafterrecord_sep':'',
+        'allow_lastrecordnotclosedproperly':False,  #in csv sometimes the last record is no closed correctly. This is related to communciation over email. Beware: when using this, other checks will not be enforced!
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
