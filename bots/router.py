@@ -152,6 +152,7 @@ def routedispatcher(routestorun,type=None):
     botslib.set_minta4query()
     for route in routestorun:
         foundroute=False
+        botslib.setpreprocessnumber(SET_FOR_PROCESSING)
         for routedict in botslib.query('''SELECT idroute     ,
                                                  fromchannel_id as fromchannel,
                                                  tochannel_id as tochannel,
@@ -224,8 +225,8 @@ def router(routedict):
     #communication.run translation
     if routedict['translateind']:
         botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
-        if botslib.addinfo(change={'status':MAILBAG},where={'status':FILEIN,'idroute':routedict['idroute'],'editype':'mailbag'}):
-            transform.splitmailbag(idroute=routedict['idroute'])
+        #~ if botslib.addinfo(change={'status':MAILBAG},where={'status':FILEIN,'idroute':routedict['idroute'],'editype':'mailbag'}):
+            #~ transform.splitmailbag(idroute=routedict['idroute'])
         botslib.addinfo(change={'status':TRANSLATE},where={'status':FILEIN,'idroute':routedict['idroute']})
         transform.translate(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)

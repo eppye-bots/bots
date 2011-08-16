@@ -102,6 +102,13 @@ def setrouteid(routeid):
 def getrouteid():
     return botsglobal.routeid
 
+def setpreprocessnumber(statusnumber):
+    botsglobal.preprocessnumber = statusnumber 
+def getpreprocessnumber():
+    terug = botsglobal.preprocessnumber
+    botsglobal.preprocessnumber +=2
+    return terug 
+    
 #**********************************************************/**
 #***************** class  Transaction *********************/**
 #**********************************************************/**
