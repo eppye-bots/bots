@@ -452,6 +452,7 @@ def useoneof(*args):
         return None
     
 def dateformat(date):
+    ''' for edifact: return right format code for the date. '''
     if not date:
         return None
     if len(date)==8:
@@ -461,5 +462,20 @@ def dateformat(date):
     if len(date)==16:
         return '718'
     return None
+
+def datemask(value,frommask,tomask):
+    ''' value is formatted according as in frommask; 
+        returned is the value formatted according to tomask.
+    '''
+    if not value:
+        return value
+    convdict = collections.defaultdict(list)
+    for key,value in zip(frommask,value):
+        convdict[key].append(value)
+    #~ return ''.join([convdict.get(c,[c]).pop(0) for c in tomask])     #very short, but not faster....
+    terug = ''
+    for c in tomask:
+        terug += convdict.get(c,[c]).pop(0)
+    return terug
 
 
