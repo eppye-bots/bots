@@ -532,11 +532,14 @@ class pop3(_comsession):
     @botslib.log_session
     def incommunicate(self):
         ''' Fetch messages from Pop3-mailbox.
-            SSL supported but: no keys-file/cert-file??.
-            apop supported
+            A bad connection is tricky, because mails are actually deleted on the server is QUIT is succesful.
+            A solution would be to connect, fetch, delete and quit over and over again, but probably this will introduce other problems.
+            So: keep a list of idta received OK.
+            If connection gets bad, delete these ta's
         '''
+        self.listoftamarkedfordelete = []
         maillist = self.session.list()[1]     #get list of messages #alt: (response, messagelist, octets) = popsession.list()     #get list of messages
-        for mail in maillist:				#message is string
+        for mail in maillist:
             try:
                 ta_from = botslib.NewTransaction(filename='pop3://'+self.channeldict['username']+'@'+self.channeldict['host'],
                                                     status=EXTERNIN,
@@ -548,24 +551,41 @@ class pop3(_comsession):
                 fp = botslib.opendata(filename, 'wb')
                 fp.write(os.linesep.join(maillines))
                 fp.close()
-                if self.channeldict['remove']:
+                if self.channeldict['remove']:      #on server side mail is marked to be deleted. The pop3-server will actually delete the file if the QUIT commnd is receieved!
                     self.session.dele(mailID)
+                    #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. delete these as they will NOT 
+                    self.listoftamarkedfordelete.append(ta_from.idta)
+                    self.listoftamarkedfordelete.append(ta_to.idta)
             except:
+                #something went wrong for this mail.  
                 txt=botslib.txtexc()
                 botslib.ErrorProcess(functionname='pop3-incommunicate',errortext=txt)
-                #~ ta_from.update(statust=ERROR,errortext=txt)  #this has the big advantage it will be retried again!
                 ta_from.delete()
-                ta_to.delete()    #is not received
+                ta_to.delete()
+                #test connection. if connection is not OK stop fetching mails.
+                try:
+                    self.session.noop()
+                except:
+                    break
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(statust=OK,filename=filename)
 
+    def disconnect(self):
+        try:
+            self.session.noop()     #check if connection is OK
+            resp = self.session.quit()     #pop3 server will now actually delete the mails
+            if resp[:1] != '+':
+                raise Exception('QUIT command to POP3 server failed')
+        except:
+            botslib.ErrorProcess(functionname='pop3-incommunicate',errortext='Could not fetch emails via POP3; probably communication problems')
+            for idta in self.listoftamarkedfordelete:
+                ta = botslib.OldTransaction(idta)
+                ta.delete()
+
     @botslib.log_session
     def postcommunicate(self,fromstatus,tostatus):
         self.mime2file(fromstatus,tostatus)
-
-    def disconnect(self):
-        self.session.quit()
 
 class pop3s(pop3):
     def connect(self):
@@ -578,7 +598,7 @@ class pop3apop(pop3):
     def connect(self):
         self.session = poplib.POP3(host=self.channeldict['host'],port=int(self.channeldict['port']))
         self.session.set_debuglevel(botsglobal.ini.getint('settings','pop3debug',0))    #if used, gives information about session (on screen), for debugging pop3
-        self.session.apop(self.channeldict['username'],self.channeldict['secret'])    #looks like python handles password encryption by itself
+        self.session.apop(self.channeldict['username'],self.channeldict['secret'])    #python handles apop password encryption
 
 
 class smtp(_comsession):

@@ -237,14 +237,15 @@ class _Transaction(object):
         newdbta.update(**ta_info)
         return newdbta
 
-    def processparent(self):
-        self.syn('script')
-        for row in query(u'''SELECT filename
-                    FROM ta
-                   WHERE idta=%(selfid)s''',
-                    {'selfid':self.script}):
-            break
-        return row['filename']
+    #20110823: is not used.
+    #~ def processparent(self):
+        #~ self.syn('script')
+        #~ for row in query(u'''SELECT filename
+                    #~ FROM ta
+                   #~ WHERE idta=%(selfid)s''',
+                    #~ {'selfid':self.script}):
+            #~ break
+        #~ return row['filename']
 
 
 class OldTransaction(_Transaction):
@@ -550,7 +551,7 @@ def txtexc():
         return terug
 
 class ErrorProcess(NewTransaction):
-    ''' Used in logging of occasional errors in processes.'''
+    ''' Used in logging of errors in processes.'''
     def __init__(self,functionname='',errortext=''):
         super(ErrorProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid(),statust=ERROR,errortext=errortext)
 
