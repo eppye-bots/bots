@@ -159,23 +159,36 @@ def writetodatabase(orgpluglist):
         #- plugintype
         #all fields have the right database name 
                 
-        #~ print 'plug attr',plug
-        #~ print '**sleutel',sleutelorg
+        print 'plug attr',plug
+        print 'orgsleutel',sleutelorg
+        print 'sleutel',sleutel
         
         #existing ccodetriggers are not overwritten (as deleting ccodetrigger also deletes ccodes)
         if plugintype == 'ccodetrigger':
             listexistingentries = table.objects.filter(**sleutelorg).all()
-            if len(listexistingentries) >= 1:
+            if listexistingentries:
                 continue
         #now find the entry using the keys in sleutelorg; delete the existing entry.
-        if sleutelorg:  #not for translate and confirmrule; these have an have an empty 'sleutel'
+        elif sleutelorg:  #not for translate and confirmrule; these have an have an empty 'sleutel'
             listexistingentries = table.objects.filter(**sleutelorg).all()
-            if len(listexistingentries)>1:
-                raise Exception('not unique?')      #this should not be possible: sleutelorg is the key.
-            elif len(listexistingentries)==1:
-                listexistingentries[0].delete()
+        elif plugintype == 'translate':   #for translate: delete existing entry
+            listexistingentries = table.objects.filter(fromeditype=plug['fromeditype'],frommessagetype=plug['frommessagetype'],alt=plug['alt'],frompartner=plug['frompartner_id'],topartner=plug['topartner_id']).all()
+        elif plugintype == 'confirmrule':   #for confirmrule: delete existing entry; but how to find this??? what are keys???
+            listexistingentries = table.objects.filter(confirmtype=plug['confirmtype'],
+                                                        ruletype=plug['ruletype'],
+                                                        negativerule=plug['negativerule'],
+                                                        idroute=plug['idroute'],
+                                                        idchannel=plug['idchannel_id'],
+                                                        editype=plug['editype'],
+                                                        messagetype=plug['messagetype'],
+                                                        frompartner=plug['frompartner_id'],
+                                                        topartner=plug['topartner_id']).all()
+
+        if listexistingentries:
+            for entry in listexistingentries:
+                entry.delete()
             botsglobal.logger.info(_(u'        Existing entry in database is deleted.'))
-            
+
         dbobject = table(**sleutel)   #create db-object
         if plugintype == 'partner':   #for partners, first the partner needs to be saved before groups can be made
             dbobject.save()
