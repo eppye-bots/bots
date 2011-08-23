@@ -416,7 +416,7 @@ def delete(request,*kw,**kwargs):
         if 'submit' in request.POST: 
             form = forms.DeleteForm(request.POST)
             if form.is_valid():
-                botsglobal.logger.info(_(u'Start deleting from configuration".'))
+                botsglobal.logger.info(_(u'Start deleting.'))
                 if form.cleaned_data['deltransactions']:
                     #while testing with very big loads, deleting transaction when wrong. Using raw SQL solved this.
                     from django.db import connection, transaction
@@ -464,7 +464,7 @@ def delete(request,*kw,**kwargs):
                     request.user.message_set.create(message=_(u'Userscripts are deleted.'))
                 elif form.cleaned_data['delbackup']:
                     deletefrompath = botsglobal.ini.get('directories','usersysabs')
-                    for root, dirs, files in os.walk(dirname):
+                    for root, dirs, files in os.walk(deletefrompath):
                         head, tail = os.path.split(root)
                         if tail == 'charsets':
                             del dirs[:]
