@@ -159,9 +159,9 @@ def writetodatabase(orgpluglist):
         #- plugintype
         #all fields have the right database name 
                 
-        print 'plug attr',plug
-        print 'orgsleutel',sleutelorg
-        print 'sleutel',sleutel
+        #~ print 'plug attr',plug
+        #~ print 'orgsleutel',sleutelorg
+        #~ print 'sleutel',sleutel
         
         #existing ccodetriggers are not overwritten (as deleting ccodetrigger also deletes ccodes)
         if plugintype == 'ccodetrigger':
