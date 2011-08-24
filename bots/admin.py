@@ -59,7 +59,7 @@ class CcodeAdmin(BotsAdmin):
     list_display_links = ('ccodeid',)
     list_filter = ('ccodeid',)
     ordering = ('ccodeid','leftcode')
-    search_fields = ('leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8')
+    search_fields = ('ccodeid__ccodeid','leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8')
     def lookup_allowed(self, lookup, *args, **kwargs):
         if lookup.startswith('ccodeid'):
             return True
@@ -71,6 +71,7 @@ class CcodetriggerAdmin(BotsAdmin):
     list_display = ('ccodeid','ccodeid_desc',)
     list_display_links = ('ccodeid',)
     ordering = ('ccodeid',)
+    search_fields = ('ccodeid','ccodeid_desc')
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
@@ -78,6 +79,7 @@ class ChannelAdmin(BotsAdmin):
     list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename',  'remove', 'archivepath', 'charset')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
+    search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath', 'charset')
     fieldsets = (
         (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset','desc')
                         }),
@@ -95,6 +97,7 @@ class ConfirmruleAdmin(BotsAdmin):
     list_display = ('active','negativerule','confirmtype','ruletype', 'frompartner', 'topartner','idroute','idchannel','editype','messagetype')
     list_display_links = ('confirmtype',)
     list_filter = ('active','confirmtype','ruletype')
+    search_fields = ('confirmtype','ruletype', 'frompartner__idpartner', 'topartner__idpartner', 'idroute', 'idchannel__idchannel', 'editype', 'messagetype')
     ordering = ('confirmtype','ruletype')
     fieldsets = (
         (None, {'fields': ('active','negativerule','confirmtype','ruletype','frompartner', 'topartner','idroute','idchannel',('editype','messagetype'))}),
@@ -126,7 +129,7 @@ class PartnerAdmin(BotsAdmin):
     list_display_links = ('idpartner',)
     list_filter = ('active','isgroup')
     ordering = ('idpartner',)
-    search_fields = ('idpartner','name')
+    search_fields = ('idpartner','name','mail','cc')
 admin.site.register(models.partner,PartnerAdmin)
 
 class RoutesAdmin(BotsAdmin):
@@ -168,6 +171,7 @@ class TranslateAdmin(BotsAdmin):
     list_display_links = ('fromeditype',)
     list_filter = ('active','fromeditype','toeditype')
     ordering = ('fromeditype','frommessagetype')
+    search_fields = ('fromeditype', 'frommessagetype', 'alt', 'frompartner__idpartner', 'topartner__idpartner', 'tscript', 'toeditype', 'tomessagetype')
     fieldsets = (
         (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype','desc'))
                     }),
