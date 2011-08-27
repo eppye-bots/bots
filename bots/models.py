@@ -68,6 +68,8 @@ CHANNELTYPE = (
     ('pop3', _(u'pop3')),
     ('pop3s', _(u'pop3s')),
     ('pop3apop', _(u'pop3apop')),
+    ('imap4', _(u'imap4')),
+    ('imap4s', _(u'imap4s')),
     ('ftp', _(u'ftp')),
     ('ftps', _(u'ftps')),
     ('sftp', _(u'sftp')),

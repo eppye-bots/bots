@@ -29,6 +29,9 @@ except ImportError:
     import simplejson
 import smtplib
 import poplib
+import imaplib
+#~ import re
+#~ import string
 import ftplib
 import xmlrpclib
 from django.utils.translation import ugettext as _
@@ -597,6 +600,135 @@ class pop3apop(pop3):
         self.session = poplib.POP3(host=self.channeldict['host'],port=int(self.channeldict['port']))
         self.session.set_debuglevel(botsglobal.ini.getint('settings','pop3debug',0))    #if used, gives information about session (on screen), for debugging pop3
         self.session.apop(self.channeldict['username'],self.channeldict['secret'])    #python handles apop password encryption
+
+
+class imap4(_comsession):
+    ''' Fetch email from IMAP server. 
+    '''
+    def connect(self):
+        imaplib.Debug = botsglobal.ini.getint('settings','imap4debug',0)    #if used, gives information about session (on screen), for debugging imap4
+        self.session = imaplib.IMAP4(host=self.channeldict['host'],port=int(self.channeldict['port']))
+        self.session.login(self.channeldict['username'],self.channeldict['secret'])
+
+    @botslib.log_session
+    def incommunicate(self):
+        ''' Fetch messages from imap4-mailbox.
+        '''
+        # path may contain a mailbox name, otherwise use INBOX
+        if self.channeldict['path']:
+            mailbox_name = self.channeldict['path']
+        else:
+            mailbox_name = 'INBOX'
+
+        response, data = self.session.select(mailbox_name)
+        if response != 'OK': # eg. mailbox does not exist
+            raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
+        else:
+            # Get the message UIDs that should be read, limit to first n messages in mailbox
+            n=50
+            response, data = self.session.uid('search', None, '(UNDELETED)')
+            if response != 'OK': # have never seen this happen, but just in case!
+                raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
+            else:
+                maillist = data[0].split()
+                for mail in maillist[:n]:
+                    try:
+                        ta_from = botslib.NewTransaction(filename='imap4://'+self.channeldict['username']+'@'+self.channeldict['host'],
+                                                            status=EXTERNIN,
+                                                            fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
+                        ta_to =   ta_from.copyta(status=RAWIN)
+                        filename = str(ta_to.idta)
+                        # Get the message (header and body)
+                        response, msg_data = self.session.uid('fetch',mail, '(RFC822)')
+                        fp = botslib.opendata(filename, 'wb')
+                        fp.write(msg_data[0][1])
+                        fp.close()
+                        # Flag message for deletion AND expunge. Direct expunge has advantages for bad (internet)connections.
+                        if self.channeldict['remove']:
+                            self.session.uid('store',mail, '+FLAGS', '\\Deleted')
+                            self.session.expunge()
+                    except:
+                        txt=botslib.txtexc()
+                        botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt)
+                        ta_from.delete()
+                        ta_to.delete()    #is not received
+                    else:
+                        ta_from.update(statust=DONE)
+                        ta_to.update(statust=OK,filename=filename)
+
+    @botslib.log_session
+    def incommunicate_mike(self):
+        ''' Fetch messages from imap4-mailbox.
+        '''
+        # path may contain a mailbox name, otherwise use INBOX
+        if self.channeldict['path']:
+            mailbox_name = self.channeldict['path']
+        else:
+            mailbox_name = 'INBOX'
+
+        self.expungebeforelogout = False
+        response, data = self.session.select(mailbox_name)
+        if response != 'OK': # eg. mailbox does not exist
+            raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
+        else:
+            #~print 'imap4 found',data[0],'messages in',mailbox_name
+            # Get the message IDs that should be read, limit to first n messages in mailbox
+            n=50
+            response, data = self.session.search(None, '(UNDELETED)')
+            if response != 'OK': # have never seen this happen, but just in case!
+                raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
+            else:
+                #~ maillist = string.split(data[0])[:n]
+                maillist = data[0].split()
+                for mail in maillist[:n]:
+                    try:
+                        ta_from = botslib.NewTransaction(filename='imap4://'+self.channeldict['username']+'@'+self.channeldict['host'],
+                                                            status=EXTERNIN,
+                                                            fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
+                        ta_to =   ta_from.copyta(status=RAWIN)
+                        filename = str(ta_to.idta)
+                        # Get the message (header and body)
+                        #~print 'imap4 get message ID',mail
+                        maillines = []
+                        response, msg_data = self.session.fetch(mail, '(BODY.PEEK[HEADER])')
+                        for part in msg_data:
+                            if isinstance(part, tuple):
+                                maillines.append(part[1])
+                        response, msg_data = self.session.fetch(mail, '(BODY.PEEK[TEXT])')
+                        for part in msg_data:
+                            if isinstance(part, tuple):
+                                maillines.append(part[1])
+                        fp = botslib.opendata(filename, 'wb')
+                        fp.write(os.linesep.join(maillines))
+                        fp.close()
+                        # Flag message for deletion, expunge before logout
+                        if self.channeldict['remove']:
+                            self.session.store(mail, '+FLAGS', '\\Deleted')
+                            self.expungebeforelogout = True
+                    except:
+                        txt=botslib.txtexc()
+                        botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt)
+                        ta_from.delete()
+                        ta_to.delete()    #is not received
+                    else:
+                        ta_from.update(statust=DONE)
+                        ta_to.update(statust=OK,filename=filename)
+
+    @botslib.log_session
+    def postcommunicate(self,fromstatus,tostatus):
+        self.mime2file(fromstatus,tostatus)
+
+    def disconnect(self):
+        # Expunge any messages flagged for deletion
+        #~ if self.expungebeforelogout:
+            #~ self.session.expunge()
+        self.session.logout()
+
+class imap4s(imap4):
+    def connect(self):
+        imaplib.Debug = botsglobal.ini.getint('settings','imap4debug',0)    #if used, gives information about session (on screen), for debugging imap4
+        self.session = imaplib.IMAP4_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']))
+        self.session.login(self.channeldict['username'],self.channeldict['secret'])
 
 
 class smtp(_comsession):
