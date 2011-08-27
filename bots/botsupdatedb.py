@@ -77,7 +77,7 @@ def start(configdir = 'config'):
             cursor.execute('''ALTER TABLE ta MODIFY errortext VARCHAR(2048)''',None)
         elif botsglobal.dbinfo.drivername == 'postgres':
             cursor.execute('''ALTER TABLE ta ALTER COLUMN errortext type VARCHAR(2048)''',None)
-        #else: #sqlite does not allow modifying existing field, but does not check lentghs either so this works.
+        #else: #sqlite does not allow modifying existing field, but does not check lengths either so this works.
         cursor.execute('''CREATE TABLE confirmrule (
                             id INTEGER PRIMARY KEY,
                             active BOOLEAN,

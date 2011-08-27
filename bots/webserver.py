@@ -14,7 +14,7 @@ import botsinit
 def showusage():
     usage = '''
     This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
-    The %(name)s is the web server for bots; the interface (bots-monitor) can be accessed in a btrowser, eg 'http://localhost:8080'.
+    The %(name)s is the web server for bots; the interface (bots-monitor) can be accessed in a browser, eg 'http://localhost:8080'.
     Usage:
         %(name)s  -c<directory>
     Options:

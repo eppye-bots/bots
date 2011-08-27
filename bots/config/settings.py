@@ -67,7 +67,7 @@ DATABASE_OPTIONS = {}
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
 #~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#PostgeSQL:
+#PostgreSQL:
 #~ DATABASE_ENGINE = 'postgresql_psycopg2'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'

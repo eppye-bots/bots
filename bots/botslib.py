@@ -166,7 +166,7 @@ class _Transaction(object):
         cursor.close()
 
     def succes(self,status):
-        '''Succces: give correct status to all children of transaction (and children of children etc)'''
+        '''Success: give correct status to all children of transaction (and children of children etc)'''
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''SELECT idta FROM ta
                            WHERE idta>%(rootidta)s
@@ -732,7 +732,7 @@ def getcodeccanonicalname(codecname):
 def checkcodeciscompatible(charset1,charset2):
     ''' check if charset of edifile) is 'compatible' with charset of channel: OK; else: raise exception
     '''
-    #some codecs are upward compable (subsets); charsetcompatible is used to check if charsets are upward compatibel with each other.
+    #some codecs are upward compatible (subsets); charsetcompatible is used to check if charsets are upward compatibel with each other.
     #some charset are 1 byte (ascii, ISO-8859-*). others are more bytes (UTF-16, utf-32. UTF-8 is more bytes, but is ascii compatible.
     charsetcompatible = {
         'unoa':['unob','ascii','utf-8','iso8859-1','cp1252','iso8859-15'],

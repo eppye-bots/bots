@@ -20,7 +20,7 @@ class BotsAdmin(admin.ModelAdmin):
     save_as = True
 
     def delete_view(self, request, object_id, extra_context=None):
-        ''' copy from admin.ModelAdmin; adapted: do not checkl references: no cascading deletes; no confirmation.'''
+        ''' copy from admin.ModelAdmin; adapted: do not check references: no cascading deletes; no confirmation.'''
         opts = self.model._meta
         app_label = opts.app_label
         try:

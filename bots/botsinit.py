@@ -108,7 +108,7 @@ def generalinit(configdir):
 
     #start initializing bots charsets
     initbotscharsets()
-    #set environemnt for django to start***************************************************************************************************
+    #set environment for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     initbotscharsets()
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #

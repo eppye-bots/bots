@@ -32,7 +32,7 @@ def prepareretransmit():
             ta_rereceive = botslib.OldTransaction(row2['idta'])
             ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
             ta_raw = ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
-    #for resend; this one is slow. Can be improved by having a seperate list of idta to resend
+    #for resend; this one is slow. Can be improved by having a separate list of idta to resend
     for row in botslib.query('''SELECT idta,parent
                                 FROM  ta
                                 WHERE retransmit=%(retransmit)s
@@ -231,7 +231,7 @@ def router(routedict):
         transform.translate(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
         
-    #merge messags & communication.run outgoing channel
+    #merge messages & communication.run outgoing channel
     if routedict['tochannel']:   #do outgoing part of route
         botslib.tryrunscript(userscript,scriptname,'premerge',routedict=routedict)
         envelope.mergemessages(idroute=routedict['idroute'])

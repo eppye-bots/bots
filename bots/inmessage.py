@@ -30,7 +30,7 @@ import grammar
 from botsconfig import *
 
 def edifromfile(**ta_info):
-    ''' Read,lex, parse edi-file. Is a despatch function for Inmessage and subclasses.'''
+    ''' Read,lex, parse edi-file. Is a dispatch function for Inmessage and subclasses.'''
     try:
         classtocall = globals()[ta_info['editype']]  #get inmessage class to call (subclass of Inmessage)
     except KeyError:
@@ -62,7 +62,7 @@ class Inmessage(message.Message):
         ''' initialisation from a edi file '''
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])  #read grammar, after sniffing. Information from sniffing can be used (eg name editype for edifact, using version info from UNB)
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set
-        self.ta_info['charset'] =self.defmessage.syntax['charset']  #always use cahrset of edi file.
+        self.ta_info['charset'] =self.defmessage.syntax['charset']  #always use charset of edi file.
         self._readcontent_edifile()
         self._sniff()           #some hard-coded parsing of edi file; eg ta_info can be overruled by syntax-parameters in edi-file
         #start lexing and parsing
@@ -144,7 +144,7 @@ class Inmessage(message.Message):
                 #~ return ''   #when num field has spaces as content, spaces are stripped. Field should be numeric.
             if value[-1] == u'-':    #if minus-sign at the end, put it in front.
                 value = value[-1] + value[:-1]
-            value = value.replace(self.ta_info['triad'],u'')     #strip triad-seperators
+            value = value.replace(self.ta_info['triad'],u'')     #strip triad-separators
             value = value.replace(self.ta_info['decimaal'],u'.',1) #replace decimal sign by canonical decimal sign
             if 'E' in value or 'e' in value:
                 raise botslib.InMessageFieldError(_(u'Record "$record" field "$field" format "$format" contains exponent: "$content".'),record=record,field=grammarfield[ID],content=value,format=grammarfield[BFORMAT])
@@ -248,7 +248,7 @@ class Inmessage(message.Message):
                     rec2parse = self._parse(defmessage.structure,_nextrecord,inode,rec2parse=rec2parse,argmessagetype=messagetype,argnewnode=newnode)
                     #~ end subparse for messagetype
                 else:
-                    inode.append(newnode)   #append new node to currenct node
+                    inode.append(newnode)   #append new node to current node
                     if LEVEL in tab[tabindex]:        #if header, go to subgroup
                         rec2parse = self._parse(tab[tabindex][LEVEL],_nextrecord,newnode)
                         if subparse:  #back in top level of subparse: return (to motherparse)
@@ -599,7 +599,7 @@ class var(Inmessage):
 
 
 class csv(var):
-    ''' class for ediobjects with Comma Seperated Value'''
+    ''' class for ediobjects with Comma Separated Values'''
     def _lex(self):
         super(csv,self)._lex()
         if self.ta_info['skip_firstline']:    #if first line for CSV should be skipped (contains field names)
@@ -651,14 +651,14 @@ class edifact(var):
         self.ta_info['charset'] = self.rawinput[4:8]
         self.ta_info['version'] = self.rawinput[9:10]
         if not unacharset:
-            if self.rawinput[3:4]=='+' and self.rawinput[8:9]==':':     #assume standard seperators.
+            if self.rawinput[3:4]=='+' and self.rawinput[8:9]==':':     #assume standard separators.
                 self.ta_info['sfield_sep'] = ':'
                 self.ta_info['field_sep'] = '+'
                 self.ta_info['decimaal'] = '.'
                 self.ta_info['escape'] = '?'
                 self.ta_info['reserve'] = ''    #for now: no support of repeating dataelements
                 self.ta_info['record_sep'] = "'"
-            elif self.rawinput[3:4]=='\x1D' and self.rawinput[8:9]=='\x1F':     #check if UNOB seperators are used
+            elif self.rawinput[3:4]=='\x1D' and self.rawinput[8:9]=='\x1F':     #check if UNOB separators are used
                 self.ta_info['sfield_sep'] = '\x1F'
                 self.ta_info['field_sep'] = '\x1D'
                 self.ta_info['decimaal'] = '.'
@@ -666,7 +666,7 @@ class edifact(var):
                 self.ta_info['reserve'] = ''    #for now: no support of repeating dataelements
                 self.ta_info['record_sep'] = '\x1C'
             else:
-                raise botslib.InMessageError(_(u'Incoming edi file uses non-standard seperators - should use UNA.'))
+                raise botslib.InMessageError(_(u'Incoming edi file uses non-standard separators - should use UNA.'))
         try:
             self.rawinput = self.rawinput.decode(self.ta_info['charset'],self.ta_info['checkcharsetin'])
         except LookupError:
@@ -871,7 +871,7 @@ class xml(var):
             ''' the messagetype is not know. 
                 bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
                 mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
-                'xpath' is a xpath to use on xml-file (using eleemnttree xpath functionality)
+                'xpath' is a xpath to use on xml-file (using elementtree xpath functionality)
                 if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
                 if found, and no 'content' in the dict; set messagetype.
             '''
@@ -891,7 +891,7 @@ class xml(var):
                     parser.entity[key] = value
             except AttributeError:
                 pass    #there is no extra_character_entity in the mailbag definitions, is OK.
-            etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite simular to bots-node trees but conversion is needed
+            etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
             for item in mailbagsearch:
                 if 'xpath' not in item or 'messagetype' not in item:
@@ -917,7 +917,7 @@ class xml(var):
             parser = ET.XMLParser()
             for key,value in self.ta_info['extra_character_entity'].items():
                 parser.entity[key] = value
-            etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite simular to bots-node trees but conversion is needed
+            etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
         self.stack = []
         self.root = self.etree2botstree(etreeroot)  #convert etree to bots-nodes-tree

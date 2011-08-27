@@ -38,7 +38,7 @@ import node
 from botsconfig import *
 
 def outmessage_init(**ta_info):
-    ''' despatch function class Outmessage or subclass
+    ''' dispatch function class Outmessage or subclass
         ta_info: needed is editype, messagetype, filename, charset, merge
     '''
     try:
@@ -49,7 +49,7 @@ def outmessage_init(**ta_info):
 
 class Outmessage(message.Message):
     ''' abstract class; represents a outgoing edi message.
-        subclassing is neccessary for the editype (csv, edi, x12, etc)
+        subclassing is necessary for the editype (csv, edi, x12, etc)
         A tree of nodes is build form the mpaths received from put()or putloop(). tree starts at self.root.
         Put() recieves mpaths from mappingscript
         The next algorithm is used to 'map' a mpath into the tree:
@@ -129,7 +129,7 @@ class Outmessage(message.Message):
 
     def _write(self,node):
         ''' the write method for most classes.
-            tree is serialised to sequental records; records are written to file.
+            tree is serialised to sequential records; records are written to file.
             Classses that write using other libraries (xml, json, template, db) use specific write methods. 
         ''' 
         self.tree2records(node)
@@ -339,7 +339,7 @@ class Outmessage(message.Message):
             if field[SFIELD]:
                 value += sfield_sep
             else:   #is a field: 
-                if fieldcount == 0:  #do nothing because first field in record is not preceeded by a separator
+                if fieldcount == 0:  #do nothing because first field in record is not preceded by a separator
                     fieldcount = 1
                 elif fieldcount == 1:
                     value += record_tag_sep
@@ -444,8 +444,8 @@ class xml(Outmessage):
         
         #xml prolog: always use.*********************************
         #syntax parameter controls if stand-alone is used within prolog.
-        #in ET 1.3.0: if standalone is to be used: should surpress ET-generated prolog - explicit parameter
-        #in ET 1.2.6: always generates prolog if encoding != utf-8/ascii. SO: can not use stadnalone for encoding !=utf-8,ascii
+        #in ET 1.3.0: if standalone is to be used: should suppress ET-generated prolog - explicit parameter
+        #in ET 1.2.6: always generates prolog if encoding != utf-8/ascii. SO: can not use standalone for encoding !=utf-8,ascii
         if ET.VERSION not in ['1.2.6','1.0.6'] or self.ta_info['charset'] in ['us-ascii','utf-8']:
             if self.ta_info['standalone']:
                 standalonestring = 'standalone="%s" '%(self.ta_info['standalone'])
@@ -599,7 +599,7 @@ class json(Outmessage):
             self._outstream.write(u'[')
 
     def _write(self,node):
-        ''' convert node tree to appropriate python objecct.
+        ''' convert node tree to appropriate python object.
             python objects are written to json by simplejson.
         '''
         if self.nrmessagewritten:

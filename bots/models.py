@@ -14,7 +14,7 @@ STATUST = [
 STATUS = [
     (1,_(u'process')),
     (3,_(u'discarded')),
-    (200,_(u'FileRecieve')),
+    (200,_(u'FileReceive')),
     (210,_(u'RawInfile')),
     (215,_(u'Mimein')),
     (220,_(u'Infile')),
@@ -194,14 +194,14 @@ class ccode(botsmodel):
 class channel(botsmodel):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
-    type = StripCharField(max_length=35,choices=CHANNELTYPE)  #use seperate in/out; keuzelijst; ook keuzelijst voor type (FILE, POP3, etc)
+    type = StripCharField(max_length=35,choices=CHANNELTYPE)  #use separate in/out; keuzelijst; ook keuzelijst voor type (FILE, POP3, etc)
     charset = StripCharField(max_length=35,default=u'us-ascii')
     host = StripCharField(max_length=256,blank=True)
     port = models.PositiveIntegerField(default=0,blank=True)
     username = StripCharField(max_length=35,blank=True)
     secret = StripCharField(max_length=35,blank=True,verbose_name=_(u'password'))
-    starttls = models.BooleanField(default=False,verbose_name='Skip checking from-addresses',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email adress'
-    apop = models.BooleanField(default=False,verbose_name='Skip checking to-addresses',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #not used anymore (is in 'type' now) #20110104: used as 'no check on "to:" email adress'
+    starttls = models.BooleanField(default=False,verbose_name='Skip checking from-addresses',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
+    apop = models.BooleanField(default=False,verbose_name='Skip checking to-addresses',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #not used anymore (is in 'type' now) #20110104: used as 'no check on "to:" email address'
     remove = models.BooleanField(default=False,help_text=_(u'For in-channels: remove the edi files after succesful reading. Note: in production you do want to remove the edi files, else these are read over and over again!'))
     path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both are used
     filename = StripCharField(max_length=35,blank=True,help_text=_(u'For "type" ftp and file; read or write this filename. Wildcards allowed, eg "*.edi". Note for out-channels: if no wildcard is used, all edi message are written to one file.'))
@@ -407,7 +407,7 @@ class ta(botsmodel):
     tomail = StripCharField(max_length=256)
     charset = StripCharField(max_length=35)
     statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module
-    retransmit = models.BooleanField()                  #20070831: only retransmit, not rerecieve
+    retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
     errortext = StripCharField(max_length=2048)
     ts = models.DateTimeField()

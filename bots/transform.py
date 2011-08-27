@@ -21,7 +21,7 @@ from envelope import mergemessages
 from communication import run 
 
 #~ '''
-#~ about auto-dectect/mailbag:
+#~ about auto-detect/mailbag:
 #~ - in US mailbag is used: one file for all received edi messages...appended in one file. I heard that edifact and x12 can be mixed,
     #~ but have actually never seen this.
 #~ - bots needs and ' splitter': one edi-file, more interchanges. it is preferred to split these first.
@@ -34,7 +34,7 @@ from communication import run
 
 #~ @botslib.log_session
 #~ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
-    #~ ''' splits 'mailbag'files to seperate files each containging one interchange (ISA-IEA or UNA/UNB-UNZ).
+    #~ ''' splits 'mailbag'files to separate files each containging one interchange (ISA-IEA or UNA/UNB-UNZ).
         #~ handles x12 and edifact; these can be mixed.
     #~ '''
     #~ header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))',re.DOTALL)
@@ -71,7 +71,7 @@ from communication import run
                     #~ editype='x12'
                     #~ headpos=startpos+ found.start(2)
                     #~ count=0
-                    #~ for c in edifile[headpos:headpos+120]:  #search first 120 characters to find seperators
+                    #~ for c in edifile[headpos:headpos+120]:  #search first 120 characters to find separators
                         #~ if c in '\r\n' and count!=105:
                             #~ continue
                         #~ count +=1
@@ -121,7 +121,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
     ''' translates edifiles in one or more edimessages.
         reads and parses edifiles that have to be translated.
         tries to split files into messages (using 'nextmessage' of grammar); if no splitting: edifile is one message.
-        seaches the right translation in translate-table;
+        searches the right translation in translate-table;
         runs the mapping-script for the translation;
         Function takes db-ta with status=TRANSLATE->PARSED->SPLITUP->TRANSLATED
     '''

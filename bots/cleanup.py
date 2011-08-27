@@ -98,7 +98,7 @@ def _cleantransactions():
 
 
 def _cleanprocessnothingreceived():
-    ''' delete all --new runs that recieved no files; including all process under the run
+    ''' delete all --new runs that received no files; including all process under the run
         processes are organised as trees, so recursive.
     '''
     def core(idta):

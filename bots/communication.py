@@ -84,7 +84,7 @@ class _comsession(object):
         self.scriptname=scriptname
         if self.channeldict['inorout']=='out':
             #routes can have the same outchannel.
-            #the different outchannels can be 'direct' or deffered (in route)
+            #the different outchannels can be 'direct' or deferred (in route)
             nroffiles = self.precommunicate(FILEOUT,RAWOUT)
             if self.countoutfiles() > 0: #for out-comm: send if something to send
                 self.connect()
@@ -203,7 +203,7 @@ class _comsession(object):
                         message.add_header('CC',ccto)
                     reference=email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
                     message.add_header('Message-ID',reference)
-                    ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use corect&updated ta_to in user script)
+                    ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use correct & updated ta_to in user script)
                     
                     message.add_header("Date",email.Utils.formatdate(localtime=True))
                     #should a MDN be asked?
@@ -233,8 +233,6 @@ class _comsession(object):
                     charset = self.convertcodecformime(row['charset'])
                     message.add_header('Content-Type',row['contenttype'].lower(),charset=charset)          #contenttype is set in grammar.syntax
                     #*******set attachment/payload*************************
-                    #~ content = botslib.readdata(contentfilename,charset)     #get attachment (the data file); read is using the right charset
-                    #~ message.set_payload(content.encode(charset),str(charset))   #encode engain....basically just cheing the charset?.....str(charset) is because email-lib in python 2.4 wants this....
                     message.set_payload(content)   #do not use charset; this lead to unwanted encodings...bots always uses base64
                     if self.channeldict['askmdn'] == 'never':
                         emailencoders.encode_7or8bit(message)
@@ -259,7 +257,7 @@ class _comsession(object):
         return counter
 
     def mime2file(self,fromstatus,tostatus):
-        ''' transfer communcation-file from RAWIN to FILEIN, convert from Mime to file.
+        ''' transfer communication-file from RAWIN to FILEIN, convert from Mime to file.
             process mime-files:
             -   extract information (eg sender-address)
             -   do emailtransport-handling: generate MDN, process MDN
@@ -270,7 +268,7 @@ class _comsession(object):
         whitelist_major=['text','application']
         blacklist_contenttype=['text/html','text/enriched','text/rtf','text/richtext','application/postscript']
         def savemime(msg):
-            ''' save contents of email as seperate files.
+            ''' save contents of email as separate files.
                 is a nested function.
                 3x filtering:
                 -   whitelist of multipart-contenttype
@@ -329,7 +327,7 @@ class _comsession(object):
                                ''',
                                 {'status':RAWOUT,'reference':originalmessageid,'confirmed':True,'confirmtype':'ask-email-MDN','confirmidta':ta_mail.idta,'confirmasked':True})
             #for now no checking if processing was OK.....
-            #performance: not good. Another way is to extract the orginal idta from the original messageid
+            #performance: not good. Another way is to extract the original idta from the original messageid
         @botslib.log_session
         def mdnsend():
             if not botslib.checkconfirmrules('send-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
@@ -408,18 +406,18 @@ class _comsession(object):
                 frommail        = email.Utils.parseaddr(msg['from'])[1]
                 tos             = email.Utils.getaddresses(msg.get_all('to', []))
                 ccs             = email.Utils.getaddresses(msg.get_all('cc', []))
-                #~ tomail          = tos[0][1]  #tomail is the email address of the first "To"-recepient
+                #~ tomail          = tos[0][1]  #tomail is the email address of the first "To"-recipient
                 cc              = ','.join([emailaddress[1] for emailaddress in (tos + ccs)])
                 reference       = msg['message-id']
                 subject         = msg['subject']
                 contenttype     = msg.get_content_type()
                 #authorize: find the frompartner for the email addresses in the message
                 frompartner = ''
-                if not self.channeldict['starttls']:    #reusing old datbase name; 'no check on "from:" email adress'
+                if not self.channeldict['starttls']:    #reusing old database name; 'no check on "from:" email adress'
                     frompartner = self.mailaddress2idpartner(frommail)
                 topartner = ''  #initialise topartner
                 tomail = ''  #initialise tomail
-                if not self.channeldict['apop']:    #reusing old datbase name; 'no check on "to:" email adress'
+                if not self.channeldict['apop']:    #reusing old database name; 'no check on "to:" email adress'
                     for toname,tomail_tmp in tos:   #all tos-addresses are checked; only one needs to be authorised.
                         try:
                             topartner =  self.mailaddress2idpartner(tomail_tmp)
@@ -434,7 +432,7 @@ class _comsession(object):
                         
                 
                 #update transaction of mail with information found in mail
-                ta_mime.update(frommail=frommail,   #why now why not later: because ta_mime is copied to seperate files later, so need the info now 
+                ta_mime.update(frommail=frommail,   #why now why not later: because ta_mime is copied to separate files later, so need the info now 
                                 tomail=tomail,
                                 reference=reference,
                                 contenttype=contenttype,
@@ -840,7 +838,7 @@ class ftp(_comsession):
             files = self.session.nlst()
         except (ftplib.error_perm,ftplib.error_temp),resp:
             resp = str(resp).strip(' \t.').lower()  #'normalise' error
-            if resp not in ['550 no files found','450 no files found']:     #some ftp servers give errors when directory is empty. here these errors are catched
+            if resp not in ['550 no files found','450 no files found']:     #some ftp servers give errors when directory is empty. here these errors are caught
                 raise
         lijst = fnmatch.filter(files,self.channeldict['filename'])
         for fromfilename in lijst:  #fetch messages from ftp-server.
@@ -1247,7 +1245,7 @@ class intercommit(_comsession):
                 #check encoding for outchannel
                 botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 #create unique for filenames of xml-header file and contentfile
-                uniquepart = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for fielanmes
+                uniquepart = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filenames
                 statusfilename = self.channeldict['filename'].replace('*',uniquepart) #filename is filename in channel where '*' is replaced by idta
                 statusfilenamewithpath = botslib.join(dirforintercommitsend,statusfilename)
                 (filenamewithoutext,ext)=os.path.splitext(statusfilename)
@@ -1337,7 +1335,7 @@ class database(_comsession):
         jsonobject = botslib.runscript(self.dbscript,self.dbscriptname,'main',channeldict=self.channeldict,session=self.session,metadata=self.metadata)
         self.session.flush()
         self.session.commit()
-        #shoudl I check here more elaborate if jsonobject has 'real' data?
+        #should I check here more elaborate if jsonobject has 'real' data?
         if jsonobject:
             ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
                                                 status=EXTERNIN,
@@ -1410,7 +1408,7 @@ class db(_comsession):
         ''' read data from database.
             returns db_objects;
             if this is None, do nothing
-            if this is a list, treat each member of the list as a seperate 'message'
+            if this is a list, treat each member of the list as a separate 'message'
         '''
         db_objects = botslib.runscript(self.dbscript,self.dbscriptname,'incommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection)
         if not db_objects:
@@ -1466,13 +1464,13 @@ class db(_comsession):
 
 class communicationscript(_comsession):
     """
-    For running an (user maintained) communcation script. 
+    For running an (user maintained) communication script. 
     Examples of use:
     - call external communication program or a program that imports data in ERP system
     - communication method not available in Bots
     - specialised I/O wishes; eg specific naming of output files. (eg including partner name)
-    place of communcation scripts: bots/usersys/communcationscripts
-    name of communcation script: same name as channel (the channelID)
+    place of communication scripts: bots/usersys/communicationscripts
+    name of communication script: same name as channel (the channelID)
     in this communication script some functions will be called:
     -   connect
     -   main

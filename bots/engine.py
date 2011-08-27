@@ -27,8 +27,8 @@ def showusage():
         %(name)s  [run-options] [config-option] [routes]
 
     Run-options (can be combined, except for crashrecovery):
-        --new                recieve new edi files (default: if no run-option given: run as new).
-        --retransmit         resend and rerececieve as indicated by user.
+        --new                receive new edi files (default: if no run-option given: run as new).
+        --retransmit         resend and rereceive as indicated by user.
         --retry              retry previous errors.
         --crashrecovery      reruns the run where the crash occurred. (when database is locked).
         --automaticretrycommunication - automatically retry outgoing communication.
@@ -140,7 +140,7 @@ def start():
                                     {'active':True,'notindefaultrun':False}):
             routestorun.append(row['idroute'])
         botsglobal.logger.info(_(u'Run active routes from database: "%s".'),str(routestorun))
-    #routestorun is now either a list with routes from comandline, or the list of active routes for the routes tabel in the db.
+    #routestorun is now either a list with routes from commandline, or the list of active routes for the routes table in the db.
     #**************run the routes for retry, retransmit and new runs*************************************
     try: 
         #commandstorun determines the type(s) of run

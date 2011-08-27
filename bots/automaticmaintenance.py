@@ -18,7 +18,7 @@ def evaluate(type,stuff2evaluate):
         return 1    #there has been an error!
 
 def evaluaterun(type,stuff2evaluate):
-    ''' traces all recieved files.
+    ''' traces all received files.
         Write a filereport for each file,
         and writes a report for the run.
     '''
@@ -209,7 +209,7 @@ class Trace(object):
             #So: if the same filename and different script: use newest idta
             #shortcut: when an error occurs in a split all is turned back.
             #so: split up is OK as a whole or because of retries.
-            #so: if split, and different scripts: split is becaue of retires: use newest idta.
+            #so: if split, and different scripts: split is becaue of retries: use newest idta.
             #~ print tacurrent.talijst
             if len(talijst) > 1 and talijst[0].script != talijst[1].script:
                 #find higest idta

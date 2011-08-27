@@ -108,7 +108,7 @@ class Message(object):
         self.root.sort(*mpaths)
         
     def normalisetree(self,node):
-        ''' The node tree is check, sorted, fields are formated etc.
+        ''' The node tree is check, sorted, fields are formatted etc.
             Always use this method before writing output.
         '''
         #~ node.display()
@@ -192,7 +192,7 @@ class Message(object):
                 if structure_record[MIN] > count:
                     raise botslib.MessageError(_(u'Record "$mpath" mandatory but not present.'),mpath=structure_record[MPATH])
                 if structure_record[MAX] < count:
-                    raise botslib.MessageError(_(u'Record "$mpath" occures to often ($count times).'),mpath=structure_record[MPATH],count=count)
+                    raise botslib.MessageError(_(u'Record "$mpath" occurs to often ($count times).'),mpath=structure_record[MPATH],count=count)
             node.children=sortednodelist
             if hasattr(self,'get_queries_from_edi'):
                 self.get_queries_from_edi(node,structure)

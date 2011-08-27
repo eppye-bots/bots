@@ -1,4 +1,6 @@
 """SMTP over SSL client.
+used for python < 2.5
+in python 2.6 and up the smtp-library has a class SMTP_SSL
 
 Public class:	SMTP_SSL
 Public errors:	SMTPSSLException
@@ -52,7 +54,7 @@ class SMTP_SSL (smtplib.SMTP):
 
 	This class is a simple subclass of the smtplib.SMTP class that comes with
 	Python. It overrides the connect() method to use an SSL socket, and it
-	overrides the starttles() function to throw an error (you can't do 
+	overrides the starttls() function to throw an error (you can't do 
 	starttls within an SSL session).
 	"""
 	certfile = None

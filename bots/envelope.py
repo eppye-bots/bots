@@ -11,9 +11,9 @@ from botsconfig import *
 @botslib.log_session
 def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
     ''' Merges en envelopes several messages to one file;
-        In db-ta: attribute 'merge' indicates message should be merged with simular messages; 'merge' is generated in translation from messagetype-grammar
-        If merge==False: 1 message per envelope - no merging, else append all simular messages to one file
-        Implementation as seperate loops: one for merge&envelope, another for enveloping only
+        In db-ta: attribute 'merge' indicates message should be merged with similar messages; 'merge' is generated in translation from messagetype-grammar
+        If merge==False: 1 message per envelope - no merging, else append all similar messages to one file
+        Implementation as separate loops: one for merge&envelope, another for enveloping only
         db-ta status TRANSLATED---->MERGED
     '''
     outerqueryparameters = {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query(),'merge':False}
@@ -101,7 +101,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
 
 
 def envelope(ta_info,ta_list):
-    ''' despatch function for class Envelope and subclasses.
+    ''' dispatch function for class Envelope and subclasses.
         editype, edimessage and envelope essential for enveloping.
         
         determine the class for enveloping:
@@ -259,7 +259,7 @@ class edifact(Envelope):
         tofile.close()
 
 class tradacoms(Envelope):
-    ''' Generate STX and END segment; fill with approrioriate data, write to interchange-file.'''
+    ''' Generate STX and END segment; fill with appropriate data, write to interchange file.'''
     def run(self):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
             raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "$ta_info".'),ta_info=self.ta_info)
@@ -314,7 +314,7 @@ class template(Envelope):
         except:
             txt=botslib.txtexc()
             raise ImportError('Dependency failure: editype "template" requires python library "kid". Please install this library. Error: $txt',txt=txt)
-        defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed beause we do not know envelope; read syntax for editype/messagetype
+        defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
         self.ta_info.update(defmessage.syntax)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         if not self.ta_info['envelope-template']:
@@ -342,7 +342,7 @@ class orders2printenvelope(template):
 
 
 class x12(Envelope):
-    ''' Generate envelope segments; fill with approrioriate data, write to interchange-file.'''
+    ''' Generate envelope segments; fill with appropriate data, write to interchange-file.'''
     def run(self):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
             raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "$ta_info".'),ta_info=self.ta_info)

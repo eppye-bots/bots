@@ -4,7 +4,7 @@
 #for statust in ta:
 OPEN    = 0 #Bots always closes transaction. OPEN is severe error
 ERROR   = 1 #error in transaction.
-OK      = 2 #succesfull, result is 'save'. But procesing has stopped: next step with error, or no next steps defined
+OK      = 2 #succesfull, result is 'save'. But processing has stopped: next step with error, or no next steps defined
 DONE    = 3 #succesfull, and result is picked up by next step
 #~ RETRANSMIT = 4   #reinjected archive edi-file
 
@@ -15,7 +15,7 @@ DISCARD= 3
 
 EXTERNIN  = 200      #transaction is OK; file is exported; out of reach
 RAWIN    = 210    #the file as received, unprocessed; eg mail is in email-format (headers, body, attachments)
-MIMEIN   = 215      #mime is checked and read; mime-info (sneder, receiver) is in db-ta
+MIMEIN   = 215      #mime is checked and read; mime-info (sender, receiver) is in db-ta
 FILEIN   = 220    #received edifile; ready for further use
 SET_FOR_PROCESSING = 230
 #~ ZIP     = 270             #20110809 obsolete
@@ -28,7 +28,7 @@ SPLITUP    = 320        #the edimessages in the PARSED edifile have been split u
 TRANSLATED = 330        #edimessage is result of translation
 MERGED   =   400        #is enveloped
 FILEOUT    = 500    #edifile ready to be 'send' (just the edi-file)
-RAWOUT    = 510    #file in send fromat eg email format (including headers, body, attachemnts) 
+RAWOUT    = 510    #file in send format eg email format (including headers, body, attachemnts) 
 EXTERNOUT  = 520      #transaction is complete; file is exported; out of reach
 
 #grammar.structure: keys in grammarrecords

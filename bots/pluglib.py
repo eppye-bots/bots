@@ -14,9 +14,9 @@ import botsglobal
 some tabel have 'id' as primary key. This is always an artificial key.
 this is not usable for plugins: 'id' is never written to a plugin.
 often a tabel with 'id' has an 'unique together' attribute.
-than this is used to check if the enty already exists (this is reported).
-existing enties are always overwritten.
-exeptions:
+than this is used to check if the entry already exists (this is reported).
+existing entries are always overwritten.
+exceptions:
 - confirmrule; there is no clear unique key. AFAICS this will never be a problem.
 - translate: may be confusing. But anyway, no existing translate will be overwritten....
 '''
@@ -52,7 +52,7 @@ def writetodatabase(orgpluglist):
             raise botslib.PluginError(_(u'"plugintype" missing in: "%s". Nothing is written.')%(plug))
            
     #special case: compatibility with bots 1.* plugins.
-    #in bots 1.*, partnrgroup was in seperate tabel; in bots 2.* partnergroup is in partner
+    #in bots 1.*, partnergroup was in separate tabel; in bots 2.* partnergroup is in partner
     #later on, partnergroup will get filtered
     for plug in orgpluglist[:]:
         if plug['plugintype'] == 'partnergroup':
@@ -324,7 +324,7 @@ def plugout_database(cleaned_data):
             plug['fields'][pk] = plug['pk']
         tmpbotsindex += repr(plug['fields']) + u',\n'
         botsglobal.logger.debug(u'    write in index: %s',plug['fields'])
-        #check confirmrule: id is non-artificla key?
+        #check confirmrule: id is non-artifical key?
     tmpbotsindex += u']\n'
     return tmpbotsindex
     
@@ -362,7 +362,7 @@ def plugout_files_bydir(dirname,defaultdirname):
     for root, dirs, files in os.walk(dirname):
         head, tail = os.path.split(root)
         if tail in ['.svn']:
-            del dirs[:]     #os.walk will not look in subdirecties 
+            del dirs[:]     #os.walk will not look in subdirectories 
             continue        #skip this .svn directory
         rootinplugin = root.replace(dirname,defaultdirname,1)
         for bestand in files:

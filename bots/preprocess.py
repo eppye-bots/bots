@@ -57,7 +57,7 @@ header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1
 #           group:    1   2       3  4            5        6         7
 
 def mailbag(ta_from,endstatus,**argv):
-    ''' splits 'mailbag'files to separate files each contaiging one interchange (ISA-IEA or UNA/UNB-UNZ).
+    ''' splits 'mailbag'files to separate files each containing one interchange (ISA-IEA or UNA/UNB-UNZ).
         handles x12 and edifact; these can be mixed.
         recognizes xml files. messagetype 'xml' has a special handling when reading xml-files.
 
@@ -88,7 +88,7 @@ def mailbag(ta_from,endstatus,**argv):
             editype='x12'
             headpos=startpos+ found.start(2)
             count=0
-            for c in edifile[headpos:headpos+120]:  #search first 120 characters to find seperators
+            for c in edifile[headpos:headpos+120]:  #search first 120 characters to find separators
                 if c in '\r\n' and count!=105:
                     continue
                 count +=1

@@ -143,7 +143,7 @@ class Node(object):
     def _changecore(self,where,change): #diff from getcore
         mpaths = where  #diff from getcore
         mpath = mpaths[0]
-        if self.record['BOTSID'] == mpath['BOTSID']: #is record-id equal to mpath-botsid? Not stricly needed, but gives much beter performance...
+        if self.record['BOTSID'] == mpath['BOTSID']: #is record-id equal to mpath-botsid? Not strictly needed, but gives much beter performance...
             for part in mpath:          #check all mpath-parts;
                 if part in self.record:
                     if mpath[part] == self.record[part]:
@@ -193,11 +193,11 @@ class Node(object):
         #go get it!
         terug =  bool(self._deletecore(*mpaths))
         botsglobal.logmap.debug(u'"%s" for delete%s',terug,str(mpaths))
-        return terug  #return False if not removed, retunr True if removed
+        return terug  #return False if not removed, return True if removed
         
     def _deletecore(self,*mpaths):
         mpath = mpaths[0]
-        if self.record['BOTSID'] == mpath['BOTSID']: #is record-id equal to mpath-botsid? Not stricly needed, but gives much beter performance...
+        if self.record['BOTSID'] == mpath['BOTSID']: #is record-id equal to mpath-botsid? Not strictly needed, but gives much beter performance...
             for part in mpath:          #check all mpath-parts;
                 if part in self.record:
                     if mpath[part] == self.record[part]:
@@ -268,7 +268,7 @@ class Node(object):
     def _getcore(self,*mpaths):
         mpath = mpaths[0]
         terug = 1 #if there is no 'None' in the mpath, but everything is matched, 1 is returned (like True)
-        if self.record['BOTSID'] == mpath['BOTSID']: #is record-id equal to mpath-botsid? Not stricly needed, but gives much beter performance...
+        if self.record['BOTSID'] == mpath['BOTSID']: #is record-id equal to mpath-botsid? Not strictly needed, but gives much beter performance...
             for part in mpath:          #check all mpath-parts;
                 if part in self.record:
                     if mpath[part] is None: #this is the field we are looking for; but not all matches have been made so remember value
