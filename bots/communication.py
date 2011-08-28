@@ -7,14 +7,9 @@ except:
 import time
 import email
 import email.Utils
-#~ import email.Header
 import email.Generator
 import email.Message
-#~ import email.Charset
-try:
-    import email.encoders as emailencoders
-except:
-    import email.Encoders as emailencoders #for python 2.4
+import email.encoders
 import glob
 import shutil
 import fnmatch
@@ -30,8 +25,6 @@ except ImportError:
 import smtplib
 import poplib
 import imaplib
-#~ import re
-#~ import string
 import ftplib
 import xmlrpclib
 from django.utils.translation import ugettext as _
@@ -238,12 +231,12 @@ class _comsession(object):
                     #*******set attachment/payload*************************
                     message.set_payload(content)   #do not use charset; this lead to unwanted encodings...bots always uses base64
                     if self.channeldict['askmdn'] == 'never':
-                        emailencoders.encode_7or8bit(message)
+                        email.encoders.encode_7or8bit(message)
                     elif self.channeldict['askmdn'] == 'ascii' and charset=='us-ascii':
                         pass
                     else:
                     #~ elif self.channeldict['askmdn'] in ['always',''] or (self.channeldict['askmdn'] == 'ascii' and charset!='us-ascii'):
-                        emailencoders.encode_base64(message)
+                        email.encoders.encode_base64(message)
                     #*******write email to file***************************
                     outfilename = str(ta_to.idta)
                     outfile = botslib.opendata(outfilename, 'wb')
