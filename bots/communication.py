@@ -645,66 +645,8 @@ class imap4(_comsession):
                         fp.close()
                         # Flag message for deletion AND expunge. Direct expunge has advantages for bad (internet)connections.
                         if self.channeldict['remove']:
-                            self.session.uid('store',mail, '+FLAGS', '\\Deleted')
+                            self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
                             self.session.expunge()
-                    except:
-                        txt=botslib.txtexc()
-                        botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt)
-                        ta_from.delete()
-                        ta_to.delete()    #is not received
-                    else:
-                        ta_from.update(statust=DONE)
-                        ta_to.update(statust=OK,filename=filename)
-
-    @botslib.log_session
-    def incommunicate_mike(self):
-        ''' Fetch messages from imap4-mailbox.
-        '''
-        # path may contain a mailbox name, otherwise use INBOX
-        if self.channeldict['path']:
-            mailbox_name = self.channeldict['path']
-        else:
-            mailbox_name = 'INBOX'
-
-        self.expungebeforelogout = False
-        response, data = self.session.select(mailbox_name)
-        if response != 'OK': # eg. mailbox does not exist
-            raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
-        else:
-            #~print 'imap4 found',data[0],'messages in',mailbox_name
-            # Get the message IDs that should be read, limit to first n messages in mailbox
-            n=50
-            response, data = self.session.search(None, '(UNDELETED)')
-            if response != 'OK': # have never seen this happen, but just in case!
-                raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
-            else:
-                #~ maillist = string.split(data[0])[:n]
-                maillist = data[0].split()
-                for mail in maillist[:n]:
-                    try:
-                        ta_from = botslib.NewTransaction(filename='imap4://'+self.channeldict['username']+'@'+self.channeldict['host'],
-                                                            status=EXTERNIN,
-                                                            fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
-                        ta_to =   ta_from.copyta(status=RAWIN)
-                        filename = str(ta_to.idta)
-                        # Get the message (header and body)
-                        #~print 'imap4 get message ID',mail
-                        maillines = []
-                        response, msg_data = self.session.fetch(mail, '(BODY.PEEK[HEADER])')
-                        for part in msg_data:
-                            if isinstance(part, tuple):
-                                maillines.append(part[1])
-                        response, msg_data = self.session.fetch(mail, '(BODY.PEEK[TEXT])')
-                        for part in msg_data:
-                            if isinstance(part, tuple):
-                                maillines.append(part[1])
-                        fp = botslib.opendata(filename, 'wb')
-                        fp.write(os.linesep.join(maillines))
-                        fp.close()
-                        # Flag message for deletion, expunge before logout
-                        if self.channeldict['remove']:
-                            self.session.store(mail, '+FLAGS', '\\Deleted')
-                            self.expungebeforelogout = True
                     except:
                         txt=botslib.txtexc()
                         botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt)
@@ -719,9 +661,7 @@ class imap4(_comsession):
         self.mime2file(fromstatus,tostatus)
 
     def disconnect(self):
-        # Expunge any messages flagged for deletion
-        #~ if self.expungebeforelogout:
-            #~ self.session.expunge()
+        self.session.close()        #Close currently selected mailbox. This is the recommended command before 'LOGOUT'. 
         self.session.logout()
 
 class imap4s(imap4):
@@ -1432,8 +1372,8 @@ class intercommit(_comsession):
 
 
 class database(_comsession):
-    ''' this class is obsolete and only heere for compatibility reasons.
-        this calls is repalced by class db
+    ''' ***this class is obsolete and only heere for compatibility reasons.
+        ***this class is replaced by class db
         communicate with a database; directly read or write from a database.
         the user HAS to provide a script that does the actual import/export using SQLalchemy API.
         use of channel parameters:
