@@ -560,7 +560,7 @@ class pop3(_comsession):
             except:
                 #something went wrong for this mail.  
                 txt=botslib.txtexc()
-                botslib.ErrorProcess(functionname='pop3-incommunicate',errortext=txt)
+                botslib.ErrorProcess(functionname='pop3-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
                 #test connection. if connection is not OK stop fetching mails.
@@ -579,7 +579,7 @@ class pop3(_comsession):
             if resp[:1] != '+':
                 raise Exception('QUIT command to POP3 server failed')
         except:
-            botslib.ErrorProcess(functionname='pop3-incommunicate',errortext='Could not fetch emails via POP3; probably communication problems')
+            botslib.ErrorProcess(functionname='pop3-incommunicate',errortext='Could not fetch emails via POP3; probably communication problems',channeldict=self.channeldict)
             for idta in self.listoftamarkedfordelete:
                 ta = botslib.OldTransaction(idta)
                 ta.delete()
@@ -649,7 +649,7 @@ class imap4(_comsession):
                             self.session.expunge()
                     except:
                         txt=botslib.txtexc()
-                        botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt)
+                        botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt,channeldict=self.channeldict)
                         ta_from.delete()
                         ta_to.delete()    #is not received
                     else:
@@ -796,7 +796,7 @@ class file(_comsession):
                     os.remove(fromfilename)
             except:
                 txt=botslib.txtexc()
-                botslib.ErrorProcess(functionname='file-incommunicate',errortext=txt)
+                botslib.ErrorProcess(functionname='file-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()    #is not received
                 botsglobal.logger.debug(u'Error reading incoming file "%s".',fromfilename)
@@ -932,8 +932,7 @@ class ftp(_comsession):
                     self.session.delete(fromfilename)
             except:
                 txt=botslib.txtexc()
-                botslib.ErrorProcess(functionname='ftp-incommunicate',errortext=txt)
-                #~ ta_from.update(statust=ERROR,errortext=txt)  #this has the big advantage it will be retried again!
+                botslib.ErrorProcess(functionname='ftp-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()    #is not received
             else:
@@ -1118,7 +1117,7 @@ class sftp(_comsession):
                     self.session.remove(fromfilename)
             except:
                 txt=botslib.txtexc()
-                botslib.ErrorProcess(functionname='sftp-incommunicate',errortext=txt)
+                botslib.ErrorProcess(functionname='sftp-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()    #is not received
             else:
@@ -1228,7 +1227,7 @@ class xmlrpc(_comsession):
                 tofile.close()
             except:
                 txt=botslib.txtexc()
-                botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt)
+                botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()    #is not received
             else:
@@ -1582,7 +1581,7 @@ class communicationscript(_comsession):
                         os.remove(fromfilename)
                 except:
                     txt=botslib.txtexc()
-                    botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt)
+                    botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
                     #~ ta_from.update(statust=ERROR,errortext=txt)  #this has the big advantage it will be retried again!
                     ta_from.delete()
                     ta_to.delete()    #is not received
@@ -1609,7 +1608,7 @@ class communicationscript(_comsession):
                         os.remove(fromfilename)
                 except:
                     txt=botslib.txtexc()
-                    botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt)
+                    botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
                     #~ ta_from.update(statust=ERROR,errortext=txt)  #this has the big advantage it will be retried again!
                     ta_from.delete()
                     ta_to.delete()    #is not received

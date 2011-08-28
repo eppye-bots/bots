@@ -269,7 +269,7 @@ class NewTransaction(_Transaction):
                                  VALUES   (''' + varsstring + ''')''',
                                 updatedict)
         self.idta = cursor.lastrowid
-        if not self.idta:   #if botsglobal.settings.DATABASE_ENGINE ==
+        if not self.idta:
             cursor.execute('''SELECT lastval() as idta''')
             self.idta = cursor.fetchone()['idta']
         botsglobal.db.commit()
@@ -285,7 +285,6 @@ class NewProcess(NewTransaction):
     def update(self,**ta_info):
         super(NewProcess,self).update(**ta_info)
         _Transaction.processlist.pop()
-            #use idroute for better logging
 
 
 def trace_origin(ta,where=None):
@@ -551,9 +550,17 @@ def txtexc():
         return terug
 
 class ErrorProcess(NewTransaction):
-    ''' Used in logging of errors in processes.'''
-    def __init__(self,functionname='',errortext=''):
-        super(ErrorProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid(),statust=ERROR,errortext=errortext)
+    ''' Used in logging of errors in processes.
+        20110828: used in communication.py
+    '''
+    def __init__(self,functionname='',errortext='',channeldict=None):
+        fromchannel = tochannel = ''
+        if channeldict:
+            if channeldict['inorout'] == 'in':
+                fromchannel = channeldict['idchannel']
+            else:
+                tochannel = channeldict['idchannel']
+        super(ErrorProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid(),statust=ERROR,errortext=errortext,fromchannel=fromchannel,tochannel=tochannel)
 
 #**********************************************************/**
 #*************************File handling os.path, imports etc***********************/**
