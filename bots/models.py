@@ -2,7 +2,7 @@ from datetime import datetime
 from django.db import models
 from django.utils.translation import ugettext as _
 '''
-django is not excellent in generating db. But they have provided a way to customize the generated database using SQL. I love this! see bots/sql/*.
+django is not excellent in generating db. But they have provided a way to customize the generated database using SQL. see bots/sql/*.
 '''
 
 STATUST = [
@@ -196,10 +196,10 @@ class ccode(botsmodel):
 class channel(botsmodel):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
-    type = StripCharField(max_length=35,choices=CHANNELTYPE)  #use separate in/out; keuzelijst; ook keuzelijst voor type (FILE, POP3, etc)
+    type = StripCharField(max_length=35,choices=CHANNELTYPE)    #protocol type
     charset = StripCharField(max_length=35,default=u'us-ascii')
     host = StripCharField(max_length=256,blank=True)
-    port = models.PositiveIntegerField(default=0,blank=True)
+    port = models.PositiveIntegerField(default=0,blank=True,null=True)
     username = StripCharField(max_length=35,blank=True)
     secret = StripCharField(max_length=35,blank=True,verbose_name=_(u'password'))
     starttls = models.BooleanField(default=False,verbose_name='Skip checking from-addresses',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
@@ -219,7 +219,7 @@ class channel(botsmodel):
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
-    rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max bytes per run'),help_text=_(u"Max bytes per run for this channel- limit the input (in bytes) for each run."))                        #added 20100501. 20110906: max volume messages.
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'

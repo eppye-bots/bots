@@ -1,4 +1,5 @@
 import os
+import sys
 import posixpath
 try:
     import cPickle as pickle
@@ -59,6 +60,7 @@ def run(idchannel,idroute=''):
             classtocall = getattr(userscript,'UserCommunicationClass')
         else:
             classtocall = globals()[channeldict['type']]
+
         classtocall(channeldict,idroute,userscript,scriptname) #call the class for this type of channel
         botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
@@ -89,6 +91,13 @@ class _comsession(object):
                 self.archive()
         else:   #incommunication
             if botsglobal.incommunicate: #for in-communication: only communicate for new run
+                #handle maxfilesperchannel
+                self.maxfilesperchannel = botsglobal.ini.getint('settings','maxfilesperchannel',sys.maxint)
+                #handle maxbytesperchannel. In database this is field 'rsrv2'.
+                if self.channeldict['rsrv2'] <= 0:
+                    self.maxbytesperchannel = botsglobal.ini.getint('settings','maxbytesperchannel',sys.maxint)
+                else:
+                    self.maxbytesperchannel = self.channeldict['rsrv2']
                 self.connect()
                 self.incommunicate()
                 self.disconnect()
@@ -533,7 +542,8 @@ class pop3(_comsession):
         '''
         self.listoftamarkedfordelete = []
         maillist = self.session.list()[1]     #get list of messages #alt: (response, messagelist, octets) = popsession.list()     #get list of messages
-        for mail in maillist:
+        bytesperchannel = 0     #the number of bytes received 
+        for mail in maillist[:self.maxfilesperchannel]:
             try:
                 ta_from = botslib.NewTransaction(filename='pop3://'+self.channeldict['username']+'@'+self.channeldict['host'],
                                                     status=EXTERNIN,
@@ -545,11 +555,12 @@ class pop3(_comsession):
                 fp = botslib.opendata(filename, 'wb')
                 fp.write(os.linesep.join(maillines))
                 fp.close()
+                bytesperchannel += os.path.getsize(filename)
                 if self.channeldict['remove']:      #on server side mail is marked to be deleted. The pop3-server will actually delete the file if the QUIT commnd is receieved!
                     self.session.dele(mailID)
                     #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. delete these as they will NOT 
-                    self.listoftamarkedfordelete.append(ta_from.idta)
-                    self.listoftamarkedfordelete.append(ta_to.idta)
+                    self.listoftamarkedfordelete.extend([ta_from.idta,ta_to.idta])
+                    
             except:
                 #something went wrong for this mail.  
                 txt=botslib.txtexc()
@@ -560,14 +571,18 @@ class pop3(_comsession):
                 try:
                     self.session.noop()
                 except:
+                    self.session = None     #indicate session is not valid anymore
                     break
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(statust=OK,filename=filename)
+                if bytesperchannel >= self.maxbytesperchannel:
+                    break
 
     def disconnect(self):
         try:
-            self.session.noop()     #check if connection is OK
+            if not self.session: 
+                raise Exception('Pop3 connection not OK')
             resp = self.session.quit()     #pop3 server will now actually delete the mails
             if resp[:1] != '+':
                 raise Exception('QUIT command to POP3 server failed')
@@ -616,38 +631,41 @@ class imap4(_comsession):
         response, data = self.session.select(mailbox_name)
         if response != 'OK': # eg. mailbox does not exist
             raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
-        else:
-            # Get the message UIDs that should be read, limit to first n messages in mailbox
-            n=50
-            response, data = self.session.uid('search', None, '(UNDELETED)')
-            if response != 'OK': # have never seen this happen, but just in case!
-                raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
+            
+        # Get the message UIDs that should be read
+        response, data = self.session.uid('search', None, '(UNDELETED)')
+        if response != 'OK': # have never seen this happen, but just in case!
+            raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
+            
+        maillist = data[0].split()
+        bytesperchannel = 0     #the number of bytes received 
+        for mail in maillist[:self.maxfilesperchannel]:
+            try:
+                ta_from = botslib.NewTransaction(filename='imap4://'+self.channeldict['username']+'@'+self.channeldict['host'],
+                                                    status=EXTERNIN,
+                                                    fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
+                ta_to =   ta_from.copyta(status=RAWIN)
+                filename = str(ta_to.idta)
+                # Get the message (header and body)
+                response, msg_data = self.session.uid('fetch',mail, '(RFC822)')
+                fp = botslib.opendata(filename, 'wb')
+                fp.write(msg_data[0][1])
+                fp.close()
+                bytesperchannel += os.path.getsize(filename)
+                # Flag message for deletion AND expunge. Direct expunge has advantages for bad (internet)connections.
+                if self.channeldict['remove']:
+                    self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
+                    self.session.expunge()
+            except:
+                txt=botslib.txtexc()
+                botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt,channeldict=self.channeldict)
+                ta_from.delete()
+                ta_to.delete()    #is not received
             else:
-                maillist = data[0].split()
-                for mail in maillist[:n]:
-                    try:
-                        ta_from = botslib.NewTransaction(filename='imap4://'+self.channeldict['username']+'@'+self.channeldict['host'],
-                                                            status=EXTERNIN,
-                                                            fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
-                        ta_to =   ta_from.copyta(status=RAWIN)
-                        filename = str(ta_to.idta)
-                        # Get the message (header and body)
-                        response, msg_data = self.session.uid('fetch',mail, '(RFC822)')
-                        fp = botslib.opendata(filename, 'wb')
-                        fp.write(msg_data[0][1])
-                        fp.close()
-                        # Flag message for deletion AND expunge. Direct expunge has advantages for bad (internet)connections.
-                        if self.channeldict['remove']:
-                            self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
-                            self.session.expunge()
-                    except:
-                        txt=botslib.txtexc()
-                        botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt,channeldict=self.channeldict)
-                        ta_from.delete()
-                        ta_to.delete()    #is not received
-                    else:
-                        ta_from.update(statust=DONE)
-                        ta_to.update(statust=OK,filename=filename)
+                ta_from.update(statust=DONE)
+                ta_to.update(statust=OK,filename=filename)
+                if bytesperchannel >= self.maxbytesperchannel:
+                    break
 
     @botslib.log_session
     def postcommunicate(self,fromstatus,tostatus):
@@ -762,7 +780,8 @@ class file(_comsession):
         '''
         frompath = botslib.join(self.channeldict['path'],self.channeldict['filename'])
         #fetch messages from filesystem.
-        for fromfilename in [c for c in glob.glob(frompath) if os.path.isfile(c)]:
+        bytesperchannel = 0     #the number of bytes received 
+        for fromfilename in [c for c in glob.glob(frompath) if os.path.isfile(c)][:self.maxfilesperchannel]:
             try:
                 ta_from = botslib.NewTransaction(filename=fromfilename,
                                                 status=EXTERNIN,
@@ -785,6 +804,7 @@ class file(_comsession):
                 shutil.copyfileobj(fromfile,tofile)
                 fromfile.close()
                 tofile.close()
+                bytesperchannel += os.path.getsize(tofilename)
                 if self.channeldict['remove']:
                     os.remove(fromfilename)
             except:
@@ -797,6 +817,8 @@ class file(_comsession):
                 ta_from.update(statust=DONE)
                 ta_to.update(filename=tofilename,statust=OK)
                 botsglobal.logger.debug(u'Read incoming file "%s".',fromfilename)
+                if bytesperchannel >= self.maxbytesperchannel:
+                    break
                 
     @botslib.log_session
     def outcommunicate(self):
@@ -898,15 +920,17 @@ class ftp(_comsession):
         '''
         #'ls' to ftp-server; filter this list
         #~ lijst = fnmatch.filter(self.session.nlst(),self.channeldict['filename'])
+        bytesperchannel = 0     #the number of bytes received 
         files = []
         try:
             files = self.session.nlst()
         except (ftplib.error_perm,ftplib.error_temp),resp:
             resp = str(resp).strip(' \t.').lower()  #'normalise' error
-            if resp not in ['550 no files found','450 no files found']:     #some ftp servers give errors when directory is empty. here these errors are caught
+            if resp[:3] not in ['550','450']:     #some ftp servers give errors when directory is empty. here these errors are caught
                 raise
+
         lijst = fnmatch.filter(files,self.channeldict['filename'])
-        for fromfilename in lijst:  #fetch messages from ftp-server.
+        for fromfilename in lijst[:self.maxfilesperchannel]:  #fetch messages from ftp-server.
             try:
                 ta_from = botslib.NewTransaction(filename='ftp:/'+posixpath.join(self.dirpath,fromfilename),
                                                     status=EXTERNIN,
@@ -921,6 +945,7 @@ class ftp(_comsession):
                     tofile = botslib.opendata(tofilename, 'w')
                     self.session.retrlines("RETR " + fromfilename, lambda s, w=tofile.write: w(s+"\n"))
                 tofile.close()
+                bytesperchannel += os.path.getsize(tofilename)
                 if self.channeldict['remove']:
                     self.session.delete(fromfilename)
             except:
@@ -931,6 +956,8 @@ class ftp(_comsession):
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(filename=tofilename,statust=OK)
+                if bytesperchannel >= self.maxbytesperchannel:
+                    break
         
     @botslib.log_session
     def outcommunicate(self):
@@ -1203,6 +1230,8 @@ class xmlrpc(_comsession):
 
     @botslib.log_session
     def incommunicate(self):
+        countnrfilesincoming = 0
+        bytesperchannel = 0     #the number of bytes received 
         while (True):
             try:
                 tocall = getattr(self.session,self.channeldict['path'])
@@ -1218,6 +1247,7 @@ class xmlrpc(_comsession):
                 tofile = botslib.opendata(tofilename, 'wb')
                 simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
                 tofile.close()
+                bytesperchannel += os.path.getsize(tofilename)
             except:
                 txt=botslib.txtexc()
                 botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
@@ -1226,6 +1256,11 @@ class xmlrpc(_comsession):
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(filename=tofilename,statust=OK)
+                countnrfilesincoming += 1
+                if countnrfilesincoming > self.maxfilesperchannel:
+                    break
+                if bytesperchannel >= self.maxbytesperchannel:
+                    break
 
 
 class intercommit(_comsession):
@@ -1399,7 +1434,7 @@ class database(_comsession):
         jsonobject = botslib.runscript(self.dbscript,self.dbscriptname,'main',channeldict=self.channeldict,session=self.session,metadata=self.metadata)
         self.session.flush()
         self.session.commit()
-        #should I check here more elaborate if jsonobject has 'real' data?
+        #should be checked more elaborate if jsonobject has 'real' data?
         if jsonobject:
             ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
                                                 status=EXTERNIN,
@@ -1555,7 +1590,9 @@ class communicationscript(_comsession):
             
     @botslib.log_session
     def incommunicate(self):
+        bytesperchannel = 0     #the number of bytes received 
         if hasattr(self.userscript,'main'): #process files one by one; script has to be a generator
+            countnrfilesincoming = 0
             for fromfilename in botslib.runscriptyield(self.userscript,self.scriptname,'main',channeldict=self.channeldict):
                 try:
                     ta_from = botslib.NewTransaction(filename = fromfilename,
@@ -1570,6 +1607,7 @@ class communicationscript(_comsession):
                     shutil.copyfileobj(fromfile,tofile)
                     fromfile.close()
                     tofile.close()
+                    bytesperchannel += os.path.getsize(tofilename)
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 except:
@@ -1581,9 +1619,14 @@ class communicationscript(_comsession):
                 else:
                     ta_from.update(statust=DONE)
                     ta_to.update(filename=tofilename,statust=OK)
+                    countnrfilesincoming += 1
+                    if countnrfilesincoming > self.maxfilesperchannel:
+                        break
+                    if bytesperchannel >= self.maxbytesperchannel:
+                        break
         else:   #all files have been set ready by external script using 'connect'.
             frompath = botslib.join(self.channeldict['path'], self.channeldict['filename'])
-            for fromfilename in [c for c in glob.glob(frompath) if os.path.isfile(c)]:
+            for fromfilename in [c for c in glob.glob(frompath) if os.path.isfile(c)][:self.maxfilesperchannel]:
                 try:
                     ta_from = botslib.NewTransaction(filename = fromfilename,
                                                     status = EXTERNIN,
@@ -1597,6 +1640,7 @@ class communicationscript(_comsession):
                     shutil.copyfileobj(fromfile,tofile)
                     fromfile.close()
                     tofile.close()
+                    bytesperchannel += os.path.getsize(tofilename)
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 except:
@@ -1608,6 +1652,8 @@ class communicationscript(_comsession):
                 else:
                     ta_from.update(statust=DONE)
                     ta_to.update(filename=tofilename,statust=OK)
+                    if bytesperchannel >= self.maxbytesperchannel:
+                        break
 
                 
     @botslib.log_session
