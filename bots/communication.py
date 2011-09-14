@@ -555,7 +555,7 @@ class pop3(_comsession):
                 fp = botslib.opendata(filename, 'wb')
                 fp.write(os.linesep.join(maillines))
                 fp.close()
-                bytesperchannel += os.path.getsize(filename)
+                bytesperchannel += os.path.getsize(botslib.abspathdata(filename))
                 if self.channeldict['remove']:      #on server side mail is marked to be deleted. The pop3-server will actually delete the file if the QUIT commnd is receieved!
                     self.session.dele(mailID)
                     #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. delete these as they will NOT 
@@ -651,7 +651,7 @@ class imap4(_comsession):
                 fp = botslib.opendata(filename, 'wb')
                 fp.write(msg_data[0][1])
                 fp.close()
-                bytesperchannel += os.path.getsize(filename)
+                bytesperchannel += os.path.getsize(botslib.abspathdata(filename))
                 # Flag message for deletion AND expunge. Direct expunge has advantages for bad (internet)connections.
                 if self.channeldict['remove']:
                     self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
@@ -804,7 +804,7 @@ class file(_comsession):
                 shutil.copyfileobj(fromfile,tofile)
                 fromfile.close()
                 tofile.close()
-                bytesperchannel += os.path.getsize(tofilename)
+                bytesperchannel += os.path.getsize(botslib.abspathdata(tofilename))
                 if self.channeldict['remove']:
                     os.remove(fromfilename)
             except:
@@ -945,7 +945,7 @@ class ftp(_comsession):
                     tofile = botslib.opendata(tofilename, 'w')
                     self.session.retrlines("RETR " + fromfilename, lambda s, w=tofile.write: w(s+"\n"))
                 tofile.close()
-                bytesperchannel += os.path.getsize(tofilename)
+                bytesperchannel += os.path.getsize(botslib.abspathdata(tofilename))
                 if self.channeldict['remove']:
                     self.session.delete(fromfilename)
             except:
@@ -1247,7 +1247,7 @@ class xmlrpc(_comsession):
                 tofile = botslib.opendata(tofilename, 'wb')
                 simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
                 tofile.close()
-                bytesperchannel += os.path.getsize(tofilename)
+                bytesperchannel += os.path.getsize(botslib.abspathdata(tofilename))
             except:
                 txt=botslib.txtexc()
                 botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
@@ -1607,7 +1607,7 @@ class communicationscript(_comsession):
                     shutil.copyfileobj(fromfile,tofile)
                     fromfile.close()
                     tofile.close()
-                    bytesperchannel += os.path.getsize(tofilename)
+                    bytesperchannel += os.path.getsize(botslib.abspathdata(tofilename))
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 except:
@@ -1640,7 +1640,7 @@ class communicationscript(_comsession):
                     shutil.copyfileobj(fromfile,tofile)
                     fromfile.close()
                     tofile.close()
-                    bytesperchannel += os.path.getsize(tofilename)
+                    bytesperchannel += os.path.getsize(botslib.abspathdata(tofilename))
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 except:

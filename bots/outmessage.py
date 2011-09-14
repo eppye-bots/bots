@@ -489,14 +489,18 @@ class xml(Outmessage):
         else:
             if level and (not elem.tail or not elem.tail.strip()):
                 elem.tail = i
+
     def envelopewrite(self,node):
         ''' write envelope for XML messages'''
-        self.normalisetree(node)
-        #~ xmltree = ET.ElementTree(self._node2xml(node))
-        xmltree = BotsElementTree(self._node2xml(node))
+        #~ self.normalisetree(node)
+        xmltree = ET.ElementTree(self._node2xml(node))
+        #~ xmltree = BotsElementTree(self._node2xml(node))
         root=xmltree.getroot()
         ETI.include(root)
-        xmltree.write(self.ta_info['filename'],encoding=self.ta_info['charset'],ta_info=self.ta_info)
+        try:
+            xmltree.write(self.ta_info['filename'],encoding=self.ta_info['charset'])
+        except:
+            print 'jaja'
 
     def _node2xml(self,node):
         ''' recursive method.
