@@ -302,7 +302,7 @@ class Inmessage(message.Message):
         ''' Generates each message as a separate Inmessage.
         '''
         #~ self.root.display()
-        if self.defmessage.nextmessage is not None: #if nextmessage defined in grammar
+        if self.defmessage.nextmessage is not None: #if nextmessage defined in grammar: split up messages
             first = True
             for message in self.getloop(*self.defmessage.nextmessage):  #get node of each message
                 if first:
@@ -312,7 +312,7 @@ class Inmessage(message.Message):
                 ta_info.update(message.queries)
                 #~ ta_info['botsroot']=self.root
                 yield _edifromparsed(self.__class__.__name__,message,ta_info)
-            if self.defmessage.nextmessage2 is not None:
+            if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
                 first = True
                 for message in self.getloop(*self.defmessage.nextmessage2):
                     if first:
@@ -322,7 +322,7 @@ class Inmessage(message.Message):
                     ta_info.update(message.queries)
                     #~ ta_info['botsroot']=self.root
                     yield _edifromparsed(self.__class__.__name__,message,ta_info)
-        elif self.defmessage.nextmessageblock is not None:
+        elif self.defmessage.nextmessageblock is not None:          #for csv/fixed: nextmessageblock indicates which field determines a message (as long as the field is the same, it is one message)
             #there is only one recordtype (this is checked in grammar.py).
             first = True
             for line in self.root.children:
@@ -348,7 +348,7 @@ class Inmessage(message.Message):
                     ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
                     #~ ta_info['botsroot']=self.root
                     yield _edifromparsed(self.__class__.__name__,newroot,ta_info)
-        else:   #no split up indicated in grammar; s
+        else:   #no split up indicated in grammar; 
             if self.root.record or self.ta_info['pass_all']:    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
