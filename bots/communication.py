@@ -56,8 +56,11 @@ def run(idchannel,idroute=''):
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
         except ImportError:
             userscript = scriptname = None
-        if hasattr(userscript,'UserCommunicationClass'):
-            classtocall = getattr(userscript,'UserCommunicationClass')
+        if userscript:      #check to see if user defined his own communciation class (sub classing)
+            if hasattr(userscript,channeldict['type']):
+                classtocall = getattr(userscript,channeldict['type'])
+            elif hasattr(userscript,'UserCommunicationClass'):      #20110920: UserCommunicationClass is obsolete, depreciated. Keep this for now. 
+                classtocall = getattr(userscript,'UserCommunicationClass')
         else:
             classtocall = globals()[channeldict['type']]
 
@@ -1566,8 +1569,8 @@ class communicationscript(_comsession):
     For running an (user maintained) communication script. 
     Examples of use:
     - call external communication program or a program that imports data in ERP system
-    - communication method not available in Bots
-    - specialised I/O wishes; eg specific naming of output files. (eg including partner name)
+    - communication method not available in Bots ***better use sub-classing for this***
+    - specialised I/O wishes; eg specific naming of output files. (eg including partner name) ***beter: use sub-classing or have more user exits***
     place of communication scripts: bots/usersys/communicationscripts
     name of communication script: same name as channel (the channelID)
     in this communication script some functions will be called:

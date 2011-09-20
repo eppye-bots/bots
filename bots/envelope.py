@@ -131,7 +131,8 @@ def envelope(ta_info,ta_list):
                 classtocall = globals()[ta_info['envelope']]
             except KeyError:
                 try:    #check if there is a envelope class with name ta_info['editype'] in this file (envelope.py).
-                        # 20110919: this should disappear in the long run....use this now for orders2printenvelope and myxmlenvelop
+                        #20110919: this should disappear in the long run....use this now for orders2printenvelope and myxmlenvelop
+                        #reason to disappear: confusing when setting up. 
                     classtocall = globals()[ta_info['editype']]
                 except KeyError:
                     raise botslib.OutMessageError(_(u'Not found envelope "$envelope".'),envelope=ta_info['editype'])
