@@ -192,7 +192,7 @@ admin.site.register(models.uniek,UniekAdmin)
 #User - change the default display of user screen
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-UserAdmin.list_display = ('username', 'is_active', 'is_staff', 'is_superuser', 'date_joined', 'last_login')
+UserAdmin.list_display = ('username', 'first_name', 'last_name','email', 'is_active', 'is_staff', 'is_superuser', 'date_joined','last_login') 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
