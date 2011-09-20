@@ -114,7 +114,7 @@ def envelope(ta_info,ta_list):
     '''
     #determine which class to use for enveloping
     userscript = scriptname = None
-    if not ta_info['envelope']: 
+    if not ta_info['envelope']:     #used when enveloping is just appending files.
         classtocall = noenvelope
     else:
         try:    #see if the is user scripted enveloping
@@ -122,15 +122,19 @@ def envelope(ta_info,ta_list):
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'] + '.' + ta_info['envelope'])
         except ImportError: #other errors, eg syntax errors are just passed
             pass
-        try:
-            classtocall = globals()[ta_info['envelope']]
-        except KeyError:
-            try:
-                classtocall = globals()[ta_info['editype']]
-            except KeyError:
-                raise botslib.OutMessageError(_(u'Not found envelope "$envelope".'),envelope=ta_info['editype'])
+        #first: check if there is a class with name ta_info['envelope'] in the user scripting
+        #this allows complete enveloping in user scripting
         if userscript and hasattr(userscript,ta_info['envelope']):
             classtocall = getattr(userscript,ta_info['envelope'])
+        else:
+            try:    #check if there is a envelope class with name ta_info['envelope'] in this file (envelope.py)
+                classtocall = globals()[ta_info['envelope']]
+            except KeyError:
+                try:    #check if there is a envelope class with name ta_info['editype'] in this file (envelope.py).
+                        # 20110919: this should disappear in the long run....use this now for orders2printenvelope and myxmlenvelop
+                    classtocall = globals()[ta_info['editype']]
+                except KeyError:
+                    raise botslib.OutMessageError(_(u'Not found envelope "$envelope".'),envelope=ta_info['editype'])
     env = classtocall(ta_info,ta_list,userscript,scriptname)
     env.run()
 

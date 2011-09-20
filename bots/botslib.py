@@ -570,6 +570,7 @@ def botsbaseimport(modulename):
     if modulename.startswith('.'):
         modulename = modulename[1:]
     try:
+        #~ print 'import',modulename
         module = __import__(modulename)
         components = modulename.split('.')
         for comp in components[1:]:

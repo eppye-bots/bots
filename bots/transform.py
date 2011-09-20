@@ -5,6 +5,7 @@ except:
     import pickle
 import re
 import copy
+import collections
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
