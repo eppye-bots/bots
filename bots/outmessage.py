@@ -444,9 +444,50 @@ class xml(Outmessage):
     def _write(self,node):
         ''' write normal XML messages (no envelope)'''
         xmltree = ET.ElementTree(self._node2xml(node))
-        root=xmltree.getroot()
-        self._xmlwrite(xmltree,root)
+        root = xmltree.getroot()
+        self._xmlcorewrite(xmltree,root)
 
+    def envelopewrite(self,node):
+        ''' write envelope for XML messages'''
+        self._initwrite()
+        self.normalisetree(node)
+        xmltree = ET.ElementTree(self._node2xml(node))
+        root = xmltree.getroot()
+        ETI.include(root)
+        self._xmlcorewrite(xmltree,root)
+        self._closewrite()
+
+    def _xmlcorewrite(self,xmltree,root):
+        #xml prolog: always use.*********************************
+        #standalone, DOCTYPE, processing instructions: only possible in python >= 2.7 or if encoding is utf-8/ascii
+        if sys.version >= '2.7.0' or self.ta_info['charset'] in ['us-ascii','utf-8'] or ET.VERSION >= '1.3.0':
+            if self.ta_info['indented']:
+                indentstring = '\n'
+            else:
+                indentstring = ''
+            if self.ta_info['standalone']:
+                standalonestring = 'standalone="%s" '%(self.ta_info['standalone'])
+            else:
+                standalonestring = ''
+            PI = ET.ProcessingInstruction('xml', 'version="%s" encoding="%s" %s'%(self.ta_info['version'],self.ta_info['charset'], standalonestring))        
+            self._outstream.write(ET.tostring(PI) + indentstring) #do not use encoding here. gives double xml prolog; possibly because ET.ElementTree.write i used again by write()
+            #doctype /DTD **************************************
+            if self.ta_info['DOCTYPE']:
+                self._outstream.write('<!DOCTYPE %s>'%(self.ta_info['DOCTYPE']) + indentstring)
+            #processing instructions (other than prolog) ************
+            if self.ta_info['processing_instructions']:
+                for pi in self.ta_info['processing_instructions']:
+                    PI = ET.ProcessingInstruction(pi[0], pi[1])
+                    self._outstream.write(ET.tostring(PI) + indentstring) #do not use encoding here. gives double xml prolog; possibly because ET.ElementTree.write i used again by write()
+        #indent the xml elements
+        if self.ta_info['indented']:
+            self.botsindent(root)
+        #write tree to file; this is differnt for different python/elementtree versions
+        if sys.version < '2.7.0' and ET.VERSION < '1.3.0':
+            xmltree.write(self._outstream,encoding=self.ta_info['charset'])
+        else:
+            xmltree.write(self._outstream,encoding=self.ta_info['charset'],xml_declaration=False)
+        
     def botsindent(self,elem, level=0,indentstring='    '):
         i = "\n" + level*indentstring
         if len(elem):
@@ -461,52 +502,6 @@ class xml(Outmessage):
         else:
             if level and (not elem.tail or not elem.tail.strip()):
                 elem.tail = i
-
-    def envelopewrite(self,node):
-        ''' write envelope for XML messages'''
-        self.normalisetree(node)
-        xmltree = ET.ElementTree(self._node2xml(node))
-        root=xmltree.getroot()
-        ETI.include(root)
-        self._xmlwrite(xmltree,root)
-
-    def _xmlwrite(self,xmltree,root):
-        f = botslib.opendata(self.ta_info['filename'],"wb")
-        
-        #xml prolog: always use.*********************************
-        #standalone, DOCTYPE, processing instructions: only possible in python >= 2.7 or if encoding is utf-8/ascii
-        if sys.version >= '2.7.0' or self.ta_info['charset'] in ['us-ascii','utf-8'] or ET.VERSION >= '1.3.0':
-            if self.ta_info['indented']:
-                indentstring = '\n'
-            else:
-                indentstring = ''
-            if self.ta_info['standalone']:
-                standalonestring = 'standalone="%s" '%(self.ta_info['standalone'])
-            else:
-                standalonestring = ''
-            PI = ET.ProcessingInstruction('xml', 'version="%s" encoding="%s" %s'%(self.ta_info['version'],self.ta_info['charset'], standalonestring))        
-            f.write(ET.tostring(PI) + indentstring) #do not use encoding here. gives double xml prolog; possibly because ET.ElementTree.write i used again by write()
-            
-            #doctype /DTD **************************************
-            if self.ta_info['DOCTYPE']:
-                f.write('<!DOCTYPE %s>'%(self.ta_info['DOCTYPE']) + indentstring)
-            
-            #processing instructions (other than prolog) ************
-            if self.ta_info['processing_instructions']:
-                for pi in self.ta_info['processing_instructions']:
-                    PI = ET.ProcessingInstruction(pi[0], pi[1])
-                    f.write(ET.tostring(PI) + indentstring) #do not use encoding here. gives double xml prolog; possibly because ET.ElementTree.write i used again by write()
-        
-        #indent the xml elements
-        if self.ta_info['indented']:
-            self.botsindent(root)
-        
-        if sys.version < '2.7.0' and ET.VERSION < '1.3.0':
-            xmltree.write(f,encoding=self.ta_info['charset'])
-        else:
-            xmltree.write(f,encoding=self.ta_info['charset'],xml_declaration=False)
-        f.close()
-        
 
     def _node2xml(self,node):
         ''' recursive method.
@@ -556,11 +551,8 @@ class xml(Outmessage):
         
     def _initwrite(self):
         botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+        self._outstream = botslib.opendata(self.ta_info['filename'],"wb")
         
-    def _closewrite(self):
-        botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
-
-
 
 class xmlnocheck(xml):
     def normalisetree(self,node):
