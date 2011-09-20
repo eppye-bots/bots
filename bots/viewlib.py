@@ -210,11 +210,13 @@ def trace2detail(ta):
 def datetimefrom():
     #~ terug = datetime.datetime.today()-datetime.timedelta(1860)
     terug = datetime.datetime.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
-    return terug.strftime('%Y-%m-%d %H:%M:%S')
+    #~ return terug.strftime('%Y-%m-%d %H:%M:%S')
+    return terug.strftime('%Y-%m-%d 00:00:00') 
 
 def datetimeuntil():
     terug = datetime.datetime.today()
-    return terug.strftime('%Y-%m-%d %H:%M:%S')
+    #~ return terug.strftime('%Y-%m-%d %H:%M:%S')
+    return terug.strftime('%Y-%m-%d 23:59:59') 
 
 def handlepagination(requestpost,cleaned_data):
     ''' use requestpost to set criteria for pagination in cleaned_data'''
