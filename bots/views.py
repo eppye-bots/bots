@@ -480,6 +480,9 @@ def delete(request,*kw,**kwargs):
 def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
             #~ logger = logging.getLogger('bots')
+        if list(models.mutex.objects.filter(mutexk=1).all()):
+            request.user.message_set.create(message=_(u'Database is locked by another run in progress. Please try again later.'))
+            return django.shortcuts.redirect('/')         
         if os.name=='nt':
             lijst = [sys.executable, os.path.normpath(os.path.join(sys.prefix,'Scripts','bots-engine.py'))]
         elif os.path.exists(os.path.join(sys.prefix,'bin','bots-engine.py')):
