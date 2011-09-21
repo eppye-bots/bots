@@ -76,7 +76,7 @@ admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
     actions = ('bulk_delete',)
-    list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename',  'remove', 'archivepath', 'charset')
+    list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename', 'remove', 'archivepath', 'charset','rsrv2','ftpactive', 'ftpbinary','askmdn', 'syslock', 'starttls','apop')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
     search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath', 'charset')
@@ -136,8 +136,9 @@ class RoutesAdmin(BotsAdmin):
     actions = ('bulk_delete','activate')
     list_display = ('active', 'idroute', 'seq', 'fromchannel', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'translateind', 'tochannel', 'defer', 'toeditype', 'tomessagetype', 'frompartner_tochannel', 'topartner_tochannel', 'testindicator', 'notindefaultrun')
     list_display_links = ('idroute',)
-    list_filter = ('idroute','active','fromeditype','testindicator')
+    list_filter = ('idroute','active','fromeditype')
     ordering = ('idroute','seq')
+    search_fields = ('idroute', 'fromchannel__idchannel','fromeditype', 'frommessagetype', 'alt', 'tochannel__idchannel','toeditype', 'tomessagetype')
     fieldsets = (
         (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc')}),
         (_(u'Filtering for outchannel'),{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
