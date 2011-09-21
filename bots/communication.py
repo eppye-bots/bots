@@ -921,15 +921,12 @@ class ftp(_comsession):
             each to be imported file is transaction.
             each imported file is transaction.
         '''
-        #'ls' to ftp-server; filter this list
-        #~ lijst = fnmatch.filter(self.session.nlst(),self.channeldict['filename'])
         bytesperchannel = 0     #the number of bytes received 
         files = []
-        try:
+        try:            #some ftp servers give errors when directory is empty; catch these errors here
             files = self.session.nlst()
         except (ftplib.error_perm,ftplib.error_temp),resp:
-            resp = str(resp).strip(' \t.').lower()  #'normalise' error
-            if resp[:3] not in ['550','450']:     #some ftp servers give errors when directory is empty. here these errors are caught
+            if str(resp)[:3] not in ['550','450']:
                 raise
 
         lijst = fnmatch.filter(files,self.channeldict['filename'])
@@ -941,17 +938,30 @@ class ftp(_comsession):
                                                     charset=self.channeldict['charset'],idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=RAWIN)
                 tofilename = str(ta_to.idta)
-                if self.channeldict['ftpbinary']:
-                    tofile = botslib.opendata(tofilename, 'wb')
-                    self.session.retrbinary("RETR " + fromfilename, tofile.write)
-                else:
-                    tofile = botslib.opendata(tofilename, 'w')
-                    self.session.retrlines("RETR " + fromfilename, lambda s, w=tofile.write: w(s+"\n"))
+                tofile = botslib.opendata(tofilename, 'wb')
+                try:
+                    if self.channeldict['ftpbinary']:
+                        self.session.retrbinary("RETR " + fromfilename, tofile.write)
+                    else:
+                        self.session.retrlines("RETR " + fromfilename, lambda s, w=tofile.write: w(s+"\n"))
+                except ftplib.error_perm, resp:
+                    if str(resp)[:3] in ['550',]:     #we are trying to download a directory...
+                        raise botslib.BotsError('This error is to be catched and handled')
+                    else:
+                        raise
                 tofile.close()
-                bytesperchannel += os.path.getsize(botslib.abspathdata(tofilename))
+                filesize = os.path.getsize(botslib.abspathdata(tofilename))
+                if not filesize:
+                    raise botslib.BotsError('This error is to be catched and handled')
                 if self.channeldict['remove']:
                     self.session.delete(fromfilename)
+                bytesperchannel += filesize
+            except botslib.BotsError:   #catch this exception, raised for handling 
+                tofile.close()
+                ta_from.delete()
+                ta_to.delete()
             except:
+                tofile.close()
                 txt=botslib.txtexc()
                 botslib.ErrorProcess(functionname='ftp-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
