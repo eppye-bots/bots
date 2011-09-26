@@ -329,12 +329,13 @@ def plugout_database(cleaned_data):
     return tmpbotsindex
     
 def plugout_files(cleaned_data):
+    ''' gather list of files for the plugin that is generated '''
     files2return = []
     usersys = botsglobal.ini.get('directories','usersysabs')
     botssys = botsglobal.ini.get('directories','botssys')
-    if cleaned_data['fileconfiguration']:
+    if cleaned_data['fileconfiguration']:       #gather from usersys
         files2return.extend(plugout_files_bydir(usersys,'usersys'))
-        if not cleaned_data['charset']:     #if edifact charsets are not needed: remove them. These are included in default bots installation. Is that wise?
+        if not cleaned_data['charset']:     #if edifact charsets are not needed: remove them (are included in default bots installation).
             charsetdirs = plugout_files_bydir(os.path.join(usersys,'charsets'),'usersys/charsets')
             for charset in charsetdirs:
                 try:
@@ -358,16 +359,17 @@ def plugout_files(cleaned_data):
     return files2return
 
 def plugout_files_bydir(dirname,defaultdirname):
+    ''' gather all files from directory dirname'''
     files2return = []
     for root, dirs, files in os.walk(dirname):
         head, tail = os.path.split(root)
-        if tail in ['.svn']:
+        if tail in ['.svn']:    #skip .svn directries
             del dirs[:]     #os.walk will not look in subdirectories 
-            continue        #skip this .svn directory
+            continue 
         rootinplugin = root.replace(dirname,defaultdirname,1)
         for bestand in files:
             ext = os.path.splitext(bestand)[1]
-            if ext in ['.pyc','.pyo'] or bestand in ['__init__.py']:
+            if ext and (ext in ['.pyc','.pyo'] or bestand in ['__init__.py'] or (len(ext) == 15 and ext[1:].isdigit())):
                 continue
             files2return.append([os.path.join(root,bestand),os.path.join(rootinplugin,bestand)])
     return files2return
