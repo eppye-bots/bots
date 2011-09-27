@@ -187,68 +187,78 @@ class _comsession(object):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=tostatus)
+                ta_to.synall()  #needed for user exits: get all parameters of ta_to from database;
                 confirmtype = u''
                 confirmasked = False
                 charset = row['charset']
                 
                 if row['editype'] == 'email-confirmation': #outgoing MDN: message is already assembled
                     outfilename = row['filename']
-                else:
-                    #assemble message: 
+                else:   #assemble message: headers and payload. Bots uses simple MIME-envelope; by default payload is an attachmetn
                     message = email.Message.Message()
-                    message.epilogue = ''	# Make sure message ends in a newline
-                    #******generate headers*******************************
-                    #~ message.set_type(contenttype)                               #contenttype is set in grammar.syntax
+                    #set 'from' header (sender)
                     frommail,ccfrom = self.idpartner2mailaddress(row['frompartner'])    #lookup email address for partnerID
                     message.add_header('From', frommail)
-                    ta_to.synall()  #get all parameters of ta_to from database; ta_to is send to user script
-                    if self.userscript and hasattr(self.userscript,'getmailaddressforreceiver'):
+                    
+                    #set 'to' header (receiver)
+                    if self.userscript and hasattr(self.userscript,'getmailaddressforreceiver'):    #user exit to determine to-address/receiver
                         tomail,ccto = botslib.runscript(self.userscript,self.scriptname,'getmailaddressforreceiver',channeldict=self.channeldict,ta=ta_to)
                     else:
                         tomail,ccto = self.idpartner2mailaddress(row['topartner'])          #lookup email address for partnerID
                     message.add_header('To',tomail)
                     if ccto:
                         message.add_header('CC',ccto)
+                    
+                    #set Message-ID
                     reference=email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
                     message.add_header('Message-ID',reference)
                     ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use correct & updated ta_to in user script)
                     
+                    #set date-time stamp
                     message.add_header("Date",email.Utils.formatdate(localtime=True))
-                    #should a MDN be asked?
+                    
+                    #set Disposition-Notification-To: ask/ask not a a MDN?
                     if botslib.checkconfirmrules('ask-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
                                                                 frompartner=row['frompartner'],topartner=row['topartner']):
                         message.add_header("Disposition-Notification-To",frommail)
                         confirmtype = u'ask-email-MDN'
                         confirmasked = True
+                    
                     #set subject
                     subject=str(row['idta'])
                     content = botslib.readdata(row['filename'])     #get attachment from data file
-                    if self.userscript and hasattr(self.userscript,'subject'):
+                    if self.userscript and hasattr(self.userscript,'subject'):    #user exit to determine subject
                         subject = botslib.runscript(self.userscript,self.scriptname,'subject',channeldict=self.channeldict,ta=ta_to,subjectstring=subject,content=content)
                     message.add_header('Subject',subject)
-                    #set attachmentname; first generate default attachmentname
-                    unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
+                    
+                    #set MIME-version
+                    message.add_header('MIME-Version','1.0')
+                    
+                    #set attachment filename
+                    #create default attachment filename
+                    unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
                     if self.channeldict['filename']:
                         attachmentfilename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
                     else:
                         attachmentfilename = unique
-                    #user script for attachmentname
-                    if self.userscript and hasattr(self.userscript,'filename'):
+                    if self.userscript and hasattr(self.userscript,'filename'): #user exit to determine attachmentname
                         attachmentfilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,ta=ta_to,filename=attachmentfilename)
-                    if attachmentfilename:  #if None or empty string: not an attachment
+                    if attachmentfilename:  #Tric: if attachmentfilename is None or empty string: do not send as an attachment.
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
-                    #end set attachmentname
+                    
+                    #set Content-Type and charset
                     charset = self.convertcodecformime(row['charset'])
                     message.add_header('Content-Type',row['contenttype'].lower(),charset=charset)          #contenttype is set in grammar.syntax
-                    #*******set attachment/payload*************************
+                    
+                    #set attachment/payload; the Content-Transfer-Encoding is set by python encoder
                     message.set_payload(content)   #do not use charset; this lead to unwanted encodings...bots always uses base64
-                    if self.channeldict['askmdn'] == 'never':
-                        email.encoders.encode_7or8bit(message)
+                    if self.channeldict['askmdn'] == 'never':       #channeldict['askmdn'] is the Mime encoding
+                        email.encoders.encode_7or8bit(message)      #no encoding; but the Content-Transfer-Encoding is set to 7-bit or 8-bt
                     elif self.channeldict['askmdn'] == 'ascii' and charset=='us-ascii':
-                        pass
-                    else:
-                    #~ elif self.channeldict['askmdn'] in ['always',''] or (self.channeldict['askmdn'] == 'ascii' and charset!='us-ascii'):
+                        pass        #do nothing: ascii is default encoding
+                    else:           #if Mime encoding is 'always' or  (Mime encoding == 'ascii' and charset!='us-ascii'): use base64
                         email.encoders.encode_base64(message)
+                    
                     #*******write email to file***************************
                     outfilename = str(ta_to.idta)
                     outfile = botslib.opendata(outfilename, 'wb')
@@ -341,29 +351,28 @@ class _comsession(object):
             if not botslib.checkconfirmrules('send-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
                                                             frompartner=frompartner,topartner=topartner):
                 return 0 #do not send
-            #make message: header, text/plain, message/disposition-notification
+            #make message
             message = email.Message.Message()
-            message['From'] = tomail
+            message.add_header('From',tomail)
             dispositionnotificationto = email.Utils.parseaddr(msg['disposition-notification-to'])[1]
-            message['To'] = dispositionnotificationto
-            message['Subject']='Return Receipt (displayed) - '+subject
-            message["Date"]=email.Utils.formatdate(localtime=True)
-            message.set_type('multipart/report')
-            message.set_param('reporttype','disposition-notification')
-            message.epilogue = ''	# Make sure message ends in a newline
+            message.add_header('To', dispositionnotificationto)
+            message.add_header('Subject', 'Return Receipt (displayed) - '+subject)
+            message.add_header("Date", email.Utils.formatdate(localtime=True))
+            message.add_header('MIME-Version','1.0')
+            message.add_header('Content-Type','multipart/report',reporttype='disposition-notification')
+            #~ message.set_type('multipart/report')
+            #~ message.set_param('reporttype','disposition-notification')
 
             #make human readable message
             humanmessage = email.Message.Message()
-            humanmessage['Content-Type'] = 'text/plain'
+            humanmessage.add_header('Content-Type', 'text/plain')
             humanmessage.set_payload('This is an return receipt for the mail that you send to '+tomail)
-            humanmessage.epilogue = ''	# Make sure message ends in a newline
             message.attach(humanmessage)
             
             #make machine readable message
             machinemessage = email.Message.Message()
-            machinemessage['Content-Type'] = 'message/disposition-notification'
-            machinemessage["Original-Message-ID"]=reference
-            machinemessage.epilogue = ''	# Make sure message ends in a newline
+            machinemessage.add_header('Content-Type', 'message/disposition-notification')
+            machinemessage.add_header('Original-Message-ID', reference)
             nep = email.Message.Message()
             machinemessage.attach(nep)
             message.attach(machinemessage)
@@ -371,7 +380,7 @@ class _comsession(object):
             #write email to file;
             ta_mdn=botslib.NewTransaction(status=MERGED)  #new transaction for group-file
             mdn_reference = email.Utils.make_msgid(str(ta_mdn.idta))    #we first have to get the mda-ta to make this reference
-            message['Message-ID'] = mdn_reference
+            message.add_header('Message-ID', mdn_reference)
             mdnfilename = str(ta_mdn.idta)
             mdnfile = botslib.opendata(mdnfilename, 'wb')
             g = email.Generator.Generator(mdnfile, mangle_from_=False, maxheaderlen=78)
