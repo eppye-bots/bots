@@ -70,12 +70,14 @@ def start():
     
     botsglobal.logger.info(_(u'Bots web server started.'))
     #handle ssl in webserver:
+    #cherrypy < 3.2 always uses pyOpenssl, cherrypy >= 3.2 will use python buildin ssl.
+    #python >= 2.6 has buildin support for ssl 
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
     ssl_private_key = botsglobal.ini.get('webserver','ssl_private_key',None)
     if ssl_certificate and ssl_private_key:
         botswebserver.ssl_module = 'builtin'            #in cherrypy > 3.1, this has no result (but does no harm)
-        botswebserver.ssl_certificate = '/home/hje/testcert/mycert.pem'
-        botswebserver.ssl_private_key = '/home/hje/testcert/mycert.pem'
+        botswebserver.ssl_certificate = ssl_certificate
+        botswebserver.ssl_private_key = ssl_private_key
         botsglobal.logger.info(_(u'Bots web server uses ssl (https).'))
     else:
         botsglobal.logger.info(_(u'Bots web server uses plain http (no ssl).'))
