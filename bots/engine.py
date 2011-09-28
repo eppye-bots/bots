@@ -42,6 +42,11 @@ def showusage():
     print usage
     
 def start():
+    #exit codes:
+    # 0: OK, no errors
+    # 1: (system) errors
+    # 2: bots ran OK, but there are errors/process errors  in the run
+    # 3: Database is locked, but "maxruntime" has not been exceeded.
     #********command line arguments**************************
     commandspossible = ['--new','--retry','--retransmit','--cleanup','--crashrecovery','--retrycommunication','--automaticretrycommunication']
     commandstorun = []
@@ -118,7 +123,7 @@ def start():
                 sys.exit(1)
             else:   #maxruntime has not passed. Exit silently, nothing reported
                 botsglobal.logger.info(_(u'Database is locked, but "maxruntime" has not been exceeded.'))
-                exit(0)
+                sys.exit(3)
     else:
         if '--crashrecovery' in commandstorun:    #user starts recovery operation but there is no databaselock.
             warn = _(u'User started a forced retry of the last run.\nOnly use this when the database is locked.\nThe database was not locked (database is OK).\nSo Bots has done nothing now.')

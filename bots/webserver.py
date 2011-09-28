@@ -75,7 +75,7 @@ def start():
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
     ssl_private_key = botsglobal.ini.get('webserver','ssl_private_key',None)
     if ssl_certificate and ssl_private_key:
-        botswebserver.ssl_module = 'builtin'            #in cherrypy > 3.1, this has no result (but does no harm)
+        botswebserver.ssl_module = 'builtin'            #in cherrypy < 3.2, this has no result (but does no harm)
         botswebserver.ssl_certificate = ssl_certificate
         botswebserver.ssl_private_key = ssl_private_key
         botsglobal.logger.info(_(u'Bots web server uses ssl (https).'))
