@@ -58,12 +58,14 @@ def start():
     
     #**********init cherrypy as webserver*********************************************
     #set global configuration options for cherrypy
-    cherrypy.config.update({'global': { 'log.screen': False, 'server.environment': botsglobal.ini.get('webserver','environment','development')}})
+    cherrypy.config.update({'global': { 'log.screen': False, 'server.environment': botsglobal.ini.get('webserver','environment','production')}})
     #set the cherrypy handling of static files
     conf = {'/': {'tools.staticdir.on' : True,'tools.staticdir.dir' : 'media' ,'tools.staticdir.root': botsglobal.ini.get('directories','botspath')}}
-    servestaticfiles = cherrypy.tree.mount(Dummyclass(), '/media', conf)    #myroot is needed to set logging 
+    servestaticfiles = cherrypy.tree.mount(Dummyclass(), '/media', conf) 
+    #set the cherrypy handling of django
+    servedjango = AdminMediaHandler(WSGIHandler()) 
     #cherrypy uses a dispatcher in order to handle the serving of static files and django.
-    dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': AdminMediaHandler(WSGIHandler()), '/media': servestaticfiles})
+    dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, '/media': servestaticfiles})
     botswebserver = wsgiserver.CherryPyWSGIServer(('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), dispatcher)
     
     botsglobal.logger.info(_(u'Bots web server started.'))
