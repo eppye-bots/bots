@@ -71,8 +71,8 @@ CHANNELTYPE = (
     ('imap4', _(u'imap4')),
     ('imap4s', _(u'imap4s')),
     ('ftp', _(u'ftp')),
-    ('ftps', _(u'ftps')),
-    ('sftp', _(u'sftp')),
+    ('ftps', _(u'ftps (implicit)')),
+    ('sftp', _(u'sftp (ssh)')),
     ('xmlrpc', _(u'xmlrpc')),
     ('mimefile', _(u'mimefile')),
     ('communicationscript', _(u'communicationscript')),
@@ -219,7 +219,7 @@ class channel(botsmodel):
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
-    rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max bytes per run'),help_text=_(u"Max bytes per run for this channel- limit the input (in bytes) for each run."))                        #added 20100501. 20110906: max volume messages.
+    rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds per run'),help_text=_(u'Max seconds used for the in-communication time for this channel.'))                        #added 20100501. 20110906: max communication time.
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'
