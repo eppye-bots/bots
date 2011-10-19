@@ -1031,6 +1031,10 @@ class ftp(_comsession):
         botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
         
 class ftps(ftp):
+    ''' explicit ftps as defined in RFC 2228 and RFC 4217.
+        standard port to connect to is as in normal FTP (port 21)
+        ftps is supported by python >= 2.7
+    '''
     def connect(self):
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
         if not hasattr(ftplib,'FTP_TLS'):
@@ -1053,10 +1057,14 @@ class ftps(ftp):
                 self.session.cwd(self.dirpath)           #set right path on ftp-server
 
 class sftp(_comsession):
-    # for sftp channel type, requires paramiko and pycrypto to be installed
-    # based on class ftp and ftps above with code from demo_sftp.py which is included with paramiko
-    # Mike Griffin 16/10/2010
-    # Henk-jan ebbers 20110802: when testing I found that the transport also needs to be closed. So changed transport ->self.transport, and close this in disconnect
+    ''' SSH File Transfer Protocol (SFTP is not FTP run over SSH, SFTP is not Simple File Transfer Protocol)
+        standard port to connect to is port 22.
+        requires paramiko and pycrypto to be installed
+        based on class ftp and ftps above with code from demo_sftp.py which is included with paramiko
+        Mike Griffin 16/10/2010
+        Henk-jan ebbers 20110802: when testing I found that the transport also needs to be closed. So changed transport ->self.transport, and close this in disconnect
+        henk-jan ebbers 20111019: disabled the host_key part for now (but is very interesting). Is not tested; keys should be integrated in bots also for other protocols. 
+    '''
     def connect(self):
         # check dependencies
         try:
@@ -1086,19 +1094,19 @@ class sftp(_comsession):
         # get host key, if we know one
         # (I have not tested this, just copied from demo)
         hostkeytype = None
-        hostkey = None
-        try:
-            host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
-        except IOError:
-            try: # try ~/ssh/ too, because windows can't have a folder named ~/.ssh/
-                host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/ssh/known_hosts'))
-            except IOError:
-                host_keys = {}
-                botsglobal.logger.debug(u'No host keys found for sftp')
-        if host_keys.has_key(hostname):
-            hostkeytype = host_keys[hostname].keys()[0]
-            hostkey = host_keys[hostname][hostkeytype]
-            botsglobal.logger.debug(u'Using host key of type "%s" for sftp',hostkeytype)
+        hostkey = {}
+        #~ try:
+            #~ host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
+        #~ except IOError:
+            #~ try: # try ~/ssh/ too, because windows can't have a folder named ~/.ssh/
+                #~ host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/ssh/known_hosts'))
+            #~ except IOError:
+                #~ host_keys = {}
+                #~ botsglobal.logger.debug(u'No host keys found for sftp')
+        #~ if host_keys.has_key(hostname):
+            #~ hostkeytype = host_keys[hostname].keys()[0]
+            #~ hostkey = host_keys[hostname][hostkeytype]
+            #~ botsglobal.logger.debug(u'Using host key of type "%s" for sftp',hostkeytype)
 
         # now, connect and use paramiko Transport to negotiate SSH2 across the connection
         self.transport = paramiko.Transport((hostname,port))
