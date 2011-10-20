@@ -468,3 +468,9 @@ class db(Envelope):
     def run(self):
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         self.ta_info['filename'] = self.ta_list[0]
+
+class raw(Envelope):
+    ''' Only copies the input files to one output file.'''
+    def run(self):
+        botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
+        self.ta_info['filename'] = self.ta_list[0]

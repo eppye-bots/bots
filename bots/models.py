@@ -40,21 +40,22 @@ STATUS = [
     (520,_(u'FileSend')),
     ]
 EDITYPES = [
-    ('edifact', _(u'edifact')),
-    ('x12', _(u'x12')),
     ('csv', _(u'csv')),
-    ('fixed', _(u'fixed')),
-    ('xml', _(u'xml')),
-    ('json', _(u'json')),
-    ('mailbag', _(u'mailbag')),
-    ('idoc', _(u'idoc')),
-    ('database', _(u'database')),
+    ('database', _(u'database (old)')),
     ('db', _(u'db')),
-    ('xmlnocheck', _(u'xmlnocheck')),
+    ('edifact', _(u'edifact')),
+    ('email-confirmation',_(u'email-confirmation')),
+    ('fixed', _(u'fixed')),
+    ('idoc', _(u'idoc')),
+    ('json', _(u'json')),
     ('jsonnocheck', _(u'jsonnocheck')),
+    ('mailbag', _(u'mailbag')),
+    ('raw', _(u'raw')),
     ('template', _(u'template')),
     ('tradacoms', _(u'tradacoms')),
-    ('email-confirmation',_(u'email-confirmation')),
+    ('xml', _(u'xml')),
+    ('xmlnocheck', _(u'xmlnocheck')),
+    ('x12', _(u'x12')),
     ]
 INOROUT = (
     ('in', _(u'in')),
@@ -77,8 +78,8 @@ CHANNELTYPE = (
     ('xmlrpc', _(u'xmlrpc')),
     ('mimefile', _(u'mimefile')),
     ('communicationscript', _(u'communicationscript')),
-    ('database', _(u'database')),
     ('db', _(u'db')),
+    ('database', _(u'database (old)')),
     ('intercommit', _(u'intercommit')),
     )
 CONFIRMTYPE = [

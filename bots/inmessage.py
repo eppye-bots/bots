@@ -1070,8 +1070,10 @@ class jsonnocheck(json):
     def getrootID(self):
         return self.ta_info['defaultBOTSIDroot']   #as there is no structure in grammar, use value form syntax.
 
+
 class database(jsonnocheck):
     pass
+
 
 class db(Inmessage):
     ''' the database-object is unpickled, and passed to the mapping script.
@@ -1080,6 +1082,19 @@ class db(Inmessage):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
         f = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
         self.root = pickle.load(f)
+        f.close()
+        
+    def nextmessage(self):
+        yield self
+
+
+class raw(Inmessage):
+    ''' the file object is just read and passed to the mapping script.
+    '''
+    def initfromfile(self):
+        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        f = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
+        self.root = f.read()
         f.close()
         
     def nextmessage(self):

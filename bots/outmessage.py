@@ -713,3 +713,21 @@ class db(Outmessage):
         self._outstream.close()
         botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
         self.ta_info['envelope'] = 'db'     #use right enveloping for db: no coping etc, use same file.
+
+
+class raw(Outmessage):
+    ''' out.root is just saved.
+    '''
+    def __init__(self,ta_info):
+        super(raw,self).__init__(ta_info)
+        self.root = None    #make root None; root is not a Node-object anyway; None can easy be tested when writing.
+
+    def writeall(self):
+        if self.root is None:
+            raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
+        botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+        self._outstream = botslib.opendata(self.ta_info['filename'],'wb')
+        self._outstream.write(self.root)
+        self._outstream.close()
+        botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
+        self.ta_info['envelope'] = 'raw'     #use right enveloping for raw: no coping etc, use same file.
