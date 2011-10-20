@@ -205,7 +205,7 @@ class channel(botsmodel):
     secret = StripCharField(max_length=35,blank=True,verbose_name=_(u'password'))
     starttls = models.BooleanField(default=False,verbose_name='Skip checking from-addresses',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
     apop = models.BooleanField(default=False,verbose_name='Skip checking to-addresses',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #not used anymore (is in 'type' now) #20110104: used as 'no check on "to:" email address'
-    remove = models.BooleanField(default=False,help_text=_(u'For in-channels: remove the edi files after succesful reading. Note: in production you do want to remove the edi files, else these are read over and over again!'))
+    remove = models.BooleanField(default=False,help_text=_(u'For in-channels: remove the edi files after successful reading. Note: in production you do want to remove the edi files, else these are read over and over again!'))
     path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both are used
     filename = StripCharField(max_length=35,blank=True,help_text=_(u'For "type" ftp and file; read or write this filename. Wildcards allowed, eg "*.edi". Note for out-channels: if no wildcard is used, all edi message are written to one file.'))
     lockname = StripCharField(max_length=35,blank=True,help_text=_(u'When reading or writing edi files in this directory use this file to indicate a directory lock.'))

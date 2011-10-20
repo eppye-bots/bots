@@ -547,10 +547,10 @@ class pop3(_comsession):
     @botslib.log_session
     def incommunicate(self):
         ''' Fetch messages from Pop3-mailbox.
-            A bad connection is tricky, because mails are actually deleted on the server when QUIT is succesful.
+            A bad connection is tricky, because mails are actually deleted on the server when QUIT is successful.
             A solution would be to connect, fetch, delete and quit for each mail, but this might introduce other problems.
             So: keep a list of idta received OK.
-            If QUIT is not succesful than delete these ta's
+            If QUIT is not successful than delete these ta's
         '''
         self.listoftamarkedfordelete = []
         maillist = self.session.list()[1]     #get list of messages #alt: (response, messagelist, octets) = popsession.list()     #get list of messages

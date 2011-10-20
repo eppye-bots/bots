@@ -214,7 +214,7 @@ class Node(object):
                         terug =  childnode._deletecore(*mpaths[1:]) #search recursive for rest of mpaths
                         if terug == 2:  #indicates node should be removed
                             del self.children[i]    #remove node
-                            return 1    #this indicates: deleted succesfull, do not remove anymore (no removal of parents)
+                            return 1    #this indicates: deleted successfull, do not remove anymore (no removal of parents)
                         if terug:
                             return terug
                     else:   #no child has given a valid return

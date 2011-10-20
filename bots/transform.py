@@ -235,7 +235,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
             edifile.close(ta_fromfile,error=False)
             ta_fromfile.update(statust=DONE)
             ta_parsedfile.update(statust=DONE,**edifile.confirminfo)
-            botsglobal.logger.debug(u'Succesfull read and parse of input file')
+            botsglobal.logger.debug(u'Successfull read and parse of input file')
             del edifile
         #~ gc.collect()
     #~ gc.enable()

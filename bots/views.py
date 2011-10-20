@@ -382,8 +382,8 @@ def plugin(request,*kw,**kwargs):
                     botsglobal.logger.info(u'%s',str(txt))
                     request.user.message_set.create(message='%s'%txt)
                 else:
-                    botsglobal.logger.info(_(u'Plugin "%s" read succesful.'),request.FILES['file'].name)
-                    request.user.message_set.create(message='Plugin %s read succesful.'%request.FILES['file'].name)
+                    botsglobal.logger.info(_(u'Finished reading plugin "%s" successful.'),request.FILES['file'].name)
+                    request.user.message_set.create(message='Plugin "%s" is read successful.'%request.FILES['file'].name)
                 request.FILES['file'].close()
             else:
                  request.user.message_set.create(message=_(u'No plugin read.'))
@@ -404,8 +404,8 @@ def plugout(request,*kw,**kwargs):
                     botsglobal.logger.info(u'%s',str(txt))
                     request.user.message_set.create(message='%s'%txt)
                 else:
-                    botsglobal.logger.info(_(u'Plugin "%s" created succesful.'),form.cleaned_data['filename'])
-                    request.user.message_set.create(message=_(u'Plugin %s created succesful.')%form.cleaned_data['filename'])
+                    botsglobal.logger.info(_(u'Plugin "%s" created successful.'),form.cleaned_data['filename'])
+                    request.user.message_set.create(message=_(u'Plugin %s created successful.')%form.cleaned_data['filename'])
     return django.shortcuts.redirect('/')
 
 def delete(request,*kw,**kwargs):

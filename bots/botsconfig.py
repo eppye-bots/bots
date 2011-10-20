@@ -4,8 +4,8 @@
 #for statust in ta:
 OPEN    = 0 #Bots always closes transaction. OPEN is severe error
 ERROR   = 1 #error in transaction.
-OK      = 2 #succesfull, result is 'save'. But processing has stopped: next step with error, or no next steps defined
-DONE    = 3 #succesfull, and result is picked up by next step
+OK      = 2 #successfull, result is 'save'. But processing has stopped: next step with error, or no next steps defined
+DONE    = 3 #successfull, and result is picked up by next step
 #~ RETRANSMIT = 4   #reinjected archive edi-file
 
 #for status in ta:
