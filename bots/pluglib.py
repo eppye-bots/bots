@@ -216,7 +216,8 @@ def load(pathzipfile):
         txt = botslib.txtexc()
         raise botslib.PluginError(_(u'Error in plugin. Nothing is written. Error: "%s"')%(txt))
     else:
-        botsglobal.logger.info(_(u'Plugin is OK.\nStart writing to database.'))
+        botsglobal.logger.info(_(u'Plugin is OK.'))
+        botsglobal.logger.info(_(u'Start writing to database.'))
     
     #write content of index file to the bots database
     try:
@@ -225,7 +226,8 @@ def load(pathzipfile):
         txt = botslib.txtexc()
         raise botslib.PluginError('Error writing plugin to database. Nothing is written. Error: "%s"'%(txt))
     else:
-        botsglobal.logger.info(u'Writing to database is OK.\nStart writing to files')
+        botsglobal.logger.info(u'Writing to database is OK.')
+        botsglobal.logger.info(u'Start writing to files')
     
     #write files to the file system.
     try:
