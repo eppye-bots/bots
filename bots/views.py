@@ -23,6 +23,7 @@ def server_error(request, template_name='500.html'):
     """
     import traceback
     exc_info = traceback.format_exc(None).decode('utf-8','ignore')
+    botsglobal.logger.info(_(u'Ran into server error: "%s"'),str(exc_info))
 
     t = django.template.loader.get_template(template_name) # You need to create a 500.html template.
     return django.http.HttpResponseServerError(t.render(django.template.Context({'exc_info':exc_info})))
@@ -387,7 +388,7 @@ def plugin(request,*kw,**kwargs):
                 request.FILES['file'].close()
             else:
                  request.user.message_set.create(message=_(u'No plugin read.'))
-        return django.shortcuts.redirect('/')
+        return django.shortcuts.redirect('/home')
     
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
@@ -406,7 +407,7 @@ def plugout(request,*kw,**kwargs):
                 else:
                     botsglobal.logger.info(_(u'Plugin "%s" created successful.'),form.cleaned_data['filename'])
                     request.user.message_set.create(message=_(u'Plugin %s created successful.')%form.cleaned_data['filename'])
-    return django.shortcuts.redirect('/')
+    return django.shortcuts.redirect('/home')
 
 def delete(request,*kw,**kwargs):
     if request.method == 'GET':
@@ -483,15 +484,16 @@ def delete(request,*kw,**kwargs):
                     request.user.message_set.create(message=_(u'Backupped user scripts are deleted/purged (in usersys).'))
                     botsglobal.logger.info(_(u'    Backupped user scripts are deleted/purged (in usersys).'))
                 botsglobal.logger.info(_(u'Finished deleting in configuration.'))
-    return django.shortcuts.redirect('/')
+    return django.shortcuts.redirect('/home')
 
 
 def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
-            #~ logger = logging.getLogger('bots')
         if list(models.mutex.objects.filter(mutexk=1).all()):
-            request.user.message_set.create(message=_(u'Database is locked by another run in progress. Please try again later.'))
-            return django.shortcuts.redirect('/')         
+            request.user.message_set.create(message=_(u'Trying to run "bots-engine", but database is locked by another run in progress. Please try again later.'))
+            botsglobal.logger.info(_(u'Trying to run "bots-engine", but database is locked by another run in progress.'))
+            return django.shortcuts.redirect('/home')
+        #find the bots-engine
         if os.name=='nt':
             lijst = [sys.executable, os.path.normpath(os.path.join(sys.prefix,'Scripts','bots-engine.py'))]
         elif os.path.exists(os.path.join(sys.prefix,'bin','bots-engine.py')):
@@ -499,22 +501,21 @@ def runengine(request,*kw,**kwargs):
         elif os.path.exists(os.path.join(sys.prefix,'local/bin','bots-engine.py')):
             lijst = [os.path.normpath(os.path.join(sys.prefix,'local/bin','bots-engine.py'))]
         else:
-            request.user.message_set.create(message=_(u'Bots can not find executable for bots-engine.'))
-            #~ logger.info('Bots can not find executable for bots-engine.')
-            return django.shortcuts.redirect('/')
+            request.user.message_set.create(message=_(u'Can not find executable for bots-engine.'))
+            botsglobal.logger.info(_(u'Can not find executable for bots-engine.'))
+            return django.shortcuts.redirect('/home')
             
         try:
             if 'clparameter' in request.GET:
                 lijst.append(request.GET['clparameter'])
-            #~ logger.info('Run bots-engine with parameters: "%s"',str(lijst))
+            botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
             terug = subprocess.Popen(lijst).pid
             request.user.message_set.create(message=_(u'Bots-engine is started.'))
-            #~ logger.info('Bots-engine is started.')
         except:
-            print botslib.txtexc()
+            txt =  botslib.txtexc()
             request.user.message_set.create(message=_(u'Errors while trying to run bots-engine.'))
-            #~ logger.info('Errors while trying to run bots-engine.')
-    return django.shortcuts.redirect('/')
+            botsglobal.logger.info(_(u'Errors while trying to run bots-engine: "%s".'),txt)
+    return django.shortcuts.redirect('/home')
 
 def unlock(request,*kw,**kwargs):
     if request.method == 'GET':
@@ -522,9 +523,11 @@ def unlock(request,*kw,**kwargs):
         if lijst:
             lijst[0].delete()
             request.user.message_set.create(message=_(u'Unlocked database.'))
+            botsglobal.logger.info(_(u'Unlocked database.'))
         else:
-            request.user.message_set.create(message=_(u'Database was not locked.'))
-    return django.shortcuts.redirect('/')
+            request.user.message_set.create(message=_(u'Request to unlock database, but database was not locked.'))
+            botsglobal.logger.info(_(u'Request to unlock database, but database was not locked.'))
+    return django.shortcuts.redirect('/home')
 
 def sendtestmailmanagers(request,*kw,**kwargs):
     try:
@@ -532,15 +535,19 @@ def sendtestmailmanagers(request,*kw,**kwargs):
     except botslib.BotsError:
         sendornot = False
     if not sendornot:
-        request.user.message_set.create(message=_(u'In bots.ini, section [settings], "sendreportiferror" is not set (to "True").'))
-        return django.shortcuts.redirect('/')
+        botsglobal.logger.info(_(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".'))
+        request.user.message_set.create(message=_(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".'))
+        return django.shortcuts.redirect('/home')
             
     from django.core.mail import mail_managers
     try:
         mail_managers(_(u'testsubject'), _(u'test content of report'))
     except:
-        request.user.message_set.create(message=_(u'Sending test report failed: "%s".')%botslib.txtexc())
-        return django.shortcuts.redirect('/')
-    request.user.message_set.create(message=_(u'Sending test report succeeded.'))
-    return django.shortcuts.redirect('/')
+        txt = botslib.txtexc()
+        request.user.message_set.create(message=_(u'Sending test mail failed.'))
+        botsglobal.logger.info(_(u'Sending test mail failed: "%s".'), txt)
+        return django.shortcuts.redirect('/home')
+    request.user.message_set.create(message=_(u'Sending test mail succeeded.'))
+    botsglobal.logger.info(_(u'Sending test mail succeeded.'))
+    return django.shortcuts.redirect('/home')
 
