@@ -72,6 +72,7 @@ CHANNELTYPE = (
     ('imap4s', _(u'imap4s')),
     ('ftp', _(u'ftp')),
     ('ftps', _(u'ftps (explicit)')),
+    ('ftpis', _(u'ftps (implicit)')),
     ('sftp', _(u'sftp (ssh)')),
     ('xmlrpc', _(u'xmlrpc')),
     ('mimefile', _(u'mimefile')),

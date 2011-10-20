@@ -45,7 +45,6 @@ def run(idchannel,idroute=''):
                                 WHERE idchannel=%(idchannel)s''',
                                 {'idchannel':idchannel}):
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
-        botsglobal.logger.debug(u'(try) to read user communicationscript channel "%s".',channeldict['idchannel'])
         #update communication/run process with idchannel
         ta_run = botslib.OldTransaction(botslib._Transaction.processlist[-1])
         if channeldict['inorout'] == 'in':
@@ -54,16 +53,17 @@ def run(idchannel,idroute=''):
             ta_run.update(tochannel=channeldict['idchannel'])
             
         try:
+            botsglobal.logger.debug(u'(try) to read user communicationscript channel "%s".',channeldict['idchannel'])
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
         except ImportError:
             userscript = scriptname = None
-        if userscript:      #check to see if user defined his own communciation class (sub classing)
-            if hasattr(userscript,channeldict['type']):
-                classtocall = getattr(userscript,channeldict['type'])
-            elif hasattr(userscript,'UserCommunicationClass'):      #20110920: UserCommunicationClass is obsolete, depreciated. Keep this for now. 
-                classtocall = getattr(userscript,'UserCommunicationClass')
+        #get the communication class to use:
+        if userscript and hasattr(userscript,channeldict['type']):          #check communication class in user script (sub classing)
+            classtocall = getattr(userscript,channeldict['type'])
+        elif userscript and hasattr(userscript,'UserCommunicationClass'):   #check for communication class called 'UserCommunicationClass' in user script. 20110920: Obsolete, depreciated. Keep this for now. 
+            classtocall = getattr(userscript,'UserCommunicationClass')
         else:
-            classtocall = globals()[channeldict['type']]
+            classtocall = globals()[channeldict['type']]                    #get the communication class from this module
 
         classtocall(channeldict,idroute,userscript,scriptname) #call the class for this type of channel
         botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
@@ -96,7 +96,7 @@ class _comsession(object):
         else:   #incommunication
             if botsglobal.incommunicate: #for in-communication: only communicate for new run
                 #handle maxsecondsperchannel: use global value from bots.ini unless specified in channel. (In database this is field 'rsrv2'.)
-                print "self.channeldict['rsrv2']",self.channeldict['rsrv2']
+                #~ print "self.channeldict['rsrv2']",self.channeldict['rsrv2']
                 if self.channeldict['rsrv2'] <= 0:
                     self.maxsecondsperchannel = botsglobal.ini.getint('settings','maxsecondsperchannel',sys.maxint)
                 else:
@@ -909,6 +909,9 @@ class ftp(_comsession):
         self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
         self.session.connect(host=self.channeldict['host'],port=int(self.channeldict['port']))
         self.session.login(user=self.channeldict['username'],passwd=self.channeldict['secret'],acct=self.channeldict['ftpaccount'])
+        self.set_cwd()
+
+    def set_cwd(self):
         self.dirpath = self.session.pwd()
         if self.channeldict['path']:
             self.dirpath = posixpath.normpath(posixpath.join(self.dirpath,self.channeldict['path']))
@@ -1038,7 +1041,7 @@ class ftps(ftp):
     def connect(self):
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
         if not hasattr(ftplib,'FTP_TLS'):
-            raise botslib.CommunicationError('FTPS is not supported by your python version, use >=2.7')
+            raise botslib.CommunicationError('ftps is not supported by your python version, use >=2.7')
         self.session = ftplib.FTP_TLS()
         self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
         self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
@@ -1047,14 +1050,81 @@ class ftps(ftp):
         self.session.auth()
         self.session.login(user=self.channeldict['username'],passwd=self.channeldict['secret'],acct=self.channeldict['ftpaccount'])
         self.session.prot_p()
-        self.dirpath = self.session.pwd()
-        if self.channeldict['path']:
-            self.dirpath = posixpath.normpath(posixpath.join(self.dirpath,self.channeldict['path']))
+        self.set_cwd()
+
+
+#sub classing of ftplib for ftpis
+if hasattr(ftplib,'FTP_TLS'):
+    class FTP_TLS_IMPLICIT(ftplib.FTP_TLS):
+        ''' FTPS implicit is not directly supported by python; python>=2.7 supports only ftps explicit.
+            So class ftplib.FTP_TLS is sub-classed here, with the needed modifications.
+            (code is nicked from ftplib.ftp v. 2.7; additions/changes are indicated)
+            '''
+        def connect(self, host='', port=0, timeout=-999):
+            #added hje 20110713: directly use SSL in FTPIS
+            import socket
+            import ssl
+            #end added
+            if host != '':
+                self.host = host
+            if port > 0:
+                self.port = port
+            if timeout != -999:
+                self.timeout = timeout
+            self.sock = socket.create_connection((self.host, self.port), self.timeout)
+            self.af = self.sock.family
+            #added hje 20110713: directly use SSL in FTPIS
+            self.sock = ssl.wrap_socket(self.sock, self.keyfile, self.certfile,ssl_version=self.ssl_version)
+            #end added
+            self.file = self.sock.makefile('rb')
+            self.welcome = self.getresp()
+            return self.welcome
+        def prot_p(self):
+            #Inovis FTPIS gives errors on 'PBSZ 0' and 'PROT P', vsftp does not work without these commands.
+            #These errors are just catched, nothing is done with them.
             try:
-                self.session.cwd(self.dirpath)           #set right path on ftp-server
-            except:
-                self.session.mkd(self.dirpath)           #set right path on ftp-server; no nested directories
-                self.session.cwd(self.dirpath)           #set right path on ftp-server
+                self.voidcmd('PBSZ 0')
+            except ftplib.error_perm:
+                pass
+            try:
+                resp = self.voidcmd('PROT P')
+            except ftplib.error_perm:
+                resp = None
+            self._prot_p = True
+            return resp
+
+
+class ftpis(ftp):
+    ''' FTPS implicit; is not defined in a RFC.
+        standard port to connect is port 990.
+        FTPS implicit is not supported by python.
+        python>=2.7 supports ftps explicit.
+        So used is the sub-class FTP_TLS_IMPLICIT.
+        Tested with Inovis and VSFTPd.
+        Python library FTP_TLS uses ssl_version = ssl.PROTOCOL_TLSv1
+        Inovis seems to need PROTOCOL_SSLv3
+        This is 'solved' by using 'parameters' in the channel.
+        ~ ssl.PROTOCOL_SSLv2  = 0
+        ~ ssl.PROTOCOL_SSLv3  = 1
+        ~ ssl.PROTOCOL_SSLv23 = 2
+        ~ ssl.PROTOCOL_TLSv1  = 3
+    '''
+    def connect(self):
+        botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
+        if not hasattr(ftplib,'FTP_TLS'):
+            raise botslib.CommunicationError('ftpis is not supported by your python version, use >=2.7')
+        self.session = FTP_TLS_IMPLICIT()
+        if self.channeldict['parameters']:
+            self.session.ssl_version = int(self.channeldict['parameters'])
+        self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
+        self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
+        self.session.connect(host=self.channeldict['host'],port=int(self.channeldict['port']))
+        #support key files (PEM, cert)?
+        #~ self.session.auth()
+        self.session.login(user=self.channeldict['username'],passwd=self.channeldict['secret'],acct=self.channeldict['ftpaccount'])
+        self.session.prot_p()
+        self.set_cwd()
+
 
 class sftp(_comsession):
     ''' SSH File Transfer Protocol (SFTP is not FTP run over SSH, SFTP is not Simple File Transfer Protocol)
