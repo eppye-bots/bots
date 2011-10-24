@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import sys
 import os
-import logging,logging.handlers
-import django
+import logging
+from logging.handlers import TimedRotatingFileHandler
 from django.core.handlers.wsgi import WSGIHandler
-from django.core.servers.basehttp import AdminMediaHandler
 from django.utils.translation import ugettext as _
 import cherrypy
 from cherrypy import wsgiserver
@@ -24,13 +23,9 @@ def showusage():
     print usage
     sys.exit(0)
 
-class Dummyclass(object):
-    ''' dummy class needed by cherrypy for serving static files.'''
-    pass
-
 def start():
     #NOTE bots is always on PYTHONPATH!!! - otherwise it will not start.
-    #********command line arguments**************************
+    #***command line arguments**************************
     configdir = 'config'
     for arg in sys.argv[1:]:
         if not arg:
@@ -45,33 +40,30 @@ def start():
         else:
             showusage()
     
-    #init general: find locating of bots, configfiles, init paths etc.***********************
+    #***init general: find locating of bots, configfiles, init paths etc.***********************
     botsinit.generalinit(configdir)
 
-    #initialise logging. This logging only contains the logging from bots-webserver, not from cherrypy.
+    #***initialise logging. This logging only contains the logging from bots-webserver, not from cherrypy.
     botsglobal.logger = logging.getLogger('bots-webserver')
     botsglobal.logger.setLevel(logging.DEBUG)
-    h = logging.handlers.TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'), backupCount=10)
+    h = TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'), backupCount=10)
     fileformat = logging.Formatter("%(asctime)s %(levelname)-8s: %(message)s",'%Y%m%d %H:%M:%S')
     h.setFormatter(fileformat)
     botsglobal.logger.addHandler(h)
     
-    #**********init cherrypy as webserver*********************************************
-    #set global configuration options for cherrypy
+    #***init cherrypy as webserver*********************************************
+    #global configuration for cherrypy
     cherrypy.config.update({'global': { 'log.screen': False, 'server.environment': botsglobal.ini.get('webserver','environment','production')}})
-    #set the cherrypy handling of static files
+    #cherrypy handling of static files
     conf = {'/': {'tools.staticdir.on' : True,'tools.staticdir.dir' : 'media' ,'tools.staticdir.root': botsglobal.ini.get('directories','botspath')}}
-    servestaticfiles = cherrypy.tree.mount(Dummyclass(), '/media', conf) 
-    #set the cherrypy handling of django
-    servedjango = AdminMediaHandler(WSGIHandler()) 
+    servestaticfiles = cherrypy.tree.mount(None, '/media', conf)    #None: no cherrypy application (as this only serves static files)
+    #cherrypy handling of django
+    servedjango = WSGIHandler()     #was: servedjango = AdminMediaHandler(WSGIHandler())  but django does not need the AdminMediaHandler in this setup. is much faster.
     #cherrypy uses a dispatcher in order to handle the serving of static files and django.
     dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, '/media': servestaticfiles})
-    botswebserver = wsgiserver.CherryPyWSGIServer(('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), dispatcher)
-    
+    botswebserver = wsgiserver.CherryPyWSGIServer(bind_addr=('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), wsgi_app=dispatcher)
     botsglobal.logger.info(_(u'Bots web server started.'))
-    #handle ssl in webserver:
-    #cherrypy < 3.2 always uses pyOpenssl, cherrypy >= 3.2 will use python buildin ssl.
-    #python >= 2.6 has buildin support for ssl 
+    #handle ssl: cherrypy < 3.2 always uses pyOpenssl, cherrypy >= 3.2 can use python buildin ssl (python >= 2.6 has buildin support for ssl).
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
     ssl_private_key = botsglobal.ini.get('webserver','ssl_private_key',None)
     if ssl_certificate and ssl_private_key:
@@ -82,7 +74,7 @@ def start():
     else:
         botsglobal.logger.info(_(u'Bots web server uses plain http (no ssl).'))
     
-    #start the cherrypy webserver.
+    #***start the cherrypy webserver.
     try:
         botswebserver.start()
     except KeyboardInterrupt:
