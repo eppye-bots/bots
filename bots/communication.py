@@ -1164,7 +1164,7 @@ class sftp(_comsession):
         # get host key, if we know one
         # (I have not tested this, just copied from demo)
         hostkeytype = None
-        hostkey = {}
+        hostkey = None
         #~ try:
             #~ host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
         #~ except IOError:
