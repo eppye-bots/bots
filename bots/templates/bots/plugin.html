@@ -1,9 +1,11 @@
 {% extends "admin/base.html" %}
 {% load i18n %}
 
-<div id="menu">
-
 {% block content %}
+<br/>
+<h1>Read a plugin</h1>
+<p>Select a plugin from your file system:</p>
+<br/>
 <form action="/plugin" method="POST" enctype="multipart/form-data">
     <table>
         {{ form }}
