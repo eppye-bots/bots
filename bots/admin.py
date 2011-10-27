@@ -76,7 +76,7 @@ admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
     actions = ('bulk_delete',)
-    list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename', 'remove', 'archivepath', 'charset','rsrv2','ftpactive', 'ftpbinary','askmdn', 'syslock', 'starttls','apop')
+    list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename', 'remove', 'charset', 'archivepath','rsrv2','ftpactive', 'ftpbinary','askmdn', 'syslock', 'starttls','apop')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
     search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath', 'charset')

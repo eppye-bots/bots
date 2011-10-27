@@ -97,9 +97,9 @@ RULETYPE = (
     ('messagetype',_(u'messagetype')),
     )
 ENCODE_MIME = (
-    ('always',_(u'always use base64')),
-    ('never',_(u'never encode')),
-    ('ascii',_(u'only encode if not ascii')),
+    ('always',_(u'base64')),
+    ('never',_(u'never')),
+    ('ascii',_(u'base64 if not ascii')),
     )
 
 
@@ -204,8 +204,8 @@ class channel(botsmodel):
     port = models.PositiveIntegerField(default=0,blank=True,null=True)
     username = StripCharField(max_length=35,blank=True)
     secret = StripCharField(max_length=35,blank=True,verbose_name=_(u'password'))
-    starttls = models.BooleanField(default=False,verbose_name='Skip checking from-addresses',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
-    apop = models.BooleanField(default=False,verbose_name='Skip checking to-addresses',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #not used anymore (is in 'type' now) #20110104: used as 'no check on "to:" email address'
+    starttls = models.BooleanField(default=False,verbose_name='No check from-address',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
+    apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #not used anymore (is in 'type' now) #20110104: used as 'no check on "to:" email address'
     remove = models.BooleanField(default=False,help_text=_(u'For in-channels: remove the edi files after successful reading. Note: in production you do want to remove the edi files, else these are read over and over again!'))
     path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both are used
     filename = StripCharField(max_length=35,blank=True,help_text=_(u'For "type" ftp and file; read or write this filename. Wildcards allowed, eg "*.edi". Note for out-channels: if no wildcard is used, all edi message are written to one file.'))
@@ -221,7 +221,7 @@ class channel(botsmodel):
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
-    rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds per run'),help_text=_(u'Max seconds used for the in-communication time for this channel.'))                        #added 20100501. 20110906: max communication time.
+    rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds used for the in-communication time for this channel.'))                        #added 20100501. 20110906: max communication time.
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'
