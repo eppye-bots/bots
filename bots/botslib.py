@@ -537,15 +537,11 @@ def txtexc():
             limit=0
     else:
         limit=0
-    #~ if botsglobal.ini.getboolean('settings','debug',False):
-        #~ limit = None
-    #~ else:
-        #~ limit=0
     #problems with char set for some input data that are reported in traces....so always decode this; 
     terug = traceback.format_exc(limit).decode('utf-8','ignore')
     #~ botsglobal.logger.debug(u'exception %s',terug)
     if hasattr(botsglobal,'dbinfo') and botsglobal.dbinfo.drivername != 'sqlite':    #sqlite does not enforce strict lengths
-        return terug[-2047:]
+        return terug[-1848:]    #filed isze is 2048; but more text can be prepended. 
     else:
         return terug
 
