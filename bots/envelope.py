@@ -373,9 +373,11 @@ class x12(Envelope):
         #ISA06 and GS02 can be different; eg ISA06 is a service provider.
         #ISA06 and GS02 can be in the syntax....
         ISA06 = self.ta_info.get('ISA06',self.ta_info['frompartner'])
+        ISA06 = ISA06.ljust(15)    #add spaces; is fixed length
         GS02 = self.ta_info.get('GS02',self.ta_info['frompartner'])
         #also for ISA08 and GS03
         ISA08 = self.ta_info.get('ISA08',self.ta_info['topartner'])
+        ISA08 = ISA08.ljust(15)    #add spaces; is fixed length
         GS03 = self.ta_info.get('GS03',self.ta_info['topartner'])
         #build the envelope segments (that is, the tree from which the segments will be generated)
         self.out.put({'BOTSID':'ISA',
