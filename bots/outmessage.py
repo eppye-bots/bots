@@ -194,15 +194,17 @@ class Outmessage(message.Message):
             Format is checked and converted (if needed).
             return the formatted value
         '''
-        #~ value = value[:]
         if grammarfield[BFORMAT] == 'A':
-            if grammarfield[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
-                value = value.rjust(grammarfield[MINLENGTH])
-            else:
-                value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
+            if isinstance(self,fixed):  #check length fields in variable records
+                if grammarfield[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
+                    value = value.rjust(grammarfield[MINLENGTH])
+                else:
+                    value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
             valuelength=len(value)
             if valuelength > grammarfield[LENGTH]:
                 raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
+            if valuelength < grammarfield[MINLENGTH]:
+                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too small (min $min): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
         elif grammarfield[BFORMAT] == 'D':
             try:
                 lenght = len(value)

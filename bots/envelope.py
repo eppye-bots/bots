@@ -393,7 +393,7 @@ class x12(Envelope):
                         'ISA12':self.ta_info['version'],
                         'ISA13':self.ta_info['reference'],
                         'ISA14':self.ta_info['ISA14'],
-                        'ISA15':testindicator})
+                        'ISA15':testindicator},strip=False)         #MIND: strip=False: ISA fields shoudl not be stripped as it is soemwhat like fixed-length
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':'1','IEA02':self.ta_info['reference']})
         GS08 = self.ta_info['messagetype'][3:]
         if GS08[:6]<'004010':

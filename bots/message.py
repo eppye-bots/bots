@@ -88,10 +88,10 @@ class Message(object):
                 for terug in childnode.getloop(*mpaths): #search recursive for rest of mpaths
                     yield terug
 
-    def put(self,*mpaths):
+    def put(self,*mpaths,**kwargs):
         if self.root.record is None and self.root.children:
             raise botslib.MappingRootError(_(u'put($mpath): "root" of outgoing message is empty; use out.putloop'),mpath=mpaths)
-        return self.root.put(*mpaths)
+        return self.root.put(*mpaths,**kwargs)
 
     def putloop(self,*mpaths):
         if not self.root.record:    #no input yet, and start with a putloop(): dummy root
@@ -111,8 +111,8 @@ class Message(object):
         ''' The node tree is check, sorted, fields are formatted etc.
             Always use this method before writing output.
         '''
-        #~ node.display()
         self._checktree(node,self.defmessage.structure[0])
+        #~ node.display()
         self._canonicaltree(node,self.defmessage.structure[0])
         
     def _checktree(self,tree,structure):
@@ -198,31 +198,31 @@ class Message(object):
                 self.get_queries_from_edi(node,structure)
 
     def _canonicalfields(self,noderecord,structure_record,headerrecordnumber):
-        ''' For fields: check M/C; format the fields. Field are not sorted here (a dict can not be sorted)
+        ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted)
         '''
         for grammarfield in structure_record[FIELDS]:
             if grammarfield[ISFIELD]:    #if field (no composite)
-                value = noderecord.get(grammarfield[ID],'')
+                value = noderecord.get(grammarfield[ID])
+                #~ print 'field',noderecord,grammarfield
                 if not value:
+                    #~ print 'field',grammarfield[ID], 'has no value'
                     if grammarfield[MANDATORY] == 'M':
                         raise botslib.MessageError(_(u'Record "$mpath" field "$field" is mandatory.'),mpath=structure_record[MPATH],field=grammarfield[ID])
-                    elif not grammarfield[MINLENGTH]:   #if minlength=0
-                        continue
+                    continue
                 noderecord[grammarfield[ID]] = self._formatfield(value,grammarfield,structure_record)
             else:               #if composite
-                compositefilled = False
-                for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields to see if one of them is there
-                    if noderecord.get(grammarsubfield[ID],''):
-                        compositefilled = True
-                if not compositefilled:
+                for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields to see if data in composite
+                    if noderecord.get(grammarsubfield[ID]):
+                        break   #composite has data.
+                else:           #composite has no data
                     if grammarfield[MANDATORY]=='M':
                         raise botslib.MessageError(_(u'Record "$mpath" composite "$field" is mandatory.'),mpath=structure_record[MPATH],field=grammarfield[ID])
                     continue
+                #there is data in the composite!
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
-                    value = noderecord.get(grammarsubfield[ID],'')
+                    value = noderecord.get(grammarsubfield[ID])
                     if not value:
                         if grammarsubfield[MANDATORY]=='M':
                             raise botslib.MessageError(_(u'Record "$mpath" subfield "$field" is mandatory: "$record".'),mpath=structure_record[MPATH],field=grammarsubfield[ID],record=noderecord)
-                        else:
-                            continue
+                        continue
                     noderecord[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,structure_record)

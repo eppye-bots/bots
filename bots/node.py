@@ -373,7 +373,7 @@ class Node(object):
         return terug
         
 
-    def put(self,*mpaths):
+    def put(self,*mpaths,**kwargs):
         if not mpaths or not isinstance(mpaths,tuple):
             raise botslib.MappingFormatError(_(u'must be dicts in tuple: put($mpath)'),mpath=mpaths)
         for part in mpaths:
@@ -390,7 +390,10 @@ class Node(object):
                     return False
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: put($mpath)'),mpath=mpaths)
-                part[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
+                if kwargs and 'strip' in kwargs and kwargs['strip'] == False:
+                    part[key] = unicode(value)          #used for fixed ISA header of x12
+                else:
+                    part[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
         
         if self.sameoccurence(mpaths[0]):
             self._putcore(*mpaths[1:])
