@@ -31,6 +31,21 @@ def syntaxread(soortpythonfile,editype,grammarname):
     terug.initsyntax(includedefault=False)
     return terug
 
+def mydeepcopy(orgrecorddef):
+    ''' this is much faster than copy.deepcopy'''
+    newrecorddef = {}
+    for tag,segment in orgrecorddef.iteritems():
+        newsegment = []
+        for field in segment:
+            newsegment.append(field[:])
+            if isinstance(field[2],list):
+                newsegment[-1][2]=[]
+                for subfield in field[2]:
+                    newsegment[-1][2].append(subfield[:])
+        newrecorddef[tag] = newsegment
+    return newrecorddef
+
+
 class Grammar(object):
     ''' Class for translation grammar. The grammar is used in reading or writing an edi file.
         Description of the grammar file: see user manual.
@@ -94,26 +109,29 @@ class Grammar(object):
         except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
             self.nextmessageblock = None
         if self._checkstructurerequired:
+            #in each imported grammar-part is a mark to see if it has been read already (and all checks are done..)
             self._dostructure()
+            self.structure = copy.deepcopy(self.structurefromgrammar)   #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
             self._dorecorddefs()
+            self.recorddefs = mydeepcopy(self.recorddefsfromgrammar)   #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
             self._linkrecorddefs2structure(self.structure)
-            if self.syntax['noBOTSID'] and len(self.recorddefs) != 1:
-                raise botslib.GrammarError(_(u'Grammar "$grammar": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),grammar=self.grammarname)
-            if self.nextmessageblock is not None and len(self.recorddefs) != 1:
-                raise botslib.GrammarError(_(u'Grammar "$grammar": if nextmessageblock: there can be only one record in recorddefs.'),grammar=self.grammarname)
 
     def _dorecorddefs(self):
         ''' 1. check the recorddefinitions for validity.
             2. adapt in field-records: normalise length lists, set bool ISFIELD, etc
         '''
         try:    
-            recorddefsfromgrammar = getattr(self.module, 'recorddefs')
+            self.recorddefsfromgrammar = getattr(self.module, 'recorddefs')
         except AttributeError:
             raise botslib.GrammarError(_(u'Grammar "$grammar": no recorddefs.'),grammar=self.grammarname)
-        self.recorddefs = self.mydeepcopy(recorddefsfromgrammar)      #a deepcopy because recorddefsfromgrammar are changed
-        if not isinstance(self.recorddefs,dict):
+        if not isinstance(self.recorddefsfromgrammar,dict):
             raise botslib.GrammarError(_(u'Grammar "$grammar": recorddefs is not a dict{}.'),grammar=self.grammarname)
-        for recordID ,fields in self.recorddefs.iteritems():
+        #check if recorddefsfromgrammar has been read before. If so, we can skip all checks.
+        for fields in self.recorddefsfromgrammar.itervalues():
+            if len(fields[0]) == 8:
+                return
+            break
+        for recordID ,fields in self.recorddefsfromgrammar.iteritems():
             if not isinstance(recordID,basestring):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": is not a string.'),grammar=self.grammarname,record=recordID)
             if not recordID:
@@ -146,20 +164,11 @@ class Grammar(object):
                 
             if not hasBOTSID:   #there is no field 'BOTSID' in record
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": no field BOTSID.'),grammar=self.grammarname,record=recordID)
+        if self.syntax['noBOTSID'] and len(self.recorddefsfromgrammar) != 1:
+            raise botslib.GrammarError(_(u'Grammar "$grammar": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),grammar=self.grammarname)
+        if self.nextmessageblock is not None and len(self.recorddefsfromgrammar) != 1:
+            raise botslib.GrammarError(_(u'Grammar "$grammar": if nextmessageblock: there can be only one record in recorddefs.'),grammar=self.grammarname)
                 
-    def mydeepcopy(self,orgrecorddef):
-        ''' this is much faster than copy.deepcopy'''
-        newrecorddef = {}
-        for tag,segment in orgrecorddef.iteritems():
-            newsegment = []
-            for field in segment:
-                newsegment.append(field[:])
-                if isinstance(field[2],list):
-                    newsegment[-1][2]=[]
-                    for subfield in field[2]:
-                        newsegment[-1][2].append(subfield[:])
-            newrecorddef[tag] = newsegment
-        return newrecorddef
         
     def _checkfield(self,field,recordID):
         #'normalise' field: make list equal length
@@ -242,17 +251,19 @@ class Grammar(object):
             3. remember that structure is checked and adapted (so when grammar is read again, no checking/adapt needed)
         '''
         try:    
-            structurefromgrammar = getattr(self.module, 'structure')
+            self.structurefromgrammar = getattr(self.module, 'structure')
         except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
             raise botslib.GrammarError(_(u'Grammar "$grammar": no structure, is required.'),grammar=self.grammarname)
-        self.structure = copy.deepcopy(structurefromgrammar)
-        if len(self.structure) != 1:                        #every structure has only 1 root!!
+        #~ self.structure = copy.deepcopy(structurefromgrammar)
+        if len(self.structurefromgrammar) != 1:                        #every structure has only 1 root!!
             raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: only one root record allowed.'),grammar=self.grammarname)
-        self._checkstructure(self.structure,[])
+        if MPATH in self.structurefromgrammar[0]:
+            return 
+        self._checkstructure(self.structurefromgrammar,[])
         if self.syntax['checkcollision']:
-            self._checkbackcollision(self.structure)
-            self._checknestedcollision(self.structure)
-            self._checkbotscollision(self.structure)
+            self._checkbackcollision(self.structurefromgrammar)
+            self._checknestedcollision(self.structurefromgrammar)
+            self._checkbotscollision(self.structurefromgrammar)
 
     def _checkstructure(self,structure,mpath):
         ''' Recursive
