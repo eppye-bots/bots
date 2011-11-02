@@ -154,36 +154,40 @@ class Outmessage(message.Message):
         ''' appends fields in noderecord to (raw)record; use structure_record as guide.
             complex because is is used for: editypes that have compression rules (edifact), var editypes without compression, fixed protocols 
         '''
-        buildrecord = []
+        buildrecord = []    #the record that is going to be build; list of dicts. Each dict is a field.
         buffer = []
-        for grammarfield in structure_record[FIELDS]:
+        for grammarfield in structure_record[FIELDS]:       #loop all fields in grammar-definition
             if grammarfield[ISFIELD]:    #if field (no composite)
-                if grammarfield[ID] in noderecord:
-                    buildrecord.extend(buffer)
-                    buffer=[]
+                if grammarfield[ID] in noderecord:      #is there data in the outgoing message for this field in the grammar?
+                    buildrecord.extend(buffer)          #write the buffer to buildrecord
+                    buffer=[]                           #clear the buffer
                     buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:False}]      #append new field
-                else:
+                else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        buffer += [{VALUE:'',SFIELD:False}]      #generate & append new field to buffer
+                        buffer += [{VALUE:'',SFIELD:False}]      #append new empty to buffer;
                     else:
                         value = self._formatfield('',grammarfield,structure_record)  #generate field
                         buildrecord += [{VALUE:value,SFIELD:False}]                #append new field
-            else:               #if composite
-                donefirst = False
-                subbuffer=[]
-                subiswritten=False
+            else:  #if composite
+                donefirst = False       #used because first subfield in composite is marked as a field (not a subfield).
+                subbuffer=[]            #buffer for this composite. 
+                subiswritten=False      #check if composite contains data
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
-                    if grammarsubfield[ID] in noderecord:
-                        buildrecord.extend(buffer)
-                        buffer=[]
-                        buildrecord.extend(subbuffer)
-                        subbuffer=[]
+                    if grammarsubfield[ID] in noderecord:   #field has data
+                        buildrecord.extend(buffer)      #write buffer
+                        buffer=[]                       #clear buffer
+                        buildrecord.extend(subbuffer)   #write subbuffer
+                        subbuffer=[]                    #clear subbuffer
                         buildrecord += [{VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst}]      #append field
                         subiswritten = True    
                     else:
-                        subbuffer += [{VALUE:self._formatfield('',grammarsubfield,structure_record),SFIELD:donefirst}]      #generate & append new field
+                        if self.ta_info['stripfield_sep']:
+                            subbuffer += [{VALUE:'',SFIELD:donefirst}]      #append new empty to buffer;
+                        else:
+                            value = self._formatfield('',grammarsubfield,structure_record)      #generate & append new field. For eg fixed and csv: all field have to be present
+                            subbuffer += [{VALUE:value,SFIELD:donefirst}]      #generate & append new field
                     donefirst = True
-                if not subiswritten:
+                if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
                     buffer += [{VALUE:'',SFIELD:False}]
         self.records += [buildrecord]
                 

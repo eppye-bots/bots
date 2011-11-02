@@ -198,7 +198,8 @@ class Message(object):
                 self.get_queries_from_edi(node,structure)
 
     def _canonicalfields(self,noderecord,structure_record,headerrecordnumber):
-        ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted)
+        ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted).
+            Fields are never added.
         '''
         for grammarfield in structure_record[FIELDS]:
             if grammarfield[ISFIELD]:    #if field (no composite)
