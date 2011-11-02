@@ -38,7 +38,7 @@ def mydeepcopy(orgrecorddef):
         newsegment = []
         for field in segment:
             newsegment.append(field[:])
-            if isinstance(field[2],list):
+            if not field[ISFIELD]:      #if composite: deepcopy all subfields
                 newsegment[-1][2]=[]
                 for subfield in field[2]:
                     newsegment[-1][2].append(subfield[:])
