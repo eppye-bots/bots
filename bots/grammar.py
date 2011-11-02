@@ -105,13 +105,12 @@ class Grammar(object):
     def _dorecorddefs(self):
         ''' 1. check the recorddefinitions for validity.
             2. adapt in field-records: normalise length lists, set bool ISFIELD, etc
-            3. remember that recorddef is checked and adapted (so when grammar is read again, no checking/adapt needed)
         '''
         try:    
             recorddefsfromgrammar = getattr(self.module, 'recorddefs')
-        except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
+        except AttributeError:
             raise botslib.GrammarError(_(u'Grammar "$grammar": no recorddefs.'),grammar=self.grammarname)
-        self.recorddefs = copy.deepcopy(recorddefsfromgrammar)
+        self.recorddefs = self.mydeepcopy(recorddefsfromgrammar)      #a deepcopy because recorddefsfromgrammar are changed
         if not isinstance(self.recorddefs,dict):
             raise botslib.GrammarError(_(u'Grammar "$grammar": recorddefs is not a dict{}.'),grammar=self.grammarname)
         for recordID ,fields in self.recorddefs.iteritems():
@@ -121,7 +120,7 @@ class Grammar(object):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": recordID with empty string.'),grammar=self.grammarname,record=recordID)
             if not isinstance(fields,list):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": no correct fields found.'),grammar=self.grammarname,record=recordID)
-            if isinstance(self,xml) or isinstance(self,json):
+            if isinstance(self,(xml,json)):
                 if len (fields) < 1:
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": too few fields.'),grammar=self.grammarname,record=recordID)
             else:
@@ -148,7 +147,19 @@ class Grammar(object):
             if not hasBOTSID:   #there is no field 'BOTSID' in record
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": no field BOTSID.'),grammar=self.grammarname,record=recordID)
                 
-        #~ recorddefset.add(id(self.recorddefs))    #remember that this recorddef has already been checked
+    def mydeepcopy(self,orgrecorddef):
+        ''' this is much faster than copy.deepcopy'''
+        newrecorddef = {}
+        for tag,segment in orgrecorddef.iteritems():
+            newsegment = []
+            for field in segment:
+                newsegment.append(field[:])
+                if isinstance(field[2],list):
+                    newsegment[-1][2]=[]
+                    for subfield in field[2]:
+                        newsegment[-1][2].append(subfield[:])
+            newrecorddef[tag] = newsegment
+        return newrecorddef
         
     def _checkfield(self,field,recordID):
         #'normalise' field: make list equal length
@@ -172,15 +183,15 @@ class Grammar(object):
         if field[ISFIELD]:  # that is: field, and not a composite
             #get MINLENGTH (from tuple or if fixed
             if isinstance(field[LENGTH],tuple):
-                if not isinstance(field[LENGTH][0],int) and not isinstance(field[LENGTH][0],float):
+                if not isinstance(field[LENGTH][0],(int,float)):
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": min length "$min" has to be a number.'),grammar=self.grammarname,record=recordID,field=field[ID],min=field[LENGTH])
-                if not isinstance(field[LENGTH][1],int) and not isinstance(field[LENGTH][1],float):
+                if not isinstance(field[LENGTH][1],(int,float)):
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": max length "$max" has to be a number.'),grammar=self.grammarname,record=recordID,field=field[ID],max=field[LENGTH])
                 if field[LENGTH][0] > field[LENGTH][1]:
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": min length "$min" must be > max length "$max".'),grammar=self.grammarname,record=recordID,field=field[ID],min=field[LENGTH][0],max=field[LENGTH][1])
                 field[MINLENGTH]=field[LENGTH][0]
                 field[LENGTH]=field[LENGTH][1]
-            elif isinstance(field[LENGTH],int) or isinstance(field[LENGTH],float):
+            elif isinstance(field[LENGTH],(int,float)):
                 if isinstance(self,fixed):
                     field[MINLENGTH]=field[LENGTH]
             else:

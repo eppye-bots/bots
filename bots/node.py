@@ -29,13 +29,12 @@ class Node(object):
 
     def updatequerie(self,updatequeries):
         ''' set/update queries of a node with dict queries.
-            use deepcopy to avoid memory problems
         '''
         if updatequeries:
             if self._queries is None:
-                self._queries = copy.deepcopy(updatequeries)
+                self._queries = updatequeries.copy()
             else:
-                self._queries.update(copy.deepcopy(updatequeries))
+                self._queries.update(updatequeries)
     
     queries = property(getquerie,updatequerie)
 

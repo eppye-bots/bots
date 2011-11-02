@@ -1051,7 +1051,7 @@ class json(var):
                     thisnode.append(newnode)
             elif isinstance(value,list):
                 thisnode.children.extend(self.dojsonlist(value,key))
-            elif isinstance(value,int) or isinstance(value,long) or isinstance(value,float):  #json field; map to field in node.record
+            elif isinstance(value,(int,long,float)):  #json field; map to field in node.record
                 thisnode.record[key]=str(value)
             else:
                 if self.ta_info['checkunknownentities']:
