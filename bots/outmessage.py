@@ -158,7 +158,7 @@ class Outmessage(message.Message):
         buffer = []
         for grammarfield in structure_record[FIELDS]:       #loop all fields in grammar-definition
             if grammarfield[ISFIELD]:    #if field (no composite)
-                if grammarfield[ID] in noderecord:      #is there data in the outgoing message for this field in the grammar?
+                if grammarfield[ID] in noderecord  and noderecord[grammarfield[ID]]:      #field exists in outgoing message and has data
                     buildrecord.extend(buffer)          #write the buffer to buildrecord
                     buffer=[]                           #clear the buffer
                     buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:False}]      #append new field
@@ -173,7 +173,7 @@ class Outmessage(message.Message):
                 subbuffer=[]            #buffer for this composite. 
                 subiswritten=False      #check if composite contains data
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
-                    if grammarsubfield[ID] in noderecord:   #field has data
+                    if grammarsubfield[ID] in noderecord and noderecord[grammarfield[ID]]:   #field exists in outgoing message and has data
                         buildrecord.extend(buffer)      #write buffer
                         buffer=[]                       #clear buffer
                         buildrecord.extend(subbuffer)   #write subbuffer
@@ -189,6 +189,8 @@ class Outmessage(message.Message):
                     donefirst = True
                 if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
                     buffer += [{VALUE:'',SFIELD:False}]
+        #~ print [buildrecord]
+        
         self.records += [buildrecord]
                 
 

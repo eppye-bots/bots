@@ -204,12 +204,13 @@ class Message(object):
         for grammarfield in structure_record[FIELDS]:
             if grammarfield[ISFIELD]:    #if field (no composite)
                 value = noderecord.get(grammarfield[ID])
-                #~ print 'field',noderecord,grammarfield
+                #~ print '(message)field',noderecord,grammarfield
                 if not value:
                     #~ print 'field',grammarfield[ID], 'has no value'
                     if grammarfield[MANDATORY] == 'M':
                         raise botslib.MessageError(_(u'Record "$mpath" field "$field" is mandatory.'),mpath=structure_record[MPATH],field=grammarfield[ID])
                     continue
+                #~ print 'field',grammarfield[ID], 'value', value
                 noderecord[grammarfield[ID]] = self._formatfield(value,grammarfield,structure_record)
             else:               #if composite
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields to see if data in composite
