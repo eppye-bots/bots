@@ -40,7 +40,7 @@ def showusage():
 
     '''%{'name':os.path.basename(sys.argv[0])}
     print usage
-    
+
 def start():
     #exit codes:
     # 0: OK, no errors
@@ -206,7 +206,7 @@ def start():
             stuff2evaluate = router.routedispatcher(routestorun)
             errorinrun +=  automaticmaintenance.evaluate('--new',stuff2evaluate)
             if userscript and hasattr(userscript,'postnewrun'):
-                botslib.runscript(userscript,scriptname,'postnewrun',routestorun)
+                botslib.runscript(userscript,scriptname,'postnewrun',routestorun=routestorun)
         if '--cleanup' in commandstorun or botsglobal.ini.get('settings','whencleanup','always')=='always':
             botsglobal.logger.debug(u'Do cleanup.')
             cleanup.cleanup()
@@ -221,8 +221,8 @@ def start():
             sys.exit(2) #indicate: error(s) in run(s)
         else:
             sys.exit(0) #OK
-            
-        
+
+
 if __name__=='__main__':
     start()
 
