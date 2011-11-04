@@ -155,7 +155,9 @@ def generate_report(stuff2evaluate):
     reporttext += _(u'    %d files send in run.\n')%(results['send'])
     
     botsglobal.logger.info(reporttext)
-    if results['status']:
+    # sendreportifprocesserror allows blocking of email reports for process errors
+    if (results['lasterror'] or results['lastopen'] or results['lastok'] or
+       (results['processerrors'] and botsglobal.ini.getboolean('settings','sendreportifprocesserror',True))):
         botslib.sendbotserrorreport(subject,reporttext)
     return int(results['status'])    #return report status: 0 (no error) or 1 (error)
 
