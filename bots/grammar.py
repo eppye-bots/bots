@@ -174,11 +174,8 @@ class Grammar(object):
         #'normalise' field: make list equal length
         if len(field) == 3:  # that is: composite
             field +=[None,False,None,None,'A']
-            #~ field[ISFIELD] = 
         elif len(field) == 4:               # that is: field (not a composite)
             field +=[True,0,0,'A']
-            #~ field[ISFIELD] = True
-            #~ field[MINLENGTH] = 0
         elif len(field) == 8:               # this happens when there are errors in a table and table is read again
             raise botslib.GrammarError(_(u'Grammar "$grammar": error in grammar; error is already reported in this run.'),grammar=self.grammarname)
         else:

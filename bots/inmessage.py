@@ -62,7 +62,7 @@ class Inmessage(message.Message):
         ''' initialisation from a edi file '''
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])  #read grammar, after sniffing. Information from sniffing can be used (eg name editype for edifact, using version info from UNB)
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set
-        self.ta_info['charset'] =self.defmessage.syntax['charset']  #always use charset of edi file.
+        self.ta_info['charset'] =self.defmessage.syntax['charset']      #always use charset of edi file.
         self._readcontent_edifile()
         self._sniff()           #some hard-coded parsing of edi file; eg ta_info can be overruled by syntax-parameters in edi-file
         #start lexing and parsing

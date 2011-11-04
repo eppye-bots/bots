@@ -175,11 +175,10 @@ class Message(object):
             del record[field]
                 
     def _canonicaltree(self,node,structure,headerrecordnumber=0):
-        ''' For nodes: check min and max occurence; sort the nodes conform grammar
-            For fields: check M/C; format the fields.
+        ''' For nodes: check min and max occurence; sort the records conform grammar
         '''
         sortednodelist = []
-        self._canonicalfields(node.record,structure,headerrecordnumber)    #write the fields
+        self._canonicalfields(node.record,structure,headerrecordnumber)    #handle fields of this record
         if LEVEL in structure:
             for structure_record in structure[LEVEL]:  #for structure_record of this level in grammar
                 count = 0                           #count number of occurences of record
