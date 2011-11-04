@@ -153,7 +153,6 @@ def start():
         #botsglobal.incommunicate is used to control if there is communication in; only 'new' incommunicates.
         #botsglobal.minta4query controls which ta's are queried by the routes.
         #stuff2evaluate controls what is evaluated in automatic maintenance.
-        #~ timer = botslib.Timer('../timer.txt')
         errorinrun = 0      #detect if there has been some error. Only used for good exit() code
         botsglobal.incommunicate = False
         if '--crashrecovery' in commandstorun:
@@ -164,6 +163,8 @@ def start():
                 errorinrun +=  automaticmaintenance.evaluate('--crashrecovery',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'No retry of the last run - there was no last run.'))
+            if userscript and hasattr(userscript,'postcrashrecovery'):
+                botslib.runscript(userscript,scriptname,'postcrashrecovery',routestorun=routestorun)
         if '--retrycommunication' in commandstorun:
             botsglobal.logger.info(_(u'Run communication retry.'))
             stuff2evaluate = router.routedispatcher(routestorun,'--retrycommunication')
@@ -171,6 +172,8 @@ def start():
                 errorinrun +=  automaticmaintenance.evaluate('--retrycommunication',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'Run recommunicate: nothing to recommunicate.'))
+            if userscript and hasattr(userscript,'postretrycommunication'):
+                botslib.runscript(userscript,scriptname,'postretrycommunication',routestorun=routestorun)
         if '--automaticretrycommunication' in commandstorun:
             botsglobal.logger.info(_(u'Run automatic communication retry.'))
             stuff2evaluate = router.routedispatcher(routestorun,'--automaticretrycommunication')
@@ -178,13 +181,8 @@ def start():
                 errorinrun +=  automaticmaintenance.evaluate('--automaticretrycommunication',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'Run automatic recommunicate: nothing to recommunicate.'))
-        #~ if '--retry' in commandstorun:
-            #~ botsglobal.logger.info(u'Run retry.')
-            #~ if botslib.set_minta4query_retry():
-                #~ stuff2evaluate = router.routedispatcher(routestorun)
-                #~ errorinrun +=  automaticmaintenance.evaluate('--retry',stuff2evaluate)
-            #~ else:
-                #~ botsglobal.logger.info(_(u'Run retry: nothing to retry.'))
+            if userscript and hasattr(userscript,'postautomaticretrycommunication'):
+                botslib.runscript(userscript,scriptname,'postautomaticretrycommunication',routestorun=routestorun)
         if '--retry' in commandstorun:
             botsglobal.logger.info(u'Run retry.')
             stuff2evaluate = router.routedispatcher(routestorun,'--retry')
@@ -192,6 +190,8 @@ def start():
                 errorinrun +=  automaticmaintenance.evaluate('--retry',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'Run retry: nothing to retry.'))
+            if userscript and hasattr(userscript,'postretry'):
+                botslib.runscript(userscript,scriptname,'postretry',routestorun=routestorun)
         if '--retransmit' in commandstorun:
             botsglobal.logger.info(u'Run retransmit.')
             stuff2evaluate = router.routedispatcher(routestorun,'--retransmit')
@@ -199,6 +199,8 @@ def start():
                 errorinrun +=  automaticmaintenance.evaluate('--retransmit',stuff2evaluate)
             else:
                 botsglobal.logger.info(_(u'Run retransmit: nothing to retransmit.'))
+            if userscript and hasattr(userscript,'postretransmit'):
+                botslib.runscript(userscript,scriptname,'postretransmit',routestorun=routestorun)
         if '--new' in commandstorun:
             botsglobal.logger.info('Run new.')
             botsglobal.incommunicate = True
@@ -210,8 +212,6 @@ def start():
         if '--cleanup' in commandstorun or botsglobal.ini.get('settings','whencleanup','always')=='always':
             botsglobal.logger.debug(u'Do cleanup.')
             cleanup.cleanup()
-        #~ timer.point('cleanup')
-        #~ timer.close()
         botslib.remove_database_lock()
     except Exception,e:
         botsglobal.logger.exception(_(u'Severe error in bots system: "%s".')%(e))    #of course this 'should' not happen. 
