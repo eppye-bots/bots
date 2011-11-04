@@ -6,6 +6,7 @@ import envelope
 import transform
 import botslib
 import botsglobal
+import preprocess
 from botsconfig import *
 
 @botslib.log_session
@@ -206,7 +207,6 @@ def router(routedict):
         return  #so: if function ' main' : communication.run only the routescript, nothing else.
     if not (userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']): 
         raise botslib.ScriptError(_(u'Route "$route" is empty: no script, not enough parameters.'),route=routedict['idroute'])
-
     
     botslib.tryrunscript(userscript,scriptname,'start',routedict=routedict)
     
@@ -219,8 +219,11 @@ def router(routedict):
         change={'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
         botslib.updateinfo(change=change,where=where)
             
+        preprocess.preprocess(routedict,preprocess.botsunzip,pass_non_zip=True)
         #all received files have status FILEIN
         botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
+        if routedict['fromeditype'] == 'mailbag':   
+            preprocess.preprocess(routedict,preprocess.mailbag)
     
     #communication.run translation
     if routedict['translateind']:

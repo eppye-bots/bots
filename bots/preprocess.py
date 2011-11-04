@@ -9,7 +9,7 @@ from botsconfig import *
 @botslib.log_session
 def preprocess(routedict,function, status=FILEIN,**argv):
     ''' for pre- and postprocessing of files.
-        these are NOT translations; translation involve grammers, mapping scripts etc. think of eg:
+        these are NOT translations; translation involve grammars, mapping scripts etc. think of eg:
         - unzipping zipped files.
         - convert excel to csv
         - password protected files.
@@ -22,7 +22,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
     nr_files = 0
     preprocessnumber = botslib.getpreprocessnumber()
     if not botslib.addinfo(change={'status':preprocessnumber},where={'status':status,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel']}):    #check if there is something to do
-        return nr_files
+        return 0
     for row in botslib.query(u'''SELECT idta,filename,charset
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
