@@ -173,7 +173,7 @@ class Outmessage(message.Message):
                 subbuffer=[]            #buffer for this composite. 
                 subiswritten=False      #check if composite contains data
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
-                    if grammarsubfield[ID] in noderecord and noderecord[grammarfield[ID]]:   #field exists in outgoing message and has data
+                    if grammarsubfield[ID] in noderecord and noderecord[grammarsubfield[ID]]:   #field exists in outgoing message and has data
                         buildrecord.extend(buffer)      #write buffer
                         buffer=[]                       #clear buffer
                         buildrecord.extend(subbuffer)   #write subbuffer
@@ -306,10 +306,7 @@ class Outmessage(message.Message):
         ''' convert self.records to a file.
             using the right editype (edifact, x12, etc) and charset.
         '''
-        try:
-            wrap_length = int(self.ta_info['wrap_length'])
-        except:
-            wrap_length = 0
+        wrap_length = int(self.ta_info.get('wrap_length', 0))
         if wrap_length:
             s = ''.join(self._record2string(r) for r in self.records) # join all records
             for i in range(0,len(s),wrap_length): # then split in fixed lengths
