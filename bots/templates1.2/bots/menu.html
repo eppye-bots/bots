@@ -1,0 +1,81 @@
+{% load i18n %}
+<div id="menu">
+{% if user.is_authenticated %}
+	<ul>
+		<a href="/home">{% trans 'Home' %}</a>
+		<li><a href="/home/">{% trans 'Home *' %}</a></li>
+		<li><a href="/help/">{% trans 'Help' %}</a></li>
+		<li><a href="/logout/">{% trans 'Log out' %}</a></li>
+		<li><a href="/admin/password_change/">{% trans 'Change password' %}</a></li>
+		<li>{% trans 'Current user' %}: {{ user.username }}</li>
+		<li>{% trans 'Last login' %}: {{ user.last_login|date:"Y-m-d G:i" }}</li>
+	</ul>
+	<ul>
+		<a href="/incoming/?last">{% trans 'Last run' %}</a>
+		<li><a href="/reports/?all" >{% trans 'Report (per run)' %}</a></li>
+		<li><a href="/incoming/?last" >{% trans 'Incoming *' %}</a></li>
+		<li><a href="/document/?last" >{% trans 'Document' %}</a></li>
+		<li><a href="/outgoing/?last" >{% trans 'Outgoing' %}</a></li>
+		<li><a href="/processes/?last" >{% trans 'Process Errors' %}</a></li>
+	</ul>
+	<ul>
+		<a href="/reports/?all">{% trans 'All runs' %}</a>
+		<li><a href="/reports/?all" >{% trans 'Report (per run) *' %}</a></li>
+        <li><a href="/incoming/?all" >{% trans 'Incoming' %}</a></li>
+		<li><a href="/document/?all" >{% trans 'Document' %}</a></li>
+		<li><a href="/outgoing/?all" >{% trans 'Outgoing' %}</a></li>
+		<li><a href="/processes/?all" >{% trans 'Process Errors' %}</a></li>
+		<li><a href="/confirm/?all" >{% trans 'Confirmations' %}</a></li>
+	</ul>
+	<ul>
+		<a href="/document/?select">{% trans 'Select' %}</a>
+		<li><a href="/reports/?select" >{% trans 'Reports (per run)' %}</a></li>
+        <li><a href="/incoming/?select" >{% trans 'Incoming' %}</a></li>
+		<li><a href="/document/?select" >{% trans 'Document *' %}</a></li>
+		<li><a href="/outgoing/?select" >{% trans 'Outgoing' %}</a></li>
+		<li><a href="/processes/?select" >{% trans 'Process Errors' %}</a></li>
+		<li><a href="/confirm/?select" >{% trans 'Confirmations' %}</a></li>
+	</ul>
+	{% if user.is_staff %}
+	<ul>
+		<a>{% trans 'Configuration' %}</a>
+		<li><a href="/admin/bots/routes/" >{% trans 'Routes' %}</a></li>
+		<li><a href="/admin/bots/channel/" >{% trans 'Channels' %}</a></li>
+		<li><a href="/admin/bots/translate/" >{% trans 'Translations' %}</a></li>
+		<li><a href="/admin/bots/partner/" >{% trans 'Partners &amp; groups' %}</a></li>
+		<li><a href="/admin/bots/confirmrule/" >{% trans 'Confirmrules' %}</a></li>
+		<li><a href="/admin/bots/ccode/" >{% trans 'User Codes as list' %}</a></li>
+		<li><a href="/admin/bots/ccodetrigger/" >{% trans 'User Codes by type' %}</a></li>
+	</ul>
+    {% endif %}
+    {% if user.is_superuser %}
+	<ul>
+		<a>{% trans 'SysTasks' %}</a>
+		<li><a href="/plugin/" >{% trans 'Read plugin' %}</a></li>
+		<li><a href="/plugout/" >{% trans 'Write plugin' %}</a></li>
+		<li>-----</li>
+		<li><a href="/delete/" >{% trans 'Delete from configuration' %}</a></li>
+		<li>-----</li>
+		<li><a href="/admin/auth/user/" >{% trans 'Users' %}</a></li>
+		<li><a href="/admin/auth/user/" >{% trans 'UserGroups' %}</a></li>
+		<li><a href="/admin/bots/uniek/" >{% trans 'View/edit counters' %}</a></li>
+		<li>-----</li>
+		<li><a href="/unlock/" >{% trans 'Unlock database' %}</a></li>
+		<li><a href="/runengine/?clparameter=--crashrecovery"  OnClick = "return confirm('{% trans 'Only needed in case of database lock/crash recovery.\n Are you sure?' %}');">{% trans 'Run crash recovery' %}</a></li>
+		<li><a href="/sendtestmail/">{% trans 'Send test report' %}</a></li>
+	</ul>
+    {% endif %}
+	<ul>
+		<a href="/runengine/?clparameter=--new" >{% trans 'Run (only new)' %}</a>
+		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new) *' %}</a></li>
+		<li><a href="/runengine/?clparameter=--retransmit" >{% trans 'Run user-indicated retransmits' %}</a></li>
+		<li><a href="/runengine/?clparameter=--retrycommunication" >{% trans 'Retry user-indicated comm errors' %}</a></li>
+		<li><a href="/runengine/?clparameter=--retry"  OnClick = "return confirm('{% trans 'Are you sure you want to retry ALL previous errors?\n' %}');">{% trans 'Retry all previous errors' %}</a></li>
+	</ul>
+{% else %}
+	<ul>
+		<a href="/login/">{% trans 'Log in' %}</a>
+	</ul>
+{% endif %}
+		<noscript>{% trans '*****Javascript is not enabled. Bots works beter with javascript*****' %}</noscript>
+</div>
