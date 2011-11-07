@@ -15,16 +15,13 @@ import glob
 from botsconfig import *
 
 def server_error(request, template_name='500.html'):
-    """
-    500 error handler.
-
-    Templates: `500.html`
-    Context: None
+    """ the 500 error handler.
+        Templates: `500.html`
+        Context: None
     """
     import traceback
     exc_info = traceback.format_exc(None).decode('utf-8','ignore')
     botsglobal.logger.info(_(u'Ran into server error: "%s"'),str(exc_info))
-
     t = django.template.loader.get_template(template_name) # You need to create a 500.html template.
     return django.http.HttpResponseServerError(t.render(django.template.Context({'exc_info':exc_info})))
 
@@ -489,25 +486,18 @@ def delete(request,*kw,**kwargs):
 
 def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
+        #check if bots-engine is not already running
         if list(models.mutex.objects.filter(mutexk=1).all()):
             request.user.message_set.create(message=_(u'Trying to run "bots-engine", but database is locked by another run in progress. Please try again later.'))
             botsglobal.logger.info(_(u'Trying to run "bots-engine", but database is locked by another run in progress.'))
             return django.shortcuts.redirect('/home')
-        #find the bots-engine
-        if os.name=='nt':
-            lijst = [sys.executable, os.path.normpath(os.path.join(sys.prefix,'Scripts','bots-engine.py'))]
-        elif os.path.exists(os.path.join(sys.prefix,'bin','bots-engine.py')):
-            lijst = [os.path.normpath(os.path.join(sys.prefix,'bin','bots-engine.py'))]
-        elif os.path.exists(os.path.join(sys.prefix,'local/bin','bots-engine.py')):
-            lijst = [os.path.normpath(os.path.join(sys.prefix,'local/bin','bots-engine.py'))]
-        else:
-            request.user.message_set.create(message=_(u'Can not find executable for bots-engine.'))
-            botsglobal.logger.info(_(u'Can not find executable for bots-engine.'))
-            return django.shortcuts.redirect('/home')
-            
+        #find out the right arguments to use
+        botsenginepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py')        #find the bots-engine
+        lijst = [sys.executable,botsenginepath] + sys.argv[1:]
+        if 'clparameter' in request.GET:
+            lijst.append(request.GET['clparameter'])
+        
         try:
-            if 'clparameter' in request.GET:
-                lijst.append(request.GET['clparameter'])
             botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
             terug = subprocess.Popen(lijst).pid
             request.user.message_set.create(message=_(u'Bots-engine is started.'))
