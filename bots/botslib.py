@@ -80,19 +80,6 @@ def set_minta4query_crashrecovery():
         return botsglobal.minta4query
     return 0
 
-#~ def set_minta4query_retrycommunication():
-    #~ #bad query....
-    #~ for row in query('''SELECT min(idta) as min
-                        #~ FROM  ta
-                        #~ WHERE statust = %(statust)s
-                        #~ AND   status = %(status)s ''',
-                        #~ {'statust':OK, 'status':RAWOUT}):
-        #~ if row['min'] is None:
-            #~ return 0
-        #~ botsglobal.minta4query = row['min'] -1
-        #~ return botsglobal.minta4query
-    #~ return 0    #if no error found.
-
 def getlastrun():
     return _Transaction.processlist[1]  #get root-idta of last run
 
@@ -236,16 +223,6 @@ class _Transaction(object):
         newdbta = OldTransaction(newidta)
         newdbta.update(**ta_info)
         return newdbta
-
-    #20110823: is not used.
-    #~ def processparent(self):
-        #~ self.syn('script')
-        #~ for row in query(u'''SELECT filename
-                    #~ FROM ta
-                   #~ WHERE idta=%(selfid)s''',
-                    #~ {'selfid':self.script}):
-            #~ break
-        #~ return row['filename']
 
 
 class OldTransaction(_Transaction):
@@ -477,7 +454,6 @@ def checkunique(domein, receivednumber):
     cursor.close()
     return terug
 
-
 def keeptrackoflastretry(domein,newlastta):
     ''' keep track of last automaticretrycommunication/retry
         if domain not used before, initialize it . '1' is the first value expected.
@@ -526,7 +502,6 @@ def log_session(f):
             ta_session.update(statust=DONE)
             return terug
     return wrapper
-
 
 def txtexc():
     ''' Get text from last exception    '''
@@ -638,20 +613,9 @@ def opendata(filename,mode,charset=None,errors=None):
     else:
         return open(filename,mode)
 
-#~ def codecsopen(filename,mode,charset,errors):
-    #~ ''' open (absolute!) file, use right encoding.'''
-    #~ if not charset:
-        #~ charset = botsglobal.ini.get('settings','charset','us-ascii')
-    #~ return codecs.open(filename,mode,charset,errors)
-
 def readdata(filename,charset=None,errors=None):
     ''' read internal data file in memory using the right encoding or no encoding'''
     f = opendata(filename,'rb',charset,errors)
-    #~ filename = abspathdata(filename)
-    #~ if charset:
-        #~ f = codecs.open(filename,'r',charset,errors)
-    #~ else:
-        #~ f = open(filename,'rb')
     content = f.read()
     f.close()
     return content
@@ -685,7 +649,6 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
     except:
         txt=txtexc()
         raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
-
 
 def runexternprogram(*args):
     path = os.path.dirname(args[0])
@@ -733,6 +696,7 @@ def checkconfirmrules(confirmtype,**kwargs):
 def getcodeccanonicalname(codecname):
     c = codecs.lookup(codecname)
     return c.name
+
 def checkcodeciscompatible(charset1,charset2):
     ''' check if charset of edifile) is 'compatible' with charset of channel: OK; else: raise exception
     '''
@@ -750,8 +714,6 @@ def checkcodeciscompatible(charset1,charset2):
     if charset_edifile in charsetcompatible and charset_channel in charsetcompatible[charset_edifile]:
         return True
     raise CommunicationOutError(_(u'Charset "$charset2" for channel not matching with charset "$charset1" for edi-file.'),charset1=charset1,charset2=charset2)
-
-            
 
 #**********************************************************/**
 #***************###############  misc.   #############
@@ -771,19 +733,16 @@ class Uri(object):
         #assemble complete host name
         fullhost = ''
         if self.uriparts['username']:   #always use both?
-            fullhost += self.uriparts['username'].strip()
-            if self.uriparts['password']:   #always use both?
-                fullhost += ':' + self.uriparts['password'].strip()
-            fullhost += '@'
+            fullhost += self.uriparts['username'] + '@'
         if self.uriparts['host']:
-            fullhost += self.uriparts['host'].strip()
+            fullhost += self.uriparts['host']
         if self.uriparts['port']:
-            fullhost += ':' + str(self.uriparts['port']).strip()
+            fullhost += ':' + str(self.uriparts['port'])
         #assemble complete path
         if self.uriparts['path'].strip().endswith('/'):
-            fullpath = self.uriparts['path'].strip() + self.uriparts['filename'].strip()
+            fullpath = self.uriparts['path'] + self.uriparts['filename']
         else:
-            fullpath = self.uriparts['path'].strip() + '/' + self.uriparts['filename'].strip()
+            fullpath = self.uriparts['path'] + '/' + self.uriparts['filename']
         if fullpath.endswith('/'):
             fullpath = fullpath[:-1]
             
@@ -792,31 +751,16 @@ class Uri(object):
             raise Exception('Uri is empty.')
         return _uri
     
-    
 def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
 
-
 def countunripchars(value,delchars):
 	return len([c for c in value if c not in delchars])
-def countripchars(value,delchars):
-	return len(([c for c in value if c in delchars]))
+
 def updateunlessset(updatedict,fromdict):
     for key, value in fromdict.items():
         if key not in updatedict:
             updatedict[key]=value
-
-class Timer(object):
-    ''' utility for performance/timing '''
-    def __init__(self,filename):
-        self.timertotal = self.timerold = datetime.datetime.now()
-    def point(self,txt):
-        timernew = datetime.datetime.now()
-        botsglobal.logger.debug(u'%s %s',txt,(timernew-self.timerold))
-        self.timerold = timernew
-    def close(self):
-        botsglobal.logger.debug(u'Total time: %s',(datetime.datetime.now() - self.timertotal))
-
 
 #**********************************************************/**
 #**************  Exception classes ***************************
