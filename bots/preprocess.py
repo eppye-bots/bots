@@ -1,3 +1,4 @@
+import OS
 import re
 import zipfile
 from django.utils.translation import ugettext as _
@@ -49,8 +50,6 @@ def preprocess(routedict,function, status=FILEIN,**argv):
             ta_processing.update(statust=DONE)
             nr_files += 1
     return nr_files
-
-
 
 
 header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))',re.DOTALL)
@@ -126,8 +125,8 @@ def mailbag(ta_from,endstatus,**argv):
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
 
 def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
-    ''' unzip file; editype & messagetype are unchanged.
-        if not a zipfile: save as editype mailbag, messagetype mailbag.
+    ''' unzip file;
+        editype & messagetype are unchanged.
     '''
     try:
         z = zipfile.ZipFile(botslib.abspathdata(filename=ta_from.filename),mode='r')
@@ -153,8 +152,8 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
 
 def extractpdf(ta_from,endstatus,**argv):
-    ''' extract pfd document.
-        if not a zipfile: save as editype mailbag, messagetype mailbag.
+    ''' extract pfd file.
+        editype & messagetype are unchanged.
     '''
     import pyPdf
     try:
@@ -178,3 +177,68 @@ def extractpdf(ta_from,endstatus,**argv):
         txt=botslib.txtexc()
         botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error: %s'),txt)
         raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error: $error'),error=txt)
+
+
+def extractexcel(ta_from,endstatus,**argv):
+    ''' extract excel file.
+        editype & messagetype are unchanged.
+    '''
+    import xlrd
+    import csv
+    try:
+        infilename = botslib.abspathdata(row['filename'])
+        xlsdata = read_xls(infilename)
+        ta_to = ta_from.copyta(status=endstatus)
+        tofilename = str(ta_to.idta)
+        dump_csv(xlsdata,tofilename)
+        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info; 
+        botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
+    except:
+        txt=botslib.txtexc()
+        botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error: %s'),txt)
+        raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error: $error'),error=txt)
+
+#***functions used by extractexcel
+#-------------------------------------------------------------------------------
+def read_xls(infilename):
+    # Read excel first sheet into a 2-d array
+    book       = xlrd.open_workbook(infilename)
+    sheet      = book.sheet_by_index(0)
+    formatter  = lambda(t,v): format_excelval(book,t,v,False)
+    xlsdata = []
+    for row in range(sheet.nrows):
+        (types, values) = (sheet.row_types(row), sheet.row_values(row))
+        xlsdata.append(map(formatter, zip(types, values)))
+    return xlsdata
+#-------------------------------------------------------------------------------
+def dump_csv(xlsdata, tofilename):
+    stream = botslib.opendata(tofilename, 'wb')
+    csvout = csv.writer(stream, delimiter=',', doublequote=False, escapechar='\\')
+    csvout.writerows( map(utf8ize, xlsdata) )
+    stream.close()
+#-------------------------------------------------------------------------------
+def format_excelval(book, type, value, wanttupledate):
+    #  Clean up the incoming excel data for some data types
+    returnrow = []
+    if   type == 2:
+        if value == int(value): value = int(value)
+    elif type == 3:
+        datetuple = xlrd.xldate_as_tuple(value, book.datemode)
+        value = datetuple if wanttupledate else tupledate_to_isodate(datetuple)
+    elif type == 5:
+        value = xlrd.error_text_from_code[value]
+    return value
+#-------------------------------------------------------------------------------
+def tupledate_to_isodate(tupledate):
+    # Turns a gregorian (year, month, day, hour, minute, nearest_second) into a
+    # standard YYYY-MM-DDTHH:MM:SS ISO date.
+    (y,m,d, hh,mm,ss) = tupledate
+    nonzero = lambda n: n!=0
+    date = "%04d-%02d-%02d"  % (y,m,d)    if filter(nonzero, (y,m,d))                else ''
+    time = "T%02d:%02d:%02d" % (hh,mm,ss) if filter(nonzero, (hh,mm,ss)) or not date else ''
+    return date+time
+#-------------------------------------------------------------------------------
+def utf8ize(l):
+    # Make string-like things into utf-8, leave other things alone
+    return [unicode(s).encode("utf-8") if hasattr(s,'encode') else s for s in l]
+#***end functions used by extractexcel
