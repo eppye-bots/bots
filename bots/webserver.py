@@ -53,7 +53,7 @@ def start():
     
     #***init cherrypy as webserver*********************************************
     #global configuration for cherrypy
-    cherrypy.config.update({'global': { 'log.screen': False, 'server.environment': botsglobal.ini.get('webserver','environment','production')}})
+    cherrypy.config.update({'global': {'log.screen': False, 'server.environment': botsglobal.ini.get('webserver','environment','production')}})
     #cherrypy handling of static files
     conf = {'/': {'tools.staticdir.on' : True,'tools.staticdir.dir' : 'media' ,'tools.staticdir.root': botsglobal.ini.get('directories','botspath')}}
     servestaticfiles = cherrypy.tree.mount(None, '/media', conf)    #None: no cherrypy application (as this only serves static files)
@@ -63,13 +63,17 @@ def start():
     dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, '/media': servestaticfiles})
     botswebserver = wsgiserver.CherryPyWSGIServer(bind_addr=('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), wsgi_app=dispatcher)
     botsglobal.logger.info(_(u'Bots web server started.'))
-    #handle ssl: cherrypy < 3.2 always uses pyOpenssl, cherrypy >= 3.2 can use python buildin ssl (python >= 2.6 has buildin support for ssl).
+    #handle ssl: cherrypy < 3.2 always uses pyOpenssl. cherrypy >= 3.2 uses python buildin ssl (python >= 2.6 has buildin support for ssl).
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
     ssl_private_key = botsglobal.ini.get('webserver','ssl_private_key',None)
     if ssl_certificate and ssl_private_key:
-        botswebserver.ssl_module = 'builtin'            #in cherrypy < 3.2, this has no result (but does no harm)
-        botswebserver.ssl_certificate = ssl_certificate
-        botswebserver.ssl_private_key = ssl_private_key
+        if cherrypy.__version__ >= '3.2.0':
+            adapter_class = wsgiserver.get_ssl_adapter_class('builtin')
+            botswebserver.ssl_adapter = adapter_class(ssl_certificate,ssl_private_key)
+        else:
+            #but: pyOpenssl should be there!
+            botswebserver.ssl_certificate = ssl_certificate
+            botswebserver.ssl_private_key = ssl_private_key
         botsglobal.logger.info(_(u'Bots web server uses ssl (https).'))
     else:
         botsglobal.logger.info(_(u'Bots web server uses plain http (no ssl).'))
