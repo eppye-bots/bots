@@ -151,3 +151,30 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         tofile.close()
         ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info; 
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
+
+def extractpdf(ta_from,endstatus,**argv):
+    ''' extract pfd document.
+        if not a zipfile: save as editype mailbag, messagetype mailbag.
+    '''
+    import pyPdf
+    try:
+        stream = botslib.opendata(ta_from.filename, 'rb')
+        #EOF = stream.find('%%EOF')+5 # some PFDs from SAP have data beyond the %%EOF!
+        pdf = pyPdf.PdfFileReader(stream)
+        content = ''
+        for page in range(0, pdf.getNumPages()):
+            # Extract text from page and add to content
+            content += 'PDF ' + pdf.getPage(page).extractText() + '\n'
+        stream.close()
+
+        ta_to = ta_from.copyta(status=endstatus)
+        tofilename = str(ta_to.idta)
+        tofile = botslib.opendata(tofilename,'wb')
+        tofile.write(content)
+        tofile.close()
+        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info; 
+        botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
+    except:
+        txt=botslib.txtexc()
+        botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error: %s'),txt)
+        raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error: $error'),error=txt)
