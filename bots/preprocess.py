@@ -1,4 +1,4 @@
-import OS
+import os
 import re
 import zipfile
 from django.utils.translation import ugettext as _

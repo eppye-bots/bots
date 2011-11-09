@@ -219,7 +219,6 @@ def router(routedict):
         change={'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
         botslib.updateinfo(change=change,where=where)
             
-        preprocess.preprocess(routedict,preprocess.botsunzip,pass_non_zip=True)
         #all received files have status FILEIN
         botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
         if routedict['fromeditype'] == 'mailbag':   
