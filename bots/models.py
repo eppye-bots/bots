@@ -28,8 +28,6 @@ STATUS = [
     (237,_(u'Preprocess')),
     (238,_(u'Set for preprocess')),
     (239,_(u'Preprocess')),
-    (280,_(u'Mailbag')),
-    (290,_(u'Mailbagparsed')),
     (300,_(u'Translate')),
     (310,_(u'Parsed')),
     (320,_(u'Splitup')),

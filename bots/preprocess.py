@@ -46,7 +46,6 @@ def preprocess(routedict,function, status=FILEIN,**argv):
         else:
             botsglobal.logmap.debug(u'OK preprocessing  "%s" for file "%s".',function.__name__,row['filename'])
             ta_set_for_processing.update(statust=DONE)
-            #~ ta_processing.succes(INFILE)    #
             ta_processing.update(statust=DONE)
             nr_files += 1
     return nr_files
@@ -56,7 +55,7 @@ header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1
 #           group:    1   2       3  4            5        6         7
 
 def mailbag(ta_from,endstatus,**argv):
-    ''' splits 'mailbag'files to separate files each containing one interchange (ISA-IEA or UNA/UNB-UNZ).
+    ''' split 'mailbag' files to separate files each containing one interchange (ISA-IEA or UNA/UNB-UNZ).
         handles x12 and edifact; these can be mixed.
         recognizes xml files. messagetype 'xml' has a special handling when reading xml-files.
 

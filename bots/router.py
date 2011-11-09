@@ -221,14 +221,12 @@ def router(routedict):
             
         #all received files have status FILEIN
         botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
-        if routedict['fromeditype'] == 'mailbag':   
+        if routedict['fromeditype'] == 'mailbag':               #mailbag for the route.
             preprocess.preprocess(routedict,preprocess.mailbag)
     
     #communication.run translation
     if routedict['translateind']:
         botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
-        #~ if botslib.addinfo(change={'status':MAILBAG},where={'status':FILEIN,'idroute':routedict['idroute'],'editype':'mailbag'}):
-            #~ transform.splitmailbag(idroute=routedict['idroute'])
         botslib.addinfo(change={'status':TRANSLATE},where={'status':FILEIN,'idroute':routedict['idroute']})
         transform.translate(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)

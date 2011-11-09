@@ -10,7 +10,6 @@ DONE    = 3 #successfull, and result is picked up by next step
 
 #for status in ta:
 PROCESS    = 1
-#~ STATUSTMP= 2        #20110809 obsolete
 DISCARD= 3
 
 EXTERNIN  = 200      #transaction is OK; file is exported; out of reach
@@ -18,10 +17,6 @@ RAWIN    = 210    #the file as received, unprocessed; eg mail is in email-format
 MIMEIN   = 215      #mime is checked and read; mime-info (sender, receiver) is in db-ta
 FILEIN   = 220    #received edifile; ready for further use
 SET_FOR_PROCESSING = 230
-#~ ZIP     = 270             #20110809 obsolete
-#~ ZIPPARSED = 275        #20110809 obsolete
-MAILBAG = 280        #20110809 obsolete
-MAILBAGPARSED = 290        #20110809 obsolete
 TRANSLATE = 300     #file to be translated
 PARSED   = 310   #the edifile is lexed and parsed
 SPLITUP    = 320        #the edimessages in the PARSED edifile have been split up

@@ -152,21 +152,6 @@ class _Transaction(object):
         botsglobal.db.commit()
         cursor.close()
 
-    def succes(self,status):
-        '''Success: give correct status to all children of transaction (and children of children etc)'''
-        cursor = botsglobal.db.cursor()
-        cursor.execute(u'''SELECT idta FROM ta
-                           WHERE idta>%(rootidta)s
-                           AND parent=%(selfid)s''',
-                            {'selfid':self.idta,'rootidta':get_minta4query()})
-        rows = cursor.fetchall()
-        for row in rows:
-            ta=OldTransaction(row['idta'])
-            ta.update(status=status)
-            #~ ta.succes()
-        botsglobal.db.commit()
-        cursor.close()
-
     def mergefailure(self):
         '''Failure while merging: all parents of transaction get status OK (turn back)'''
         cursor = botsglobal.db.cursor()

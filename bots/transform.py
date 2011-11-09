@@ -3,7 +3,6 @@ try:
     import cPickle as pickle
 except:
     import pickle
-import re
 import copy
 import collections
 from django.utils.translation import ugettext as _
@@ -20,102 +19,6 @@ from botsconfig import *
 from botslib import addinfo,updateinfo,changestatustinfo,checkunique
 from envelope import mergemessages
 from communication import run 
-
-#~ '''
-#~ about auto-detect/mailbag:
-#~ - in US mailbag is used: one file for all received edi messages...appended in one file. I heard that edifact and x12 can be mixed,
-    #~ but have actually never seen this.
-#~ - bots needs and ' splitter': one edi-file, more interchanges. it is preferred to split these first.
-#~ - auto-detect: is is x12, edifact, xml, or??
-
-#~ the dumping of multiple files in one file is kind of obsolete (dirty old edi tricks).
-#~ eg edifact with two different charsets in one
-#~ '''
-
-
-#~ @botslib.log_session
-#~ def splitmailbag(startstatus=MAILBAG,endstatus=TRANSLATE,idroute=''):
-    #~ ''' splits 'mailbag'files to separate files each containging one interchange (ISA-IEA or UNA/UNB-UNZ).
-        #~ handles x12 and edifact; these can be mixed.
-    #~ '''
-    #~ header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))',re.DOTALL)
-    #~ #           group:    1   2       3  4            5        6         7
-    #~ for row in botslib.query(u'''SELECT idta,filename,charset
-                                #~ FROM  ta
-                                #~ WHERE   idta>%(rootidta)s
-                                #~ AND     status=%(status)s
-                                #~ AND     statust=%(statust)s
-                                #~ AND     idroute=%(idroute)s
-                                #~ ''',
-                                #~ {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
-        #~ try:
-            #~ ta_org=botslib.OldTransaction(row['idta'])
-            #~ ta_intermediate = ta_org.copyta(status=MAILBAGPARSED)
-            #~ edifile = botslib.readdata(filename=row['filename'])    #read as binary...
-            #~ botsglobal.logmap.debug(u'Start parsing mailbag file "%s".',row['filename'])
-            #~ startpos=0
-            #~ while (1):
-                #~ found = header.search(edifile[startpos:])
-                #~ if found is None:
-                    #~ if startpos:    #ISA/UNB have been found in file; no new ISA/UNB is found. So all processing is done.
-                        #~ break
-                    #~ #guess if this is an xml file.....
-                    #~ sniffxml = edifile[:25]
-                    #~ sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first ' real' data; some char are because of BOM, UTF-16 etc
-                    #~ if sniffxml and sniffxml[0]=='<':
-                        #~ ta_tomes=ta_intermediate.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
-                        #~ ta_tomes.update(status=STATUSTMP,statust=OK,filename=row['filename'],editype='xml') #update outmessage transaction with ta_info;
-                        #~ break;
-                    #~ else:
-                        #~ raise botslib.InMessageError(_(u'Found no content in mailbag.'))
-                #~ elif found.group(1):
-                    #~ editype='x12'
-                    #~ headpos=startpos+ found.start(2)
-                    #~ count=0
-                    #~ for c in edifile[headpos:headpos+120]:  #search first 120 characters to find separators
-                        #~ if c in '\r\n' and count!=105:
-                            #~ continue
-                        #~ count +=1
-                        #~ if count==4:
-                            #~ field_sep = c
-                        #~ elif count==106:
-                            #~ record_sep = c
-                            #~ break
-                    #~ foundtrailer = re.search(re.escape(record_sep)+'\s*I\s*E\s*A\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
-                #~ elif found.group(3):
-                    #~ editype='edifact'
-                    #~ if found.group(4):
-                        #~ field_sep = edifile[startpos + found.start(4) + 4]
-                        #~ record_sep = edifile[startpos + found.start(4) + 8]
-                        #~ headpos=startpos+ found.start(4)
-                    #~ else:
-                        #~ field_sep = '+'
-                        #~ record_sep = "'"
-                        #~ headpos=startpos+ found.start(5)
-                    #~ foundtrailer = re.search(re.escape(record_sep)+'\s*U\s*N\s*Z\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
-                #~ if not foundtrailer:
-                    #~ raise botslib.InMessageError(_(u'Found no valid envelope trailer in mailbag.'))
-                #~ endpos = headpos+foundtrailer.end()
-                #~ #so: interchange is from headerpos untill endpos
-                #if header.search(edifile[headpos+25:endpos]):   #check if there is another header in the interchange
-                    #raise botslib.InMessageError(u'Error in mailbag format: found no valid envelope trailer.')
-                #~ ta_tomes=ta_intermediate.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
-                #~ tofilename = str(ta_tomes.idta)
-                #~ tofile = botslib.opendata(tofilename,'wb')
-                #~ tofile.write(edifile[headpos:endpos])
-                #~ tofile.close()
-                #~ ta_tomes.update(status=STATUSTMP,statust=OK,filename=tofilename,editype=editype,messagetype=editype) #update outmessage transaction with ta_info;
-                #~ startpos=endpos
-        #~ except:
-            #~ txt=botslib.txtexc()
-            #~ ta_intermediate.failure()
-            #~ ta_intermediate.update(statust=ERROR,errortext=txt)
-        #~ else:
-            #~ botsglobal.logmap.debug(u'OK Parsing mailbag file "%s".',row['filename'])
-            #~ ta_org.update(statust=DONE)
-            #~ ta_intermediate.succes(endstatus)
-            #~ ta_intermediate.update(statust=DONE)
-
 
 @botslib.log_session
 def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
