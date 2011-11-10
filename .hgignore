@@ -18,3 +18,4 @@ syntax: regexp
 ^bots/installwin.*
 ^bots/usersys/\w+/.*
 glob:bots/botssys/sqlitedb/botsdb
+glob:bots/profile.tmp
