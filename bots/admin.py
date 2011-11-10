@@ -28,7 +28,7 @@ class BotsAdmin(admin.ModelAdmin):
         except self.model.DoesNotExist:
             obj = None
         if not self.has_delete_permission(request, obj):
-            raise PermissionDenied
+            raise PermissionDenied(_(u'Permission denied'))
         if obj is None:
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_unicode(opts.verbose_name), 'key': escape(object_id)})
         obj_display = force_unicode(obj)

@@ -328,7 +328,7 @@ class _comsession(object):
         def mdnreceive():
             tmp = msg.get_param('reporttype')
             if tmp is None or email.Utils.collapse_rfc2231_value(tmp)!='disposition-notification':    #invalid MDN
-                raise botslib.CommunicationInError(u'Received email-MDN with errors.')
+                raise botslib.CommunicationInError(_(u'Received email-MDN with errors.'))
             for part in msg.get_payload():
                 if part.get_content_type()=='message/disposition-notification':
                     originalmessageid = part['original-message-id']
@@ -593,10 +593,10 @@ class pop3(_comsession):
     def disconnect(self):
         try:
             if not self.session: 
-                raise Exception('Pop3 connection not OK')
+                raise botslib.CommunicationInError(_(u'Pop3 connection not OK'))
             resp = self.session.quit()     #pop3 server will now actually delete the mails
             if resp[:1] != '+':
-                raise Exception('QUIT command to POP3 server failed')
+                raise botslib.CommunicationInError(_(u'QUIT command to POP3 server failed'))
         except:
             botslib.ErrorProcess(functionname='pop3-incommunicate',errortext='Could not fetch emails via POP3; probably communication problems',channeldict=self.channeldict)
             for idta in self.listoftamarkedfordelete:
@@ -712,7 +712,7 @@ class smtp(_comsession):
                 raise botslib.CommunicationOutError(_(u'SMTP server did not accept user/password combination.'))
             except:
                 txt=botslib.txtexc()
-                raise botslib.CommunicationOutError(_(u'SMTP login failed: "$txt".'),txt=txt)
+                raise botslib.CommunicationOutError(_(u'SMTP login failed. Error:\n$txt'),txt=txt)
         
     @botslib.log_session
     def outcommunicate(self):
@@ -804,7 +804,7 @@ class file(_comsession):
                     elif os.name == 'posix':
                         fcntl.lockf(fromfile.fileno(), fcntl.LOCK_SH|fcntl.LOCK_NB)
                     else:
-                        raise botslib.LockedFileError("Can not do a systemlock on this platform")
+                        raise botslib.LockedFileError(_(u'Can not do a systemlock on this platform'))
                 #open tofile
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
@@ -865,14 +865,13 @@ class file(_comsession):
                     filename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=filename,ta=ta_from)
                 tofilename = botslib.join(outputdir,filename)
                 tofile = open(tofilename, mode)
-                #~ raise Exception('test')  #for testing
                 if self.channeldict['syslock']:
                     if os.name == 'nt':
                         msvcrt.locking(tofile.fileno(), msvcrt.LK_LOCK, 0x0fffffff)
                     elif os.name == 'posix':
                         fcntl.lockf(tofile.fileno(), fcntl.LOCK_EX|fcntl.LOCK_NB)
                     else:
-                        raise botslib.LockedFileError(_('Can not do a systemlock on this platform'))
+                        raise botslib.LockedFileError(_(u'Can not do a systemlock on this platform'))
                 #open fromfile
                 fromfile = botslib.opendata(row['filename'], 'rb')
                 #copy
@@ -952,13 +951,13 @@ class ftp(_comsession):
                         self.session.retrlines("RETR " + fromfilename, lambda s, w=tofile.write: w(s+"\n"))
                 except ftplib.error_perm, resp:
                     if str(resp)[:3] in ['550',]:     #we are trying to download a directory...
-                        raise botslib.BotsError('This error is to be catched and handled')
+                        raise botslib.BotsError(u'To be catched')
                     else:
                         raise
                 tofile.close()
                 filesize = os.path.getsize(botslib.abspathdata(tofilename))
                 if not filesize:
-                    raise botslib.BotsError('This error is to be catched and handled')
+                    raise botslib.BotsError(u'To be catched')
                 if self.channeldict['remove']:
                     self.session.delete(fromfilename)
             except botslib.BotsError:   #catch this exception and handle it 
@@ -1041,7 +1040,7 @@ class ftps(ftp):
     def connect(self):
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
         if not hasattr(ftplib,'FTP_TLS'):
-            raise botslib.CommunicationError('ftps is not supported by your python version, use >=2.7')
+            raise botslib.CommunicationError(_(u'ftps is not supported by your python version, use >=2.7'))
         self.session = ftplib.FTP_TLS()
         self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
         self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
@@ -1112,7 +1111,7 @@ class ftpis(ftp):
     def connect(self):
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
         if not hasattr(ftplib,'FTP_TLS'):
-            raise botslib.CommunicationError('ftpis is not supported by your python version, use >=2.7')
+            raise botslib.CommunicationError(_(u'ftpis is not supported by your python version, use >=2.7'))
         self.session = FTP_TLS_IMPLICIT()
         if self.channeldict['parameters']:
             self.session.ssl_version = int(self.channeldict['parameters'])
@@ -1141,12 +1140,12 @@ class sftp(_comsession):
             import paramiko
         except:
             txt=botslib.txtexc()
-            raise ImportError('Dependency failure: communicationtype "sftp" requires python library "paramiko". Please install this library. Error: $txt',txt=txt)
+            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "paramiko". Error:\n%s'%txt))
         try:
             from Crypto import Cipher
         except:
             txt=botslib.txtexc()
-            raise ImportError('Dependency failure: communicationtype "sftp" requires python library "pycrypto". Please install this libraries. Error: $txt',txt=txt)
+            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "pycrypto". Error:\n%s'%txt))
         # setup logging if required
         ftpdebug = botsglobal.ini.getint('settings','ftpdebug',0)
         if ftpdebug > 0:
@@ -1509,7 +1508,7 @@ class database(_comsession):
             import sqlalchemy
         except:
             txt=botslib.txtexc()
-            raise ImportError('Dependency failure: communication type "database" requires python library "sqlalchemy". Please install this library. Error: $txt',txt=txt)
+            raise ImportError(_(u'Dependency failure: communication type "database" requires python library "sqlalchemy". Error:\n%s'%txt))
         from sqlalchemy.orm import sessionmaker
         engine = sqlalchemy.create_engine(self.channeldict['path'],strategy='threadlocal') 
         self.metadata = sqlalchemy.MetaData()
@@ -1585,7 +1584,7 @@ class db(_comsession):
     '''
     def connect(self):
         if self.userscript is None:
-            raise ImportError(u'Channel "$channel" is type "db", but no communicationscript exists.',channel=self.channeldict['idchannel'])
+            raise ImportError(_(u'Channel "%s" is type "db", but no communicationscript exists.'%self.channeldict['idchannel']))
         #check functions bots assumes to be present in user script:
         if not hasattr(self.userscript,'connect'):
             raise botslib.ScriptImportError(_(u'No function "connect" in imported script "$script".'),script=self.scriptname)
@@ -1683,10 +1682,8 @@ class communicationscript(_comsession):
         2.2 no 'main' function: the processing of all the files can be done in 'disconnect'. bots can remove the files (if you use the 'remove' switch of the channel).
     """
     def connect(self):
-        if self.userscript is None:
-            raise ImportError(u'Channel "$channel" is type "communicationscript", but no communicationscript exists.',channel=self.channeldict['idchannel'])
-        if not botslib.tryrunscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict):
-            raise ImportError(u'Channel "$channel" is type "communicationscript", but no communicationscript exists.',channel=self.channeldict['idchannel'])
+        if self.userscript is None or not botslib.tryrunscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict):
+            raise ImportError(_(u'Channel "%s" is type "communicationscript", but no communicationscript exists.'%self.channeldict['idchannel']))
             
             
     @botslib.log_session

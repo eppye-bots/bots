@@ -12,7 +12,7 @@ def grammarread(editype,grammarname):
     try:
         classtocall = globals()[editype]
     except KeyError:
-        raise botslib.GrammarError(_('Read grammar for editype "$editype" messagetype "$messagetype", but editype is unknown.'), editype=editype, messagetype=grammarname)
+        raise botslib.GrammarError(_(u'Read grammar for editype "$editype" messagetype "$messagetype", but editype is unknown.'), editype=editype, messagetype=grammarname)
     terug = classtocall('grammars',editype,grammarname)
     terug.initsyntax(includedefault=True)
     terug.initrestofgrammar()
@@ -26,7 +26,7 @@ def syntaxread(soortpythonfile,editype,grammarname):
     try:
         classtocall = globals()[editype]
     except KeyError:
-        raise botslib.GrammarError(_('Read grammar for type "$soort" editype "$editype" messagetype "$messagetype", but editype is unknown.'), soort=soortpythonfile,editype=editype, messagetype=grammarname)
+        raise botslib.GrammarError(_(u'Read grammar for type "$soort" editype "$editype" messagetype "$messagetype", but editype is unknown.'), soort=soortpythonfile,editype=editype, messagetype=grammarname)
     terug = classtocall(soortpythonfile,editype,grammarname)
     terug.initsyntax(includedefault=False)
     return terug
@@ -378,7 +378,7 @@ class Grammar(object):
         try:
             field[BFORMAT] = self.formatconvert[field[FORMAT]]
         except KeyError:
-            raise botslib.GrammarError(u'Grammar "$grammar", record "$record", field "$field": format "$format" has to be one of "$keys".',grammar=self.grammarname,record=recordID,field=field[ID],format=field[FORMAT],keys=self.formatconvert.keys())
+            raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": format "$format" has to be one of "$keys".'),grammar=self.grammarname,record=recordID,field=field[ID],format=field[FORMAT],keys=self.formatconvert.keys())
 
 #the grammar subclasses, equivalent to the editypes Bots can handle.
 #contains the defaultsyntax

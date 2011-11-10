@@ -41,13 +41,13 @@ def writetodatabase(orgpluglist):
     if not orgpluglist:  #list of plugins is empty: is OK. DO nothing
         return
     if not isinstance(orgpluglist,list):   #has to be a list!!
-        raise Exception(_(u'plugins should be list of dicts. Nothing is written.'))
+        raise botslib.PluginError(_(u'plugins should be list of dicts. Nothing is written.'))
     for plug in orgpluglist:
         if not isinstance(plug,dict):
             raise botslib.PluginError(_(u'plugins should be list of dicts. Nothing is written.'))
         for key in plug.keys():
             if not isinstance(key,basestring):
-                raise botslib.PluginError(_('key of dict is not a string: "%s". Nothing is written.')%(plug))
+                raise botslib.PluginError(_(u'key of dict is not a string: "%s". Nothing is written.')%(plug))
         if 'plugintype' not in plug:
             raise botslib.PluginError(_(u'"plugintype" missing in: "%s". Nothing is written.')%(plug))
            
@@ -214,7 +214,7 @@ def load(pathzipfile):
             del sys.modules['botsindex']
     except:
         txt = botslib.txtexc()
-        raise botslib.PluginError(_(u'Error in plugin. Nothing is written. Error: "%s"')%(txt))
+        raise botslib.PluginError(_(u'Error in plugin. Nothing is written. Error:\n%s')%(txt))
     else:
         botsglobal.logger.info(_(u'Plugin is OK.'))
         botsglobal.logger.info(_(u'Start writing to database.'))
@@ -224,7 +224,7 @@ def load(pathzipfile):
         writetodatabase(pluglist)
     except:
         txt = botslib.txtexc()
-        raise botslib.PluginError('Error writing plugin to database. Nothing is written. Error: "%s"'%(txt))
+        raise botslib.PluginError(_(u'Error writing plugin to database. Nothing is written. Error:\n%s'%(txt)))
     else:
         botsglobal.logger.info(u'Writing to database is OK.')
         botsglobal.logger.info(u'Start writing to files')
@@ -268,7 +268,7 @@ def load(pathzipfile):
     except:
         txt = botslib.txtexc()
         z.close()
-        raise botslib.PluginError(_(u'Error writing files to system. Nothing is written to database. Error: "%s"')%(txt))
+        raise botslib.PluginError(_(u'Error writing files to system. Nothing is written to database. Error:\n%s')%(txt))
     else:
         z.close()
         botsglobal.logger.info(_(u'Writing files to filesystem is OK.'))

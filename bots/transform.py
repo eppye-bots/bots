@@ -133,7 +133,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
             txt=botslib.txtexc()
             ta_parsedfile.failure()
             ta_parsedfile.update(statust=ERROR,errortext=txt)
-            botsglobal.logger.debug(u'Error reading and parsing input file: %s',txt)
+            botsglobal.logger.debug(u'Error reading and parsing input file:\n%s',txt)
         else:
             edifile.close(ta_fromfile,error=False)
             ta_fromfile.update(statust=DONE)

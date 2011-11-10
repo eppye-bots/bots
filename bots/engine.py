@@ -214,7 +214,7 @@ def start():
             cleanup.cleanup()
         botslib.remove_database_lock()
     except Exception,e:
-        botsglobal.logger.exception(_(u'Severe error in bots system: "%s".')%(e))    #of course this 'should' not happen. 
+        botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(e))    #of course this 'should' not happen. 
         sys.exit(1)
     else:
         if errorinrun:

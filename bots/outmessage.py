@@ -219,7 +219,7 @@ class Outmessage(message.Message):
                 elif lenght==8:
                     time.strptime(value,'%Y%m%d')
                 else:
-                    raise ValueError
+                    raise ValueError(u'To be catched')
             except ValueError:
                 raise botslib.OutMessageError(_(u'record "$mpath" field "$field" no valid date: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
             valuelength=len(value)
@@ -235,7 +235,7 @@ class Outmessage(message.Message):
                 elif lenght==6:
                     time.strptime(value,'%H%M%S')
                 else: #lenght==8:     #tsja...just use first part of field
-                    raise ValueError
+                    raise ValueError(u'To be catched')
             except  ValueError:
                 raise botslib.OutMessageError(_(u'record "$mpath" field "$field" no valid time: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
             valuelength=len(value)
@@ -567,7 +567,7 @@ class xmlnocheck(xml):
         ''' fields in a node are written to xml fields; output is sorted according to grammar
         '''
         if 'BOTSID' not in noderecord:
-            raise botslib.OutMessageError(u'No field "BOTSID" in xml-output in: "$record"',record=noderecord)
+            raise botslib.OutMessageError(_(u'No field "BOTSID" in xml-output in: "$record"'),record=noderecord)
         #first generate the xml-'record'
         attributedict = {}
         recordtag = noderecord['BOTSID']
@@ -676,7 +676,7 @@ class template(Outmessage):
             import kid
         except:
             txt=botslib.txtexc()
-            raise ImportError('Dependency failure: editype "template" requires python library "kid". Please install this library. Error: $txt',txt=txt)
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid". Error:\n%s'%txt))
        #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templates',self.ta_info['template'])
@@ -685,7 +685,7 @@ class template(Outmessage):
             ediprint = kid.Template(file=templatefile, data=self.data)
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype": $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
         try:
             f = botslib.opendata(self.ta_info['filename'],'wb')
             ediprint.write(f,
@@ -695,7 +695,7 @@ class template(Outmessage):
                             fragment=self.ta_info['merge'])
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype": $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
         botsglobal.logger.debug(_(u'End writing to file "%s".'),self.ta_info['filename'])
 
 

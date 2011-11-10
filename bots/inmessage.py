@@ -116,7 +116,7 @@ class Inmessage(message.Message):
                     elif lenght==8:
                         time.strptime(value,'%Y%m%d')
                     else:
-                        raise ValueError
+                        raise ValueError(u'To be catched')
                 except ValueError:
                     raise botslib.InMessageFieldError(_(u'Record "$record" date field "$field" not a valid date: "$content".'),record=record,field=grammarfield[ID],content=value)
             elif grammarfield[BFORMAT] == 'T':
@@ -129,9 +129,9 @@ class Inmessage(message.Message):
                     elif lenght==7 or lenght==8:
                         time.strptime(value[0:6],'%H%M%S')
                         if not value[6:].isdigit():
-                            raise ValueError
+                            raise ValueError(u'To be catched')
                     else:
-                        raise ValueError
+                        raise ValueError(u'To be catched')
                 except  ValueError:
                     raise botslib.InMessageFieldError(_(u'Record "$record" time field "$field" not a valid time: "$content".'),record=record,field=grammarfield[ID],content=value)
         else:   #numerics (R, N, I)
@@ -395,7 +395,7 @@ class fixed(Inmessage):
                 value = self._formatfield(value,field,fixedrecord)
             except botslib.InMessageFieldError:
                 txt=botslib.txtexc()
-                raise botslib.InMessageFieldError(_(u'line:$line pos:$pos: $txt'),line=recordEdiFile[ID][LIN],pos=pos,txt=txt)
+                raise botslib.InMessageFieldError(_(u'line:$line pos:$pos. Error:\n$txt'),line=recordEdiFile[ID][LIN],pos=pos,txt=txt)
             if value:
                 recorddict[field[ID][:]] = value #copy id string to avoid memory problem ; value is already a copy
             else:
@@ -422,9 +422,9 @@ class idoc(fixed):
                 self.rawinput = self.rawinput[count:]  #here the interchange should start
                 break
         else:
-            raise botslib.InMessageError(u'edi file only contains whitespace.')
+            raise botslib.InMessageError(_(u'edi file only contains whitespace.'))
         if self.rawinput[:6] != 'EDI_DC':
-            raise botslib.InMessageError(u'expect "EDI_DC", found "$content". Probably no SAP idoc.',content=self.rawinput[:6])
+            raise botslib.InMessageError(_(u'expect "EDI_DC", found "$content". Probably no SAP idoc.'),content=self.rawinput[:6])
 
 
 class var(Inmessage):
@@ -575,7 +575,7 @@ class var(Inmessage):
                     rfield[VALUE] = self._formatfield(rfield[VALUE],field,recordEdiFile[0][VALUE])
                 except botslib.InMessageFieldError:
                     txt=botslib.txtexc()
-                    raise botslib.InMessageFieldError(_(u'line:$line pos:$pos; $txt'),line=rfield[LIN],pos=rfield[POS],txt=txt)
+                    raise botslib.InMessageFieldError(_(u'line:$line pos:$pos. Error:\n$txt'),line=rfield[LIN],pos=rfield[POS],txt=txt)
                 recorddict[field[ID][:]]=rfield[VALUE][:]   #copy string to avoid memory problems
         #****************** then: check M/C
         for tfield in trecord:
@@ -629,7 +629,7 @@ class edifact(var):
             if c.isalnum():
                 break
         else:
-            raise botslib.InMessageError(u'edi file only contains whitespace.')
+            raise botslib.InMessageError(_(u'edi file only contains whitespace.'))
         if self.rawinput[count:count+3] == 'UNA':
             unacharset=True
             self.ta_info['sfield_sep'] = self.rawinput[count+3]
@@ -647,7 +647,7 @@ class edifact(var):
             unacharset=False
             self.rawinput = self.rawinput[count:]  #here the interchange should start
         if self.rawinput[:3] != 'UNB':
-            raise botslib.InMessageError(u'No "UNB" at the start of file. Maybe not edifact.')
+            raise botslib.InMessageError(_(u'No "UNB" at the start of file. Maybe not edifact.'))
         self.ta_info['charset'] = self.rawinput[4:8]
         self.ta_info['version'] = self.rawinput[9:10]
         if not unacharset:
@@ -895,7 +895,7 @@ class xml(var):
             etreeroot = etree.parse(filename, parser)
             for item in mailbagsearch:
                 if 'xpath' not in item or 'messagetype' not in item:
-                    raise botslib.InMessageError(u'invalid search parameters in xml mailbag.')
+                    raise botslib.InMessageError(_(u'invalid search parameters in xml mailbag.'))
                 #~ print 'search' ,item
                 found = etree.find(item['xpath'])
                 if found is not None:
@@ -907,7 +907,7 @@ class xml(var):
                     #~ continue
                     break
             else:
-                raise botslib.InMessageError(u'could not find right xml messagetype for mailbag.')
+                raise botslib.InMessageError(_(u'could not find right xml messagetype for mailbag.'))
             
             self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
             botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
@@ -969,7 +969,7 @@ class xml(var):
                     str_recordlist = str_record[4]
                     break
             else:
-                raise botslib.InMessageError(u'Unknown XML-tag in "$record".',record=record)
+                raise botslib.InMessageError(_(u'Unknown XML-tag in "$record".'),record=record)
         for str_record in str_recordlist:   #see if xmlchildnode is in structure
             #~ print '    is xmlhildnode in this level comparing',xmlchildnode.tag,str_record[0]
             if xmlchildnode.tag == str_record[0]:

@@ -262,7 +262,7 @@ class Trace(object):
                 elif statustcount[DONE]:
                     return DONE #all is OK
                 elif statustcount[ERROR]:
-                    raise botslib.TraceError(-(u'DONE but no child is DONE or OK (idta: $idta).'),idta=tacurrent.idta)
+                    raise botslib.TraceError(_(u'DONE but no child is DONE or OK (idta: $idta).'),idta=tacurrent.idta)
                 else:   #if no ERROR and has no children: end of trace
                     return DONE
             elif tacurrent.statust==OK:

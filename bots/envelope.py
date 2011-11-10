@@ -318,7 +318,7 @@ class template(Envelope):
             import kid
         except:
             txt=botslib.txtexc()
-            raise ImportError('Dependency failure: editype "template" requires python library "kid". Please install this library. Error: $txt',txt=txt)
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid". Error:\n%s'%txt))
         defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
         self.ta_info.update(defmessage.syntax)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -331,7 +331,7 @@ class template(Envelope):
             ediprint = kid.Template(file=templatefile, data=ta_list) #init template; pass list with filenames
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype": $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
         try:
             f = botslib.opendata(self.ta_info['filename'],'wb')
             ediprint.write(f,
@@ -339,7 +339,7 @@ class template(Envelope):
                             output=self.ta_info['output'])
         except:
             txt=botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While enveloping error in "$editype.$messagetype"; probably in html file(s) to be merged: $txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
 
 
 class orders2printenvelope(template):

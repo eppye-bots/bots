@@ -179,7 +179,7 @@ def connect():
     if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
         #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
         if not os.path.isfile(botsglobal.settings.DATABASE_NAME):
-            raise Exception(_('Could not find database file for SQLite'))
+            raise botslib.PanicError(_(u'Could not find database file for SQLite'))
         import botssqlite
         botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASE_NAME)
     elif botsglobal.settings.DATABASE_ENGINE == 'mysql':

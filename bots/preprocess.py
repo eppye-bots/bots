@@ -174,8 +174,8 @@ def extractpdf(ta_from,endstatus,**argv):
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
         txt=botslib.txtexc()
-        botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error: %s'),txt)
-        raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error: $error'),error=txt)
+        botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error:\n%s'),txt)
+        raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error:\n$error'),error=txt)
 
 
 def extractexcel(ta_from,endstatus,**argv):
@@ -194,8 +194,8 @@ def extractexcel(ta_from,endstatus,**argv):
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
         txt=botslib.txtexc()
-        botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error: %s'),txt)
-        raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error: $error'),error=txt)
+        botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error:\n%s'),txt)
+        raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error:\n$error'),error=txt)
 
 #***functions used by extractexcel
 #-------------------------------------------------------------------------------

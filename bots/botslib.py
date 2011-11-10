@@ -535,7 +535,7 @@ def botsbaseimport(modulename):
         raise
     except:             #other errors
         txt=txtexc()
-        raise ScriptImportError(u'Import file: "%s, error: %s'%(modulename,txt))
+        raise ScriptImportError(_(u'Import file: "$module", error:\n$txt'),module=modulename,txt=txt)
     else:
         return module
 
@@ -641,7 +641,7 @@ def runexternprogram(*args):
         subprocess.call(list(args),cwd=path)
     except:
         txt=txtexc()
-        raise OSError(_(u'error running extern program "$program": $txt'),program=args,txt=txt)
+        raise OSError(_(u'error running extern program "%s", error:\n%s'%(args,txt)))
 
 #**********************************************************/**
 #***************###############  mdn   #############
@@ -714,7 +714,7 @@ class Uri(object):
     @property   #the getter
     def uri(self):
         if not self.uriparts['scheme']:
-            raise Exception('No scheme in uri.')
+            raise BotsError(_(u'No scheme in uri.'))
         #assemble complete host name
         fullhost = ''
         if self.uriparts['username']:   #always use both?
@@ -733,7 +733,7 @@ class Uri(object):
             
         _uri = urlparse.urlunparse((self.uriparts['scheme'],fullhost,fullpath,self.uriparts['parameters'],urllib.urlencode(self.uriparts['query']),self.uriparts['fragment']))
         if not _uri:
-            raise Exception('Uri is empty.')
+            raise BotsError(_(u'Uri is empty.'))
         return _uri
     
 def settimeout(milliseconds):

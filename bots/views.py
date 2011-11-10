@@ -361,7 +361,7 @@ def filer(request,*kw,**kwargs):
                         ta.content = botslib.readdata(ta.filename,charset='utf-8',errors='ignore')
             return  django.shortcuts.render_to_response('bots/filer.html', {'idtas': talijst},context_instance=django.template.RequestContext(request))
         except:
-            print botslib.txtexc()
+            #~ print botslib.txtexc()
             return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
 
 def plugin(request,*kw,**kwargs):
@@ -504,7 +504,7 @@ def runengine(request,*kw,**kwargs):
         except:
             txt =  botslib.txtexc()
             request.user.message_set.create(message=_(u'Errors while trying to run bots-engine.'))
-            botsglobal.logger.info(_(u'Errors while trying to run bots-engine: "%s".'),txt)
+            botsglobal.logger.info(_(u'Errors while trying to run bots-engine:\n%s.'),txt)
     return django.shortcuts.redirect('/home')
 
 def unlock(request,*kw,**kwargs):
@@ -535,7 +535,7 @@ def sendtestmailmanagers(request,*kw,**kwargs):
     except:
         txt = botslib.txtexc()
         request.user.message_set.create(message=_(u'Sending test mail failed.'))
-        botsglobal.logger.info(_(u'Sending test mail failed: "%s".'), txt)
+        botsglobal.logger.info(_(u'Sending test mail failed, error:\n%s'), txt)
         return django.shortcuts.redirect('/home')
     request.user.message_set.create(message=_(u'Sending test mail succeeded.'))
     botsglobal.logger.info(_(u'Sending test mail succeeded.'))
