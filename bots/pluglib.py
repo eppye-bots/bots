@@ -177,12 +177,12 @@ def writetodatabase(orgpluglist):
             listexistingentries = table.objects.filter(confirmtype=plug['confirmtype'],
                                                         ruletype=plug['ruletype'],
                                                         negativerule=plug['negativerule'],
-                                                        idroute=plug['idroute'],
-                                                        idchannel=plug['idchannel_id'],
-                                                        editype=plug['editype'],
-                                                        messagetype=plug['messagetype'],
-                                                        frompartner=plug['frompartner_id'],
-                                                        topartner=plug['topartner_id']).all()
+                                                        idroute=plug.get('idroute'),
+                                                        idchannel=plug.get('idchannel_id'),
+                                                        editype=plug.get('editype'),
+                                                        messagetype=plug.get('messagetype'),
+                                                        frompartner=plug.get('frompartner_id'),
+                                                        topartner=plug.get('topartner_id')).all()
 
         if listexistingentries:
             for entry in listexistingentries:

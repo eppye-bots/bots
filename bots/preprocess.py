@@ -77,7 +77,7 @@ def mailbag(ta_from,endstatus,**argv):
             sniffxml = edifile[:25]
             sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first ' real' data; some char are because of BOM, UTF-16 etc
             if sniffxml and sniffxml[0]=='<':
-                ta_to=ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='xml')  #make transaction for translated message; gets ta_info of ta_frommes
+                ta_to=ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag')  #make transaction for translated message; gets ta_info of ta_frommes
                 #~ ta_tomes.update(status=STATUSTMP,statust=OK,filename=ta_set_for_processing.filename,editype='xml') #update outmessage transaction with ta_info;
                 break;
             else:

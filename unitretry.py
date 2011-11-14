@@ -44,7 +44,7 @@ def scriptwrite(path,content):
     f.close()
 
 if __name__ == '__main__':
-    pythoninterpreter = 'C:/python27/python'
+    pythoninterpreter = 'python'
     newcommand = [pythoninterpreter,'bots-engine.py',]
     retrycommand = [pythoninterpreter,'bots-engine.py','--retry']
     
@@ -54,6 +54,11 @@ if __name__ == '__main__':
     dummylogger()
     botsinit.connect()
     
+    try:
+        os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.py'))
+        os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.pyc'))
+    except:
+        pass
     scriptwrite(os.path.join(usersys,'mappings','edifact','unitretry_2.py'),
 '''
 import bots.transform as transform
@@ -61,6 +66,8 @@ def main(inn,out):
     raise Exception('test mapping')
     transform.inn2out(inn,out)''')
 
+    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'))
+    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.pyc'))
     scriptwrite(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'),
 '''
 def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
@@ -68,7 +75,8 @@ def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
         raise Exception('test')
     return True
 ''')
-
+    
+    #
     #new;  error in mime-handling
     subprocess.call(newcommand)
     mycompare({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'send':0},getlastreport())
@@ -76,6 +84,10 @@ def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
     #retry: again same error
     subprocess.call(retrycommand)
     mycompare({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'send':0},getlastreport())
+    
+    #
+    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'))
+    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.pyc'))
     scriptwrite(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'),
 '''
 def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
@@ -91,6 +103,8 @@ def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
     subprocess.call(retrycommand)
     mycompare({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'send':0},getlastreport())
 
+    os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.py'))
+    os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.pyc'))
     scriptwrite(os.path.join(usersys,'mappings','edifact','unitretry_2.py'),
 '''
 import bots.transform as transform

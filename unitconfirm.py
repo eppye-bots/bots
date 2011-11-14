@@ -11,7 +11,17 @@ import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
 from bots.botsconfig import *
 
-'''plugin unitconfirm.zip'''
+'''
+plugin unitconfirm.zip
+
+expect:
+    17 files received/processed in run.
+    12 files without errors,
+    4 files with errors,
+    1 files got stuck,
+    24 files send in run.
+'''
+
 botssys = 'bots/botssys'
 
 
@@ -19,6 +29,7 @@ class TestMain(unittest.TestCase):
     def testroutetestmdn(self):
         lijst = utilsunit.getdir(os.path.join(botssys,'outfile/confirm/mdn/*'))
         self.failUnless(len(lijst)==0)
+        nr_rows = 0
         for row in botslib.query(u'''SELECT idta,confirmed,confirmidta
                                 FROM    ta
                                 WHERE   status=%(status)s
@@ -29,12 +40,13 @@ class TestMain(unittest.TestCase):
                                 ORDER BY idta DESC
                                 ''',
                                 {'status':210,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
-                                    
+            nr_rows += 1
             self.failUnless(row[1])
             self.failUnless(row[2]!=0)
-            break
         else:
-            self.failUnless(1==0)
+            self.failUnless(nr_rows==1)
+            
+        nr_rows = 0
         for row in botslib.query(u'''SELECT idta,confirmed,confirmidta
                                 FROM    ta
                                 WHERE   status=%(status)s
@@ -45,16 +57,17 @@ class TestMain(unittest.TestCase):
                                 ORDER BY idta DESC
                                 ''',
                                 {'status':510,'statust':DONE,'idroute':'testmdn','confirmtype':'ask-email-MDN','confirmasked':True}):
+            nr_rows += 1
             self.failUnless(row[1])
             self.failUnless(row[2]!=0)
-            break
         else:
-            self.failUnless(1==0)
+            self.failUnless(nr_rows==1)
         
 
     def testroutetestmdn2(self):
         lijst = utilsunit.getdir(os.path.join(botssys,'outfile/confirm/mdn2/*'))
         self.failUnless(len(lijst)==0)
+        nr_rows = 0
         for row in botslib.query(u'''SELECT idta,confirmed,confirmidta
                                 FROM    ta
                                 WHERE   status=%(status)s
@@ -65,11 +78,11 @@ class TestMain(unittest.TestCase):
                                 ORDER BY idta DESC
                                 ''',
                                 {'status':510,'statust':DONE,'idroute':'testmdn2','confirmtype':'ask-email-MDN','confirmasked':True}):
+            nr_rows += 1
             self.failUnless(not row[1])
             self.failUnless(row[2]==0)
-            break
         else:
-            self.failUnless(1==0)
+            self.failUnless(nr_rows==1)
 
     def testroutetest997(self):
         '''
@@ -129,7 +142,7 @@ class TestMain(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    pythoninterpreter = 'C:/python25/python'
+    pythoninterpreter = 'python'
     newcommand = [pythoninterpreter,'bots-engine.py',]
     shutil.rmtree(os.path.join(botssys, 'outfile'),ignore_errors=True)    #remove whole output directory
     subprocess.call(newcommand)

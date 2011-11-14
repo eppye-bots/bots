@@ -454,7 +454,7 @@ class var(Inmessage):
             if c == u'\n':    #line within file
                 countline += 1
                 countpos = 0            #new line, pos back to 0
-                #no continue, because \n can be record separator. In edifact: catch with skip_char
+                #no continue, because \n can be record separator. In edifact: catched with skip_char
             else:
                 countpos += 1        #position within line
             if mode_quote:          #within a quote: quote-char is also escape-char
@@ -479,17 +479,20 @@ class var(Inmessage):
                 else:
                     value += c
                     continue
-            if not mode_inrecord and c.isspace():   #ignore space between records.
-                continue
-            else:
-                mode_inrecord = 1
+            if mode_inrecord:
+                pass               #do nothing, is already in mode_inrecord
+            else: 
+                if c.isspace():   
+                    continue       #not in mode_inrecord, and a space: ignore space between records.
+                else:
+                    mode_inrecord = 1
             if c in skip_char:    #after mode_quote, but before mode_escape!!
                 continue
             if mode_escape:        #always append in escaped_mode
                 mode_escape = 0
                 value += c
                 continue
-            if not value:        #if no char in token than is is a new token; so get line and pos for (the new) token
+            if not value:        #if no char in token: this is a new token, get line and pos for (new) token
                 valueline = countline
                 valuepos = countpos
             if c == quote_char:
@@ -517,17 +520,16 @@ class var(Inmessage):
                 mode_inrecord=0
                 continue
             value += c    #just a char: append char to value
-        #end of for-loop.
-        if mode_inrecord:       #this  would  indicate  a record is not terminated correctly.
-            if isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
-                #force the closing of the  last record.
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
-                self.records += [record]    #write record to recordlist
-                record=[]
-                value = u''
-            else:
-                raise botslib.InMessageError(_(u'translation problem with lexing; last record was not closed properly'))
-        if value:
+        #end of for-loop. all characters have been processed.
+        
+        if mode_inrecord and isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
+            #force the closing of the last record of csv file.
+            #it appears a csv recor is not always closed properly
+            record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
+            self.records += [record]    #write record to recordlist
+            record=[]
+            value = u''
+        elif value:
             value = value.strip('\x00\x1a')
             if value:
                 raise botslib.InMessageError(_(u'translation problem with lexing; probably a seperator-problem, or extra characters after interchange'))

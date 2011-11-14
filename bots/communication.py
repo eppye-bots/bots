@@ -570,7 +570,7 @@ class pop3(_comsession):
                 if self.channeldict['remove']:      #on server side mail is marked to be deleted. The pop3-server will actually delete the file if the QUIT commnd is receieved!
                     self.session.dele(mailID)
                     #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. delete these as they will NOT 
-                    self.listoftamarkedfordelete.extend([ta_from.idta,ta_to.idta])
+                    self.listoftamarkedfordelete += [ta_from.idta,ta_to.idta]
                     
             except:         #something went wrong for this mail.  
                 txt=botslib.txtexc()

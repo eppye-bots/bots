@@ -159,7 +159,7 @@ class Outmessage(message.Message):
         for grammarfield in structure_record[FIELDS]:       #loop all fields in grammar-definition
             if grammarfield[ISFIELD]:    #if field (no composite)
                 if grammarfield[ID] in noderecord  and noderecord[grammarfield[ID]]:      #field exists in outgoing message and has data
-                    buildrecord.extend(buffer)          #write the buffer to buildrecord
+                    buildrecord += buffer          #write the buffer to buildrecord
                     buffer=[]                           #clear the buffer
                     buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:False}]      #append new field
                 else:                                   #there is no data for this field
@@ -174,9 +174,9 @@ class Outmessage(message.Message):
                 subiswritten=False      #check if composite contains data
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
                     if grammarsubfield[ID] in noderecord and noderecord[grammarsubfield[ID]]:   #field exists in outgoing message and has data
-                        buildrecord.extend(buffer)      #write buffer
+                        buildrecord += buffer           #write buffer
                         buffer=[]                       #clear buffer
-                        buildrecord.extend(subbuffer)   #write subbuffer
+                        buildrecord += subbuffer        #write subbuffer
                         subbuffer=[]                    #clear subbuffer
                         buildrecord += [{VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst}]      #append field
                         subiswritten = True    

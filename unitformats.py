@@ -245,10 +245,11 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         #                    length            decimals minlength 
         self.assertEqual(self.edi._formatfield('abcde',tfield1,testdummy), 'abcde','basic')
         self.assertEqual(self.edi._formatfield('a	b',tfield1,testdummy), 'a	b','basic')
-        self.assertEqual(self.edi._formatfield('a',tfield1,testdummy), 'a ','basic')
-        self.assertEqual(self.edi._formatfield('  ',tfield1,testdummy), '  ','basic')
-        self.assertEqual(self.edi._formatfield(' ',tfield1,testdummy), '  ','basic')
-        self.assertEqual(self.edi._formatfield('',tfield1,testdummy), '  ','basic')
+        self.assertEqual(self.edi._formatfield('aa',tfield1,testdummy), 'aa','basic')
+        self.assertEqual(self.edi._formatfield('aaa',tfield1,testdummy), 'aaa','basic')
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'a',tfield1,testdummy) #field too small
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,' ',tfield1,testdummy) #field too small
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'',tfield1,testdummy) #field too small
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'abcdef',tfield1,testdummy) #no valid date
         
 class TestFormatFieldFixedOutmessage(unittest.TestCase):

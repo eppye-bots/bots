@@ -311,7 +311,7 @@ class Grammar(object):
             collision.append(i[ID])
             if LEVEL in i:
                 returncollision,returnheaderissave = self._checkbackcollision(i[LEVEL],[i[ID]])
-                collision.extend(returncollision)
+                collision += returncollision
                 if returnheaderissave:  #if one of segment(groups) is required, there is always a segment after the header segment; so remove header from nowcollision:
                     collision.remove(i[ID])
         return collision,headerissave    #collision is used to update on higher level; cleared indicates the header segment can not collide anymore
