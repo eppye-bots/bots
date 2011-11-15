@@ -38,7 +38,7 @@ def mydeepcopy(orgrecorddef):
         newsegment = []
         for field in segment:
             newsegment.append(field[:])
-            if not field[ISFIELD]:      #if composite: deepcopy all subfields
+            if not field[ISFIELD]:      #if composite: 'deepcopy' all subfields
                 newsegment[-1][2]=[]
                 for subfield in field[2]:
                     newsegment[-1][2].append(subfield[:])
@@ -75,6 +75,8 @@ class Grammar(object):
         #***********every module is read once, using python import-machinery.
         #***********if a structure of recorddef has been read, Bots remembers this and skip most of the checks
         self.module,self.grammarname = botslib.botsimport(soortpythonfile,editype + '.' + grammarname)
+        if not hasattr(self.module, 'checked'):
+            self.module.checked = False
         
     def initsyntax(self,includedefault):
         ''' Update default syntax from class with syntax read from grammar. '''
@@ -109,12 +111,12 @@ class Grammar(object):
         except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
             self.nextmessageblock = None
         if self._checkstructurerequired:
-            #in each imported grammar-part is a mark to see if it has been read already (and all checks are done..)
             self._dostructure()
             self.structure = copy.deepcopy(self.structurefromgrammar)   #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
             self._dorecorddefs()
             self.recorddefs = mydeepcopy(self.recorddefsfromgrammar)   #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
             self._linkrecorddefs2structure(self.structure)
+            self.module.checked = True             #in each imported grammar-is a mark to see if it has been checked.
 
     def _dorecorddefs(self):
         ''' 1. check the recorddefinitions for validity.
@@ -124,13 +126,11 @@ class Grammar(object):
             self.recorddefsfromgrammar = getattr(self.module, 'recorddefs')
         except AttributeError:
             raise botslib.GrammarError(_(u'Grammar "$grammar": no recorddefs.'),grammar=self.grammarname)
+        #check if grammar is read & checked earlier in this run. If so, we can skip all checks.
+        if self.module.checked:
+            return
         if not isinstance(self.recorddefsfromgrammar,dict):
             raise botslib.GrammarError(_(u'Grammar "$grammar": recorddefs is not a dict{}.'),grammar=self.grammarname)
-        #check if recorddefsfromgrammar has been read before. If so, we can skip all checks.
-        for fields in self.recorddefsfromgrammar.itervalues():
-            if len(fields[0]) == 8:
-                return
-            break
         for recordID ,fields in self.recorddefsfromgrammar.iteritems():
             if not isinstance(recordID,basestring):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": is not a string.'),grammar=self.grammarname,record=recordID)
@@ -251,11 +251,11 @@ class Grammar(object):
             self.structurefromgrammar = getattr(self.module, 'structure')
         except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
             raise botslib.GrammarError(_(u'Grammar "$grammar": no structure, is required.'),grammar=self.grammarname)
-        #~ self.structure = copy.deepcopy(structurefromgrammar)
+        #check if grammar is read & checked earlier in this run. If so, we can skip all checks.
+        if self.module.checked:
+            return
         if len(self.structurefromgrammar) != 1:                        #every structure has only 1 root!!
             raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: only one root record allowed.'),grammar=self.grammarname)
-        if MPATH in self.structurefromgrammar[0]:
-            return 
         self._checkstructure(self.structurefromgrammar,[])
         if self.syntax['checkcollision']:
             self._checkbackcollision(self.structurefromgrammar)
