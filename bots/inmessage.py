@@ -85,7 +85,7 @@ class Inmessage(message.Message):
         '''
         self.root = node
 
-    def close(self,ta_fromfile,error):
+    def handleconfirm(self,ta_fromfile,error):
         ''' end of edi file handling.
             eg writing of confirmations etc.
         '''
@@ -676,11 +676,12 @@ class edifact(var):
         except UnicodeDecodeError, flup:
             raise botslib.InMessageError(_(u'not allowed chars in incoming edi file (for translation) at/after filepos: $content'),content=flup[2])
 
-
-
     def checkenvelope(self):
+        self.confirmationlist = []              #information about the edifact file for confirmation/CONTRL; for edifact this is done per interchange (UNB-UNZ)
         for nodeunb in self.getloop({'BOTSID':'UNB'}):
             botsglobal.logmap.debug(u'Start parsing edifact envelopes')
+            sender = nodeunb.get({'BOTSID':'UNB','S002.0004':None})
+            receiver = nodeunb.get({'BOTSID':'UNB','S003.0010':None})
             UNBreference = nodeunb.get({'BOTSID':'UNB','0020':None})
             UNZreference = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0020':None})
             if UNBreference != UNZreference:
@@ -689,7 +690,13 @@ class edifact(var):
             messagecount = len(nodeunb.children) - 1
             if int(UNZcount) != messagecount:
                 raise botslib.InMessageError(_(u'Count in messages in UNZ is $UNZcount; should be equal to number of messages $messagecount.'),UNZcount=UNZcount,messagecount=messagecount)
+            self.confirmationlist.append({'UNBreference':UNBreference,'UNZcount':UNZcount,'sender':sender,'receiver':receiver,'UNHlist':[]})   #gather information about functional group (GS-GE)
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
+                UNHtype = nodeunh.get({'BOTSID':'UNH','S009.0065':None})
+                UNHversion = nodeunh.get({'BOTSID':'UNH','S009.0052':None})
+                UNHrelease = nodeunh.get({'BOTSID':'UNH','S009.0054':None})
+                UNHcontrollingagency = nodeunh.get({'BOTSID':'UNH','S009.0051':None})
+                UNHassociationassigned = nodeunh.get({'BOTSID':'UNH','S009.0057':None})
                 UNHreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                 UNTreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                 if UNHreference != UNTreference:
@@ -698,6 +705,7 @@ class edifact(var):
                 segmentcount = nodeunh.getcount()
                 if int(UNTcount) != segmentcount:
                     raise botslib.InMessageError(_(u'Segmentcount in UNT is $UNTcount; should be equal to number of segments $segmentcount.'),UNTcount=UNTcount,segmentcount=segmentcount)
+                self.confirmationlist[-1]['UNHlist'].append({'UNHreference':UNHreference,'UNHtype':UNHtype,'UNHversion':UNHversion,'UNHrelease':UNHrelease,'UNHcontrollingagency':UNHcontrollingagency,'UNHassociationassigned':UNHassociationassigned})   #add info per message to interchange
             for nodeung in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNG'}):
                 UNGreference = nodeung.get({'BOTSID':'UNG','0048':None})
                 UNEreference = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0048':None})
@@ -718,6 +726,49 @@ class edifact(var):
                         raise botslib.InMessageError(_(u'Segmentcount in UNT is $UNTcount; should be equal to number of segments $segmentcount.'),UNTcount=UNTcount,segmentcount=segmentcount)
             botsglobal.logmap.debug(u'Parsing edifact envelopes is OK')
 
+    def handleconfirm(self,ta_fromfile,error):
+        ''' end of edi file handling.
+            eg writing of confirmations etc.
+            send CONTRL messages
+            parameter 'error' is not used
+        '''
+        #filter the confirmationlist
+        tmpconfirmationlist = []
+        for confirmation in self.confirmationlist:
+            tmpmessagelist = []
+            for message in confirmation['UNHlist']:
+                if message['UNHtype'] == 'CONTRL': #do not generate CONTRL for a CONTRL message
+                    continue
+                if botslib.checkconfirmrules('send-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
+                                                topartner=confirmation['sender'],frompartner=confirmation['receiver'],
+                                                editype='edifact',messagetype=message['UNHtype']):
+                    tmpmessagelist.append(message)
+            confirmation['UNHlist'] = tmpmessagelist
+            if not tmpmessagelist: #if no messages/transactions in interchange
+                continue
+            tmpconfirmationlist.append(confirmation)
+        self.confirmationlist = tmpconfirmationlist
+        for confirmation in self.confirmationlist:
+            reference=str(botslib.unique('messagecounter'))
+            ta_confirmation = ta_fromfile.copyta(status=TRANSLATED,reference=reference)
+            filename = str(ta_confirmation.idta)
+            out = outmessage.outmessage_init(editype='edifact',messagetype='CONTRL22UNEAN002',filename=filename)    #make outmessage object
+            out.ta_info['frompartner']=confirmation['receiver']
+            out.ta_info['topartner']=confirmation['sender']
+            out.put({'BOTSID':'UNH','0062':reference,'S009.0065':'CONTRL','S009.0052':'2','S009.0054':'2','S009.0051':'UN','S009.0057':'EAN002'})
+            out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'8','S002.0004':confirmation['sender'],'S003.0010':confirmation['sender'],'0020':confirmation['UNBreference']}) #8: interchange received
+            for message in confirmation['UNHlist']:
+                lou = out.putloop({'BOTSID':'UNH'},{'BOTSID':'UCM'})
+                lou.put({'BOTSID':'UCM','0083':'7','S009.0065':message['UNHtype'],'S009.0052':message['UNHversion'],'S009.0054':message['UNHrelease'],'S009.0051':message['UNHcontrollingagency'],'0062':message['UNHreference']})
+                lou.put({'BOTSID':'UCM','S009.0057':message['UNHassociationassigned']})
+            out.put({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':out.getcount()+1,'0062':reference})  #last line (counts the segments produced in out-message)
+            out.writeall()   #write tomessage (result of translation)
+            botsglobal.logger.debug(u'Send edifact confirmation (CONTRL) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
+                self.ta_info['idroute'],self.ta_info['fromchannel'],confirmation['receiver'],confirmation['sender'])
+            self.confirminfo = dict(confirmtype='send-edifact-CONTRL',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
+            ta_confirmation.update(statust=OK,**out.ta_info)    #update ta for confirmation
+
+
 class x12(var):
     ''' class for edifact inmessage objects.'''
     def _getmessagetype(self,messagetypefromsubtranslation,inode):
@@ -726,8 +777,8 @@ class x12(var):
         return messagetypefromsubtranslation +  inode.record['GS08']
 
     def _sniff(self):
-        ''' examine a read file for syntax parameters and correctness of protocol
-            eg parse UNA, find UNB, get charset and version
+        ''' examine a file for syntax parameters and correctness of protocol
+            eg parse ISA, get charset and version
         '''
         #goto char that is not whitespace
         for count,c in enumerate(self.rawinput):
@@ -757,7 +808,7 @@ class x12(var):
 
     def checkenvelope(self):
         ''' check envelopes, gather information to generate 997 '''
-        self.confirmationlist = []
+        self.confirmationlist = []              #information about the x12 file for confirmation/997; for x12 this is done per functional group
         #~ self.root.display()
         for nodeisa in self.getloop({'BOTSID':'ISA'}):
             botsglobal.logmap.debug(u'Start parsing X12 envelopes')
@@ -768,7 +819,6 @@ class x12(var):
             if ISAreference != IEAreference:
                 raise botslib.InMessageError(_(u'ISA-reference is "$ISAreference"; should be equal to IEA-reference "$IEAreference".'),ISAreference=ISAreference,IEAreference=IEAreference)
             IEAcount = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':None})
-            #~ groupcount = len(nodeisa.children) - 1
             groupcount = nodeisa.getcountoccurrences({'BOTSID':'ISA'},{'BOTSID':'GS'})
             if int(IEAcount) != groupcount:
                 raise botslib.InMessageError(_(u'Count in IEA-IEA01 is $IEAcount; should be equal to number of groups $groupcount.'),IEAcount=IEAcount,groupcount=groupcount)
@@ -782,7 +832,7 @@ class x12(var):
                 messagecount = len(nodegs.children) - 1
                 if int(GEcount) != messagecount:
                     raise botslib.InMessageError(_(u'Count in GE-GE01 is $GEcount; should be equal to number of transactions: $messagecount.'),GEcount=GEcount,messagecount=messagecount)
-                self.confirmationlist.append({'GSqualifier':GSqualifier,'GSreference':GSreference,'GEcount':GEcount,'sender':sender,'receiver':receiver,'STlist':[]})
+                self.confirmationlist.append({'GSqualifier':GSqualifier,'GSreference':GSreference,'GEcount':GEcount,'sender':sender,'receiver':receiver,'STlist':[]})   #gather information about functional group (GS-GE)
                 for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
                     STqualifier = nodest.get({'BOTSID':'ST','ST01':None})
                     STreference = nodest.get({'BOTSID':'ST','ST02':None})
@@ -794,16 +844,15 @@ class x12(var):
                     segmentcount = nodest.getcount()
                     if int(SEcount) != segmentcount:
                         raise botslib.InMessageError(_(u'Count in SE-SE01 is $SEcount; should be equal to number of segments $segmentcount.'),SEcount=SEcount,segmentcount=segmentcount)
-                    self.confirmationlist[-1]['STlist'].append({'STreference':STreference,'STqualifier':STqualifier})
+                    self.confirmationlist[-1]['STlist'].append({'STreference':STreference,'STqualifier':STqualifier})   #add info per message to functional group
             botsglobal.logmap.debug(u'Parsing X12 envelopes is OK')
 
-    def close(self,ta_fromfile,error):
+    def handleconfirm(self,ta_fromfile,error):
         ''' end of edi file handling.
             eg writing of confirmations etc.
             send 997 messages
+            parameter 'error' is not used
         '''
-        if error:   #check if no error
-            return
         #filter the confirmationlist
         tmpconfirmationlist = []
         for confirmation in self.confirmationlist:
@@ -840,7 +889,6 @@ class x12(var):
                 self.ta_info['idroute'],self.ta_info['fromchannel'],confirmation['receiver'],confirmation['sender'])
             self.confirminfo = dict(confirmtype='send-x12-997',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
             ta_confirmation.update(statust=OK,**out.ta_info)    #update ta for confirmation
-
 
 
 class tradacoms(var):

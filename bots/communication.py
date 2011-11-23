@@ -465,9 +465,9 @@ class _comsession(object):
                             confirmtype = 'send-email-MDN'
                             confirmed = True
                             confirmasked = True
-                nrmimesaved = savemime(msg)
-                if not nrmimesaved:
-                    raise botslib.CommunicationInError (_(u'No valid attachment in received email'))
+                    nrmimesaved = savemime(msg)
+                    if not nrmimesaved:
+                        raise botslib.CommunicationInError (_(u'No valid attachment in received email'))
             except:
                 txt=botslib.txtexc()
                 ta_mime.failure()

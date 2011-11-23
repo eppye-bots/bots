@@ -81,10 +81,12 @@ CHANNELTYPE = (
     ('intercommit', _(u'intercommit')),
     )
 CONFIRMTYPE = [
-    ('ask-email-MDN',_(u'ask-email-MDN')),
-    ('send-email-MDN',_(u'send-email-MDN')),
-    ('ask-x12-997',_(u'ask-x12-997')),
-    ('send-x12-997',_(u'send-x12-997')),
+    ('ask-email-MDN',_(u'ask an email confirmation (MDN) when sending')),
+    ('send-email-MDN',_(u'send an email confirmation (MDN) when receiving')),
+    ('ask-x12-997',_(u'ask a x12 confirmation (997) when sending')),
+    ('send-x12-997',_(u'send a x12 confirmation (997) when receiving')),
+    ('ask-edifact-CONTRL',_(u'ask an edifact confirmation (CONTRL) when sending')),
+    ('send-edifact-CONTRL',_(u'send an edifact confirmation (CONTRL) when receiving')),
     ]
 RULETYPE = (
     ('all',_(u'all')),

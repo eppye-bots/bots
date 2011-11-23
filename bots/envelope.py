@@ -262,6 +262,12 @@ class edifact(Envelope):
         self.writefilelist(tofile)
         tofile.write(self.out._record2string(self.out.records[-1]))
         tofile.close()
+        if self.ta_info['messagetype'][:6]!='CONTRL' and botslib.checkconfirmrules('ask-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
+                                                                                topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
+                                                                                editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype']):
+            self.ta_info['confirmtype'] = u'ask-edifact-CONTRL'
+            self.ta_info['confirmasked'] = True
+
 
 class tradacoms(Envelope):
     ''' Generate STX and END segment; fill with appropriate data, write to interchange file.'''

@@ -129,13 +129,13 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
 
         #exceptions file_in-level
         except:
-            #~ edifile.close(ta_fromfile,error=True)    #only useful if errors are reported in acknowledgement (eg x12 997). Not used now.
+            #~ edifile.handleconfirm(ta_fromfile,error=True)    #only useful if errors are reported in acknowledgement (eg x12 997). Not used now.
             txt=botslib.txtexc()
             ta_parsedfile.failure()
             ta_parsedfile.update(statust=ERROR,errortext=txt)
             botsglobal.logger.debug(u'Error reading and parsing input file:\n%s',txt)
         else:
-            edifile.close(ta_fromfile,error=False)
+            edifile.handleconfirm(ta_fromfile,error=False)
             ta_fromfile.update(statust=DONE)
             ta_parsedfile.update(statust=DONE,**edifile.confirminfo)
             botsglobal.logger.debug(u'Successfull read and parse of input file')
@@ -143,7 +143,10 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         #~ gc.collect()
     #~ gc.enable()
 
-
+#*********************************************************************
+#*** utily functions for persist: store things in the bots database. 
+#*** this is intended as a memory stretching across messages.
+#*********************************************************************
 def persist_add(domein,botskey,value):
     ''' store persistent values in db.
     '''
@@ -195,6 +198,12 @@ def persist_lookup(domein,botskey):
         return pickle.loads(str(row['content']))
     return None
 
+#*********************************************************************
+#*** utily functions for codeconversion
+#***   2 types: codeconversion via database tabel ccode, and via file.
+#*** 20111116: codeconversion via file is depreciated, will disappear.
+#*********************************************************************
+#***code conversion via database tabel ccode
 def safecodetconversion(ccodeid,leftcode,field='rightcode'):
     ''' converts code using a db-table.
         converted value is returned. 
@@ -210,8 +219,7 @@ def safecodetconversion(ccodeid,leftcode,field='rightcode'):
     return leftcode
 
 def getcodeset(ccodeid,leftcode,field='rightcode'):
-    '''
-       Get a code set 
+    ''' Get a code set 
     '''
     return list(botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
@@ -259,6 +267,7 @@ def rcodetconversion(ccodeid,rightcode,field='leftcode'):
         return row[field]
     raise botslib.CodeConversionError(_(u'Value "$value" not in codetconversions, user table "$table".'),value=rightcode,table=ccodeid)
 
+#***code conversion via file. 20111116: depreciated
 def safecodeconversion(modulename,value):
     ''' converts code using a codelist.
         converted value is returned. 
@@ -304,9 +313,8 @@ def rcodeconversion(modulename,value):
         raise botslib.CodeConversionError(_(u'Value "$value" not in file for reversed codeconversion "$filename".'),value=value,filename=filename)
 
 #*********************************************************************
-#*** utily functions for calculationg/generating/checking EAN/GTIN/GLN
+#*** utily functions for calculating/generating/checking EAN/GTIN/GLN
 #*********************************************************************
-
 def calceancheckdigit(ean):
     ''' input: EAN without checkdigit; returns the checkdigit'''
     try:
@@ -335,6 +343,9 @@ def addeancheckdigit(ean):
     ''' input: EAN without checkdigit; returns EAN with checkdigit'''
     return ean+calceancheckdigit(ean)
 
+#*********************************************************************
+#*** div utily functions for mappings
+#*********************************************************************
 def unique(domein):
     ''' generate unique number within range domein.
         uses db to keep track of last generated number.
@@ -380,5 +391,3 @@ def datemask(value,frommask,tomask):
     for c in tomask:
         terug += convdict.get(c,[c]).pop(0)
     return terug
-
-
