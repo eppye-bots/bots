@@ -16,7 +16,7 @@ admin.site.disable_action('delete_selected')
 
 
 class BotsAdmin(admin.ModelAdmin):
-    list_per_page = botsglobal.ini.getint('settings','limit',30)
+    list_per_page = botsglobal.ini.getint('settings','adminlimit',botsglobal.ini.getint('settings','limit',30))
     save_as = True
 
     def delete_view(self, request, object_id, extra_context=None):
