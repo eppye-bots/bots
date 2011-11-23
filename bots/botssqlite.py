@@ -50,6 +50,4 @@ class BotsCursor(sqlite.Cursor):
             sqlite.Cursor.execute(self,string)
         else:
             sqlite.Cursor.execute(self,reformatparamstyle.sub(u''':\g<name>''',string),parameters)
-    #~ def execute(self,string,*args):
-        #~ sqlite.Cursor.execute(self,reformatparamstyle.sub(u''':\g<name>''',string),*args)
 
