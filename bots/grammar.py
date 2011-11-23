@@ -31,25 +31,14 @@ def syntaxread(soortpythonfile,editype,grammarname):
     terug.initsyntax(includedefault=False)
     return terug
 
-def mydeepcopy(orgrecorddef):
-    ''' this is much faster than copy.deepcopy'''
-    newrecorddef = {}
-    for tag,segment in orgrecorddef.iteritems():
-        newsegment = []
-        for field in segment:
-            newsegment.append(field[:])
-            if not field[ISFIELD]:      #if composite: 'deepcopy' all subfields
-                newsegment[-1][2]=[]
-                for subfield in field[2]:
-                    newsegment[-1][2].append(subfield[:])
-        newrecorddef[tag] = newsegment
-    return newrecorddef
-
 
 class Grammar(object):
     ''' Class for translation grammar. The grammar is used in reading or writing an edi file.
         Description of the grammar file: see user manual.
         The grammar is read from the grammar file.
+        Grammar file has several grammar parts , eg 'structure'and 'recorddefs'. 
+        every grammar part is in a module is either the grammar part itself or a import from another module.
+        every module is read once, (default python import-machinery).
         The information in a grammar is checked and manipulated.
         
         structure of self.grammar:
@@ -66,17 +55,14 @@ class Grammar(object):
             fields is tuple of (field or subfield)
             field is tuple of (ID, MANDATORY, LENGTH, FORMAT)
             subfield is tuple of (ID, MANDATORY, tuple of fields)
+            
+        if a structure or recorddef has been read, Bots remembers this and skip most of the checks.
+        
     '''
     _checkstructurerequired=True
     
     def __init__(self,soortpythonfile,editype,grammarname):
-        #***********import grammar-file. Grammar file has several grammar parts , eg 'structure'and 'recorddefs'. 
-        #***********every grammar part is in a module is either the grammar part itself or a import from another module.
-        #***********every module is read once, using python import-machinery.
-        #***********if a structure of recorddef has been read, Bots remembers this and skip most of the checks
         self.module,self.grammarname = botslib.botsimport(soortpythonfile,editype + '.' + grammarname)
-        if not hasattr(self.module, 'checked'):
-            self.module.checked = False
         
     def initsyntax(self,includedefault):
         ''' Update default syntax from class with syntax read from grammar. '''
@@ -111,27 +97,37 @@ class Grammar(object):
         except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
             self.nextmessageblock = None
         if self._checkstructurerequired:
-            self._dostructure()
-            self.structure = copy.deepcopy(self.structurefromgrammar)   #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
-            self._dorecorddefs()
-            self.recorddefs = mydeepcopy(self.recorddefsfromgrammar)   #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
+            try:
+                self._dostructure()
+            except:
+                self.structurefromgrammar[0]['error'] = True                #mark the structure as having errors
+                raise
+            try:
+                self._dorecorddefs()
+            except:
+                self.recorddefs['BOTS_1$@#%_error'] = True                  #mark structure has been read with errors
+                raise
+            else:
+                self.recorddefs['BOTS_1$@#%_error'] = False                 #mark structure has been read and checked
+            self.structure = copy.deepcopy(self.structurefromgrammar)       #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
             self._linkrecorddefs2structure(self.structure)
-            self.module.checked = True             #in each imported grammar-is a mark to see if it has been checked.
 
     def _dorecorddefs(self):
         ''' 1. check the recorddefinitions for validity.
             2. adapt in field-records: normalise length lists, set bool ISFIELD, etc
         '''
         try:    
-            self.recorddefsfromgrammar = getattr(self.module, 'recorddefs')
+            self.recorddefs = getattr(self.module, 'recorddefs')
         except AttributeError:
             raise botslib.GrammarError(_(u'Grammar "$grammar": no recorddefs.'),grammar=self.grammarname)
-        #check if grammar is read & checked earlier in this run. If so, we can skip all checks.
-        if self.module.checked:
-            return
-        if not isinstance(self.recorddefsfromgrammar,dict):
+        if not isinstance(self.recorddefs,dict):
             raise botslib.GrammarError(_(u'Grammar "$grammar": recorddefs is not a dict{}.'),grammar=self.grammarname)
-        for recordID ,fields in self.recorddefsfromgrammar.iteritems():
+        #check if grammar is read & checked earlier in this run. If so, we can skip all checks.
+        if 'BOTS_1$@#%_error' in self.recorddefs:   #if checked before
+            if self.recorddefs['BOTS_1$@#%_error']:     #if grammar had errors
+                raise botslib.GrammarError(_(u'Grammar "$grammar" has error that is already reported in this run.'),grammar=self.grammarname)
+            return      #no error, skip checks
+        for recordID ,fields in self.recorddefs.iteritems():
             if not isinstance(recordID,basestring):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": is not a string.'),grammar=self.grammarname,record=recordID)
             if not recordID:
@@ -164,9 +160,9 @@ class Grammar(object):
                 
             if not hasBOTSID:   #there is no field 'BOTSID' in record
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record": no field BOTSID.'),grammar=self.grammarname,record=recordID)
-        if self.syntax['noBOTSID'] and len(self.recorddefsfromgrammar) != 1:
+        if self.syntax['noBOTSID'] and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "$grammar": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),grammar=self.grammarname)
-        if self.nextmessageblock is not None and len(self.recorddefsfromgrammar) != 1:
+        if self.nextmessageblock is not None and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "$grammar": if nextmessageblock: there can be only one record in recorddefs.'),grammar=self.grammarname)
                 
         
@@ -210,7 +206,6 @@ class Grammar(object):
             if not isinstance(field[FORMAT],basestring):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": format "$format" has to be a string.'),grammar=self.grammarname,record=recordID,field=field[ID],format=field[FORMAT])
             self._manipulatefieldformat(field,recordID)
-            #~ if field[FORMAT] in ['N','I','R']:
             if field[BFORMAT] in ['N','I','R']:
                 if isinstance(field[LENGTH],float):
                     field[DECIMALS] = int( round((field[LENGTH]-int(field[LENGTH]))*10) )  #fill DECIMALS
@@ -251,11 +246,13 @@ class Grammar(object):
             self.structurefromgrammar = getattr(self.module, 'structure')
         except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
             raise botslib.GrammarError(_(u'Grammar "$grammar": no structure, is required.'),grammar=self.grammarname)
-        #check if grammar is read & checked earlier in this run. If so, we can skip all checks.
-        if self.module.checked:
-            return
         if len(self.structurefromgrammar) != 1:                        #every structure has only 1 root!!
             raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: only one root record allowed.'),grammar=self.grammarname)
+        #check if structure is read & checked earlier in this run. If so, we can skip all checks.
+        if 'error' in self.structurefromgrammar[0]:
+            pass        # grammar has been read before, but there are errors. Do nothing here, same errors will be raised again.
+        elif MPATH in self.structurefromgrammar[0]:
+            return      # grammar has been red before, with no errors. Do no checks.
         self._checkstructure(self.structurefromgrammar,[])
         if self.syntax['checkcollision']:
             self._checkbackcollision(self.structurefromgrammar)
@@ -264,7 +261,7 @@ class Grammar(object):
 
     def _checkstructure(self,structure,mpath):
         ''' Recursive
-            1.   Checks sanity of structure.All kinds of things are checked
+            1.   Check structure.
             2.   Add keys: mpath, count
         '''
         if not isinstance(structure,list):
@@ -380,14 +377,12 @@ class Grammar(object):
         except KeyError:
             raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": format "$format" has to be one of "$keys".'),grammar=self.grammarname,record=recordID,field=field[ID],format=field[FORMAT],keys=self.formatconvert.keys())
 
-#the grammar subclasses, equivalent to the editypes Bots can handle.
-#contains the defaultsyntax
+#grammar subclasses. contain the defaultsyntax
 class test(Grammar):
     defaultsyntax = {
         'checkcollision':True,
         'noBOTSID':False,
         }
-        
 class csv(Grammar):
     defaultsyntax = {
         'acceptspaceinnumfield':True,   #only really used in fixed formats
@@ -419,7 +414,6 @@ class csv(Grammar):
         'triad':'',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         }
-        
 class fixed(Grammar):
     defaultsyntax = {
         'acceptspaceinnumfield':True,   #only really used in fixed formats
@@ -453,7 +447,6 @@ class fixed(Grammar):
         'triad':'',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         }
-        
 class idoc(fixed):
     defaultsyntax = {
         'acceptspaceinnumfield':True,   #only really used in fixed formats
@@ -490,7 +483,6 @@ class idoc(fixed):
         'MANDT':'0',
         'DOCNUM':'0',
         }
-        
 class xml(Grammar):
     defaultsyntax = {
         'add_crlfafterrecord_sep':'',
@@ -568,10 +560,8 @@ class xmlnocheck(xml):
         'triad':'',
         'version':'1.0',        #as used in xml prolog
         }
-        
 class template(Grammar):
     _checkstructurerequired=False
-    
     defaultsyntax = { \
         'add_crlfafterrecord_sep':'',
         'charset':'utf-8',
@@ -600,7 +590,6 @@ class template(Grammar):
         'stripfield_sep':False,
         'triad':'',
         }
-        
 class edifact(Grammar):
     defaultsyntax = {
         'add_crlfafterrecord_sep':'\r\n',
@@ -641,7 +630,6 @@ class edifact(Grammar):
         'AN':'A',
         'N':'R',
         }
-
 class x12(Grammar):
     defaultsyntax = {
         'add_crlfafterrecord_sep':'\r\n',
@@ -710,7 +698,6 @@ class x12(Grammar):
                 field[DECIMALS] = int(field[FORMAT][1])
             else:
                 field[DECIMALS] = 0
-
 class json(Grammar):
     defaultsyntax = {
         'add_crlfafterrecord_sep':'',
@@ -813,6 +800,5 @@ class tradacoms(Grammar):
         '9':'R',
         '9V9':'I',
         }
-
 class database(jsonnocheck):
     pass
