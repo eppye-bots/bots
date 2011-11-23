@@ -136,17 +136,12 @@ def codec_search_function(encoding):
 def botscharsetreplace(info):
     '''replaces an char outside a charset by a user defined char. Useful eg for fixed records: recordlength does not change. Do not know if this works for eg UTF-8...'''
     return (botsglobal.botsreplacechar, info.start+1)
-    #~ if isinstance(info, UnicodeEncodeError):
-    #~ else:   #if isinstance(info, UnicodeDecodeError) or isinstance(info, UnicodeTranslateError):
-        #~ return (u' ', info.start+1)
-
 
 def initenginelogging():
     convertini2logger={'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL}
     # create main logger 'bots'
     botsglobal.logger = logging.getLogger('bots')
     botsglobal.logger.setLevel(logging.DEBUG)
-
     # create rotating file handler
     log_file = botslib.join(botsglobal.ini.get('directories','logging'),'engine.log')
     rotatingfile = logging.handlers.RotatingFileHandler(log_file,backupCount=botsglobal.ini.getint('settings','log_file_number',10))
@@ -156,15 +151,12 @@ def initenginelogging():
     rotatingfile.doRollover()   #each run a new log file is used; old one is rotated
     # add rotating file handler to main logger
     botsglobal.logger.addHandler(rotatingfile)
-    
     #logger for trace of mapping; tried to use filters but got this not to work.....
     botsglobal.logmap = logging.getLogger('bots.map')
     if  not botsglobal.ini.getboolean('settings','mappingdebug',False):
         botsglobal.logmap.setLevel(logging.CRITICAL)
-
     #logger for reading edifile. is now used only very limited (1 place); is done with 'if'
     #~ botsglobal.ini.getboolean('settings','readrecorddebug',False)
-
     # create console handler
     if botsglobal.ini.getboolean('settings','log_console',True):
         console = logging.StreamHandler()
@@ -172,7 +164,6 @@ def initenginelogging():
         consuleformat = logging.Formatter("%(levelname)-8s %(message)s")
         console.setFormatter(consuleformat) # add formatter to console
         botsglobal.logger.addHandler(console)  # add console to logger
-
 
 def connect():
     #different connect code per tyoe of database
@@ -202,5 +193,3 @@ def connect():
                                                                                     botsglobal.settings.DATABASE_USER,
                                                                                     botsglobal.settings.DATABASE_PASSWORD),connection_factory=psycopg2.extras.DictConnection)
         botsglobal.db.set_client_encoding('UNICODE')
-        
-
