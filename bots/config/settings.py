@@ -1,14 +1,7 @@
 # Django settings for bots project.
 import os
 import bots
-#do some testing for django versions; eg for differnt template directories
 import django
-if django.VERSION[0] < 1 or (django.VERSION[0] == 1 and django.VERSION[1] == 0): #django.VERSION is tuple: major version, minor version, etc
-    print 'bots needs django > 1.1; you use version', django.VERSION
-if django.VERSION[0] == 1 and django.VERSION[1] == 1:
-    bots_templates = 'templates'
-else:
-    bots_templates = 'templates1.2'
 
 #*******settings for bots error reports**********************************
 MANAGERS = (    #bots will send error reports to the MANAGERS
@@ -43,7 +36,7 @@ LOGOUT_URL = '/logout/'
 #~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
 
 TEMPLATE_DIRS = (
-    os.path.join(PROJECT_PATH, bots_templates),
+    os.path.join(PROJECT_PATH, 'templates'),
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
