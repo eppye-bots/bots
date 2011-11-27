@@ -204,9 +204,9 @@ def persist_lookup(domein,botskey):
 #*** 20111116: codeconversion via file is depreciated, will disappear.
 #*********************************************************************
 #***code conversion via database tabel ccode
-def safecodetconversion(ccodeid,leftcode,field='rightcode'):
+def ccode(ccodeid,leftcode,field='rightcode'):
     ''' converts code using a db-table.
-        converted value is returned. 
+        converted value is returned, exception if not there.
     '''
     for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
@@ -216,7 +216,39 @@ def safecodetconversion(ccodeid,leftcode,field='rightcode'):
                                  'leftcode':leftcode,
                                 }):
         return row[field]
-    return leftcode
+    raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
+codetconversion = ccode
+
+def safe_ccode(ccodeid,leftcode,field='rightcode'):
+    ''' converts code using a db-table.
+        converted value is returned, if not there return orginal code
+    '''
+    try:
+        return ccode(ccodeid,leftcode,field)
+    except botslib.CodeConversionError:
+        return leftcode
+safecodetconversion = safe_ccode
+
+def reverse_ccode(ccodeid,rightcode,field='leftcode'):
+    ''' as ccode but reversed lookup.'''
+    for row in botslib.query(u'''SELECT ''' +field+ '''
+                                FROM    ccode
+                                WHERE   ccodeid_id = %(ccodeid)s
+                                AND     rightcode = %(rightcode)s''',
+                                {'ccodeid':ccodeid,
+                                 'rightcode':rightcode,
+                                }):
+        return row[field]
+    raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=rightcode,table=ccodeid)
+rcodetconversion = reverse_ccode
+
+def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):
+    ''' as safe_ccode but reversed lookup.'''
+    try:
+        return ccode(ccodeid,rightcode,field)
+    except botslib.CodeConversionError:
+        return rightcode
+safercodetconversion = safe_reverse_ccode
 
 def getcodeset(ccodeid,leftcode,field='rightcode'):
     ''' Get a code set 
@@ -228,44 +260,6 @@ def getcodeset(ccodeid,leftcode,field='rightcode'):
                                 {'ccodeid':ccodeid,
                                  'leftcode':leftcode,
                                 }))
-
-def codetconversion(ccodeid,leftcode,field='rightcode'):
-    ''' converts code using a db-table.
-        converted value is returned. 
-    '''
-    for row in botslib.query(u'''SELECT ''' +field+ '''
-                                FROM    ccode
-                                WHERE   ccodeid_id = %(ccodeid)s
-                                AND     leftcode = %(leftcode)s''',
-                                {'ccodeid':ccodeid,
-                                 'leftcode':leftcode,
-                                }):
-        return row[field]
-    raise botslib.CodeConversionError(_(u'Value "$value" not in codetconversions, user table "$table".'),value=leftcode,table=ccodeid)
-
-def safercodetconversion(ccodeid,rightcode,field='leftcode'):
-    ''' as codetconversion but reverses the dictionary first'''
-    for row in botslib.query(u'''SELECT ''' +field+ '''
-                                FROM    ccode
-                                WHERE   ccodeid_id = %(ccodeid)s
-                                AND     rightcode = %(rightcode)s''',
-                                {'ccodeid':ccodeid,
-                                 'rightcode':rightcode,
-                                }):
-        return row[field]
-    return rightcode
-
-def rcodetconversion(ccodeid,rightcode,field='leftcode'):
-    ''' as codetconversion but reverses the dictionary first'''
-    for row in botslib.query(u'''SELECT ''' +field+ '''
-                                FROM    ccode
-                                WHERE   ccodeid_id = %(ccodeid)s
-                                AND     rightcode = %(rightcode)s''',
-                                {'ccodeid':ccodeid,
-                                 'rightcode':rightcode,
-                                }):
-        return row[field]
-    raise botslib.CodeConversionError(_(u'Value "$value" not in codetconversions, user table "$table".'),value=rightcode,table=ccodeid)
 
 #***code conversion via file. 20111116: depreciated
 def safecodeconversion(modulename,value):
