@@ -641,7 +641,7 @@ def runexternprogram(*args):
         subprocess.call(list(args),cwd=path)
     except:
         txt=txtexc()
-        raise OSError(_(u'error running extern program "%s", error:\n%s'%(args,txt)))
+        raise OSError(_(u'error running extern program "%(program)s", error:\n%(error)s'%{'program':args,'error':txt}))
 
 #**********************************************************/**
 #***************###############  mdn   #############
