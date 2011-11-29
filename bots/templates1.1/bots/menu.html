@@ -57,7 +57,7 @@
 		<li><a href="/delete/" >{% trans 'Delete from configuration' %}</a></li>
 		<li>-----</li>
 		<li><a href="/admin/auth/user/" >{% trans 'Users' %}</a></li>
-		<li><a href="/admin/auth/user/" >{% trans 'UserGroups' %}</a></li>
+		<li><a href="/admin/auth/group/" >{% trans 'UserGroups' %}</a></li>
 		<li><a href="/admin/bots/uniek/" >{% trans 'View/edit counters' %}</a></li>
 		<li>-----</li>
 		<li><a href="/unlock/" >{% trans 'Unlock database' %}</a></li>
@@ -67,7 +67,7 @@
     {% endif %}
 	<ul>
 		<a>{% trans 'Run' %}</a>
-		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new) *' %}</a></li>
+		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new)' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retransmit" >{% trans 'Run user-indicated retransmits' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retrycommunication" >{% trans 'Retry user-indicated comm errors' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retry"  OnClick = "return confirm('{% trans 'Are you sure you want to retry ALL previous errors?\n' %}');">{% trans 'Retry all previous errors' %}</a></li>
@@ -77,5 +77,5 @@
 		<a href="/login/">{% trans 'Log in' %}</a>
 	</ul>
 {% endif %}
-		<noscript>{% trans '*****Javascript is not enabled. Bots works beter with javascript*****' %}</noscript>
+		<noscript>{% trans '*****Javascript is not enabled. Bots works better with javascript*****' %}</noscript>
 </div>

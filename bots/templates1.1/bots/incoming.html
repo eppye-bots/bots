@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-<form action="{{ form.action }}" method="post">{% csrf_token %}
+<form action="{{ form.action }}" method="post">
     <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
     <input type="submit" name="2select" value="{% trans 'Change selection' %}" />
     <input type="submit" name="2outgoing" value="{% trans 'Outgoing (same selection)' %}" />
@@ -44,8 +44,9 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><a href="/detail/?inidta={{row.idta}}" class="botslink" target="_blank">{% trans 'View detail' %}</a></li>
-                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}-{{row.reportidta}}" />{% trans 'Rerecieve' %}</button></li>
+                            <li><a href="/detail/?inidta={{row.idta}}" class="botslink">{% trans 'View detail' %}</a></li>
+                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}-{{row.reportidta}}" />{% trans 'Retransmit' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="delete" value="{{row.idta}}" />{% trans 'Delete file' %}</button></li>
                         </ul>
                     </div>
                 </td>

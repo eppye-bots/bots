@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-<form action="{{ form.action }}" method="post">{% csrf_token %}
+<form action="{{ form.action }}" method="post">
     <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
     <input type="submit" name="2select" value="{% trans 'Change selection' %}" />
     <input type="submit" name="2incoming" value="{% trans 'Incoming (same selection)' %}" />
