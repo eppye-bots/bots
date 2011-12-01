@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="/">{% trans "Home" %}</a> &rsaquo; {% trans "Server error" %}</div>{% endblock %}
+
+{% block title %}{% trans 'Server error (500)' %}{% endblock %}
+
+{% block content %}
+<p>{% trans 'Server Error (500)' %}</p>
+    {% if exc_info %}
+        <pre>
+        {{ exc_info }}
+        </pre>
+    {% endif %}
+{% endblock %}
