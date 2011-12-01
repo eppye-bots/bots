@@ -20,6 +20,8 @@ import botsglobal #as botsglobal
 
 def botsinfo():
     return [
+            (_(u'server name'),botsglobal.ini.get('webserver','name','bots-webserver')),
+            (_(u'served at port'),botsglobal.ini.getint('webserver','port',8080)),
             (_(u'platform'),platform.platform()),
             (_(u'machine'),platform.machine()),
             (_(u'python version'),sys.version),
