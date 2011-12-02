@@ -439,8 +439,7 @@ class var(Inmessage):
         record_sep  = self.ta_info['record_sep']
         mode_escape = 0 #0=not escaping, 1=escaping
         mode_quote = 0 #0=not in quote, 1=in quote
-        mode_2quote = 0 #0=not in quote, 1=in quote
-        mode_escape = 0 #0=not escaping quote, 1=escaping quote. Escape:
+        mode_2quote = 0 #0=not escaping quote, 1=escaping quote.
         mode_inrecord = 0    #indicates if lexing a record. If mode_inrecord==0: skip whitespace
         sfield = False # True: is subveld, False is geen subveld
         value = u''    #the value of the current token
@@ -462,16 +461,16 @@ class var(Inmessage):
                     mode_2quote = 0
                     value += c    #append quote_char
                     continue
+                elif mode_escape:        #tricky: escaping a quote char
+                    mode_escape = 0
+                    value += c
+                    continue
                 elif mode_2quote:   #thus is was a end-quote
                     mode_2quote = 0
                     mode_quote= 0
                     #go on parsing
-                elif c==quote_char:    #either end-quote or escaping quote_char
+                elif c==quote_char:    #either end-quote or escaping quote_char,we do not know yet
                     mode_2quote = 1
-                    continue
-                elif mode_escape:        #TODO: what if escaping quote_char (wich is not advised)?
-                    mode_escape = 0
-                    value += c
                     continue
                 elif c == escape:
                     mode_escape = 1
@@ -521,18 +520,13 @@ class var(Inmessage):
                 continue
             value += c    #just a char: append char to value
         #end of for-loop. all characters have been processed.
-        
+        #in a perfect world, value should always be empty now, but:
+        #it appears a csv record is not always closed properly, so force the closing of the last record of csv file:
         if mode_inrecord and isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
-            #force the closing of the last record of csv file.
-            #it appears a csv recor is not always closed properly
             record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
             self.records += [record]    #write record to recordlist
-            record=[]
-            value = u''
-        elif value:
-            value = value.strip('\x00\x1a')
-            if value:
-                raise botslib.InMessageError(_(u'translation problem with lexing; probably a seperator-problem, or extra characters after interchange'))
+        elif value.strip('\x00\x1a'):
+            raise botslib.InMessageError(_(u'translation problem with lexing; probably a seperator-problem, or extra characters after interchange'))
 
     def _striprecord(self,recordEdiFile):
         #~ return [field[VALUE] for field in recordEdiFile]
