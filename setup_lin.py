@@ -1,7 +1,6 @@
 import os
 import sys
 from distutils.core import setup
-#~ from setuptools import setup
 from distutils.command.install import INSTALL_SCHEMES
 
 #install data file in the same way as *.py
@@ -51,7 +50,7 @@ for dirpath, dirnames, filenames in os.walk('bots'):
 
 setup(
     name="bots",
-    version="2.0.3",
+    version="2.1.0rc",
     author = "eppye",
     author_email = "eppye.bots@gmail.com",
     url = "http://bots.sourceforge.net/",
