@@ -33,6 +33,7 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_URL = '/logout/'
 #~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
+
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_PATH, 'templates'),
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -58,7 +59,7 @@ DATABASE_OPTIONS = {}
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
 #~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#PostgeSQL:
+#PostgreSQL:
 #~ DATABASE_ENGINE = 'postgresql_psycopg2'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
@@ -84,8 +85,8 @@ DATETIME_FORMAT = "Y-m-d G:i"
 TIME_FORMAT  = "G:i"
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
-#~ LANGUAGE_CODE = 'nl'
+#~ LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
@@ -97,12 +98,11 @@ USE_I18N = True
 #~ TEMPLATE_DEBUG = DEBUG
 SITE_ID = 1
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'm@-u37qiujmeqfbu$daaaaz)sp^7an4u@h=wfx9dd$$$zl2i*x9#awojdcw'
+SECRET_KEY = 'm@-u37qiujmeqfbu$daaaaz)sp^7an4u@h=wfx9dd$$$zl2i*x9#awojdc'
 
 ADMINS = (
     ('bots', 'your_email@domain.com'),
     )
-
 
 
 #save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
@@ -119,13 +119,14 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    #~ 'django.middleware.csrf.CsrfViewMiddleware',     #needed for django >= 1.2.*
+    'bots.persistfilters.FilterPersistMiddleware',
+    #~ 'django.contrib.auth.middleware.MessageMiddleware',
     )
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    #~ 'django.contrib.messages',
     'django.contrib.sessions',
-    #~ 'django.contrib.sites',
     'django.contrib.admin',
     'bots',
     )
@@ -135,4 +136,5 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
+    #~ "django.contrib.messages.context_processors.messages",
     )
