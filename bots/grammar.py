@@ -99,6 +99,8 @@ class Grammar(object):
         if self._checkstructurerequired:
             try:
                 self._dostructure()
+            except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
+                raise botslib.GrammarError(_(u'Grammar "$grammar": no structure, is required.'),grammar=self.grammarname)
             except:
                 self.structurefromgrammar[0]['error'] = True                #mark the structure as having errors
                 raise
@@ -242,10 +244,7 @@ class Grammar(object):
             2. adapt in structure: Add keys: mpath, count
             3. remember that structure is checked and adapted (so when grammar is read again, no checking/adapt needed)
         '''
-        try:    
-            self.structurefromgrammar = getattr(self.module, 'structure')
-        except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
-            raise botslib.GrammarError(_(u'Grammar "$grammar": no structure, is required.'),grammar=self.grammarname)
+        self.structurefromgrammar = getattr(self.module, 'structure')
         if len(self.structurefromgrammar) != 1:                        #every structure has only 1 root!!
             raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: only one root record allowed.'),grammar=self.grammarname)
         #check if structure is read & checked earlier in this run. If so, we can skip all checks.
