@@ -105,7 +105,7 @@ ENCODE_MIME = (
 
 class StripCharField(models.CharField):
     ''' strip values before saving to database. this is not default in django #%^&*'''
-    def get_db_prep_value(self, value):
+    def get_db_prep_value(self, value,*args,**kwargs):
         """Returns field's value prepared for interacting with the database
         backend.
 
