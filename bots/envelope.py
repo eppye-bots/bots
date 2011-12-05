@@ -185,11 +185,10 @@ class csvheader(Envelope):
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #self.ta_info is not overwritten
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        if len(self.out.defmessage.recorddefs) == 1 :   #if only only type of record
-            headers = dict([(field[ID],field[ID]) for field in self.out.defmessage.structure[0][FIELDS]])
-            self.out.put(headers)
-            self.out.tree2records(self.out.root)
-            tofile.write(self.out._record2string(self.out.records[0]))
+        headers = dict([(field[ID],field[ID]) for field in self.out.defmessage.structure[0][FIELDS]])
+        self.out.put(headers)
+        self.out.tree2records(self.out.root)
+        tofile.write(self.out._record2string(self.out.records[0]))
         self.writefilelist(tofile)
         tofile.close()
 
