@@ -194,7 +194,7 @@ class _comsession(object):
                 
                 if row['editype'] == 'email-confirmation': #outgoing MDN: message is already assembled
                     outfilename = row['filename']
-                else:   #assemble message: headers and payload. Bots uses simple MIME-envelope; by default payload is an attachmetn
+                else:   #assemble message: headers and payload. Bots uses simple MIME-envelope; by default payload is an attachment
                     message = email.Message.Message()
                     #set 'from' header (sender)
                     frommail,ccfrom = self.idpartner2mailaddress(row['frompartner'])    #lookup email address for partnerID
