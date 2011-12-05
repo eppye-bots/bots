@@ -44,7 +44,7 @@ def scriptwrite(path,content):
     f.close()
 
 if __name__ == '__main__':
-    pythoninterpreter = 'python'
+    pythoninterpreter = 'python2.7'
     newcommand = [pythoninterpreter,'bots-engine.py',]
     retrycommand = [pythoninterpreter,'bots-engine.py','--retry']
     
@@ -66,8 +66,8 @@ def main(inn,out):
     raise Exception('test mapping')
     transform.inn2out(inn,out)''')
 
-    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'))
-    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.pyc'))
+    #~ os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'))
+    #~ os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.pyc'))
     scriptwrite(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'),
 '''
 def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
