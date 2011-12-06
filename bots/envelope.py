@@ -118,7 +118,6 @@ def envelope(ta_info,ta_list):
         classtocall = noenvelope
     else:
         try:    #see if the is user scripted enveloping
-            botsglobal.logger.debug(u'(try) to read user envelopescript editype "%s", envelope "%s".',ta_info['editype'],ta_info['envelope'])
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'] + '.' + ta_info['envelope'])
         except ImportError: #other errors, eg syntax errors are just passed
             pass

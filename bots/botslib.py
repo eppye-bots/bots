@@ -524,25 +524,19 @@ class ErrorProcess(NewTransaction):
 #*************************File handling os.path, imports etc***********************/**
 #**********************************************************/**
 def botsbaseimport(modulename):
-    ''' Do a dynamic import.'''
+    ''' Do a dynamic import.
+        Errors/exceptions are handled in calling functions.
+    '''
     if modulename.startswith('.'):
         modulename = modulename[1:]
-    try:
-        #~ print 'import',modulename
-        module = __import__(modulename)
-        components = modulename.split('.')
-        for comp in components[1:]:
-            module = getattr(module, comp)
-    except ImportError: #if module not found; often this is caught later on
-        raise
-    except:             #other errors
-        txt=txtexc()
-        raise ScriptImportError(_(u'Import file: "$module", error:\n$txt'),module=modulename,txt=txt)
-    else:
-        return module
+    module = __import__(modulename)
+    components = modulename.split('.')
+    for comp in components[1:]:
+        module = getattr(module, comp)
+    return module
 
 def botsimport(soort,modulename):
-    ''' to import modules from usersys.
+    ''' import modules from usersys.
         return: imported module, filename imported module; 
         if could not be found or error in module: raise
     '''
@@ -552,13 +546,16 @@ def botsimport(soort,modulename):
         modulename = modulename.encode('punycode')
     modulepath = '.'.join((botsglobal.usersysimportpath,soort,modulename))  #assemble import string
     modulefile = join(botsglobal.usersysimportpath,soort,modulename)   #assemble abs filename for errortexts
-    botsglobal.logger.debug(u'import file "%s".',modulefile)
     try:
         module = botsbaseimport(modulepath)
     except ImportError: #if module not found
-        botsglobal.logger.debug(u'no import of file "%s".',modulefile)
+        botsglobal.logger.debug(u'no import of "%s".',modulefile)
         raise
+    except:             #other errors
+        txt=txtexc()
+        raise ScriptImportError(_(u'import error in "$module", error:\n$txt'),module=modulefile,txt=txt)
     else:
+        botsglobal.logger.debug(u'import "%s".',modulefile)
         return module,modulefile
 
 def join(*paths):
@@ -629,6 +626,7 @@ def tryrunscript(module,modulefile,functioninscript,**argv):
     return False
 
 def runscriptyield(module,modulefile,functioninscript,**argv):
+    botsglobal.logger.debug(u'run user (yield) script "%s" in "%s".',functioninscript,modulefile)
     functiontorun = getattr(module, functioninscript)
     try:
         for result in functiontorun(**argv):
@@ -638,6 +636,7 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
         raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
 
 def runexternprogram(*args):
+    botsglobal.logger.debug(u'run external program "%s".',args)
     path = os.path.dirname(args[0])
     try:
         subprocess.call(list(args),cwd=path)

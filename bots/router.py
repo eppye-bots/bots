@@ -197,7 +197,6 @@ def router(routedict):
     '''
     #is there a user route script?
     try:
-        botsglobal.logger.debug(u'(try) to read user routescript route "%s".',routedict['idroute'])
         userscript,scriptname = botslib.botsimport('routescripts',routedict['idroute'])
     except ImportError: #other errors, eg syntax errors are just passed
         userscript = scriptname = None

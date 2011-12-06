@@ -8,7 +8,6 @@ def grammarread(editype,grammarname):
     ''' dispatch function for class Grammar or subclass
         read whole grammar
     '''
-    botsglobal.logger.debug(u'read grammar for editype "%s", messagetype "%s".',editype,grammarname)
     try:
         classtocall = globals()[editype]
     except KeyError:
@@ -16,7 +15,6 @@ def grammarread(editype,grammarname):
     terug = classtocall('grammars',editype,grammarname)
     terug.initsyntax(includedefault=True)
     terug.initrestofgrammar()
-    botsglobal.logger.debug(u'finished reading grammar for editype "%s", messagetype "%s".',editype,grammarname)
     return terug
     
 def syntaxread(soortpythonfile,editype,grammarname):

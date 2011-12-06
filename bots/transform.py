@@ -55,7 +55,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                             fromchannel=row['fromchannel'],
                                             idroute=idroute)
 
-            botsglobal.logger.debug(u'Start read and parse input file editype "%s" messagetype "%s".',row['editype'],row['messagetype'])
+            botsglobal.logger.debug(u'start read and parse input file "%s" editype "%s" messagetype "%s".',row['filename'],row['editype'],row['messagetype'])
             for inn in edifile.nextmessage():   #for each message in the edifile:
                 #inn.ta_info: parameters from inmessage.edifromfile(), syntax-information and parse-information
                 ta_frommes=ta_parsedfile.copyta(status=SPLITUP)    #copy PARSED to SPLITUP ta
@@ -97,10 +97,10 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                     tscript=row2['tscript']
                     tomessage = outmessage.outmessage_init(messagetype=row2['tomessagetype'],editype=row2['toeditype'],filename=tofilename,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                     #copy ta_info
-                    botsglobal.logger.debug(u'Script "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn.ta_info['messagetype'],tomessage.ta_info['messagetype'])
+                    botsglobal.logger.debug(u'script "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn.ta_info['messagetype'],tomessage.ta_info['messagetype'])
                     translationscript,scriptfilename = botslib.botsimport('mappings',inn.ta_info['editype'] + '.' + tscript) #get the mapping-script
                     doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn,out=tomessage)
-                    botsglobal.logger.debug(u'Script "%s" finished.',tscript)
+                    botsglobal.logger.debug(u'script "%s" finished.',tscript)
                     if 'topartner' not in tomessage.ta_info:    #tomessage does not contain values from ta......
                         tomessage.ta_info['topartner']=inn.ta_info['topartner']
                     if tomessage.ta_info['statust'] == DONE:    #if indicated in user script the message should be discarded
@@ -133,12 +133,12 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
             txt=botslib.txtexc()
             ta_parsedfile.failure()
             ta_parsedfile.update(statust=ERROR,errortext=txt)
-            botsglobal.logger.debug(u'Error reading and parsing input file:\n%s',txt)
+            botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
             ta_fromfile.update(statust=DONE)
             ta_parsedfile.update(statust=DONE,**edifile.confirminfo)
-            botsglobal.logger.debug(u'Successfull read and parse of input file')
+            botsglobal.logger.debug(u'translated input file "%s".',row['filename'])
             del edifile
         #~ gc.collect()
     #~ gc.enable()

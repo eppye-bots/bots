@@ -89,11 +89,10 @@ class Outmessage(message.Message):
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by mapping script
         if self.ta_info['topartner']:   #read syntax-file for partner dependent syntax
             try:
-                botsglobal.logger.debug(u'(try) to read partner specific syntax editype "%s", messagetype "%s".',editype,self.ta_info['topartner'])
                 partnersyntax = grammar.syntaxread('partners',editype,self.ta_info['topartner'])
                 self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
             except ImportError:
-                botsglobal.logger.debug(u'No partner specific syntax found (is not an error).')
+                pass        #No partner specific syntax found (is not an error).
 
     def writeall(self):
         ''' writeall is called for writing all 'real' outmessage objects; but not for envelopes.

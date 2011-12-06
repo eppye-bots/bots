@@ -53,7 +53,6 @@ def run(idchannel,idroute=''):
             ta_run.update(tochannel=channeldict['idchannel'])
             
         try:
-            botsglobal.logger.debug(u'(try) to read user communicationscript channel "%s".',channeldict['idchannel'])
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
         except ImportError:
             userscript = scriptname = None
@@ -1499,7 +1498,6 @@ class database(_comsession):
         outcommunicate (write to database) gets a json object.
     '''
     def connect(self):
-        botsglobal.logger.debug(u'(try) to read user databasescript channel "%s".',self.channeldict['idchannel'])
         self.dbscript,self.dbscriptname = botslib.botsimport('dbconnectors',self.channeldict['idchannel']) #get the dbconnector-script
         if not hasattr(self.dbscript,'main'):
             raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='main',script=self.dbscript)
