@@ -31,7 +31,6 @@ msgid "The %(name)s \"%(obj)s\" was deleted successfully."
 msgstr "%(name)s \"%(obj)s\" is verwijderd."
 
 #: admin.py:48
-#, fuzzy
 msgid "activate/de-activate"
 msgstr "(de)activeer"
 
@@ -145,7 +144,6 @@ msgid "    %d files send in run.\n"
 msgstr "    %d files als output in deze run.\n"
 
 #: automaticmaintenance.py:265
-#, fuzzy
 msgid "DONE but no child is DONE or OK (idta: $idta)."
 msgstr "OK maar file is niet verder verwerkt (idta: $idta)."
 
@@ -186,12 +184,10 @@ msgid "Could not find database file for SQLite"
 msgstr "Kan geen SQLite-database vinden"
 
 #: botslib.py:23
-#, fuzzy
 msgid "server name"
 msgstr "naam server"
 
 #: botslib.py:24
-#, fuzzy
 msgid "served at port"
 msgstr "draait op poort"
 
@@ -261,7 +257,6 @@ msgstr ""
 "\"$charset1\" van het edi-bestand."
 
 #: botslib.py:718
-#, fuzzy
 msgid "No scheme in uri."
 msgstr ""
 
@@ -274,7 +269,6 @@ msgid "Cleanup could not remove file"
 msgstr "Cleanup kan bestand niet verwijderen."
 
 #: cleanup.py:73
-#, fuzzy
 msgid "Cleanup could not remove directory"
 msgstr "Cleanup kan directory niet verwijderen."
 
@@ -471,7 +465,6 @@ msgid "Run recommunicate: nothing to recommunicate."
 msgstr ""
 
 #: engine.py:178
-#, fuzzy
 msgid "Run automatic communication retry."
 msgstr "Herzend"
 
@@ -1172,7 +1165,6 @@ msgid "discarded"
 msgstr ""
 
 #: models.py:17
-#, fuzzy
 msgid "FileReceive"
 msgstr "Ontvangen"
 
@@ -1193,7 +1185,6 @@ msgid "Set for preprocess"
 msgstr ""
 
 #: models.py:22 models.py:24 models.py:26 models.py:28 models.py:30
-#, fuzzy
 msgid "Preprocess"
 msgstr ""
 
@@ -1456,12 +1447,10 @@ msgid "password"
 msgstr "wachtwoord"
 
 #: models.py:207
-#, fuzzy
 msgid "Do not check if an incoming 'from' email addresses is known."
 msgstr "Geen controle op inkomend 'from' email adres."
 
 #: models.py:208
-#, fuzzy
 msgid "Do not check if an incoming 'to' email addresses is known."
 msgstr "Geen controle op inkomend 'to' email adres."
 
@@ -1491,7 +1480,6 @@ msgid ""
 msgstr ""
 
 #: models.py:218
-#, fuzzy
 msgid "mime encoding"
 msgstr ""
 
@@ -1802,7 +1790,7 @@ msgstr ""
 
 #: outmessage.py:111 outmessage.py:421 outmessage.py:713 outmessage.py:731
 msgid "No outgoing message"
-msgstr ""
+msgstr "Er is geen uitgaand bestand"
 
 #: outmessage.py:210 outmessage.py:226 outmessage.py:242
 msgid "record \"$mpath\" field \"$field\" too big (max $max): \"$content\"."
@@ -1892,7 +1880,6 @@ msgid "Plugin is OK."
 msgstr ""
 
 #: pluglib.py:220
-#, fuzzy
 msgid "Start writing to database."
 msgstr "Start schrijven naar de database."
 
@@ -1933,12 +1920,12 @@ msgstr ""
 
 #: pluglib.py:274
 msgid "Writing files to filesystem is OK."
-msgstr ""
+msgstr "Schrijven van bestanden is gelukt."
 
 #: pluglib.py:289
 #, python-format
 msgid "    write file \"%s\"."
-msgstr ""
+msgstr "    schrijf bestand \"%s\"."
 
 #: preprocess.py:84
 msgid "Found no content in mailbag."
@@ -1949,7 +1936,6 @@ msgid "Found no valid envelope trailer in mailbag."
 msgstr "Leeg bestand."
 
 #: preprocess.py:133 preprocess.py:138
-#, fuzzy
 msgid "File is not a zip-file."
 msgstr "Bestand is geen zip-bestand."
 
@@ -1991,7 +1977,7 @@ msgstr ""
 #: router.py:185
 #, python-format
 msgid "there is no (active) route \"%s\"."
-msgstr ""
+msgstr "er is geen (actieve) route \"%s\"."
 
 #: router.py:208
 msgid "Route \"$route\" is empty: no script, not enough parameters."
@@ -2042,11 +2028,11 @@ msgstr ""
 
 #: viewlib.py:186
 msgid "split>>>"
-msgstr "splitsen>>"
+msgstr "splits>>"
 
 #: viewlib.py:188
 msgid "merge<<<"
-msgstr "samenvoegen<<<"
+msgstr "samenvoeg<<<"
 
 #: views.py:24
 #, python-format
@@ -2079,7 +2065,7 @@ msgid "Start reading plugin \"%s\"."
 msgstr "Start inlezen plugin \"%s\"."
 
 #: views.py:383
-#, fuzzy, python-format
+#, python-format
 msgid "Finished reading plugin \"%s\" successful."
 msgstr "Plugin \"%s\" is ingelezen."
 
@@ -2093,95 +2079,84 @@ msgid "Start writing plugin \"%s\"."
 msgstr "Start het aanmaken van de plugin \"%s\"."
 
 #: views.py:405
-#, fuzzy, python-format
+#, python-format
 msgid "Plugin \"%s\" created successful."
 msgstr "Plugin \"%s\" gemaakt."
 
 #: views.py:406
-#, fuzzy, python-format
+#, python-format
 msgid "Plugin %s created successful."
 msgstr "Plugin %s gemaakt."
 
 #: views.py:417
-#, fuzzy
 msgid "Start deleting in configuration."
-msgstr "Verwijder configuratie"
+msgstr "Start met verwijderen configuratie"
 
 #: views.py:426
-#, fuzzy
 msgid "Transactions are deleted."
 msgstr "Alle transacties zijn verwijderd."
 
 #: views.py:427
-#, fuzzy
 msgid "    Transactions are deleted."
 msgstr "Alle transacties zijn verwijderd."
 
 #: views.py:432
-#, fuzzy
 msgid "Data files are deleted."
-msgstr "Alle data bestanden zijn verwijderd."
+msgstr "Alle data-bestanden zijn verwijderd."
 
 #: views.py:433
-#, fuzzy
 msgid "    Data files are deleted."
-msgstr "Alle data bestanden zijn verwijderd."
+msgstr "    Alle data-bestanden zijn verwijderd."
 
 #: views.py:441
-#, fuzzy
 msgid "Database configuration is deleted."
 msgstr "Configuratie in de database is verwijderd."
 
 #: views.py:442
-#, fuzzy
 msgid "    Database configuration is deleted."
-msgstr "Configuratie in de batabase is verwijderd."
+msgstr "    Configuratie in de batabase is verwijderd."
 
 #: views.py:446
-#, fuzzy
 msgid "User code lists are deleted."
-msgstr "Alle code lijsten zijn verwijderd."
+msgstr "Alle codelijsten zijn verwijderd."
 
 #: views.py:447
-#, fuzzy
 msgid "    User code lists are deleted."
-msgstr "Alle code lijsten zijn verwijderd."
+msgstr "    Alle codelijsten zijn verwijderd."
 
 #: views.py:451
 msgid "Files in botssys/infile are deleted."
-msgstr ""
+msgstr "Bestanden in botssys/infile zijn verwijderd."
 
 #: views.py:452
 msgid "    Files in botssys/infile are deleted."
-msgstr ""
+msgstr "    Bestanden in botssys/infile zijn verwijderd."
 
 #: views.py:456
 msgid "Files in botssys/outfile are deleted."
-msgstr ""
+msgstr "Bestanden in botssys/outfile zijn verwijderd."
 
 #: views.py:457
 msgid "    Files in botssys/outfile are deleted."
-msgstr ""
+msgstr "    Bestanden in botssys/outfile zijn verwijderd."
 
 #: views.py:468
-#, fuzzy
 msgid "User scripts are deleted (in usersys)."
-msgstr "Gebruiker scripts zijn verwijderd."
+msgstr "Gebruikers-scripts zijn verwijderd."
 
 #: views.py:469
 msgid "    User scripts are deleted (in usersys)."
-msgstr "    Gebruiker scripts zijn verwijdered (in usersys)."
+msgstr "    Gebruikers-scripts zijn verwijdered (in usersys)."
 
 #: views.py:481
 msgid "Backupped user scripts are deleted/purged (in usersys)."
-msgstr ""
+msgstr "Backups van gebruikers-scripts zijn verwijderd (in usersys)."
 
 #: views.py:482
 msgid "    Backupped user scripts are deleted/purged (in usersys)."
-msgstr ""
+msgstr "    Backups van gebruikers-scripts zijn verwijderd (in usersys)."
 
 #: views.py:483
-#, fuzzy
 msgid "Finished deleting in configuration."
 msgstr "Configuratie verwijderd."
 
@@ -2200,7 +2175,7 @@ msgstr ""
 #: views.py:501
 #, python-format
 msgid "Run bots-engine with parameters: \"%s\""
-msgstr ""
+msgstr "Run bots-engine met parameters: \"%s\""
 
 #: views.py:503
 msgid "Bots-engine is started."
@@ -2211,7 +2186,7 @@ msgid "Errors while trying to run bots-engine."
 msgstr "Starten van bots-engine niet gelukt."
 
 #: views.py:507
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Errors while trying to run bots-engine:\n"
 "%s."
@@ -2241,12 +2216,11 @@ msgid "test content of report"
 msgstr ""
 
 #: views.py:537
-#, fuzzy
 msgid "Sending test mail failed."
 msgstr "Zenden van test rapportage mislukt."
 
 #: views.py:538
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Sending test mail failed, error:\n"
 "%s"
@@ -2254,7 +2228,6 @@ msgstr "Zenden van test rapportage mislukt, melding:\n"
 "%s"
 
 #: views.py:540 views.py:541
-#, fuzzy
 msgid "Sending test mail succeeded."
 msgstr "Zenden van test rapportage is gelukt."
 
@@ -2263,12 +2236,10 @@ msgid "Bots web server started."
 msgstr "Bots webserver is gestart."
 
 #: webserver.py:77
-#, fuzzy
 msgid "Bots web server uses ssl (https)."
 msgstr "Bots webserver gebruikt ssl (https)."
 
 #: webserver.py:79
-#, fuzzy
 msgid "Bots web server uses plain http (no ssl)."
 msgstr "Bots webserver gebruikt http (geen https)."
 
@@ -2487,7 +2458,6 @@ msgstr "Handmatig bevestigen"
 
 #: templates/bots/delete.html:15 templates1.1/bots/delete.html:15
 #: templates1.2/bots/delete.html:15
-#, fuzzy
 msgid "Delete"
 msgstr "verwijder file"
 
@@ -2722,7 +2692,6 @@ msgstr "Herontvangen"
 
 #: templates/bots/menu.html:6 templates1.1/bots/menu.html:6
 #: templates1.2/bots/menu.html:6
-#, fuzzy
 msgid "Home *"
 msgstr "Start *"
 
@@ -2763,7 +2732,6 @@ msgstr "Rapportage (per run)"
 
 #: templates/bots/menu.html:16 templates1.1/bots/menu.html:16
 #: templates1.2/bots/menu.html:16
-#, fuzzy
 msgid "Incoming *"
 msgstr "Inkomend *"
 
@@ -2819,11 +2787,10 @@ msgstr "Selecties"
 #: templates/bots/menu.html:32 templates1.1/bots/menu.html:32
 #: templates1.2/bots/menu.html:32
 msgid "Reports (per run)"
-msgstr ""
+msgstr "Rapportage (per run)"
 
 #: templates/bots/menu.html:34 templates1.1/bots/menu.html:34
 #: templates1.2/bots/menu.html:34
-#, fuzzy
 msgid "Document *"
 msgstr "Documenten *"
 
@@ -2879,13 +2846,11 @@ msgstr "Inlezen plugin"
 
 #: templates/bots/menu.html:55 templates1.1/bots/menu.html:55
 #: templates1.2/bots/menu.html:55
-#, fuzzy
 msgid "Write plugin"
 msgstr "Maak plugin"
 
 #: templates/bots/menu.html:57 templates1.1/bots/menu.html:57
 #: templates1.2/bots/menu.html:57
-#, fuzzy
 msgid "Delete from configuration"
 msgstr "Verwijder configuratie"
 
@@ -2917,7 +2882,7 @@ msgstr ""
 #: templates/bots/menu.html:64 templates1.1/bots/menu.html:64
 #: templates1.2/bots/menu.html:64
 msgid "Run crash recovery"
-msgstr ""
+msgstr "Herstel van crash"
 
 #: templates/bots/menu.html:65 templates1.1/bots/menu.html:65
 #: templates1.2/bots/menu.html:65
@@ -2930,7 +2895,6 @@ msgid "Run"
 msgstr ""
 
 #: templates/bots/menu.html:70 templates1.2/bots/menu.html:70
-#, fuzzy
 msgid "Run (only new) *"
 msgstr "Run (alleen nieuwe berichten) *"
 
@@ -2941,14 +2905,13 @@ msgstr "Start run voor herzend/herontvangst"
 
 #: templates/bots/menu.html:72 templates1.1/bots/menu.html:72
 #: templates1.2/bots/menu.html:72
-#, fuzzy
 msgid "Retry user-indicated comm errors"
 msgstr "Herstel aangegeven communicatie fouten"
 
 #: templates/bots/menu.html:73 templates1.1/bots/menu.html:73
 #: templates1.2/bots/menu.html:73
 msgid "Are you sure you want to retry ALL previous errors?\\n"
-msgstr ""
+msgstr "Weet u zeker dat u ALLE voorafgaande fouten opnieuw wilt draaien?"
 
 #: templates/bots/menu.html:73 templates1.1/bots/menu.html:73
 #: templates1.2/bots/menu.html:73
@@ -2961,7 +2924,6 @@ msgid "Log in"
 msgstr ""
 
 #: templates/bots/menu.html:80 templates1.2/bots/menu.html:80
-#, fuzzy
 msgid "*****Javascript is not enabled. Bots works beter with javascript*****"
 msgstr "Javascript staat uit. Bots werkt beter met Javascript aan."
 
@@ -2998,7 +2960,6 @@ msgstr "Gelezen"
 
 #: templates/bots/plugout.html:13 templates1.1/bots/plugout.html:13
 #: templates1.2/bots/plugout.html:13
-#, fuzzy
 msgid "Generate plugin"
 msgstr "Maak plugin"
 
@@ -3068,16 +3029,14 @@ msgid "Show selection"
 msgstr "Bekijk selectie"
 
 #: templates1.1/bots/document.html:18
-#, fuzzy
 msgid "Document number"
 msgstr "Documenten"
 
 #: templates1.1/bots/document.html:40 templates1.1/bots/incoming.html:48
 msgid "Retransmit"
-msgstr ""
+msgstr "Herzend"
 
 #: templates1.1/bots/incoming.html:49
-#, fuzzy
 msgid "Delete file"
 msgstr "verwijder file"
 
@@ -3086,57 +3045,5 @@ msgid "Run (only new)"
 msgstr "Run (alleen nieuwe berichten)"
 
 #: templates1.1/bots/menu.html:80
-#, fuzzy
 msgid "*****Javascript is not enabled. Bots works better with javascript*****"
 msgstr "Javascript staat uit. Bots werkt beter met Javascript aan."
-
-#~ msgid "Plugin \"%s\" read succesful."
-#~ msgstr "Plugin \"%s\" ingelezen: OK."
-
-#~ msgid "Bots can not find executable for bots-engine."
-#~ msgstr "bots-engine kan niet gevonden worden op uw systeem."
-
-#~ msgid "Python version: \"%s\"."
-#~ msgstr "python versie: \"%s\"."
-
-#~ msgid "Django version: \"%s\"."
-#~ msgstr "Django versie: \"%s\"."
-
-#~ msgid "Make configuration plugin"
-#~ msgstr "Maak configuratie plugin"
-
-#~ msgid "Make snapshot plugin"
-#~ msgstr "Maak shapshot plugin"
-
-#~ msgid "Make codelist plugin"
-#~ msgstr "Maak codelijst plugin"
-
-#~ msgid ""
-#~ "Are you sure you want to delete all transactions?\\nThis action can not "
-#~ "be undone!"
-#~ msgstr ""
-#~ "Weet u zeker dat u alle transacties wilt verwijderen?\\nVerwijderen is "
-#~ "definitief."
-
-#~ msgid "Delete transactions"
-#~ msgstr "Verwijder transacties"
-
-#~ msgid ""
-#~ "Are you sure you want to delete all configuration?\\nThis action can not "
-#~ "be undone!"
-#~ msgstr ""
-#~ "Weet u zeker dat u alle configuratie wilt verwijderen?\\nVerwijderen is "
-#~ "definitief."
-
-#~ msgid ""
-#~ "Are you sure you want to delete all user maintained codes?\\nThis action "
-#~ "can not be undone!"
-#~ msgstr ""
-#~ "Weet u zeker dat u alle code lijsten wilt verwijderen.\\n Verwijderen is "
-#~ "definitief"
-
-#~ msgid "Delete code lists"
-#~ msgstr "Verwijder code lijsten"
-
-#~ msgid "About Bots"
-#~ msgstr "Over bots"
