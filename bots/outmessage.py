@@ -160,13 +160,13 @@ class Outmessage(message.Message):
                 if grammarfield[ID] in noderecord  and noderecord[grammarfield[ID]]:      #field exists in outgoing message and has data
                     buildrecord += buffer          #write the buffer to buildrecord
                     buffer=[]                           #clear the buffer
-                    buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:False}]      #append new field
+                    buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]      #append new field
                 else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        buffer += [{VALUE:'',SFIELD:False}]      #append new empty to buffer;
+                        buffer += [{VALUE:'',SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]      #append new empty to buffer;
                     else:
                         value = self._formatfield('',grammarfield,structure_record)  #generate field
-                        buildrecord += [{VALUE:value,SFIELD:False}]                #append new field
+                        buildrecord += [{VALUE:value,SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]                #append new field
             else:  #if composite
                 donefirst = False       #used because first subfield in composite is marked as a field (not a subfield).
                 subbuffer=[]            #buffer for this composite. 
@@ -351,10 +351,20 @@ class Outmessage(message.Message):
                     fieldcount = 2
                 else:
                     value += field_sep
-            if  quote_char and (forcequote or field_sep in field[VALUE] or quote_char in field[VALUE] or record_sep in field[VALUE]):
+            if quote_char:      #quote char only used for csv
+                start_to__quote=False
+                if forcequote == 2:
+                    if field[FORMATFROMGRAMMAR] in ['AN','A','AR']:
+                        start_to__quote=True
+                elif forcequote:    #always quote; this catches values 1, '1', '0'
+                    start_to__quote=True
+                else:
+                    if field_sep in field[VALUE] or quote_char in field[VALUE] or record_sep in field[VALUE]:
+                        start_to__quote=True
                 #TO DO test. if quote_char='' this works OK. Alt: check first if quote_char
-                value += quote_char
-                mode_quote = True
+                if start_to__quote:
+                    value += quote_char
+                    mode_quote = True
             for char in field[VALUE]:   #use escape (edifact, tradacom). For x12 is warned if content contains separator
                 if char in escapechars:
                     if isinstance(self,x12):

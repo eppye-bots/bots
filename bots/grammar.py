@@ -395,7 +395,7 @@ class csv(Grammar):
         'envelope':'',
         'escape':"",
         'field_sep':':',
-        'forcequote':'1',    #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote': 1,            #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:quote if alfanumeric
         'lengthnumericbare':False,
         'merge':True,
         'noBOTSID':False,
@@ -428,7 +428,7 @@ class fixed(Grammar):
         'envelope':'',
         'escape':'',
         'field_sep':'',
-        'forcequote':'', #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0,         #csv only
         'lengthnumericbare':False,
         'merge':True,
         'noBOTSID':False,
@@ -462,7 +462,7 @@ class idoc(fixed):
         'envelope':'',
         'escape':'',
         'field_sep':'',
-        'forcequote':'', #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0,         #csv only
         'lengthnumericbare':False,
         'merge':False,
         'noBOTSID':False,
@@ -497,8 +497,7 @@ class xml(Grammar):
         'extra_character_entity':{},    #additional character entities to resolve when parsing XML; mostly html character entities. Not in python 2.4. Example: {'euro':u'','nbsp':unichr(160),'apos':u'\u0027'}
         'escape':'',
         'field_sep':'',
-        'flattenxml': False,            #not used anymore
-        'forcequote':'',                #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0,                 #csv only
         'indented':False,               #False: xml output is one string (no cr/lf); True: xml output is indented/human readable
         'lengthnumericbare':False,
         'merge':False,
@@ -536,8 +535,7 @@ class xmlnocheck(xml):
         'escape':'',
         'extra_character_entity':{},    #additional character entities to resolve when parsing XML; mostly html character entities. Not in python 2.4. Example: {'euro':u'','nbsp':unichr(160),'apos':u'\u0027'}
         'field_sep':'',
-        'flattenxml': False,            #not used anymore
-        'forcequote':'',                #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0,                 #csv only
         'indented':False,               #False: xml output is one string (no cr/lf); True: xml output is indented/human readable
         'lengthnumericbare':False,
         'merge':False,
@@ -572,7 +570,7 @@ class template(Grammar):
         'envelope-template':'',
         'escape':'',
         'field_sep':'',
-        'forcequote':'',    #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0, #csv only
         'lengthnumericbare':False,
         'merge':True,
         'noBOTSID':False,
@@ -601,7 +599,7 @@ class edifact(Grammar):
         'envelope':'edifact',
         'escape':'?',
         'field_sep':'+',
-        'forcequote':'',    #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0, #csv only
         'forceUNA' : False,
         'lengthnumericbare':True,
         'merge':True,
@@ -641,7 +639,7 @@ class x12(Grammar):
         'envelope':'x12',
         'escape':'',
         'field_sep':'*',
-        'forcequote':'',    #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0, #csv only
         'functionalgroup'    :  'XX',
         'lengthnumericbare':True,
         'merge':True,
@@ -710,7 +708,7 @@ class json(Grammar):
         'envelope':'',
         'escape':'',
         'field_sep':'',
-        'forcequote':'',
+        'forcequote':0, #csv only
         'indented':False,               #False:  output is one string (no cr/lf); True:  output is indented/human readable
         'lengthnumericbare':False,
         'merge':False,
@@ -741,7 +739,7 @@ class jsonnocheck(json):
         'envelope':'',
         'escape':'',
         'field_sep':'',
-        'forcequote':'',
+        'forcequote':0, #csv only
         'indented':False,               #False:  output is one string (no cr/lf); True: output is indented/human readable
         'lengthnumericbare':False,
         'merge':False,
@@ -770,7 +768,7 @@ class tradacoms(Grammar):
         'envelope':'tradacoms',
         'escape':'?',
         'field_sep':'+',
-        'forcequote':'',    #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:??etcetc
+        'forcequote':0, #csv only
         'indented':False,               #False:  output is one string (no cr/lf); True:  output is indented/human readable
         'lengthnumericbare':True,
         'merge':False,

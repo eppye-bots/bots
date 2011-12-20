@@ -55,4 +55,5 @@ LIN = 3
 SFIELD = 4  #boolean: True: is subfield, False: field or first element composite
 #already defined MPATH = 5  #only for first field (=recordID)
 FIXEDLINE = 6   #for fixed records; tmp storage of fixed record
+FORMATFROMGRAMMAR = 7     #to store FORMAT field has in grammar
 
