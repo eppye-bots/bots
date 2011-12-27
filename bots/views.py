@@ -31,9 +31,6 @@ def index(request,*kw,**kwargs):
 def home(request,*kw,**kwargs):
     return django.shortcuts.render_to_response('bots/about.html', {'botsinfo':botslib.botsinfo()},context_instance=django.template.RequestContext(request))
 
-def help(request,*kw,**kwargs):
-    return django.shortcuts.render_to_response('bots/help.html', {},context_instance=django.template.RequestContext(request))
-
 def reports(request,*kw,**kwargs):
     #~ print 'reports received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
