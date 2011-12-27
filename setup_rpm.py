@@ -1,7 +1,6 @@
 import os
 import sys
 from distutils.core import setup
-#~ from setuptools import setup
 from distutils.command.install import INSTALL_SCHEMES
 
 #install data file in the same way as *.py
@@ -33,8 +32,8 @@ if root_dir != '':
 
 for dirpath, dirnames, filenames in os.walk('bots'):
     # Ignore dirnames that start with '.'
-    for i, dirname in enumerate(dirnames):
-        if dirname.startswith('.'): del dirnames[i]
+    #~ for i, dirname in enumerate(dirnames):
+        #~ if dirname.startswith('.'): del dirnames[i]
     if '__init__.py' in filenames:
         packages.append('.'.join(fullsplit(dirpath)))
         if len(filenames) > 1:
@@ -52,11 +51,11 @@ for dirpath, dirnames, filenames in os.walk('bots'):
 setup(
     name="bots",
     version="2.1.0",
-    author = "eppye",
-    author_email = "eppye.bots@gmail.com",
+    author = "hjebbers",
+    author_email = "hjebbers@gmail.com",
     url = "http://bots.sourceforge.net/",
-    description="Bots open source Edi translator",
-    long_description = "Bots is complete software for EDI (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml",
+    description="Bots open source edi translator",
+    long_description = "Bots is complete software for edi (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml",
     platforms="OS Independent (Written in an interpreted language)",
     license="GNU General Public License (GPL)",
     classifiers = [

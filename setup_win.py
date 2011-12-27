@@ -32,8 +32,8 @@ if root_dir != '':
 
 for dirpath, dirnames, filenames in os.walk('bots'):
     # Ignore dirnames that start with '.'
-    for i, dirname in enumerate(dirnames):
-        if dirname.startswith('.'): del dirnames[i]
+    #~ for i, dirname in enumerate(dirnames):
+        #~ if dirname.startswith('.'): del dirnames[i]
     if '__init__.py' in filenames:
         packages.append('.'.join(fullsplit(dirpath)))
         data_files.append([dirpath, [os.path.join(dirpath, f) for f in filenames if not f.endswith('.pyc')]])
@@ -50,12 +50,12 @@ if len(sys.argv) > 1 and 'bdist_wininst' in sys.argv[1:]:
 
 setup(
     name="bots",
-    version="2.1.0rc",
-    author = "eppye",
-    author_email = "eppye.bots@gmail.com",
+    version="2.1.0",
+    author = "hjebbers",
+    author_email = "hjebbers@gmail.com",
     url = "http://bots.sourceforge.net/",
-    description="Bots open source Edi translator",
-    long_description = "Bots is complete software for EDI (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml",
+    description="Bots open source edi translator",
+    long_description = "Bots is complete software for edi (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml",
     platforms="OS Independent (Written in an interpreted language)",
     license="GNU General Public License (GPL)",
     classifiers = [
