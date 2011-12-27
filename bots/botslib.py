@@ -4,10 +4,7 @@ import os
 import codecs
 import traceback
 import subprocess
-import time
-import datetime
 import socket   #to set a time-out for connections
-import shutil
 import string
 import urlparse
 import urllib
