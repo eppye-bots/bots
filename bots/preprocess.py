@@ -151,25 +151,100 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
 
 def extractpdf(ta_from,endstatus,**argv):
-    ''' extract pfd file.
-        editype & messagetype are unchanged.
+    ''' Try to extract text content of a PDF file to a csv.
+        You know this is not a great idea, right? But we'll do the best we can anyway!
+        Page and line numbers are added to each row.
+        Columns and rows are based on the x and y coordinates of each text element within tolerance allowed.
+        Multiple text elements may combine to make one field, some PDFs have every character separated!
+        You may need to experiment with x_group and y_group values, but defaults seem ok for most files.
+        Output csv is UTF-8 encoded - The csv module doesn't directly support reading and writing Unicode
+        If the PDF is just an image, all bets are off. Maybe try OCR, good luck with that!
+        Mike Griffin 14/12/2011
     '''
-    import pyPdf
-    try:
-        stream = botslib.opendata(ta_from.filename, 'rb')
-        #EOF = stream.find('%%EOF')+5 # some PFDs from SAP have data beyond the %%EOF!
-        pdf = pyPdf.PdfFileReader(stream)
-        content = ''
-        for page in range(0, pdf.getNumPages()):
-            # Extract text from page and add to content
-            content += 'PDF ' + pdf.getPage(page).extractText() + '\n'
-        stream.close()
+    from pdfminer.pdfinterp import PDFResourceManager, process_pdf
+    from pdfminer.converter import TextConverter
+    from pdfminer.layout import LAParams, LTContainer, LTText, LTTextBox
+    import csv
 
+    class CsvConverter(TextConverter):
+        def __init__(self, *args, **kwargs):
+            TextConverter.__init__(self, *args, **kwargs)
+
+        def receive_layout(self, ltpage):
+
+            # recursively get every text element and it's coordinates
+            def render(item):
+                if isinstance(item, LTContainer):
+                    for child in item:
+                        render(child)
+                elif isinstance(item, LTText):
+                    (_,_,x,y) = item.bbox
+
+                    # group the y values (rows) within group tolerance
+                    for v in yv:
+                        if y > v-y_group and y < v+y_group:
+                            y = v
+                    yv.append(y)
+
+                    line = lines[int(-y)]
+                    line[x] = item.get_text().encode('utf-8')
+
+            from collections import defaultdict
+            lines = defaultdict(lambda : {})
+
+            yv = []
+            render(ltpage)
+
+            lineid = 0
+            for y in sorted(lines.keys()):
+                line = lines[y]
+                lineid += 1
+                csvdata = [ltpage.pageid,lineid] # first 2 columns are page and line numbers
+
+                # group the x values (fields) within group tolerance
+                p = 0
+                field_txt=''
+                for x in sorted(line.keys()):
+                    gap = x - p
+                    if p > 0 and gap > x_group:
+                        csvdata.append(field_txt)
+                        field_txt=''
+                    field_txt += line[x]
+                    p = x
+                csvdata.append(field_txt)
+                csvout.writerow(csvdata)
+            if lineid == 0:
+                raise botslib.InMessageError(_(u'PDF text extraction failed, it may contain just image(s)?'))
+
+
+    #get some optional parameters
+    x_group = argv.get('x_group',10) # group text closer than this as one field
+    y_group = argv.get('y_group',5)  # group lines closer than this as one line
+    password = argv.get('password','')
+    quotechar = argv.get('quotechar','"')
+    field_sep = argv.get('field_sep',',')
+    escape = argv.get('escape','\\')
+    charset = argv.get('charset','utf-8')
+    if not escape:
+        doublequote = True
+    else: 
+        doublequote = False
+
+    try:
+        pdf_stream = botslib.opendata(ta_from.filename, 'rb')
         ta_to = ta_from.copyta(status=endstatus)
         tofilename = str(ta_to.idta)
-        tofile = botslib.opendata(tofilename,'wb')
-        tofile.write(content)
-        tofile.close()
+        csv_stream = botslib.opendata(tofilename,'wb')
+        csvout = csv.writer(csv_stream, quotechar=quotechar, delimiter=field_sep, doublequote=doublequote, escapechar=escape)
+
+        # Process PDF
+        rsrcmgr = PDFResourceManager(caching=True)
+        device = CsvConverter(rsrcmgr, csv_stream, codec=charset)
+        process_pdf(rsrcmgr, device, pdf_stream, pagenos=set(), password=password, caching=True, check_extractable=True)
+
+        device.close()
+        pdf_stream.close()
+        csv_stream.close()
         ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info; 
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
