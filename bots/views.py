@@ -71,12 +71,12 @@ def reports(request,*kw,**kwargs):
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-                
+
     query = models.report.objects.all()
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewReports(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
-    
+
 def incoming(request,*kw,**kwargs):
     if request.method == 'GET':
         if 'select' in request.GET:             #via menu, go to select form
@@ -122,7 +122,7 @@ def incoming(request,*kw,**kwargs):
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-                
+
     query = models.filereport.objects.all()
     pquery = viewlib.filterquery(query,cleaned_data,incoming=True)
     formout = forms.ViewIncoming(initial=cleaned_data)
@@ -165,7 +165,7 @@ def outgoing(request,*kw,**kwargs):
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-                
+
     query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE).all()
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewOutgoing(initial=cleaned_data)
@@ -200,7 +200,7 @@ def document(request,*kw,**kwargs):
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-                
+
     query = models.ta.objects.filter(django.db.models.Q(status=SPLITUP)|django.db.models.Q(status=TRANSLATED)).all()
     pquery = viewlib.filterquery(query,cleaned_data)
     viewlib.trace_document(pquery)
@@ -244,17 +244,17 @@ def process(request,*kw,**kwargs):
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-                
+
     query = models.ta.objects.filter(status=PROCESS,statust=ERROR).all()
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewProcess(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
 
 def detail(request,*kw,**kwargs):
-    ''' in: the idta, either as parameter in or out. 
+    ''' in: the idta, either as parameter in or out.
         in: is idta of incoming file.
-        out: idta of outgoing file, need to trace back for incoming file. 
-        return list of ta's for display in detail template. 
+        out: idta of outgoing file, need to trace back for incoming file.
+        return list of ta's for display in detail template.
         This list is formatted and ordered for display.
         first, get a tree (trace) starting with the incoming ta ;
         than make up the details for the trace
@@ -290,6 +290,19 @@ def confirm(request,*kw,**kwargs):
             formin = forms.SelectConfirm(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
+        elif 'confirm' in request.POST:        #coming from 'star' menu 'Manual confirm'
+            ta = models.ta.objects.get(idta=int(request.POST[u'confirm']))
+            if ta.confirmed == False and ta.confirmtype.startswith('ask'):
+                ta.confirmed = True
+                ta.confirmidta = '-1'   # to indicate a manual confirmation
+                ta.save()
+                request.user.message_set.create(message='Manual confirmed.')
+            else:
+                request.user.message_set.create(message='Manual confirm not possible.')
+            # then just refresh the current view
+            formin = forms.ViewConfirm(request.POST)
+            if not formin.is_valid():
+                return viewlib.render(request,formin)
         else:
             formin = forms.ViewConfirm(request.POST)
             if not formin.is_valid():
@@ -300,7 +313,7 @@ def confirm(request,*kw,**kwargs):
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-                
+
     query = models.ta.objects.filter(confirmasked=True).all()
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewConfirm(initial=cleaned_data)
@@ -386,13 +399,13 @@ def plugin(request,*kw,**kwargs):
             else:
                  request.user.message_set.create(message=_(u'No plugin read.'))
         return django.shortcuts.redirect('/home')
-    
+
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
         form = forms.PlugoutForm()
         return  django.shortcuts.render_to_response('bots/plugout.html', {'form': form},context_instance=django.template.RequestContext(request))
     else:
-        if 'submit' in request.POST: 
+        if 'submit' in request.POST:
             form = forms.PlugoutForm(request.POST)
             if form.is_valid():
                 botsglobal.logger.info(_(u'Start writing plugin "%s".'),form.cleaned_data['filename'])
@@ -411,7 +424,7 @@ def delete(request,*kw,**kwargs):
         form = forms.DeleteForm()
         return  django.shortcuts.render_to_response('bots/delete.html', {'form': form},context_instance=django.template.RequestContext(request))
     else:
-        if 'submit' in request.POST: 
+        if 'submit' in request.POST:
             form = forms.DeleteForm(request.POST)
             if form.is_valid():
                 botsglobal.logger.info(_(u'Start deleting in configuration.'))
@@ -496,7 +509,7 @@ def runengine(request,*kw,**kwargs):
         lijst = [sys.executable,botsenginepath] + sys.argv[1:]
         if 'clparameter' in request.GET:
             lijst.append(request.GET['clparameter'])
-        
+
         try:
             botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
             terug = subprocess.Popen(lijst).pid
@@ -528,7 +541,7 @@ def sendtestmailmanagers(request,*kw,**kwargs):
         botsglobal.logger.info(_(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".'))
         request.user.message_set.create(message=_(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".'))
         return django.shortcuts.redirect('/home')
-            
+
     from django.core.mail import mail_managers
     try:
         mail_managers(_(u'testsubject'), _(u'test content of report'))
