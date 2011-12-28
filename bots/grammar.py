@@ -356,17 +356,22 @@ class Grammar(object):
             if LEVEL in i:
                 self.display(i[LEVEL],level+1)
 
+    #bots interpretats the format from the grammer; left side are the allowed values; right side are the internal forams bots uses.
+    #the list directly below are the default values for the formats, subclasses can have their own list.
+    #this makes it possible to use x12-formats for x12, edifact-formats for edifact etc 
     formatconvert = {
-        'A':'A',
-        'AN':'A',
-        'AR':'A',       #right aligned alfanumerical field, used in fixed records.
-        'D':'D',
-        'DT':'D',
-        'T':'T',
-        'TM':'T',
-        'N':'N',
-        'I':'I',
-        'R':'R',
+        'A':'A',        #alfanumerical
+        'AN':'A',       #alfanumerical
+        #~ 'AR':'A',       #right aligned alfanumerical field, used in fixed records.
+        'D':'D',        #date
+        'DT':'D',       #date-time
+        'T':'T',        #time
+        'TM':'T',       #time
+        'N':'N',        #numerical, fixed decimal
+        #~ 'NL':'N',       #numerical, fixed decimal. In fixed format: no preceding zeros, left aligned,   
+        'R':'R',        #numerical, any number of decimals; the decimal point is 'floating'
+        #~ 'RL':'R',       #numerical, any number of decimals. fixed: no preceding zeros, left aligned
+        'I':'I',        #numercial, implicit decimal
         }
     def _manipulatefieldformat(self,field,recordID):
         try:
@@ -412,6 +417,20 @@ class csv(Grammar):
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         }
 class fixed(Grammar):
+    formatconvert = {
+        'A':'A',        #alfanumerical
+        'AN':'A',       #alfanumerical
+        'AR':'A',       #right aligned alfanumerical field, used in fixed records.
+        'D':'D',        #date
+        'DT':'D',       #date-time
+        'T':'T',        #time
+        'TM':'T',       #time
+        'N':'N',        #numerical, fixed decimal
+        'NL':'N',       #numerical, fixed decimal. In fixed format: no preceding zeros, left aligned,   
+        'R':'R',        #numerical, any number of decimals; the decimal point is 'floating'
+        'RL':'R',       #numerical, any number of decimals. fixed: no preceding zeros, left aligned
+        'I':'I',        #numercial, implicit decimal
+        }
     defaultsyntax = {
         'acceptspaceinnumfield':True,   #only really used in fixed formats
         'add_crlfafterrecord_sep':'',

@@ -271,7 +271,10 @@ class Outmessage(message.Message):
                         value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -len(decimals)))
                     except:
                         raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                    if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
+                        value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                    else:
+                        value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
                 elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
                     if self.ta_info['lengthnumericbare']:
@@ -283,7 +286,10 @@ class Outmessage(message.Message):
                         value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
                     except:
                         raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                    if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
+                        value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                    else:
+                        value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
                 elif grammarfield[BFORMAT] == 'I':  #implicit decimals
                     if self.ta_info['lengthnumericbare']:
