@@ -367,10 +367,12 @@ class Grammar(object):
         'DT':'D',       #date-time
         'T':'T',        #time
         'TM':'T',       #time
-        'N':'N',        #numerical, fixed decimal
+        'N':'N',        #numerical, fixed decimal. Fixed nr of decimals; if no decimal used: whole number, integer
         #~ 'NL':'N',       #numerical, fixed decimal. In fixed format: no preceding zeros, left aligned,   
+        #~ 'NR':'N',       #numerical, fixed decimal. In fixed format: preceding blancs, right aligned,   
         'R':'R',        #numerical, any number of decimals; the decimal point is 'floating'
         #~ 'RL':'R',       #numerical, any number of decimals. fixed: no preceding zeros, left aligned
+        #~ 'RR':'R',       #numerical, any number of decimals. fixed: preceding blancs, right aligned
         'I':'I',        #numercial, implicit decimal
         }
     def _manipulatefieldformat(self,field,recordID):
@@ -425,10 +427,12 @@ class fixed(Grammar):
         'DT':'D',       #date-time
         'T':'T',        #time
         'TM':'T',       #time
-        'N':'N',        #numerical, fixed decimal
+        'N':'N',        #numerical, fixed decimal. Fixed nr of decimals; if no decimal used: whole number, integer
         'NL':'N',       #numerical, fixed decimal. In fixed format: no preceding zeros, left aligned,   
+        'NR':'N',       #numerical, fixed decimal. In fixed format: preceding blancs, right aligned,   
         'R':'R',        #numerical, any number of decimals; the decimal point is 'floating'
         'RL':'R',       #numerical, any number of decimals. fixed: no preceding zeros, left aligned
+        'RR':'R',       #numerical, any number of decimals. fixed: preceding blancs, right aligned
         'I':'I',        #numercial, implicit decimal
         }
     defaultsyntax = {

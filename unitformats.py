@@ -395,6 +395,75 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         tfield6 = ['TEST1','M',5,'RL',True,2,       5,       'N']
         self.assertEqual(self.edi._formatfield('12.45',tfield6,testdummy), '12.45','lot of digits')
 
+    def test_out_formatfield_fixedRR(self):
+        self.edi.ta_info['lengthnumericbare']=False
+        self.edi.ta_info['decimaal']='.'
+        tfield1 = ['TEST1','M',3,'RR',True,0,       3,       'R']
+        #                    length    decimals minlength  format
+        self.assertEqual(self.edi._formatfield('',tfield1,testdummy),   '  0','empty string')
+        self.assertEqual(self.edi._formatfield('1',tfield1,testdummy),  '  1', 'basic')
+        self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '  1', 'basic')
+        self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '  1', 'basic')
+        self.assertEqual(self.edi._formatfield('0',tfield1,testdummy),  '  0','zero stays zero')
+        self.assertEqual(self.edi._formatfield('-0',tfield1,testdummy), ' -0','neg.zero stays neg.zero')
+        tfield3 = ['TEST1','M',5,'RR',True,2,       3,       'R']
+        self.assertEqual(self.edi._formatfield('-0.00',tfield3,testdummy), '-0.00','')
+        self.assertEqual(self.edi._formatfield('0.10',tfield3,testdummy),  '0.10','keep zeroes after last dec.digit')
+        
+        self.assertEqual(self.edi._formatfield('123',tfield1,testdummy),  '123','numeric field at max')
+        self.assertEqual(self.edi._formatfield('001',tfield1,testdummy),  '  1','leading zeroes are removed')
+        self.assertEqual(self.edi._formatfield('0001',tfield1,testdummy), '  1','strips leading zeroes if possobel')
+        self.assertEqual(self.edi._formatfield('+123',tfield1,testdummy), '123','strips leading zeroes if possobel')
+        self.edi.ta_info['decimaal']=','
+        self.assertEqual(self.edi._formatfield('1.2',tfield1,testdummy),  '1,2','other dec.sig, replace')
+        self.edi.ta_info['decimaal']='.'
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '.12',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '-.12',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '1234',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '-1.234',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '1<3',tfield1,testdummy)    #wrong char
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '1-3',tfield1,testdummy)    #'-' in middel of number
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '123-',tfield1,testdummy)    #'-' at end of number
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '1,3',tfield1,testdummy)    #',', where ',' is not traid sep.
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '1+3',tfield1,testdummy)    #'+' in middle of number (no exp)
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '1E3',tfield1,testdummy)    #'+' in middle of number (no exp)
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '13+',tfield1,testdummy)    #'+' at end
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '1+3',tfield1,testdummy)    #'+' in middle of number
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '0.100',tfield1,testdummy)   #field too big
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '.',tfield1,testdummy)   #no num
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '-',tfield1,testdummy)   #no num
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,  '.001',tfield1,testdummy)   #bots adds 0 before dec, thus too big
+        # #test filling up to min length
+        tfield2 = ['TEST1', 'M', 8,   'RR', True,   0,      8,'R']
+        self.assertEqual(self.edi._formatfield('12345',tfield2,testdummy),   '   12345','just large enough')
+        self.assertEqual(self.edi._formatfield('0.1000',tfield2,testdummy),  '  0.1000','keep zeroes after last dec.digit')
+        self.assertEqual(self.edi._formatfield('00001',tfield2,testdummy),   '       1','keep leading zeroes')
+        self.assertEqual(self.edi._formatfield('123',tfield2,testdummy),     '     123','add leading zeroes')
+        self.assertEqual(self.edi._formatfield('.1',tfield2,testdummy),      '     0.1','add leading zeroes')
+        self.assertEqual(self.edi._formatfield('-1.23',tfield2,testdummy),   '   -1.23','numeric field at max with minus and decimal sign')
+        #test exp
+        self.assertEqual(self.edi._formatfield('12E+3',tfield2,testdummy),   '   12000','Exponent notation is possible')
+        self.assertEqual(self.edi._formatfield('12E3',tfield2,testdummy),    '   12000','Exponent notation is possible->to std notation')
+        self.assertEqual(self.edi._formatfield('12e+3',tfield2,testdummy),   '   12000','Exponent notation is possible; e->E')
+        self.assertEqual(self.edi._formatfield('12e3',tfield2,testdummy),    '   12000','Exponent notation is possible; e->E')
+        self.assertEqual(self.edi._formatfield('4567E+3',tfield2,testdummy), ' 4567000','do not count + and E')
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
+        #~ #print '>>',self.edi._formatfield('12E-3',tfield2,testdummy)
+        #~ self.assertEqual(self.edi._formatfield('12E-3',tfield2,testdummy),       '0000.012','Exponent notation is possible')
+        #~ self.assertEqual(self.edi._formatfield('12e-3',tfield2,testdummy),       '0000.012','Exponent notation is possible; e->E')
+        #~ self.assertEqual(self.edi._formatfield('1234567E-3',tfield2,testdummy),  '1234.567','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('1234567E-6',tfield2,testdummy),  '1.234567','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('123456E-6',tfield2,testdummy),   '0.123456','do not count + and E')
+        #~ self.assertEqual(self.edi._formatfield('-12345E-5',tfield2,testdummy), '-0.12345','do not count + and E')
+        #~ self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E-8',tfield2,testdummy)   #gets 0.12345678, is too big
+        #~ self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'12345678E+3',tfield2,testdummy)   #too big with exp
+        tfield4 = ['TEST1', 'M', 30,   'RR', True,   3,      30,'R']
+        self.assertEqual(self.edi._formatfield('12345678901234560',tfield4,testdummy), '             12345678901234560','lot of digits')
+        tfield5 = ['TEST1','M',4,'RR',True,2,       4,       'N']
+        self.assertEqual(self.edi._formatfield('0.00',tfield5,testdummy), '0.00','lot of digits')
+        tfield6 = ['TEST1','M',5,'RR',True,2,       5,       'N']
+        self.assertEqual(self.edi._formatfield('12.45',tfield6,testdummy), '12.45','lot of digits')
+
     def test_out_formatfield_fixedN(self):
         self.edi.ta_info['decimaal']='.'
         self.edi.ta_info['lengthnumericbare']=False
@@ -449,6 +518,13 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'178E+4',tfield2,testdummy)   #too big with exp
         tfield4 = ['TEST1', 'M', 30,   'N', True,   3,      30,'N']
         self.assertEqual(self.edi._formatfield('1234567890123456',tfield4,testdummy), '00000000001234567890123456.000','lot of digits')
+        #test N format, zero decimals
+        tfield7 = ['TEST1', 'M',  5,   'N', True,   0,       5,  'N']
+        #                    length    decimals minlength  format
+        self.assertEqual(self.edi._formatfield('12345',tfield7,testdummy),  '12345','')
+        self.assertEqual(self.edi._formatfield('1.234',tfield7,testdummy),  '00001','')
+        self.assertEqual(self.edi._formatfield('123.4',tfield7,testdummy),  '00123','')
+        self.assertEqual(self.edi._formatfield('0.0',tfield7,testdummy),    '00000','')
 
     def test_out_formatfield_fixedNL(self):
         self.edi.ta_info['decimaal']='.'
@@ -504,6 +580,75 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'178E+4',tfield2,testdummy)   #too big with exp
         tfield4 = ['TEST1', 'M', 30,   'NL', True,   3,      30,'N']
         self.assertEqual(self.edi._formatfield('1234567890123456',tfield4,testdummy), '1234567890123456.000          ','lot of digits')
+        #test N format, zero decimals
+        tfield7 = ['TEST1', 'M',  5,   'NL', True,   0,       5,  'N']
+        #                    length    decimals minlength  format
+        self.assertEqual(self.edi._formatfield('12345',tfield7,testdummy),  '12345','')
+        self.assertEqual(self.edi._formatfield('1.234',tfield7,testdummy),  '1    ','')
+        self.assertEqual(self.edi._formatfield('123.4',tfield7,testdummy),  '123  ','')
+        self.assertEqual(self.edi._formatfield('0.0',tfield7,testdummy),    '0    ','')
+
+    def test_out_formatfield_fixedNR(self):
+        self.edi.ta_info['decimaal']='.'
+        self.edi.ta_info['lengthnumericbare']=False
+        tfield1 = ['TEST1','M',5,'NR',True,2,       5,       'N']
+        #                    length    decimals minlength  format
+        self.assertEqual(self.edi._formatfield('',tfield1,testdummy), ' 0.00','empty string')
+        self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), ' 1.00', 'basic')
+        self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), ' 1.00', 'basic')
+        self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), ' 1.00', 'basic')
+        self.assertEqual(self.edi._formatfield('0',tfield1,testdummy), ' 0.00','zero stays zero')
+        self.assertEqual(self.edi._formatfield('-0',tfield1,testdummy), '-0.00','neg.zero stays neg.zero')
+        self.assertEqual(self.edi._formatfield('-0.00',tfield1,testdummy), '-0.00','')
+        self.assertEqual(self.edi._formatfield('-0.001',tfield1,testdummy), '-0.00','')
+        self.assertEqual(self.edi._formatfield('-.12',tfield1,testdummy), '-0.12','no zero before dec,sign is OK')
+        self.assertEqual(self.edi._formatfield('001',tfield1,testdummy), ' 1.00','leading zeroes are removed')
+        self.assertEqual(self.edi._formatfield('0.10',tfield1,testdummy), ' 0.10','keep zeroes after last dec.digit')
+        self.assertEqual(self.edi._formatfield('12.1049',tfield1,testdummy), '12.10','keep zeroes after last dec.digit')
+        self.assertEqual(self.edi._formatfield('-1.23',tfield1,testdummy), '-1.23','numeric field at max with minus and decimal sign')
+        self.assertEqual(self.edi._formatfield('0001',tfield1,testdummy), ' 1.00','strips leading zeroes if possobel')
+        self.assertEqual(self.edi._formatfield('+13',tfield1,testdummy), '13.00','strips leading zeroes if possobel')
+        self.edi.ta_info['decimaal']=','
+        self.assertEqual(self.edi._formatfield('1.23',tfield1,testdummy), ' 1,23','other dec.sig, replace')
+        self.edi.ta_info['decimaal']='.'
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'123.1049',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'123',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'1234',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'-1234.56',tfield1,testdummy) #field too large
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'1<3',tfield1,testdummy)    #wrong char
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'1-3',tfield1,testdummy)    #'-' in middel of number
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'123-',tfield1,testdummy)    #'-' at end of number
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'1,3',tfield1,testdummy)    #',', where ',' is not traid sep.
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'1+3',tfield1,testdummy)    #'+' in middle of number (no exp)
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'1E3',tfield1,testdummy)    #'+' in middle of number (no exp)
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'13+',tfield1,testdummy)    #'+' at end
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'1234.100',tfield1,testdummy)   #field too big
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'.',tfield1,testdummy)   #no num
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'-',tfield1,testdummy)   #no num
+        # #test filling up to min length
+        tfield2 = ['TEST1', 'M', 8,   'NR', True,   2,      8,'N']
+        self.assertEqual(self.edi._formatfield('123.45',tfield2,testdummy),   '  123.45','just large enough')
+        self.assertEqual(self.edi._formatfield('123.4549',tfield2,testdummy), '  123.45','just large enough')
+        self.assertEqual(self.edi._formatfield('123.455',tfield2,testdummy),  '  123.46','just large enough')
+        self.assertEqual(self.edi._formatfield('0.1000',tfield2,testdummy),   '    0.10','keep zeroes after last dec.digit')
+        self.assertEqual(self.edi._formatfield('00001',tfield2,testdummy),    '    1.00','keep leading zeroes')
+        self.assertEqual(self.edi._formatfield('12',tfield2,testdummy),       '   12.00','add leading zeroes')
+        self.assertEqual(self.edi._formatfield('.1',tfield2,testdummy),       '    0.10','add leading zeroes')
+        #test exp; bots tries to convert to normal
+        self.assertEqual(self.edi._formatfield('78E+3',tfield2,testdummy),    '78000.00','add leading zeroes')
+        self.assertEqual(self.edi._formatfield('-8E+3',tfield2,testdummy),    '-8000.00','add leading zeroes')
+        self.assertEqual(self.edi._formatfield('-178e-3',tfield2,testdummy),  '   -0.18','add leading zeroes')
+        self.assertEqual(self.edi._formatfield('-178e-5',tfield2,testdummy),  '   -0.00','add leading zeroes')
+        self.assertRaises(botslib.OutMessageError,self.edi._formatfield,'178E+4',tfield2,testdummy)   #too big with exp
+        tfield4 = ['TEST1', 'M', 30,   'NR', True,   3,      30,'N']
+        self.assertEqual(self.edi._formatfield('1234567890123456',tfield4,testdummy), '          1234567890123456.000','lot of digits')
+        #test N format, zero decimals
+        tfield7 = ['TEST1', 'M',  5,   'NR', True,   0,       5,  'N']
+        #                    length    decimals minlength  format
+        self.assertEqual(self.edi._formatfield('12345',tfield7,testdummy),  '12345','')
+        self.assertEqual(self.edi._formatfield('1.234',tfield7,testdummy),  '    1','')
+        self.assertEqual(self.edi._formatfield('123.4',tfield7,testdummy),  '  123','')
+        self.assertEqual(self.edi._formatfield('0.0',tfield7,testdummy),    '    0','')
 
     def test_out_formatfield_fixedI(self):
         self.edi.ta_info['lengthnumericbare']=False

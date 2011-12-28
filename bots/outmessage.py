@@ -273,6 +273,8 @@ class Outmessage(message.Message):
                         raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
                     if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
                         value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                    elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
+                        value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)                        
                     else:
                         value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
@@ -288,6 +290,8 @@ class Outmessage(message.Message):
                         raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
                     if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
                         value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                    elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
+                        value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)                        
                     else:
                         value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
                     value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
