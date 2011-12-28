@@ -13,7 +13,6 @@ urlpatterns = patterns('',
     (r'^logout.*', 'django.contrib.auth.views.logout',{'next_page': '/'}),
     #login required
     (r'^home.*', login_required(views.home)),
-    (r'^help.*', login_required(views.help)),
     (r'^incoming.*', login_required(views.incoming)),
     (r'^detail.*', login_required(views.detail)),
     (r'^process.*', login_required(views.process)),
