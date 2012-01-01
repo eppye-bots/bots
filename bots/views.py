@@ -330,8 +330,11 @@ def filer(request,*kw,**kwargs):
             currentta = list(models.ta.objects.filter(idta=idta))[0]
             if request.GET['action']=='downl':
                 response = django.http.HttpResponse(mimetype=currentta.contenttype)
-                response['Content-Disposition'] = 'attachment; filename=' + currentta.filename + '.txt'
-                #~ absfilename = botslib.abspathdata(currentta.filename)
+                if  currentta.contenttype == 'text/html':
+                    dispositiontype = 'inline'
+                else:
+                    dispositiontype = 'attachment'
+                response['Content-Disposition'] = dispositiontype + '; filename=' + currentta.filename + '.txt'
                 #~ response['Content-Length'] = os.path.getsize(absfilename)
                 response.write(botslib.readdata(currentta.filename,charset=currentta.charset,errors='ignore'))
                 return response
