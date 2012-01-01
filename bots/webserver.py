@@ -13,7 +13,7 @@ import botsinit
 
 def showusage():
     usage = '''
-    This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
+    This is "%(name)s", a part of Bots open source edi translator - http://bots.sourceforge.net.
     The %(name)s is the web server for bots; the interface (bots-monitor) can be accessed in a browser, eg 'http://localhost:8080'.
     Usage:
         %(name)s  -c<directory>
@@ -62,7 +62,7 @@ def start():
     #cherrypy uses a dispatcher in order to handle the serving of static files and django.
     dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, '/media': servestaticfiles})
     botswebserver = wsgiserver.CherryPyWSGIServer(bind_addr=('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), wsgi_app=dispatcher, server_name=botsglobal.ini.get('webserver','name','bots-webserver'))
-    botsglobal.logger.info(_(u'Bots web server started.'))
+    botsglobal.logger.info(_(u'Bots web-server started.'))
     #handle ssl: cherrypy < 3.2 always uses pyOpenssl. cherrypy >= 3.2 uses python buildin ssl (python >= 2.6 has buildin support for ssl).
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
     ssl_private_key = botsglobal.ini.get('webserver','ssl_private_key',None)
@@ -74,9 +74,9 @@ def start():
             #but: pyOpenssl should be there!
             botswebserver.ssl_certificate = ssl_certificate
             botswebserver.ssl_private_key = ssl_private_key
-        botsglobal.logger.info(_(u'Bots web server uses ssl (https).'))
+        botsglobal.logger.info(_(u'Bots web-server uses ssl (https).'))
     else:
-        botsglobal.logger.info(_(u'Bots web server uses plain http (no ssl).'))
+        botsglobal.logger.info(_(u'Bots web-server uses plain http (no ssl).'))
     
     #***start the cherrypy webserver.
     try:

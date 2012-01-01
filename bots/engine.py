@@ -21,7 +21,7 @@ from botsconfig import *
 
 def showusage():
     usage = '''
-    This is "%(name)s", a part of Bots open source EDI translator - http://bots.sourceforge.net.
+    This is "%(name)s", a part of Bots open source edi translator - http://bots.sourceforge.net.
     The %(name)s does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
     Usage:
         %(name)s  [run-options] [config-option] [routes]

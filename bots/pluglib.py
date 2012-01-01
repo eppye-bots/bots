@@ -30,7 +30,7 @@ def pluglistcmp(key1,key2):
     return plugincomparelist.index(key1) - plugincomparelist.index(key2)
 
 def pluglistcmpisgroup(plug1,plug2):
-    #sort partnergroups befoe parters
+    #sort partnergroups before parters
     if plug1['plugintype'] == 'partner' and plug2['plugintype'] == 'partner':
         return  int(plug2['isgroup']) - int(plug1['isgroup'])
     else:
