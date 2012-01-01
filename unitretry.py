@@ -12,6 +12,7 @@ import bots.botsglobal as botsglobal
 from bots.botsconfig import *
 
 '''plugin unitretry.zip'''
+#!!!activate rotues
 ''' input: mime (complex structure); 2 different edi attachments, and ' tekst' attachemnt
     some user scripts are written in this unit test; so one runs errors will occur; write user script which prevents error in next run
     before running: delete all transactions.
