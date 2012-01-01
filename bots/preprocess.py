@@ -300,18 +300,19 @@ def extractexcel(ta_from,endstatus,**argv):
     #-------------------------------------------------------------------------------
     def utf8ize(l):
         # Make string-like things into utf-8, leave other things alone
-        return [unicode(s).encode("utf-8") if hasattr(s,'encode') else s for s in l]
+        return [unicode(s).encode(charset) if hasattr(s,'encode') else s for s in l]
     #***end functions used by extractexcel
     import xlrd
     import csv
-    #get some parameters for csv-format; default are as initial setup by Mike
-    quotechar = argv.get('quotechar','"')
-    field_sep = argv.get('field_sep',',')
-    escape = argv.get('escape','\\')
-    if not escape:
-        doublequote = True
-    else: 
+    #get parameters for csv-format; defaults are as the csv defaults (in grammar.py)
+    charset = argv.get('charset',"utf-8")
+    quotechar = argv.get('quotechar',"'")
+    field_sep = argv.get('field_sep',':')
+    escape = argv.get('escape','')
+    if escape:
         doublequote = False
+    else: 
+        doublequote = True
     try:
         infilename = botslib.abspathdata(ta_from.filename)
         xlsdata = read_xls(infilename)
