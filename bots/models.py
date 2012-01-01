@@ -50,6 +50,7 @@ EDITYPES = [
     ('mailbag', _(u'mailbag')),
     ('raw', _(u'raw')),
     ('template', _(u'template')),
+    ('templatehtml', _(u'template-html')),
     ('tradacoms', _(u'tradacoms')),
     ('xml', _(u'xml')),
     ('xmlnocheck', _(u'xmlnocheck')),

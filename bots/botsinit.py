@@ -96,6 +96,7 @@ def generalinit(configdir):
     botsglobal.ini.set('directories','logging',botslib.join(botssys,'logging'))
     botslib.dirshouldbethere(botsglobal.ini.get('directories','logging'))
     botsglobal.ini.set('directories','templates',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/template/templates'))
+    botsglobal.ini.set('directories','templateshtml',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/templatehtml/templates'))
 
     #set values in setting.py**********************************************************************
     if botsglobal.ini.get('webserver','environment','development') == 'development':   #values in bots.ini are also used in setting up cherrypy

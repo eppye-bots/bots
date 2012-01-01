@@ -681,10 +681,11 @@ class jsonnocheck(json):
         pass
 
 class template(Outmessage):
+    ''' uses Kid library for templating.'''
     class TemplateData(object):
         pass
     def __init__(self,ta_info):
-        self.data = template.TemplateData() #self.dat is used by mapping script as container for content
+        self.data = template.TemplateData() #self.data is used by mapping script as container for content
         super(template,self).__init__(ta_info)
 
     def writeall(self):
@@ -696,7 +697,7 @@ class template(Outmessage):
         except:
             txt=botslib.txtexc()
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid". Error:\n%s'%txt))
-       #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
+        #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templates',self.ta_info['template'])
         try:
@@ -712,6 +713,48 @@ class template(Outmessage):
                             encoding=self.ta_info['charset'],
                             output=self.ta_info['output'],    #output is specific parameter for class; init from grammar.syntax
                             fragment=self.ta_info['merge'])
+        except:
+            txt=botslib.txtexc()
+            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+        botsglobal.logger.debug(_(u'End writing to file "%s".'),self.ta_info['filename'])
+
+
+class templatehtml(Outmessage):
+    ''' uses Genshi library for templating. Genshi is very similar to Kid, and is the fork/follow-up of Kid.
+        Kid is not being deveolped further; in time Kid will not be in repositories etc.
+        Templates for Genshi are like Kid templates. Changes:
+        - other namespace: xmlns:py="http://genshi.edgewall.org/" instead of xmlns:py="http://purl.org/kid/ns#"
+        - enveloping is different: <xi:include href="${message}" /> instead of <div py:replace="document(message)"/>
+    '''
+    class TemplateData(object):
+        pass
+    def __init__(self,ta_info):
+        self.data = template.TemplateData() #self.data is used by mapping script as container for content
+        super(templatehtml,self).__init__(ta_info)
+
+    def writeall(self):
+        ''' Very different writeall:
+            there is no tree of nodes; there is no grammar.structure/recorddefs; kid opens file by itself.
+        '''
+        try:
+            from genshi.template import TemplateLoader
+        except:
+            txt=botslib.txtexc()
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi". Error:\n%s'%txt))
+        #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
+        self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        templatefile = botslib.abspath(u'templateshtml',self.ta_info['template'])
+        try:
+            botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+            loader = TemplateLoader(auto_reload=False)
+            tmpl = loader.load(templatefile)
+        except:
+            txt=botslib.txtexc()
+            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+        try:
+            f = botslib.opendata(self.ta_info['filename'],'wb')
+            stream = tmpl.generate(data=self.data)
+            stream.render(method='xhtml',encoding=self.ta_info['charset'],out=f)
         except:
             txt=botslib.txtexc()
             raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)

@@ -608,6 +608,36 @@ class template(Grammar):
         'stripfield_sep':False,
         'triad':'',
         }
+class templatehtml(Grammar):
+    _checkstructurerequired=False
+    defaultsyntax = { \
+        'add_crlfafterrecord_sep':'',
+        'charset':'utf-8',
+        'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
+        'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
+        'checkcollision':False,
+        'contenttype':'text/xml',
+        'checkunknownentities': True,
+        'decimaal':'.',
+        'envelope':'templatehtml',
+        'envelope-template':'',
+        'escape':'',
+        'field_sep':'',
+        'forcequote':0, #csv only
+        'lengthnumericbare':False,
+        'merge':True,
+        'noBOTSID':False,
+        'output':'xhtml-strict',
+        'quote_char':"",
+        'pass_all':False,
+        'record_sep':"",
+        'record_tag_sep':"",    #Tradacoms/GTDI
+        'reserve':'',
+        'sfield_sep':'',
+        'skip_char':'',
+        'stripfield_sep':False,
+        'triad':'',
+        }
 class edifact(Grammar):
     defaultsyntax = {
         'add_crlfafterrecord_sep':'\r\n',

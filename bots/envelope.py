@@ -349,6 +349,39 @@ class template(Envelope):
 class orders2printenvelope(template):
     pass
 
+class templatehtml(Envelope):
+    def run(self):
+        ''' class for (test) orderprint; delevers a valid html-file.
+            Uses a kid-template for the enveloping/merging.
+            use kid to write; no envelope grammar is used
+        '''
+        try:
+            from genshi.template import TemplateLoader
+        except:
+            txt=botslib.txtexc()
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi". Error:\n%s'%txt))
+        defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
+        self.ta_info.update(defmessage.syntax)
+        botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
+        if not self.ta_info['envelope-template']:
+            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype": syntax option "envelope-template" not filled; is required.'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'])
+        templatefile = botslib.abspath('templateshtml',self.ta_info['envelope-template'])
+        ta_list = self.filelist2absolutepaths()
+        try:
+            botsglobal.logger.debug(u'Start writing envelope to file "%s".',self.ta_info['filename'])
+            loader = TemplateLoader(auto_reload=False)
+            tmpl = loader.load(templatefile)
+        except:
+            txt=botslib.txtexc()
+            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+        try:
+            f = botslib.opendata(self.ta_info['filename'],'wb')
+            stream = tmpl.generate(data=ta_list)
+            stream.render(method='xhtml',encoding=self.ta_info['charset'],out=f)
+        except:
+            txt=botslib.txtexc()
+            raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+
 
 class x12(Envelope):
     ''' Generate envelope segments; fill with appropriate data, write to interchange-file.'''
