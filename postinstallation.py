@@ -17,7 +17,7 @@ def join(path,*paths):
 #***    start                     *********************************************
 #******************************************************************************
 def start():
-    print 'Installation of Bots open source EDI translator.'
+    print 'Installation of bots open source edi translator.'
     #python version dependencies
     version = str(sys.version_info[0]) + str(sys.version_info[1])
     if version == '25':
@@ -30,13 +30,13 @@ def start():
         raise Exception('Wrong python version, use python 2.5.*, 2.6.* or 2.7.*')
         
     botsdir = os.path.dirname(botsglobal.__file__)
-    print '    Installed Bots in "%s".'%(botsdir)
+    print '    Installed bots in "%s".'%(botsdir)
 
 #******************************************************************************
 #***    shortcuts       *******************************************************
 #******************************************************************************
     scriptpath = join(sys.prefix,'Scripts')
-    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots2.0')
+    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots2.1')
     try:
         os.mkdir(shortcutdir)
     except: 
@@ -46,10 +46,10 @@ def start():
         
     try:
         #~ create_shortcut(join(scriptpath,'botswebserver'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'))
-        create_shortcut(join(sys.prefix,'python'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'),join(scriptpath,'bots-webserver.py'))
-        file_created(join(shortcutdir,'Bots-webserver.lnk'))
+        create_shortcut(join(sys.prefix,'python'),'bots open source edi translator',join(shortcutdir,'bots-webserver.lnk'),join(scriptpath,'bots-webserver.py'))
+        file_created(join(shortcutdir,'bots-webserver.lnk'))
     except: 
-        print '    Failed to install shortcut/link for Bots in your menu.'
+        print '    Failed to install shortcut/link for bots in your menu.'
     else:
         print '    Installed shortcut in "Program Files".'
     
