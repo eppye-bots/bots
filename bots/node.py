@@ -15,8 +15,14 @@ def nodecompare(node):
 class Node(object):
     ''' Node class for building trees in inmessage and outmessage
     '''
-    def __init__(self,record=None):
+    def __init__(self,record=None,BOTSIDnr=None):
         self.record = record    #record is a dict with fields
+        if self.record is not None:
+            if BOTSIDnr is None:
+                if not 'BOTSIDnr' in self.record:
+                    self.record['BOTSIDnr'] = '1'
+            else:
+                self.record['BOTSIDnr'] = BOTSIDnr
         self.children = []
         self._queries = None
 
@@ -239,6 +245,8 @@ class Node(object):
         for part in mpaths[:-1]:
             if not 'BOTSID' in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": get($mpath)'),mpath=mpaths)
+            if not 'BOTSIDnr' in part:
+                part['BOTSIDnr'] = '1'
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: get($mpath)'),mpath=mpaths)
@@ -249,6 +257,8 @@ class Node(object):
         #check: all values should be strings
         if not 'BOTSID' in mpaths[-1]:
             raise botslib.MappingFormatError(_(u'last section without "BOTSID": get($mpath)'),mpath=mpaths)
+        if not 'BOTSIDnr' in mpaths[-1]:
+            mpaths[-1]['BOTSIDnr'] = '1'
         count = 0
         for key,value in mpaths[-1].iteritems():
             if  not isinstance(key,basestring):
@@ -332,6 +342,8 @@ class Node(object):
                 raise botslib.MappingFormatError(_(u'must be dicts in tuple: getloop($mpath)'),mpath=mpaths)
             if not 'BOTSID' in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": getloop($mpath)'),mpath=mpaths)
+            if not 'BOTSIDnr' in part:
+                part['BOTSIDnr'] = '1'
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: getloop($mpath)'),mpath=mpaths)
@@ -383,6 +395,8 @@ class Node(object):
         for part in mpaths:
             if not 'BOTSID' in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": put($mpath)'),mpath=mpaths)
+            if not 'BOTSIDnr' in part:
+                part['BOTSIDnr'] = '1'
             for key,value in part.iteritems():
                 if value is None:
                     botsglobal.logmap.debug(u'"None" in put %s.',str(mpaths))
@@ -423,6 +437,8 @@ class Node(object):
         for part in mpaths:
             if not 'BOTSID' in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": putloop($mpath)'),mpath=mpaths)
+            if not 'BOTSIDnr' in part:
+                part['BOTSIDnr'] = '1'
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: putloop($mpath)'),mpath=mpaths)
@@ -431,7 +447,6 @@ class Node(object):
                 #~ if  not isinstance(value,basestring):
                     #~ raise botslib.MappingFormatError(_(u'values must be strings in putloop%s'%(str(mpaths)))
                 part[key] = unicode(value).strip()
-                
         if self.sameoccurence(mpaths[0]):
             if len(mpaths)==1:
                return self
@@ -444,7 +459,7 @@ class Node(object):
             self.append(Node(mpaths[0]))
             return self.children[-1]
         for node in self.children:  #if first part of mpaths exists already in children go recursive
-            if node.record['BOTSID']==mpaths[0]['BOTSID'] and node.sameoccurence(mpaths[0]):
+            if node.record['BOTSID']==mpaths[0]['BOTSID'] and node.record['BOTSIDnr']==mpaths[0]['BOTSIDnr'] and node.sameoccurence(mpaths[0]):
                 return node._putloopcore(*mpaths[1:])
         else:   #is not present in children, so append a child, and go recursive
             self.append(Node(mpaths[0]))

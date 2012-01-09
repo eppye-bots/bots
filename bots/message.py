@@ -156,6 +156,8 @@ class Message(object):
         '''
         deletelist=[]
         for field in record.keys():          #all fields in record should exist in structure_record
+            if field == 'BOTSIDnr':
+                continue
             for grammarfield in structure_record[FIELDS]:
                 if grammarfield[ISFIELD]:    #if field (no composite)
                     if field == grammarfield[ID]:
@@ -183,7 +185,7 @@ class Message(object):
             for structure_record in structure[LEVEL]:  #for structure_record of this level in grammar
                 count = 0                           #count number of occurences of record
                 for childnode in node.children:            #for every node in mpathtree; SPEED: delete nodes from list when found
-                    if childnode.record['BOTSID'] != structure_record[ID]:   #if it is not the right NODE":
+                    if childnode.record['BOTSID'] != structure_record[ID] or childnode.record['BOTSIDnr'] != structure_record[BOTSIDnr]:   #if it is not the right NODE":
                         continue
                     count += 1
                     self._canonicaltree(childnode,structure_record,self.recordnumber)         #use rest of index in deeper level

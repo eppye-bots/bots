@@ -110,6 +110,7 @@ class Grammar(object):
             else:
                 self.recorddefs['BOTS_1$@#%_error'] = False                 #mark structure has been read and checked
             self.structure = copy.deepcopy(self.structurefromgrammar)       #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
+            self._checkbotscollision(self.structure)
             self._linkrecorddefs2structure(self.structure)
 
     def _dorecorddefs(self):
@@ -254,7 +255,6 @@ class Grammar(object):
         if self.syntax['checkcollision']:
             self._checkbackcollision(self.structurefromgrammar)
             self._checknestedcollision(self.structurefromgrammar)
-            self._checkbotscollision(self.structurefromgrammar)
 
     def _checkstructure(self,structure,mpath):
         ''' Recursive
@@ -310,16 +310,19 @@ class Grammar(object):
                     collision.remove(i[ID])
         return collision,headerissave    #collision is used to update on higher level; cleared indicates the header segment can not collide anymore
 
-    def _checkbotscollision(self,structure,collision=None):
+    def _checkbotscollision(self,structure):
         ''' Recursive.
-            Within one level: no twice the same tag. Bots can not handle this.
+            Within one level: if twice the same tag: use BOTSIDnr.
         '''
-        if not collision:
-            collision=[]
+        collision={}
         for i in structure:
             if i[ID] in collision:
-                raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: bots-collision detected at record "$mpath".'),grammar=self.grammarname,mpath=i[MPATH])
-            collision.append(i[ID])
+                #~ raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: bots-collision detected at record "$mpath".'),grammar=self.grammarname,mpath=i[MPATH])
+                i[BOTSIDnr] = str(collision[i[ID]] + 1)
+                collision[i[ID]] = collision[i[ID]] + 1
+            else:
+                i[BOTSIDnr] = '1'
+                collision[i[ID]] = 1
             if LEVEL in i:
                 self._checkbotscollision(i[LEVEL])
         return
@@ -350,7 +353,7 @@ class Grammar(object):
             For debugging.
         '''
         for i in structure:
-            print 'Record: ',i[MPATH]
+            print 'Record: ',i[MPATH],i
             for field in i[FIELDS]:
                 print '    Field: ',field
             if LEVEL in i:

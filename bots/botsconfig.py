@@ -35,6 +35,7 @@ MPATH = 5
 FIELDS = 6
 QUERIES = 7
 SUBTRANSLATION = 8
+BOTSIDnr = 9
 
 #grammar.recorddefs: dict keys for fields of record er: record[FIELDS][ID] == 'C124.0034'
 #already definedID = 0

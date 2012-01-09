@@ -76,7 +76,7 @@ class Outmessage(message.Message):
     '''
     def __init__(self,ta_info):
         self.ta_info = ta_info
-        self.root = node.Node({})         #message tree; build via put()-interface in mapping-script. Initialise with empty dict
+        self.root = node.Node(record={})         #message tree; build via put()-interface in mapping-script. Initialise with empty dict
         super(Outmessage,self).__init__()
 
     def outmessagegrammarread(self,editype,messagetype):
@@ -84,6 +84,7 @@ class Outmessage(message.Message):
             try to read the topartner dependent grammar syntax.
         ''' 
         self.defmessage = grammar.grammarread(editype,messagetype)
+        self.defmessage.display(self.defmessage.structure)
         #~ print 'self.ta_info',self.ta_info
         #~ print 'self.defmessage.syntax',self.defmessage.syntax
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by mapping script
@@ -146,7 +147,7 @@ class Outmessage(message.Message):
         self._tree2recordfields(node.record,structure)    #write root node->first record
         for childnode in node.children:            #for every node in mpathtree, these are already sorted#SPEED: node.children is already sorted!
             for structure_record in structure[LEVEL]:  #for structure_record of this level in grammar
-                if childnode.record['BOTSID'].strip() == structure_record[ID]:   #if is is the right node:
+                if childnode.record['BOTSID'] == structure_record[ID] and childnode.record['BOTSIDnr'] == structure_record[BOTSIDnr]:   #if is is the right node:
                     self._tree2recordscore(childnode,structure_record)         #use rest of index in deeper level
 
     def _tree2recordfields(self,noderecord,structure_record):

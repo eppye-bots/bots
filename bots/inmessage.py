@@ -235,7 +235,7 @@ class Inmessage(message.Message):
                     newnode.queries = {'messagetype':argmessagetype}    #copy messagetype into 1st segment of subtranslation (eg UNH, ST)
                     argmessagetype=None
                 else:
-                    newnode = node.Node(self._parsefields(rec2parse,tab[tabindex][FIELDS]))  #make new node
+                    newnode = node.Node(record=self._parsefields(rec2parse,tab[tabindex][FIELDS]),BOTSIDnr=tab[tabindex][BOTSIDnr])  #make new node
                     if botsglobal.ini.getboolean('settings','readrecorddebug',False):
                         botsglobal.logger.debug(u'read record "%s" (line %s pos %s):',tab[tabindex][ID],rec2parse[ID][LIN],rec2parse[ID][POS])
                         for key,value in newnode.record.items():
@@ -541,20 +541,19 @@ class var(Inmessage):
     def _parsefields(self,recordEdiFile,trecord):
         ''' Check all fields in message-record with field-info in grammar
             Build a dictionary of fields (field-IDs are unique within record), and return this.
-            Used by _parse
         '''
         recorddict = {}
-        #****************** first: identify fields, check _formatfield
-        tindex = -1
-        tsubindex=0
-        for rfield in recordEdiFile:    #difficult;handles both fields and sub-fields
+        #****************** first: identify fields: assign field id to lexed fields
+        tindex = -1     #elementcounter; composites count as one 
+        tsubindex=0     #sub-element couner (witin composite))
+        for rfield in recordEdiFile:    #handle both fields and sub-fields
             if rfield[SFIELD]:
                 tsubindex += 1
                 try:
                     field = trecord[tindex][SUBFIELDS][tsubindex]
-                except TypeError:
+                except TypeError:       #field has no SUBFIELDS
                     raise botslib.InMessageFieldError(_(u'line:$line pos:$pos; expect field, is a subfield; record "$record".'),line=rfield[LIN],pos=rfield[POS],record=self._striprecord(recordEdiFile))
-                except IndexError:
+                except IndexError:      #tsubindex is not in the subfields
                     raise botslib.InMessageFieldError(_(u'line:$line pos:$pos; too many subfields; record "$record".'),line=rfield[LIN],pos=rfield[POS],record=self._striprecord(recordEdiFile))
             else:
                 tindex += 1
@@ -562,11 +561,11 @@ class var(Inmessage):
                     field = trecord[tindex]
                 except IndexError:
                     raise botslib.InMessageFieldError(_(u'line:$line pos:$pos; too many fields; record "$record".'),line=rfield[LIN],pos=rfield[POS],record=self._striprecord(recordEdiFile))
-                    #TODO: better format error; give linenr/pos;
                 if not field[ISFIELD]: #if field is subfield
                     tsubindex = 0
                     field = trecord[tindex][SUBFIELDS][tsubindex]
-            if rfield[VALUE]:           #if field has content: check format and add to recorddictionary
+            #*********if field has content: check format and add to recorddictionary
+            if rfield[VALUE]:
                 try:
                     rfield[VALUE] = self._formatfield(rfield[VALUE],field,recordEdiFile[0][VALUE])
                 except botslib.InMessageFieldError:
@@ -969,7 +968,7 @@ class xml(var):
 
     def etree2botstree(self,xmlnode):
         self.stack.append(xmlnode.tag)
-        newnode = node.Node(self.etreenode2botstreenode(xmlnode))
+        newnode = node.Node(record=self.etreenode2botstreenode(xmlnode))
         for xmlchildnode in xmlnode:   #for every node in mpathtree
             if self.isfield(xmlchildnode):    #if no child entities: treat as 'field': this misses xml where attributes are used as fields....testing for repeating is no good...
                 if xmlchildnode.text and not xmlchildnode.text.isspace(): #skip empty xml entity
@@ -1055,7 +1054,7 @@ class json(var):
                 self.root = self.dojsonobject(jsonobject.values()[0],jsonobject.keys()[0])
             elif len(jsonobject)==1 and isinstance(jsonobject.values()[0],list) : 
                 #root dict has no name; use value from grammar for rootID; {id2:<dict, list>}
-                self.root=node.Node({'BOTSID': self.getrootID()})  #initialise empty node.
+                self.root=node.Node(record={'BOTSID': self.getrootID()})  #initialise empty node.
                 self.root.children = self.dojsonlist(jsonobject.values()[0],jsonobject.keys()[0])
             else:
                 #~ print self.getrootID()
@@ -1083,7 +1082,7 @@ class json(var):
         return lijst
 
     def dojsonobject(self,jsonobject,name):
-        thisnode=node.Node({})  #initialise empty node.
+        thisnode=node.Node(record={})  #initialise empty node.
         for key,value in jsonobject.items():
             if value is None:
                 continue
