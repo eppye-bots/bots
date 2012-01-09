@@ -106,7 +106,9 @@ class Inmessage(message.Message):
                 if valuelength < grammarfield[MINLENGTH]:
                     raise botslib.InMessageFieldError(_(u'Record "$record" field "$field" too small (min $min): "$content".'),record=record,field=grammarfield[ID],content=value,min=grammarfield[MINLENGTH])
             value = value.strip()
-            if grammarfield[BFORMAT] == 'A':
+            if not value:
+                pass
+            elif grammarfield[BFORMAT] == 'A':
                 pass
             elif grammarfield[BFORMAT] == 'D':
                 try:
