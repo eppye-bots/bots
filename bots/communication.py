@@ -1605,7 +1605,7 @@ class db(_comsession):
         db_objects = botslib.runscript(self.userscript,self.scriptname,'incommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection)
         if not db_objects:
             return
-        if not isinstance(db_objects,list):
+        if not isinstance(db_objects,(list,tuple)):
             db_objects = [db_objects]
         
         for db_object in db_objects:
