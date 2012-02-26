@@ -14,17 +14,17 @@
         <thead>
             <tr>
                 <th></th>
-                <th><p class="botsheader2">{% trans 'Phase' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Reference' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Botskey' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Date' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Confirm' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Route' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Channel' %}</p></th>
-                <th><p class="botsheader2">{% trans 'FromPartner' %}</p></th>
-                <th><p class="botsheader2">{% trans 'ToPartner' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Editype' %}</p></th>
-                <th><p class="botsheader2">{% trans 'Messagetype' %}</p></th>
+                <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'Phase' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="botskey" />{% trans 'Document number' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="reference" />{% trans 'Reference' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="confirmtext" />{% trans 'Confirm' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="idroute" />{% trans 'Route' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="fromchannel" />{% trans 'Channel' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="frompartner" />{% trans 'FromPartner' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="topartner" />{% trans 'ToPartner' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="editype" />{% trans 'Editype' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="messagetype" />{% trans 'Messagetype' %}</button></th>
             </tr>
         </thead>
         <tbody>
@@ -37,6 +37,7 @@
                             {% if row.incoming %} 
                                 <li><a href="/detail/?inidta={{row.incoming}}" class="botslink" target="_blank">{% trans 'View detail' %}</a></li>
                                 <li><a href="/filer/?action=this&amp;idta={{row.incoming}}" class="botslink" target="_blank">{% trans 'View incoming file' %}</a></li>
+                                <li><button class="botsheader" type="submit" name="retransmit" value="{{row.incoming}}" />{% trans 'Retransmit' %}</button></li>
                             {% else %}
                                 <li><a href="/filer/?action=this&amp;idta={{row.outgoing}}" class="botslink" target="_blank">{% trans 'View outgoing file' %}</a></li>
                             {% endif %}
@@ -44,8 +45,8 @@
                     </div>
                 </td>
                 <td>{{row.get_status_display}}</td>
+                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">{{row.botskey}}</a></td>
                 <td>{{row.reference}}</td>
-                <td>{{row.botskey}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
                 <td  style="white-space: pre;">{{row.confirmtext}}</td>
                 <td>{{row.idroute}}</td>
