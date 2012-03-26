@@ -13,6 +13,7 @@ from bots.botsconfig import *
 
 '''
 plugin unitconfirm.zip
+active all routes
 before each run: clear transactions!
 '''
 

@@ -30,8 +30,6 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         Function takes db-ta with status=TRANSLATE->PARSED->SPLITUP->TRANSLATED
     '''
     #select edifiles to translate; fill ta-object
-    #~ import gc
-    #~ gc.disable()
     for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
@@ -43,7 +41,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         try:
             ta_fromfile=botslib.OldTransaction(row['idta'])  #TRANSLATE ta
             ta_parsedfile = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta
-            #whole edi-file is read, parsed and made into a inmessage-object:
+            #read whole edi-file: read, parse and made into a inmessage-object. Message is represented a a tree.
             edifile = inmessage.edifromfile(frompartner=row['frompartner'],
                                             topartner=row['topartner'],
                                             filename=row['filename'],
@@ -119,13 +117,12 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                         break   #out of while loop
                     else:
                         inn.ta_info['alt'] = doalttranslation
-
-
                 #end of while-loop
+                
+                #
                 #~ print inn.ta_info
                 ta_frommes.update(statust=DONE,**inn.ta_info)   #update db. inn.ta_info could be changed by script. Is this useful?
                 del inn
-                #~ gc.collect()
 
         #exceptions file_in-level
         except:
@@ -140,8 +137,6 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
             ta_parsedfile.update(statust=DONE,**edifile.confirminfo)
             botsglobal.logger.debug(u'translated input file "%s".',row['filename'])
             del edifile
-        #~ gc.collect()
-    #~ gc.enable()
 
 #*********************************************************************
 #*** utily functions for persist: store things in the bots database. 
