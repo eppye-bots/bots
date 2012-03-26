@@ -51,20 +51,21 @@ def preprocess(routedict,function, status=FILEIN,**argv):
     return nr_files
 
 
-header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))',re.DOTALL)
-#           group:    1   2       3  4            5        6         7
+header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))|(\s*(STX=))',re.DOTALL)
+#           group:    1   2       3  4            5        6         7                8   9
 
 def mailbag(ta_from,endstatus,**argv):
-    ''' split 'mailbag' files to separate files each containing one interchange (ISA-IEA or UNA/UNB-UNZ).
-        handles x12 and edifact; these can be mixed.
-        recognizes xml files. messagetype 'xml' has a special handling when reading xml-files.
-
-        about auto-detect/mailbag:
-        - in US mailbag is used: one file for all received edi messages...appended in one file. I heard that edifact and x12 can be mixed,
-            but have actually never seen this.
-        - bots needs a 'splitter': one edi-file, more interchanges. it is preferred to split these first.
+    ''' 2 main functions:
+        -   recognizes and distuinguishes several edi types: x12 edifact tradacoms xml
+            ('mailbag' in, correct editype out)
+        -   split up interchanges (edifact, x12, tradacoms)
+        details:
+        - edifact, x12 and tradacoms can be can be mixed,
+        - recognizes xml files; but messagetype 'xml' has a special handling when reading xml-files: xpath identifiers are used.
+          this is needed for using xml in mailbag!
+        - when more interchanges in one file: strongly recommended to mailbag/split these.
         - handle multiple UNA in one file, including different charsets.
-        - auto-detect: is is x12, edifact, xml, or??
+        - handle multiple x12 seperators in one file.
     '''
     edifile = botslib.readdata(filename=ta_from.filename)       #read as binary...
     startpos=0
@@ -108,6 +109,12 @@ def mailbag(ta_from,endstatus,**argv):
                 record_sep = "'"
                 headpos=startpos+ found.start(5)
             foundtrailer = re.search(re.escape(record_sep)+'\s*U\s*N\s*Z\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
+        elif found.group(8):
+            editype='tradacoms'
+            headpos=startpos+ found.start(9)
+            field_sep = '='     #the tradacoms 'after-segment-tag-seperator'
+            record_sep = "'"
+            foundtrailer = re.search(re.escape(record_sep)+'\s*E\s*N\s*D\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
         if not foundtrailer:
             raise botslib.InMessageError(_(u'Found no valid envelope trailer in mailbag.'))
         endpos = headpos+foundtrailer.end()
