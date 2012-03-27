@@ -4,10 +4,9 @@
 	<ul>
 		<a href="/home">{% trans 'Home' %}</a>
 		<li><a href="/home/">{% trans 'Home *' %}</a></li>
+		<li><a href="http://code.google.com/p/bots/wiki/MonitorIntroduction">{% trans 'Help' %}</a></li>
 		<li><a href="/logout/">{% trans 'Log out' %}</a></li>
 		<li><a href="/admin/password_change/">{% trans 'Change password' %}</a></li>
-		<li>{% trans 'Current user' %}: {{ user.username }}</li>
-		<li>{% trans 'Last login' %}: {{ user.last_login|date:"Y-m-d G:i" }}</li>
 	</ul>
 	<ul>
 		<a href="/incoming/?last">{% trans 'Last run' %}</a>
