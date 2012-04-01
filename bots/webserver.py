@@ -43,13 +43,23 @@ def start():
     #***init general: find locating of bots, configfiles, init paths etc.***********************
     botsinit.generalinit(configdir)
 
-    #***initialise logging. This logging only contains the logging from bots-webserver, not from cherrypy.
+    #***initialise logging for web-server. This logging only contains the logging from bots-webserver, not from cherrypy.
     botsglobal.logger = logging.getLogger('bots-webserver')
+    #logging for logfile
     botsglobal.logger.setLevel(logging.DEBUG)
     h = TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'), backupCount=10)
-    fileformat = logging.Formatter("%(asctime)s %(levelname)-8s: %(message)s",'%Y%m%d %H:%M:%S')
+    fileformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
     h.setFormatter(fileformat)
     botsglobal.logger.addHandler(h)
+    #logging for console/screen
+    if botsglobal.ini.getboolean('settings','webserver_log_console',True):      #handling for logging to screen
+        convertini2logger={'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
+        logging.addLevelName(25, 'STARTINFO')
+        console = logging.StreamHandler()
+        console.setLevel(convertini2logger[botsglobal.ini.get('settings','webserver_log_console_level','STARTINFO')])
+        consuleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
+        console.setFormatter(consuleformat) # add formatter to console
+        botsglobal.logger.addHandler(console)  # add console to logger
     
     #***init cherrypy as webserver*********************************************
     #global configuration for cherrypy
@@ -62,7 +72,8 @@ def start():
     #cherrypy uses a dispatcher in order to handle the serving of static files and django.
     dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, '/media': servestaticfiles})
     botswebserver = wsgiserver.CherryPyWSGIServer(bind_addr=('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), wsgi_app=dispatcher, server_name=botsglobal.ini.get('webserver','name','bots-webserver'))
-    botsglobal.logger.info(_(u'Bots web-server started.'))
+    botsglobal.logger.log(25,_(u'Bots web-server started.'))
+    botsglobal.logger.log(25,_(u'Bots web-server is serving at port "%s".'),botsglobal.ini.getint('webserver','port',8080))
     #handle ssl: cherrypy < 3.2 always uses pyOpenssl. cherrypy >= 3.2 uses python buildin ssl (python >= 2.6 has buildin support for ssl).
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
     ssl_private_key = botsglobal.ini.get('webserver','ssl_private_key',None)
@@ -74,9 +85,9 @@ def start():
             #but: pyOpenssl should be there!
             botswebserver.ssl_certificate = ssl_certificate
             botswebserver.ssl_private_key = ssl_private_key
-        botsglobal.logger.info(_(u'Bots web-server uses ssl (https).'))
+        botsglobal.logger.log(25,_(u'Bots web-server uses ssl (https).'))
     else:
-        botsglobal.logger.info(_(u'Bots web-server uses plain http (no ssl).'))
+        botsglobal.logger.log(25,_(u'Bots web-server uses plain http (no ssl).'))
     
     #***start the cherrypy webserver.
     try:
