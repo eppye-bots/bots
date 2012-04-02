@@ -52,11 +52,11 @@ def start():
     h.setFormatter(fileformat)
     botsglobal.logger.addHandler(h)
     #logging for console/screen
-    if botsglobal.ini.getboolean('settings','webserver_log_console',True):      #handling for logging to screen
+    if botsglobal.ini.getboolean('webserver','webserver_log_console',True):      #handling for logging to screen
         convertini2logger={'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
         logging.addLevelName(25, 'STARTINFO')
         console = logging.StreamHandler()
-        console.setLevel(convertini2logger[botsglobal.ini.get('settings','webserver_log_console_level','STARTINFO')])
+        console.setLevel(convertini2logger[botsglobal.ini.get('webserver','webserver_log_console_level','STARTINFO')])
         consuleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
         console.setFormatter(consuleformat) # add formatter to console
         botsglobal.logger.addHandler(console)  # add console to logger
