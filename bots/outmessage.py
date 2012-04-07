@@ -4,7 +4,10 @@ try:
     import cPickle as pickle
 except:
     import pickle
-import decimal
+try:
+    import cdecimal as decimal
+except:
+    import decimal
 NODECIMAL = decimal.Decimal(1)
 try:
     import cElementTree as ET
@@ -76,7 +79,7 @@ class Outmessage(message.Message):
     '''
     def __init__(self,ta_info):
         self.ta_info = ta_info
-        self.root = node.Node(record={})         #message tree; build via put()-interface in mapping-script. Initialise with empty dict
+        self.root = node.Node({})         #message tree; build via put()-interface in mapping-script. Initialise with empty dict
         super(Outmessage,self).__init__()
 
     def outmessagegrammarread(self,editype,messagetype):
@@ -84,7 +87,7 @@ class Outmessage(message.Message):
             try to read the topartner dependent grammar syntax.
         ''' 
         self.defmessage = grammar.grammarread(editype,messagetype)
-        self.defmessage.display(self.defmessage.structure)
+        #~ self.defmessage.display(self.defmessage.structure)
         #~ print 'self.ta_info',self.ta_info
         #~ print 'self.defmessage.syntax',self.defmessage.syntax
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by mapping script
@@ -100,10 +103,10 @@ class Outmessage(message.Message):
             writeall is call from transform.translate()
         '''
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.checkmessage(self.root,self.defmessage)
         self.nrmessagewritten = 0
         if self.root.record:        #root record contains information; write whole tree in one time
             self.multiplewrite = False
-            self.normalisetree(self.root)
             self._initwrite()
             self._write(self.root)
             self.nrmessagewritten = 1
@@ -112,8 +115,6 @@ class Outmessage(message.Message):
             raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
         else:
             self.multiplewrite = True
-            for childnode in self.root.children:
-                self.normalisetree(childnode)
             self._initwrite()
             for childnode in self.root.children:
                 self._write(childnode)
@@ -145,10 +146,13 @@ class Outmessage(message.Message):
             The nodes are already sorted 
         '''
         self._tree2recordfields(node.record,structure)    #write root node->first record
-        for childnode in node.children:            #for every node in mpathtree, these are already sorted#SPEED: node.children is already sorted!
+        for childnode in node.children:            #for every node in mpathtree, these are already sorted #SPEED: node.children is already sorted!
+            BOTSID_childnode = childnode.record['BOTSID'].strip()   #speed up: use local var
+            BOTSIDnr_childnode = childnode.record['BOTSIDnr']       #speed up: use local var
             for structure_record in structure[LEVEL]:  #for structure_record of this level in grammar
-                if childnode.record['BOTSID'] == structure_record[ID] and childnode.record['BOTSIDnr'] == structure_record[BOTSIDnr]:   #if is is the right node:
+                if BOTSID_childnode == structure_record[ID] and BOTSIDnr_childnode == structure_record[BOTSIDnr]:   #check if is is the right node
                     self._tree2recordscore(childnode,structure_record)         #use rest of index in deeper level
+                    break       #childnode was found and used; break to go to next child node
 
     def _tree2recordfields(self,noderecord,structure_record):
         ''' appends fields in noderecord to (raw)record; use structure_record as guide.
@@ -164,28 +168,28 @@ class Outmessage(message.Message):
                     buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]      #append new field
                 else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        buffer += [{VALUE:'',SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]      #append new empty to buffer;
+                        buffer += [{VALUE:'',SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]          #append new empty to buffer;
                     else:
-                        value = self._formatfield('',grammarfield,structure_record)  #generate field
-                        buildrecord += [{VALUE:value,SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]                #append new field
+                        value = self._initfield(grammarfield,structure_record)                         #initialise empty field. For eg fixed and csv: all fields have to be present
+                        buildrecord += [{VALUE:value,SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]  #append new field
             else:  #if composite
                 donefirst = False       #used because first subfield in composite is marked as a field (not a subfield).
                 subbuffer=[]            #buffer for this composite. 
                 subiswritten=False      #check if composite contains data
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
-                    if grammarsubfield[ID] in noderecord and noderecord[grammarsubfield[ID]]:   #field exists in outgoing message and has data
+                    if grammarsubfield[ID] in noderecord and noderecord[grammarsubfield[ID]]:       #field exists in outgoing message and has data
                         buildrecord += buffer           #write buffer
                         buffer=[]                       #clear buffer
                         buildrecord += subbuffer        #write subbuffer
                         subbuffer=[]                    #clear subbuffer
-                        buildrecord += [{VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst}]      #append field
+                        buildrecord += [{VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst}]   #append field
                         subiswritten = True    
                     else:
                         if self.ta_info['stripfield_sep']:
-                            subbuffer += [{VALUE:'',SFIELD:donefirst}]      #append new empty to buffer;
+                            subbuffer += [{VALUE:'',SFIELD:donefirst}]                      #append new empty to buffer;
                         else:
-                            value = self._formatfield('',grammarsubfield,structure_record)      #generate & append new field. For eg fixed and csv: all field have to be present
-                            subbuffer += [{VALUE:value,SFIELD:donefirst}]      #generate & append new field
+                            value = self._initfield(grammarsubfield,structure_record)  #initialise empty field. For eg fixed and csv: all fields have to be present
+                            subbuffer += [{VALUE:value,SFIELD:donefirst}]                   #generate & append new field
                     donefirst = True
                 if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
                     buffer += [{VALUE:'',SFIELD:False}]
@@ -194,9 +198,9 @@ class Outmessage(message.Message):
         self.records += [buildrecord]
                 
 
-    def _formatfield(self,value, grammarfield,record):
+    def _formatfield(self,value, grammarfield,structure_record):
         ''' Input: value (as a string) and field definition.
-            Some parameters of self.syntax are used: decimaal
+            Some parameters of self.syntax are used, eg decimaal
             Format is checked and converted (if needed).
             return the formatted value
         '''
@@ -206,11 +210,11 @@ class Outmessage(message.Message):
                     value = value.rjust(grammarfield[MINLENGTH])
                 else:
                     value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
-            valuelength=len(value)
-            if valuelength > grammarfield[LENGTH]:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
-            if valuelength < grammarfield[MINLENGTH]:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too small (min $min): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
+            length=len(value)
+            if length > grammarfield[LENGTH]:
+                self.add2errorlist(_(u'[F20] Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+            if length < grammarfield[MINLENGTH]:
+                self.add2errorlist(_(u'[F21] Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         elif grammarfield[BFORMAT] == 'D':
             try:
                 lenght = len(value)
@@ -221,12 +225,11 @@ class Outmessage(message.Message):
                 else:
                     raise ValueError(u'To be catched')
             except ValueError:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" no valid date: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-            valuelength=len(value)
-            if valuelength > grammarfield[LENGTH]:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
-            if valuelength < grammarfield[MINLENGTH]:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too small (min $min): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
+                self.add2errorlist(_(u'[F22] Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+            if lenght > grammarfield[LENGTH]:
+                self.add2errorlist(_(u'[F31] Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+            if lenght < grammarfield[MINLENGTH]:
+                self.add2errorlist(_(u'[F32] Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         elif grammarfield[BFORMAT] == 'T':
             try:
                 lenght = len(value)
@@ -234,81 +237,99 @@ class Outmessage(message.Message):
                     time.strptime(value,'%H%M')
                 elif lenght==6:
                     time.strptime(value,'%H%M%S')
-                else: #lenght==8:     #tsja...just use first part of field
+                else:
                     raise ValueError(u'To be catched')
             except  ValueError:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" no valid time: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-            valuelength=len(value)
-            if valuelength > grammarfield[LENGTH]:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too big (max $max): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],max=grammarfield[LENGTH])
-            if valuelength < grammarfield[MINLENGTH]:
-                raise botslib.OutMessageError(_(u'record "$mpath" field "$field" too small (min $min): "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH],min=grammarfield[MINLENGTH])
+                self.add2errorlist(_(u'[F23] Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+            if lenght > grammarfield[LENGTH]:
+                self.add2errorlist(_(u'[F33] Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+            if lenght < grammarfield[MINLENGTH]:
+                self.add2errorlist(_(u'[F34] Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         else:   #numerics
-            if value or isinstance(self,fixed):    #if empty string for non-fixed: just return. Later on, ta_info[stripemptyfield] determines what to do with them
-                if not value:   #see last if; if a numerical fixed field has content '' , change this to '0' (init)
-                    value='0'
-                else:
-                    value = value.strip()
-                if value[0]=='-':
-                    minussign = '-'
-                    absvalue = value[1:]
-                else:
-                    minussign = ''
-                    absvalue = value
-                digits,decimalsign,decimals = absvalue.partition('.')
-                if not digits and not decimals:# and decimalsign:
-                    raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-                if not digits:
-                    digits = '0'
-                    
-                lengthcorrection = 0        #for some formats (if self.ta_info['lengthnumericbare']=True; eg edifact) length is calculated without decimal sing and/or minus sign.
-                if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
-                    if self.ta_info['lengthnumericbare']:
-                        if minussign:
-                            lengthcorrection += 1
-                        if decimalsign:
-                            lengthcorrection += 1
-                    try:
-                        value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -len(decimals)))
-                    except:
-                        raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-                    if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
-                        value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
-                    elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
-                        value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)                        
-                    else:
-                        value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
-                    value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
-                elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
-                    if self.ta_info['lengthnumericbare']:
-                        if minussign:
-                            lengthcorrection += 1
-                        if grammarfield[DECIMALS]:
-                            lengthcorrection += 1
-                    try:
-                        value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
-                    except:
-                        raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-                    if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
-                        value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
-                    elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
-                        value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)                        
-                    else:
-                        value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
-                    value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
-                elif grammarfield[BFORMAT] == 'I':  #implicit decimals
-                    if self.ta_info['lengthnumericbare']:
-                        if minussign:
-                            lengthcorrection += 1
-                    try:
-                        d = decimal.Decimal(minussign + digits + decimalsign + decimals) * 10**grammarfield[DECIMALS]
-                    except:
-                        raise botslib.OutMessageError(_(u'record "$mpath" field "$field" numerical format not valid: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
-                    value = str(d.quantize(NODECIMAL ))
-                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+            if value[0]=='-':
+                minussign = '-'
+                absvalue = value[1:]
+            else:
+                minussign = ''
+                absvalue = value
+            digits,decimalsign,decimals = absvalue.partition('.')
+            if not digits and not decimals:# and decimalsign:
+                self.add2errorlist(_(u'[F24] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+            if not digits:
+                digits = '0'
                 
-                if len(value)-lengthcorrection > grammarfield[LENGTH]:
-                    raise botslib.OutMessageError(_(u'record "$mpath" field "$field": content to large: "$content".'),field=grammarfield[ID],content=value,mpath=record[MPATH])
+            lengthcorrection = 0        #for some formats (if self.ta_info['lengthnumericbare']=True; eg edifact) length is calculated without decimal sing and/or minus sign.
+            if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
+                if self.ta_info['lengthnumericbare']:
+                    if minussign:
+                        lengthcorrection += 1
+                    if decimalsign:
+                        lengthcorrection += 1
+                try:
+                    value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -len(decimals)))
+                except:
+                    self.add2errorlist(_(u'[F25] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
+                    value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
+                    value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                else:
+                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
+            elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
+                if self.ta_info['lengthnumericbare']:
+                    if minussign:
+                        lengthcorrection += 1
+                    if grammarfield[DECIMALS]:
+                        lengthcorrection += 1
+                try:
+                    value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
+                except:
+                    self.add2errorlist(_(u'[F26] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
+                    value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
+                    value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)                        
+                else:
+                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
+            elif grammarfield[BFORMAT] == 'I':  #implicit decimals
+                if self.ta_info['lengthnumericbare']:
+                    if minussign:
+                        lengthcorrection += 1
+                try:
+                    d = decimal.Decimal(minussign + digits + decimalsign + decimals) * 10**grammarfield[DECIMALS]
+                    value = str(d.quantize(NODECIMAL ))
+                except:
+                    self.add2errorlist(_(u'[F27] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+            
+            if len(value)-lengthcorrection > grammarfield[LENGTH]:
+                self.add2errorlist(_(u'[F28] Record "%(record)s" field "%(field)s" too big: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+        return value
+                
+
+    def _initfield(self,grammarfield,structure_record):
+        ''' basically csv only. 
+        '''
+        if grammarfield[BFORMAT] == 'A':
+            value = ''
+        elif grammarfield[BFORMAT] == 'D':
+            value = ''
+        elif grammarfield[BFORMAT] == 'T':
+            value = ''
+        else:   #numerics
+            value = '0'
+            if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
+                value = value.zfill(grammarfield[MINLENGTH] )
+            elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
+                value = str(decimal.Decimal(value).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
+                value = value.zfill(grammarfield[MINLENGTH])
+                value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
+            elif grammarfield[BFORMAT] == 'I':  #implicit decimals
+                d = decimal.Decimal(value) * 10**grammarfield[DECIMALS]
+                value = str(d.quantize(NODECIMAL ))
+                value = value.zfill(grammarfield[MINLENGTH])
         return value
                 
 
@@ -398,7 +419,38 @@ class Outmessage(message.Message):
         return ''
 
 class fixed(Outmessage):
-    pass
+    def _initfield(self,grammarfield,structure_record):
+        if grammarfield[BFORMAT] == 'A':
+            if grammarfield[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
+                value = ''.rjust(grammarfield[MINLENGTH])
+            else:
+                value = ''.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
+        elif grammarfield[BFORMAT] == 'D':
+            value = ''.ljust(grammarfield[MINLENGTH])        #add spaces
+        elif grammarfield[BFORMAT] == 'T':
+            value = ''.ljust(grammarfield[MINLENGTH])        #add spaces
+        else:   #numerics
+            if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
+                if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
+                    value = '0'.ljust(grammarfield[MINLENGTH] )                        
+                elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
+                    value = '0'.rjust(grammarfield[MINLENGTH] )                        
+                else:
+                    value = '0'.zfill(grammarfield[MINLENGTH] )
+            elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
+                value = str(decimal.Decimal('0').quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
+                if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
+                    value = value.ljust(grammarfield[MINLENGTH])                        
+                elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
+                    value = value.rjust(grammarfield[MINLENGTH])                        
+                else:
+                    value = value.zfill(grammarfield[MINLENGTH])
+                value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
+            elif grammarfield[BFORMAT] == 'I':  #implicit decimals
+                d = decimal.Decimal('0') * 10**grammarfield[DECIMALS]
+                value = str(d.quantize(NODECIMAL ))
+                value = value.zfill(grammarfield[MINLENGTH])
+        return value
         
         
 class idoc(fixed):
@@ -444,7 +496,7 @@ class tradacoms(var):
             self.outmessagegrammarread(self.ta_info['editype'],message.get({'BOTSID':'MHD','TYPE.01':None}) + message.get({'BOTSID':'MHD','TYPE.02':None}))
             if not self.nrmessagewritten:
                 self._initwrite()
-            self.normalisetree(message)
+            self.checkmessage(message,self.defmessage)
             self._write(message)
             self.nrmessagewritten += 1
         self._closewrite()
@@ -475,7 +527,7 @@ class xml(Outmessage):
     def envelopewrite(self,node):
         ''' write envelope for XML messages'''
         self._initwrite()
-        self.normalisetree(node)
+        self.checkmessage(node,self.defmessage)
         xmltree = ET.ElementTree(self._node2xml(node))
         root = xmltree.getroot()
         ETI.include(root)
@@ -544,10 +596,9 @@ class xml(Outmessage):
         attributedict = {}
         recordtag = noderecord['BOTSID']
         attributemarker = recordtag + self.ta_info['attributemarker']       #attributemarker is a marker in the fieldname used to find out if field is an attribute of either xml-'record' or xml-element
-        #~ print '    rec_att_mark',attributemarker
-        for key,value in noderecord.items():    #find attributes belonging to xml-'record' and store in attributedict
+        #if fieldnames start with attribute-marker these are xml-attribute for the xml-'record'; store these in attributedict
+        for key,value in noderecord.items():
             if key.startswith(attributemarker):
-                #~ print '    record attribute',key,value
                 attributedict[key[len(attributemarker):]] = value
         xmlrecord = ET.Element(recordtag,attributedict) #make the xml ET node
         if 'BOTSCONTENT' in noderecord:     #BOTSCONTENT is used to store the value/text of the xml-record itself.
@@ -580,11 +631,11 @@ class xml(Outmessage):
         
 
 class xmlnocheck(xml):
-    def normalisetree(self,node):
+    def checkmessage(self,node,defmessage):
         pass
 
     def _node2xmlfields(self,noderecord):
-        ''' fields in a node are written to xml fields; output is sorted according to grammar
+        ''' fields in a node are written to xml fields;
         '''
         if 'BOTSID' not in noderecord:
             raise botslib.OutMessageError(_(u'No field "BOTSID" in xml-output in: "$record"'),record=noderecord)
@@ -599,6 +650,8 @@ class xmlnocheck(xml):
         if 'BOTSCONTENT' in noderecord:
             xmlrecord.text = noderecord['BOTSCONTENT']
             del noderecord['BOTSCONTENT']
+        if 'BOTSIDnr' in noderecord:     #BOTSIDnr does never go to the output; only internally used
+            del noderecord['BOTSIDnr']
         for key in attributedict.keys():  #remove used fields
             del noderecord[attributemarker+key]
         del noderecord['BOTSID']    #remove 'record' tag
@@ -655,6 +708,7 @@ class json(Outmessage):
             else:
                 newjsonobject[key]=[self._node2json(childnode)]
         del newjsonobject['BOTSID']
+        del newjsonobject['BOTSIDnr']
         return newjsonobject
         
     def _node2jsonold(self,node):
@@ -678,7 +732,7 @@ class json(Outmessage):
         return newdict
         
 class jsonnocheck(json):
-    def normalisetree(self,node):
+    def checkmessage(self,node,defmessage):
         pass
 
 class template(Outmessage):

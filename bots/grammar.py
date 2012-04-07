@@ -55,7 +55,6 @@ class Grammar(object):
             subfield is tuple of (ID, MANDATORY, tuple of fields)
             
         if a structure or recorddef has been read, Bots remembers this and skip most of the checks.
-        
     '''
     _checkstructurerequired=True
     
@@ -96,22 +95,19 @@ class Grammar(object):
             self.nextmessageblock = None
         if self._checkstructurerequired:
             try:
-                self._dostructure()
-            except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
-                raise botslib.GrammarError(_(u'Grammar "$grammar": no structure, is required.'),grammar=self.grammarname)
-            except:
-                self.structurefromgrammar[0]['error'] = True                #mark the structure as having errors
-                raise
-            try:
                 self._dorecorddefs()
             except:
                 self.recorddefs['BOTS_1$@#%_error'] = True                  #mark structure has been read with errors
                 raise
             else:
                 self.recorddefs['BOTS_1$@#%_error'] = False                 #mark structure has been read and checked
-            self.structure = copy.deepcopy(self.structurefromgrammar)       #(deep)copy structure for use in translation (in translation values are changed, so use a copy)
-            self._checkbotscollision(self.structure)
-            self._linkrecorddefs2structure(self.structure)
+            try:
+                self._dostructure()
+            except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
+                raise botslib.GrammarError(_(u'Grammar "$grammar": no structure, is required.'),grammar=self.grammarname)
+            except:
+                self.structure[0]['error'] = True                #mark the structure as having errors
+                raise
 
     def _dorecorddefs(self):
         ''' 1. check the recorddefinitions for validity.
@@ -243,18 +239,20 @@ class Grammar(object):
             2. adapt in structure: Add keys: mpath, count
             3. remember that structure is checked and adapted (so when grammar is read again, no checking/adapt needed)
         '''
-        self.structurefromgrammar = getattr(self.module, 'structure')
-        if len(self.structurefromgrammar) != 1:                        #every structure has only 1 root!!
+        self.structure = getattr(self.module, 'structure')
+        if len(self.structure) != 1:                        #every structure has only 1 root!!
             raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: only one root record allowed.'),grammar=self.grammarname)
         #check if structure is read & checked earlier in this run. If so, we can skip all checks.
-        if 'error' in self.structurefromgrammar[0]:
+        if 'error' in self.structure[0]:
             pass        # grammar has been read before, but there are errors. Do nothing here, same errors will be raised again.
-        elif MPATH in self.structurefromgrammar[0]:
-            return      # grammar has been red before, with no errors. Do no checks.
-        self._checkstructure(self.structurefromgrammar,[])
+        elif MPATH in self.structure[0]:
+            return      # grammar has been read before, with no errors. Do no checks.
+        self._checkstructure(self.structure,[])
         if self.syntax['checkcollision']:
-            self._checkbackcollision(self.structurefromgrammar)
-            self._checknestedcollision(self.structurefromgrammar)
+            self._checkbackcollision(self.structure)
+            self._checknestedcollision(self.structure)
+        self._checkbotscollision(self.structure)
+        self._linkrecorddefs2structure(self.structure)
 
     def _checkstructure(self,structure,mpath):
         ''' Recursive
@@ -283,7 +281,6 @@ class Grammar(object):
             if i[MIN] > i[MAX]:
                 raise botslib.GrammarError(_(u'Grammar "$grammar", in structure, at "$mpath": record where MIN > MAX: "$record".'),grammar=self.grammarname,mpath=mpath,record=str(i)[:100])
             i[MPATH]=mpath+[[i[ID]]]
-            i[COUNT]=0
             if LEVEL in i:
                 self._checkstructure(i[LEVEL],i[MPATH])
                 
@@ -515,7 +512,7 @@ class xml(Grammar):
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcollision':False,
-        'checkunknownentities': True,   #??changed later
+        'checkunknownentities': True,
         'contenttype':'text/xml ',
         'decimaal':'.',
         'DOCTYPE':'',                   #doctype declaration to use in xml header. DOCTYPE = 'mydoctype SYSTEM "mydoctype.dtd"'  will lead to: <!DOCTYPE mydoctype SYSTEM "mydoctype.dtd">
@@ -671,9 +668,20 @@ class edifact(Grammar):
         'triad':'',
         'version':'3',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        'UNB.S001.0080':'',
+        'UNB.S001.0133':'',
         'UNB.S002.0007':'14',
+        'UNB.S002.0008':'',
+        'UNB.S002.0042':'',
         'UNB.S003.0007':'14',
+        'UNB.S003.0014':'',
+        'UNB.S003.0046':'',
+        'UNB.S005.0022':'',
+        'UNB.S005.0025':'',
         'UNB.0026':'',
+        'UNB.0029':'',
+        'UNB.0031':'',
+        'UNB.0032':'',
         'UNB.0035':'0',
         }
     formatconvert = {
@@ -757,7 +765,7 @@ class json(Grammar):
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcollision':False,
-        'checkunknownentities': True,   #??changed later
+        'checkunknownentities': True,
         'contenttype':'text/xml ',
         'decimaal':'.',
         'defaultBOTSIDroot':'ROOT',

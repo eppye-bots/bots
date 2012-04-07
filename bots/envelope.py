@@ -237,19 +237,18 @@ class edifact(Envelope):
                         'S004.0019':time.strftime('%H%M'),
                         '0020':self.ta_info['reference']})
         #the following fields are conditional; do not write these when empty string (separator compression does take empty strings into account)
-        if self.ta_info['UNB.S002.0007']:
-            self.out.put({'BOTSID':'UNB','S002.0007': self.ta_info['UNB.S002.0007']})
-        if self.ta_info['UNB.S003.0007']:
-            self.out.put({'BOTSID':'UNB','S003.0007': self.ta_info['UNB.S003.0007']})
-        if self.ta_info['UNB.0026']:
-            self.out.put({'BOTSID':'UNB','0026': self.ta_info['UNB.0026']})
+        for field in ('S001.0080','S001.0133','S002.0007','S002.0008','S002.0042',
+                      'S003.0007','S003.0014','S003.0046','S005.0022','S005.0025',
+                      '0026','0029','0031','0032'):
+            if self.ta_info['UNB.'+field]:
+                self.out.put({'BOTSID':'UNB',field:self.ta_info['UNB.'+field]})
         if testindicator:
             self.out.put({'BOTSID':'UNB','0035': testindicator})
         self.out.put({'BOTSID':'UNB'},{'BOTSID':'UNZ','0036':self.ta_info['nrmessages'],'0020':self.ta_info['reference']})  #dummy segment; is not used
         #user exit
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
         #convert the tree into segments; here only the UNB is written (first segment)
-        self.out.normalisetree(self.out.root)
+        self.out.checkmessage(self.out.root,self.out.defmessage)
         self.out.tree2records(self.out.root)
         
         #start doing the actual writing:
@@ -301,7 +300,7 @@ class tradacoms(Envelope):
         #user exit
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
         #convert the tree into segments; here only the STX is written (first segment)
-        self.out.normalisetree(self.out.root)
+        self.out.checkmessage(self.out.root,self.out.defmessage)
         self.out.tree2records(self.out.root)
         
         #start doing the actual writing:
@@ -452,7 +451,7 @@ class x12(Envelope):
         #user exit
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
         #convert the tree into segments; here only the UNB is written (first segment)
-        self.out.normalisetree(self.out.root)
+        self.out.checkmessage(self.out.root,self.out.defmessage)
         self.out.tree2records(self.out.root)
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])

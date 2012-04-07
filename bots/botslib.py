@@ -498,9 +498,10 @@ def txtexc():
         limit=0
     #problems with char set for some input data that are reported in traces....so always decode this; 
     terug = traceback.format_exc(limit).decode('utf-8','ignore')
+    terug = terug.replace(u'Traceback (most recent call last):\n',u'')
     #~ botsglobal.logger.debug(u'exception %s',terug)
     if hasattr(botsglobal,'dbinfo') and botsglobal.dbinfo.drivername != 'sqlite':    #sqlite does not enforce strict lengths
-        return terug[-1848:]    #filed isze is 2048; but more text can be prepended. 
+        return terug[-1848:]    #filed size is 2048; but more text can be prepended. 
     else:
         return terug
 
@@ -768,8 +769,6 @@ class EanError(BotsError):
 class GrammarError(BotsError):            #grammar.py
     pass
 class InMessageError(BotsError):
-    pass
-class InMessageFieldError(BotsError):
     pass
 class LockedFileError(BotsError):
     pass
