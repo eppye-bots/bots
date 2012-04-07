@@ -37,13 +37,13 @@
 	{% if user.is_staff %}
 	<ul>
 		<a>{% trans 'Configuration' %}</a>
-		<li><a href="/admin/bots/routes/" >{% trans 'Routes' %}</a></li>
-		<li><a href="/admin/bots/channel/" >{% trans 'Channels' %}</a></li>
-		<li><a href="/admin/bots/translate/" >{% trans 'Translations' %}</a></li>
-		<li><a href="/admin/bots/partner/" >{% trans 'Partners &amp; groups' %}</a></li>
-		<li><a href="/admin/bots/confirmrule/" >{% trans 'Confirmrules' %}</a></li>
-		<li><a href="/admin/bots/ccode/" >{% trans 'User Codes as list' %}</a></li>
-		<li><a href="/admin/bots/ccodetrigger/" >{% trans 'User Codes by type' %}</a></li>
+		{% if perms.bots.change_routes %}<li><a href="/admin/bots/routes/" >{% trans 'Routes' %}</a></li>{% endif %}
+		{% if perms.bots.change_channel %}<li><a href="/admin/bots/channel/" >{% trans 'Channels' %}</a></li>{% endif %}
+		{% if perms.bots.change_translate %}<li><a href="/admin/bots/translate/" >{% trans 'Translations' %}</a></li>{% endif %}
+		{% if perms.bots.change_partner %}<li><a href="/admin/bots/partner/" >{% trans 'Partners &amp; groups' %}</a></li>{% endif %}
+		{% if perms.bots.change_confirmrule %}<li><a href="/admin/bots/confirmrule/" >{% trans 'Confirmrules' %}</a></li>{% endif %}
+		{% if perms.bots.change_ccode %}<li><a href="/admin/bots/ccode/" >{% trans 'User Codes list' %}</a></li>{% endif %}
+		{% if perms.bots.change_ccodetrigger %}<li><a href="/admin/bots/ccodetrigger/" >{% trans 'User Code types' %}</a></li>{% endif %}
 	</ul>
     {% endif %}
     {% if user.is_superuser %}
@@ -63,6 +63,7 @@
 		<li><a href="/sendtestmail/">{% trans 'Send test report' %}</a></li>
 	</ul>
     {% endif %}
+	{% if perms.bots.change_mutex %} <!-- change mutex permission is required to run bots-engine! -->
 	<ul>
 		<a>{% trans 'Run' %}</a>
 		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new)' %}</a></li>
@@ -70,6 +71,7 @@
 		<li><a href="/runengine/?clparameter=--retrycommunication" >{% trans 'Retry user-indicated comm errors' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retry"  OnClick = "return confirm('{% trans 'Are you sure you want to retry ALL previous errors?\n' %}');">{% trans 'Retry all previous errors' %}</a></li>
 	</ul>
+	{% endif %}
 {% else %}
 	<ul>
 		<a href="/login/">{% trans 'Log in' %}</a>
