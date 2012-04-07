@@ -1,4 +1,5 @@
 from django import template
+from bots import botsglobal
 
 register = template.Library()
 
@@ -15,3 +16,12 @@ def url2path(value):
         value = 'home'
     return value
 
+# Use customised botslogo html file if configured in bots.ini
+@register.filter
+def botslogo_html(default_html):
+    return botsglobal.ini.get('webserver','botslogo',default_html)
+
+# Customised text next to botslogo
+@register.filter
+def environment_text(default_text):
+    return botsglobal.ini.get('webserver','environment_text',default_text)

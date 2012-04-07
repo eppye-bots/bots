@@ -14,8 +14,9 @@
 
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
 {% if not is_popup %}
-    <div id="logo">
-        <img src="/media/images/botslogo.png"/>
+    {% include "bots/botslogo.html"|botslogo_html %}
+    <div id="environment">
+        <div>{{ ""|environment_text }}</div>
     </div>
     {% include "bots/menu.html" %}
 {% endif %}

@@ -12,6 +12,16 @@ div#logo>img {
 	top:		0%;
 	height:		100%;
 	}
+div#environment {
+	position:	absolute;
+	left:		52em;
+	top:		1em;
+	height:		2em;
+	}
+div#environment>div {
+	font-size:	2em; 
+	font-weight:bold; 
+	}
 div#menu {
 	position:	absolute;
 	top:		4.0em;
