@@ -30,7 +30,7 @@ ADMIN_MEDIA_PREFIX = '/media/'
 #~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
 ROOT_URLCONF = 'bots.urls'
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/home'
 LOGOUT_URL = '/logout/'
 #~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
 
@@ -119,6 +119,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #~ 'django.contrib.messages.middleware.MessageMiddleware',  #?for django 1.3: message-framework; to keep user auth working?
     'bots.persistfilters.FilterPersistMiddleware',
     )
 INSTALLED_APPS = (
@@ -126,6 +127,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.admin',
+    #~ 'django.contrib.messages',  #?for django 1.3: message-framework; to keep user auth working?
     'bots',
     )
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -134,4 +136,5 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
+    #~ 'django.contrib.messages.context_processors.messages',  #?for django 1.3: message-framework; to keep user auth working?
     )
