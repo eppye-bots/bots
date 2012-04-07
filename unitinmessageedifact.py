@@ -4,7 +4,10 @@ import bots.botslib as botslib
 import bots.botsinit as botsinit
 import utilsunit
 
-'''plugin unitinmessageedifact.zip'''
+'''plugin unitinmessageedifact.zip
+    in bots.ini: max_number_errors = 1
+
+'''
 
 
 class TestInmessage(unittest.TestCase):
@@ -16,7 +19,7 @@ class TestInmessage(unittest.TestCase):
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0401/040104.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0401/040105.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0401/040106.edi')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0401/040107.edi')
+        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0401/040107.edi')
         
     def testedifact0403(self):
         #~ #test charsets
@@ -31,7 +34,7 @@ class TestInmessage(unittest.TestCase):
             self.failUnless(utilsunit.comparenode(in1node.root,in3node.root),'compare')
         
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi')  #needs UNOA regular
-        #~ in1= inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi') #needs UNOA extended
+        # in1= inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi') #needs UNOA extended
         
         in7= inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040304.edi')  #UNOB-regular
         in5= inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/T0000000008.edi') #UNOB regular
@@ -44,17 +47,17 @@ class TestInmessage(unittest.TestCase):
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040401.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040402.edi')
         self.failUnless(inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040403.edi'), 'standaard test')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040404.edi')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040405.edi')
+        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040404.edi')
+        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040405.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040406.edi')
         #self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040407.edi')  #syntax version '0'; is not checked anymore
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040408.edi')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040409.edi')
+        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040408.edi')
+        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040409.edi')
         self.failUnless(inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040410.edi'), 'standaard test')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040411.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040412.edi')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040413.edi')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040414.edi')
+        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040413.edi')
+        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040414.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040415.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040416.edi')
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0404/040417.edi')

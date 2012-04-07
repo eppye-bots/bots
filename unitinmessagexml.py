@@ -11,8 +11,8 @@ import utilsunit
 ''' pluging unitinmessagexml.zip'''
 
 class TestInmessage(unittest.TestCase):
-    ''' Read messages; some should be OK (True), some shoudl give errors (False).
-        Tets per editype.
+    ''' Read messages; some should be OK (True), some should give errors (False).
+        Tests per editype.
     '''
     def setUp(self):
         pass

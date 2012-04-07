@@ -27,9 +27,9 @@ PLUGIN: unitinmessagejson.zip
 '''
 
 class InmessageJson(unittest.TestCase):
-    #~ #***********************************************************************
-    #~ #***********test json eg list of article (as eg used in database comm *******
-    #~ #***********************************************************************
+    #***********************************************************************
+    #***********test json eg list of article (as eg used in database comm *******
+    #***********************************************************************
     def testjson01(self):
         filein = 'botssys/infile/unitinmessagejson/org/01.jsn'
         filecomp = 'botssys/infile/unitinmessagejson/comp/01.xml'
@@ -131,7 +131,7 @@ class InmessageJson(unittest.TestCase):
         self.failUnless(inmessage.edifromfile(editype='json',messagetype='testjsonorder01',checkunknownentities=True,filename='botssys/infile/unitinmessagejson/org/130101.json'), 'standaard test')
         self.failUnless(inmessage.edifromfile(editype='jsonnocheck',messagetype='jsonnocheck',filename='botssys/infile/unitinmessagejson/org/130101.json'), 'standaard test')
         
-        #empty object
+        #~ #empty object
         self.assertRaises(botslib.InMessageError,inmessage.edifromfile, editype='json',messagetype='testjsonorder01',checkunknownentities=True,filename='botssys/infile/unitinmessagejson/org/130102.json')   
             
         #unknown field
@@ -211,19 +211,19 @@ class InmessageJson(unittest.TestCase):
         fileout = 'botssys/infile/unitinmessagejson/output/inisout05.json'
         inn = inmessage.edifromfile(editype='json',messagetype='jsoninvoic',filename=filein)
         out = outmessage.outmessage_init(editype='json',messagetype='jsoninvoic',filename=fileout,divtext='',topartner='')    #make outmessage object
-        #~ inn.root.display()
+        # inn.root.display()
         out.root = inn.root
         out.writeall()
         inn1 = inmessage.edifromfile(filename=filein,editype='jsonnocheck',messagetype='jsonnocheck',defaultBOTSIDroot='HEA')
         inn2 = inmessage.edifromfile(filename=fileout,editype='jsonnocheck',messagetype='jsonnocheck')
-        #~ inn1.root.display()
-        #~ inn2.root.display()
-        #~ self.failUnless(utilsunit.comparenode(inn1.root,inn2.root))
-        #~ rawfile1 = utilsunit.readfile(filein)
-        #~ rawfile2 = utilsunit.readfile(fileout)
-        #~ jsonobject1 = simplejson.loads(rawfile1)
-        #~ jsonobject2 = simplejson.loads(rawfile2)
-        #~ self.assertEqual(jsonobject1,jsonobject2,'CmpJson')
+        # inn1.root.display()
+        # inn2.root.display()
+        # self.failUnless(utilsunit.comparenode(inn1.root,inn2.root))
+        # rawfile1 = utilsunit.readfile(filein)
+        # rawfile2 = utilsunit.readfile(fileout)
+        # jsonobject1 = simplejson.loads(rawfile1)
+        # jsonobject2 = simplejson.loads(rawfile2)
+        # self.assertEqual(jsonobject1,jsonobject2,'CmpJson')
 
     def testinisoutjson03(self):
         ''' non-ascii-char'''

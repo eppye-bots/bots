@@ -12,7 +12,10 @@ from bots.botsconfig import *
 
 '''
 plugin 'unittesterros'
-in bots.ini: debug = False
+activate routes!
+in bots.ini: 
+    debug = False
+    max_number_errors = 25
 all tests pass if finished with 'Tests OK!!!'
 '''
 
