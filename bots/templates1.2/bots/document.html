@@ -35,8 +35,8 @@
                         <ul>
                             <li><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">{% trans 'View this file' %}</a></li>
                             {% if row.incoming %} 
+                                <li><a href="/detail/?inidta={{row.incoming}}" class="botslink" target="_blank">{% trans 'View detail' %}</a></li>
                                 <li><a href="/filer/?action=this&amp;idta={{row.incoming}}" class="botslink" target="_blank">{% trans 'View incoming file' %}</a></li>
-                                <li><a href="/detail/?inidta={{row.incoming}}" class="botslink">{% trans 'View detail' %}</a></li>
                                 <li><button class="botsheader" type="submit" name="retransmit" value="{{row.incoming}}" />{% trans 'Retransmit' %}</button></li>
                             {% else %}
                                 <li><a href="/filer/?action=this&amp;idta={{row.outgoing}}" class="botslink" target="_blank">{% trans 'View outgoing file' %}</a></li>

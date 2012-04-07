@@ -25,3 +25,9 @@ def botslogo_html(default_html):
 @register.filter
 def environment_text(default_text):
     return botsglobal.ini.get('webserver','environment_text',default_text)
+
+# Sets the minimum selectable date in datetimepicker widget
+@register.filter
+def minDate(days):
+    days = 0 - botsglobal.ini.getint('settings','maxdays',30)
+    return days
