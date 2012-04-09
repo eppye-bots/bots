@@ -43,7 +43,7 @@ def start():
     #***init general: find locating of bots, configfiles, init paths etc.***********************
     botsinit.generalinit(configdir)
 
-    #***initialise logging for web-server. This logging only contains the logging from bots-webserver, not from cherrypy.
+    #***initialise file-logging for web-server. This logging only contains the logging from bots-webserver, not from cherrypy.
     botsglobal.logger = logging.getLogger('bots-webserver')
     #logging for logfile
     botsglobal.logger.setLevel(logging.DEBUG)
@@ -73,7 +73,8 @@ def start():
     dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, '/media': servestaticfiles})
     botswebserver = wsgiserver.CherryPyWSGIServer(bind_addr=('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), wsgi_app=dispatcher, server_name=botsglobal.ini.get('webserver','name','bots-webserver'))
     botsglobal.logger.log(25,_(u'Bots web-server started.'))
-    botsglobal.logger.log(25,_(u'Bots web-server is serving at port "%s".'),botsglobal.ini.getint('webserver','port',8080))
+    botsglobal.logger.log(25,_(u'Bots web-server configdir: "%s".'),botsglobal.ini.get('directories','config'))
+    botsglobal.logger.log(25,_(u'Bots web-server serving at port: "%s".'),botsglobal.ini.getint('webserver','port',8080))
     #handle ssl: cherrypy < 3.2 always uses pyOpenssl. cherrypy >= 3.2 uses python buildin ssl (python >= 2.6 has buildin support for ssl).
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
     ssl_private_key = botsglobal.ini.get('webserver','ssl_private_key',None)
@@ -89,7 +90,7 @@ def start():
     else:
         botsglobal.logger.log(25,_(u'Bots web-server uses plain http (no ssl).'))
     
-    #***start the cherrypy webserver.
+    #***start the cherrypy webserver.************************************************
     try:
         botswebserver.start()
     except KeyboardInterrupt:

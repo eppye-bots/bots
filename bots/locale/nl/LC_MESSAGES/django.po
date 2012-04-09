@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bots Open Source EDI Translator 2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-01 00:32+0100\n"
+"POT-Creation-Date: 2012-04-09 18:57+0200\n"
 "PO-Revision-Date: 2010-05-26\n"
 "Last-Translator: hjebbers <hjebbers@gmail.com>\n"
 "Language-Team: Dutch <LL@li.org>\n"
@@ -231,24 +231,24 @@ msgstr "pad voor usersys"
 msgid "change not valid: expect status to be an integer. Programming error."
 msgstr ""
 
-#: botslib.py:553
+#: botslib.py:554
 msgid ""
 "import error in \"$module\", error:\n"
 "$txt"
 msgstr ""
 
-#: botslib.py:617 botslib.py:633
+#: botslib.py:618 botslib.py:634
 msgid "Script file \"$filename\": \"$txt\"."
 msgstr ""
 
-#: botslib.py:642
+#: botslib.py:643
 #, python-format
 msgid ""
 "error running extern program \"%(program)s\", error:\n"
 "%(error)s"
 msgstr ""
 
-#: botslib.py:699
+#: botslib.py:700
 msgid ""
 "Charset \"$charset2\" for channel not matching with charset \"$charset1\" "
 "for edi-file."
@@ -256,11 +256,11 @@ msgstr ""
 "Tekenset \"$charset2\" voor kanaal komt niet overeen met tekenset "
 "\"$charset1\" van het edi-bestand."
 
-#: botslib.py:715
+#: botslib.py:716
 msgid "No scheme in uri."
 msgstr ""
 
-#: botslib.py:734
+#: botslib.py:735
 msgid "Uri is empty."
 msgstr ""
 
@@ -492,11 +492,11 @@ msgstr ""
 msgid "Not found envelope \"$envelope\"."
 msgstr ""
 
-#: envelope.py:198 envelope.py:274 envelope.py:390
+#: envelope.py:198 envelope.py:273 envelope.py:389
 msgid "In enveloping \"frompartner\" or \"topartner\" unknown: \"$ta_info\"."
 msgstr ""
 
-#: envelope.py:325 outmessage.py:699
+#: envelope.py:324 outmessage.py:754
 #, python-format
 msgid ""
 "Dependency failure: editype \"template\" requires python library \"kid\". "
@@ -504,19 +504,19 @@ msgid ""
 "%s"
 msgstr ""
 
-#: envelope.py:330 envelope.py:367
+#: envelope.py:329 envelope.py:366
 msgid ""
 "While enveloping in \"$editype.$messagetype\": syntax option \"envelope-"
 "template\" not filled; is required."
 msgstr ""
 
-#: envelope.py:338 envelope.py:346 envelope.py:376 envelope.py:383
+#: envelope.py:337 envelope.py:345 envelope.py:375 envelope.py:382
 msgid ""
 "While enveloping in \"$editype.$messagetype\", error:\n"
 "$txt"
 msgstr ""
 
-#: envelope.py:362 outmessage.py:743
+#: envelope.py:361 outmessage.py:798
 #, python-format
 msgid ""
 "Dependency failure: editype \"template\" requires python library \"genshi\". "
@@ -536,249 +536,243 @@ msgid ""
 "\"$messagetype\", but editype is unknown."
 msgstr ""
 
-#: grammar.py:77
+#: grammar.py:76
 msgid "Grammar \"$grammar\": syntax is not a dict{}."
 msgstr ""
 
-#: grammar.py:88
+#: grammar.py:87
 msgid "Grammar \"$grammar\": if nextmessage2: nextmessage has to be used."
 msgstr ""
 
-#: grammar.py:94
+#: grammar.py:93
 msgid ""
 "Grammar \"$grammar\": nextmessageblock and nextmessage not both allowed."
 msgstr ""
 
-#: grammar.py:101
+#: grammar.py:107
 msgid "Grammar \"$grammar\": no structure, is required."
 msgstr ""
 
-#: grammar.py:122
+#: grammar.py:119
 msgid "Grammar \"$grammar\": no recorddefs."
 msgstr ""
 
-#: grammar.py:124
+#: grammar.py:121
 msgid "Grammar \"$grammar\": recorddefs is not a dict{}."
 msgstr ""
 
-#: grammar.py:128
+#: grammar.py:125
 msgid "Grammar \"$grammar\" has error that is already reported in this run."
 msgstr ""
 
-#: grammar.py:132
+#: grammar.py:129
 msgid "Grammar \"$grammar\", record \"$record\": is not a string."
 msgstr ""
 
-#: grammar.py:134
+#: grammar.py:131
 msgid "Grammar \"$grammar\", record \"$record\": recordID with empty string."
 msgstr ""
 
-#: grammar.py:136
+#: grammar.py:133
 msgid "Grammar \"$grammar\", record \"$record\": no correct fields found."
 msgstr ""
 
-#: grammar.py:139 grammar.py:142
+#: grammar.py:136 grammar.py:139
 msgid "Grammar \"$grammar\", record \"$record\": too few fields."
 msgstr ""
 
-#: grammar.py:152 grammar.py:158
+#: grammar.py:149 grammar.py:155
 msgid ""
 "Grammar \"$grammar\", record \"$record\": field \"$field\" appears twice. "
 "Field names should be unique within a record."
 msgstr ""
 
-#: grammar.py:162
+#: grammar.py:159
 msgid "Grammar \"$grammar\", record \"$record\": no field BOTSID."
 msgstr ""
 
-#: grammar.py:164
+#: grammar.py:161
 msgid ""
 "Grammar \"$grammar\": if syntax[\"noBOTSID\"]: there can be only one record "
 "in recorddefs."
 msgstr ""
 
-#: grammar.py:166
+#: grammar.py:163
 msgid ""
 "Grammar \"$grammar\": if nextmessageblock: there can be only one record in "
 "recorddefs."
 msgstr ""
 
-#: grammar.py:176
+#: grammar.py:173
 msgid ""
 "Grammar \"$grammar\": error in grammar; error is already reported in this "
 "run."
 msgstr ""
 
-#: grammar.py:178
+#: grammar.py:175
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": list has invalid "
 "number of arguments."
 msgstr ""
 
-#: grammar.py:180
+#: grammar.py:177
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": fieldID has to "
 "be a string."
 msgstr ""
 
-#: grammar.py:182
+#: grammar.py:179
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": mandatory/"
 "conditional has to be a string."
 msgstr ""
 
-#: grammar.py:184
+#: grammar.py:181
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": mandatory/"
 "conditional must be \"M\" or \"C\"."
 msgstr ""
 
-#: grammar.py:189
+#: grammar.py:186
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": min length \"$min"
 "\" has to be a number."
 msgstr ""
 
-#: grammar.py:191
+#: grammar.py:188
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": max length \"$max"
 "\" has to be a number."
 msgstr ""
 
-#: grammar.py:193
+#: grammar.py:190
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": min length \"$min"
 "\" must be > max length \"$max\"."
 msgstr ""
 
-#: grammar.py:200
+#: grammar.py:197
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": length \"$len\" "
 "has to be number or (min,max)."
 msgstr ""
 
-#: grammar.py:202
+#: grammar.py:199
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": length \"$len\" "
 "has to be at least 1."
 msgstr ""
 
-#: grammar.py:204
+#: grammar.py:201
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": minlength \"$len"
 "\" has to be at least 0."
 msgstr ""
 
-#: grammar.py:207
+#: grammar.py:204
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": format \"$format"
 "\" has to be a string."
 msgstr ""
 
-#: grammar.py:214
+#: grammar.py:211
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": field length "
 "\"$len\" has to be greater that nr of decimals \"$decimals\"."
 msgstr ""
 
-#: grammar.py:219
+#: grammar.py:216
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": if format "
 "\"$format\", no length \"$len\"."
 msgstr ""
 
-#: grammar.py:221
+#: grammar.py:218
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": if format "
 "\"$format\", no minlength \"$len\"."
 msgstr ""
 
-#: grammar.py:224
+#: grammar.py:221
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\": is a composite "
 "field, has to have subfields."
 msgstr ""
 
-#: grammar.py:226
+#: grammar.py:223
 msgid ""
 "Grammar \"$grammar\", record \"$record\", field \"$field\" has < 2 sfields."
 msgstr ""
 
-#: grammar.py:236
+#: grammar.py:233
 msgid "Grammar \"$grammar\": in recorddef no record \"$record\"."
 msgstr ""
 
-#: grammar.py:247
+#: grammar.py:244
 msgid "Grammar \"$grammar\", in structure: only one root record allowed."
 msgstr ""
 
-#: grammar.py:265
+#: grammar.py:263
 msgid "Grammar \"$grammar\", in structure, at \"$mpath\": not a list."
 msgstr ""
 
-#: grammar.py:268
+#: grammar.py:266
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": record should be a dict: "
 "\"$record\"."
 msgstr ""
 
-#: grammar.py:270
+#: grammar.py:268
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": record without ID: "
 "\"$record\"."
 msgstr ""
 
-#: grammar.py:272
+#: grammar.py:270
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": recordID of record is not "
 "a string: \"$record\"."
 msgstr ""
 
-#: grammar.py:274
+#: grammar.py:272
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": recordID of record is "
 "empty: \"$record\"."
 msgstr ""
 
-#: grammar.py:276
+#: grammar.py:274
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": record without MIN: "
 "\"$record\"."
 msgstr ""
 
-#: grammar.py:278
+#: grammar.py:276
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": record without MAX: "
 "\"$record\"."
 msgstr ""
 
-#: grammar.py:280
+#: grammar.py:278
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": record where MIN is not "
 "whole number: \"$record\"."
 msgstr ""
 
-#: grammar.py:282
+#: grammar.py:280
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": record where MAX is not "
 "whole number: \"$record\"."
 msgstr ""
 
-#: grammar.py:284
+#: grammar.py:282
 msgid ""
 "Grammar \"$grammar\", in structure, at \"$mpath\": record where MIN > MAX: "
 "\"$record\"."
 msgstr ""
 
-#: grammar.py:301
+#: grammar.py:298
 msgid ""
 "Grammar \"$grammar\", in structure: back-collision detected at record "
-"\"$mpath\"."
-msgstr ""
-
-#: grammar.py:321
-msgid ""
-"Grammar \"$grammar\", in structure: bots-collision detected at record "
 "\"$mpath\"."
 msgstr ""
 
@@ -794,354 +788,474 @@ msgid ""
 "\" has to be one of \"$keys\"."
 msgstr ""
 
-#: inmessage.py:37
+#: inmessage.py:36
 msgid "Unknown editype for incoming message: $editype"
 msgstr ""
 
-#: inmessage.py:75
+#: inmessage.py:76
 msgid ""
 "Unknown data beyond end of message; mostly problem with separators or "
 "message structure: \"$content\""
 msgstr ""
 
-#: inmessage.py:105 inmessage.py:157
-msgid "Record \"$record\" field \"$field\" too big (max $max): \"$content\"."
-msgstr ""
-
-#: inmessage.py:107 inmessage.py:159
-msgid "Record \"$record\" field \"$field\" too small (min $min): \"$content\"."
-msgstr ""
-
-#: inmessage.py:121
+#: inmessage.py:107
+#, python-format
 msgid ""
-"Record \"$record\" date field \"$field\" not a valid date: \"$content\"."
+"[F05] Record \"%(record)s\" field \"%(field)s\" too big (max %(max)s): "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: inmessage.py:136
+#: inmessage.py:109
+#, python-format
 msgid ""
-"Record \"$record\" time field \"$field\" not a valid time: \"$content\"."
+"[F06] Record \"%(record)s\" field \"%(field)s\" too small (min %(min)s): "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: inmessage.py:143
+#: inmessage.py:120
+#, python-format
 msgid ""
-"Record \"$record\" field \"$field\" has numeric format but contains only "
-"space."
+"[F07] Record \"%(record)s\" date field \"%(field)s\" not a valid date: "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: inmessage.py:150
+#: inmessage.py:135
+#, python-format
 msgid ""
-"Record \"$record\" field \"$field\" format \"$format\" contains exponent: "
-"\"$content\"."
+"[F08] Record \"%(record)s\" time field \"%(field)s\" not a valid time: "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: inmessage.py:162
+#: inmessage.py:148
+#, python-format
 msgid ""
-"Record \"$record\" field \"$field\" has format \"I\" but contains decimal "
-"sign: \"$content\"."
+"[F09] Record \"%(record)s\" field \"%(field)s\" contains exponent: "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: inmessage.py:168 inmessage.py:177 inmessage.py:184
+#: inmessage.py:155
+#, python-format
 msgid ""
-"Record \"$record\" numeric field \"$field\" has non-numerical content: "
-"\"$content\"."
+"[F10] Record \"%(record)s\" field \"%(field)s\" too big (max %(max)s): "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: inmessage.py:172
+#: inmessage.py:157
+#, python-format
 msgid ""
-"Record \"$record\" numeric field \"$field\" has invalid nr of decimals: "
-"\"$content\"."
+"[F11] Record \"%(record)s\" field \"%(field)s\" too small (min %(min)s): "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: inmessage.py:221
+#: inmessage.py:160
+#, python-format
 msgid ""
-"line:$line pos:$pos; record:\"$record\" not in grammar; looked in grammar "
+"[F12] Record \"%(record)s\" field \"%(field)s\" has format \"I\" but "
+"contains decimal sign: \"%(content)s\".\n"
+msgstr ""
+
+#: inmessage.py:167
+#, python-format
+msgid ""
+"[F13] Record \"%(record)s\" numeric field \"%(field)s\" has non-numerical "
+"content: \"%(content)s\".\n"
+msgstr ""
+
+#: inmessage.py:171
+#, python-format
+msgid ""
+"[F14] Record \"%(record)s\" numeric field \"%(field)s\" has invalid nr of "
+"decimals: \"%(content)s\".\n"
+msgstr ""
+
+#: inmessage.py:176
+#, python-format
+msgid ""
+"[F15] Record \"%(record)s\" numeric field \"%(field)s\" has non-numerical "
+"content: \"%(content)s\".\n"
+msgstr ""
+
+#: inmessage.py:183
+#, python-format
+msgid ""
+"[F16] Record \"%(record)s\" numeric field \"%(field)s\" has non-numerical "
+"content: \"%(content)s\".\n"
+msgstr ""
+
+#: inmessage.py:214
+msgid ""
+"Line:$line pos:$pos record:\"$record\": message has an error in its "
+"structure; this record is not allowed here. Scanned in message definition "
 "until mandatory record: \"$looked\"."
 msgstr ""
 
-#: inmessage.py:223
-msgid "missing mandatory record at message-level: \"$record\""
+#: inmessage.py:216
+msgid "Missing mandatory record \"$record\"."
 msgstr ""
 
-#: inmessage.py:232
-msgid "line:$line pos:$pos; too many repeats record \"$record\"."
+#: inmessage.py:230
+msgid "Could not find SUBTRANSLATION \"$sub\" in (sub)message."
 msgstr ""
 
-#: inmessage.py:246
-msgid "could not find SUBTRANSLATION \"$sub\" in (sub)message."
+#: inmessage.py:237
+msgid ""
+"No (valid) grammar for editype \"$editype\" messagetype \"$messagetype\"."
 msgstr ""
 
-#: inmessage.py:388
+#: inmessage.py:355
 msgid ""
 "line $line record \"$record\" too short; is $pos pos, defined is $defpos "
 "pos: \"$content\"."
 msgstr ""
 
-#: inmessage.py:390
+#: inmessage.py:357
 msgid ""
 "line $line record \"$record\" too long; is $pos pos, defined is $defpos pos: "
 "\"$content\"."
 msgstr ""
 
-#: inmessage.py:398 inmessage.py:574
-msgid ""
-"line:$line pos:$pos. Error:\n"
-"$txt"
-msgstr ""
-
-#: inmessage.py:403
-msgid ""
-"line:$line pos:$pos; mandatory field \"$field\" not in record \"$record\"."
-msgstr ""
-
-#: inmessage.py:425 inmessage.py:628
-msgid "edi file only contains whitespace."
-msgstr ""
-
-#: inmessage.py:427
-msgid "expect \"EDI_DC\", found \"$content\". Probably no SAP idoc."
-msgstr ""
-
-#: inmessage.py:529
+#: inmessage.py:484
 msgid ""
 "translation problem with lexing; probably a seperator-problem, or extra "
 "characters after interchange"
 msgstr ""
 
-#: inmessage.py:556
-msgid "line:$line pos:$pos; expect field, is a subfield; record \"$record\"."
-msgstr ""
-
-#: inmessage.py:558
-msgid "line:$line pos:$pos; too many subfields; record \"$record\"."
-msgstr ""
-
-#: inmessage.py:564
-msgid "line:$line pos:$pos; too many fields; record \"$record\"."
-msgstr ""
-
-#: inmessage.py:580
-msgid "line:$line mandatory field \"$field\" not in record \"$record\"."
-msgstr ""
-
-#: inmessage.py:590
+#: inmessage.py:502
+#, python-format
 msgid ""
-"line:$line mandatory subfield \"$field\" not in composite, record \"$record"
-"\"."
+"[F17] Record \"%(record)s\" expect field but \"%(content)s\" is a subfield "
+"(line %(line)s position %(pos)s).\n"
 msgstr ""
 
-#: inmessage.py:592
-msgid "line:$line mandatory composite \"$field\" not in record \"$record\"."
+#: inmessage.py:505
+#, python-format
+msgid ""
+"[F18] Record \"%(record)s\" too many subfields in composite; unknown "
+"subfield \"%(content)s\" (line %(line)s position %(pos)s).\n"
 msgstr ""
 
-#: inmessage.py:646
-msgid "No \"UNB\" at the start of file. Maybe not edifact."
+#: inmessage.py:512
+#, python-format
+msgid ""
+"[F19] Record \"%(record)s\" too many fields in record; unknown field "
+"\"%(content)s\" (line %(line)s position %(pos)s).\n"
 msgstr ""
 
-#: inmessage.py:665
+#: inmessage.py:576 inmessage.py:606
+msgid "No \"UNB\" at the start of edifact file."
+msgstr ""
+
+#: inmessage.py:583
+msgid "Edifact file only contains whitespace."
+msgstr ""
+
+#: inmessage.py:604
 msgid "Incoming edi file uses non-standard separators - should use UNA."
 msgstr ""
 
-#: inmessage.py:669
-msgid "Incoming edi file has unknown charset \"$charset\"."
+#: inmessage.py:611
+msgid "Incoming edifact file has unknown charset \"$charset\"."
 msgstr ""
 
-#: inmessage.py:671
+#: inmessage.py:613
 msgid ""
-"not allowed chars in incoming edi file (for translation) at/after filepos: "
+"Not allowed chars in incoming edi file (for translation) at/after filepos: "
 "$content"
 msgstr ""
 
-#: inmessage.py:682
+#: inmessage.py:624
+#, python-format
 msgid ""
-"UNB-reference is \"$UNBreference\"; should be equal to UNZ-reference "
-"\"$UNZreference\"."
+"[E01] UNB-reference is \"%(UNBreference)s\"; should be equal to UNZ-"
+"reference \"%(UNZreference)s\".\n"
 msgstr ""
 
-#: inmessage.py:686
+#: inmessage.py:629
+#, python-format
 msgid ""
-"Count in messages in UNZ is $UNZcount; should be equal to number of messages "
-"$messagecount."
+"[E02] Count of messages in UNZ is %(UNZcount)s; should be equal to number of "
+"messages %(messagecount)s.\n"
 msgstr ""
 
-#: inmessage.py:697 inmessage.py:716
-msgid ""
-"UNH-reference is \"$UNHreference\"; should be equal to UNT-reference "
-"\"$UNTreference\"."
+#: inmessage.py:631
+#, python-format
+msgid "[E03] Count of messages in UNZ is invalid: \"%(count)s\".\n"
 msgstr ""
 
-#: inmessage.py:701 inmessage.py:720
+#: inmessage.py:642
+#, python-format
 msgid ""
-"Segmentcount in UNT is $UNTcount; should be equal to number of segments "
-"$segmentcount."
+"[E04] UNH-reference is \"%(UNHreference)s\"; should be equal to UNT-"
+"reference \"%(UNTreference)s\".\n"
 msgstr ""
 
-#: inmessage.py:707
+#: inmessage.py:647
+#, python-format
 msgid ""
-"UNG-reference is \"$UNGreference\"; should be equal to UNE-reference "
-"\"$UNEreference\"."
+"[E05] Segmentcount in UNT is %(UNTcount)s; should be equal to number of "
+"segments %(segmentcount)s.\n"
 msgstr ""
 
-#: inmessage.py:711
-msgid ""
-"Groupcount in UNE is $UNEcount; should be equal to number of groups "
-"$groupcount."
+#: inmessage.py:649
+#, python-format
+msgid "[E06] Count of segments in UNT is invalid: \"%(count)s\".\n"
 msgstr ""
 
-#: inmessage.py:783
+#: inmessage.py:655
+#, python-format
+msgid ""
+"[E07] UNG-reference is \"%(UNGreference)s\"; should be equal to UNE-"
+"reference \"%(UNEreference)s\".\n"
+msgstr ""
+
+#: inmessage.py:660
+#, python-format
+msgid ""
+"[E08] Groupcount in UNE is %(UNEcount)s; should be equal to number of groups "
+"%(groupcount)s.\n"
+msgstr ""
+
+#: inmessage.py:662
+#, python-format
+msgid "[E09] Groupcount in UNE is invalid: \"%(count)s\"."
+msgstr ""
+
+#: inmessage.py:667
+#, python-format
+msgid ""
+"[E10] UNH-reference is \"%(UNHreference)s\"; should be equal to UNT-"
+"reference \"%(UNTreference)s\".\n"
+msgstr ""
+
+#: inmessage.py:672
+#, python-format
+msgid ""
+"[E11] Segmentcount in UNT is %(UNTcount)s; should be equal to number of "
+"segments %(segmentcount)s.\n"
+msgstr ""
+
+#: inmessage.py:674
+#, python-format
+msgid "[E12] Count of segments in UNT is invalid: \"%(count)s\".\n"
+msgstr ""
+
+#: inmessage.py:735
 msgid "edifile only contains whitespace."
 msgstr ""
 
-#: inmessage.py:785
+#: inmessage.py:737
 msgid "expect \"ISA\", found \"$content\". Probably no x12?"
 msgstr ""
 
-#: inmessage.py:814
+#: inmessage.py:766
+#, python-format
 msgid ""
-"ISA-reference is \"$ISAreference\"; should be equal to IEA-reference "
-"\"$IEAreference\"."
+"[E13] ISA-reference is \"%(ISAreference)s\"; should be equal to IEA-"
+"reference \"%(IEAreference)s\".\n"
 msgstr ""
 
-#: inmessage.py:818
+#: inmessage.py:771
+#, python-format
 msgid ""
-"Count in IEA-IEA01 is $IEAcount; should be equal to number of groups "
-"$groupcount."
+"[E14] Count in IEA-IEA01 is %(IEAcount)s; should be equal to number of "
+"groups %(groupcount)s.\n"
 msgstr ""
 
-#: inmessage.py:824
-msgid ""
-"GS-reference is \"$GSreference\"; should be equal to GE-reference "
-"\"$GEreference\"."
+#: inmessage.py:773
+#, python-format
+msgid "[E15] Count of messages in IEA is invalid: \"%(count)s\".\n"
 msgstr ""
 
-#: inmessage.py:828
+#: inmessage.py:779
+#, python-format
 msgid ""
-"Count in GE-GE01 is $GEcount; should be equal to number of transactions: "
-"$messagecount."
+"[E16] GS-reference is \"%(GSreference)s\"; should be equal to GE-reference "
+"\"%(GEreference)s\".\n"
 msgstr ""
 
-#: inmessage.py:836
+#: inmessage.py:784
+#, python-format
 msgid ""
-"ST-reference is \"$STreference\"; should be equal to SE-reference "
-"\"$SEreference\"."
+"[E17] Count in GE-GE01 is %(GEcount)s; should be equal to number of "
+"transactions: %(messagecount)s.\n"
 msgstr ""
 
-#: inmessage.py:840
-msgid ""
-"Count in SE-SE01 is $SEcount; should be equal to number of segments "
-"$segmentcount."
+#: inmessage.py:786
+#, python-format
+msgid "[E18] Count of messages in GE is invalid: \"%(count)s\".\n"
 msgstr ""
 
-#: inmessage.py:895
+#: inmessage.py:794
+#, python-format
 msgid ""
-"Count in messages in END is $ENDcount; should be equal to number of messages "
-"$messagecount"
+"[E19] ST-reference is \"%(STreference)s\"; should be equal to SE-reference "
+"\"%(SEreference)s\".\n"
 msgstr ""
 
-#: inmessage.py:904
+#: inmessage.py:799
+#, python-format
 msgid ""
-"Segmentcount in MTR is $MTRcount; should be equal to number of segments "
-"$segmentcount"
+"[E20] Count in SE-SE01 is %(SEcount)s; should be equal to number of segments "
+"%(segmentcount)s.\n"
 msgstr ""
 
-#: inmessage.py:942
+#: inmessage.py:801
+#, python-format
+msgid "[E21] Count of segments in SE is invalid: \"%(count)s\".\n"
+msgstr ""
+
+#: inmessage.py:857
+#, python-format
+msgid ""
+"[E22] Count in END is %(ENDcount)s; should be equal to number of messages "
+"%(messagecount)s.\n"
+msgstr ""
+
+#: inmessage.py:859
+#, python-format
+msgid "[E23] Count of messages in END is invalid: \"%(count)s\".\n"
+msgstr ""
+
+#: inmessage.py:869
+#, python-format
+msgid ""
+"[E24] Count in MTR is %(MTRcount)s; should be equal to number of segments "
+"%(segmentcount)s.\n"
+msgstr ""
+
+#: inmessage.py:871
+#, python-format
+msgid "[E25] Count of segments in MTR is invalid: \"%(count)s\".\n"
+msgstr ""
+
+#: inmessage.py:909
 msgid "invalid search parameters in xml mailbag."
 msgstr ""
 
-#: inmessage.py:954
+#: inmessage.py:921
 msgid "could not find right xml messagetype for mailbag."
 msgstr ""
 
-#: inmessage.py:1016
+#: inmessage.py:983
 msgid "Unknown XML-tag in \"$record\"."
 msgstr ""
 
-#: inmessage.py:1050 inmessage.py:1065
+#: inmessage.py:1017 inmessage.py:1031
 msgid "no usable content."
 msgstr ""
 
-#: inmessage.py:1069
+#: inmessage.py:1035
 msgid "Content must be a \"list\" or \"object\"."
 msgstr ""
 
-#: inmessage.py:1082
+#: inmessage.py:1048
 msgid "List content in must be a \"object\"."
 msgstr ""
 
-#: inmessage.py:1102
+#: inmessage.py:1068
 msgid "Key \"$key\" value \"$value\": is not string, list or dict."
 msgstr ""
 
-#: message.py:41
+#: message.py:20
 msgid ""
-"change($where,$change\"): \"root\" of incoming message is empty; either "
-"split messages or use inn.getloop"
+"Found at least $max_number_errors errors in message:\n"
+"$errorlist"
 msgstr ""
 
-#: message.py:47
+#: message.py:58
+msgid "$errorlist"
+msgstr ""
+
+#: message.py:63
+msgid ""
+"Grammar \"$grammar\" has (root)record \"$grammarroot\"; found \"$root\"."
+msgstr ""
+
+#: message.py:80
+#, python-format
+msgid ""
+"[S01] Record \"%(record)s\" in message has children, but these are not in "
+"grammar \"%(grammar)s\". Found record \"%(xx)s\".\n"
+msgstr ""
+
+#: message.py:93
+#, python-format
+msgid ""
+"[S02] Record \"%(record)s\" in message but not in grammar \"%(grammar)s\". "
+"Content of record: \"%(content)s\".\n"
+msgstr ""
+
+#: message.py:120
+#, python-format
+msgid ""
+"[F01] Record: \"%(mpath)s\" field \"%(field)s\" does not exist in grammar.\n"
+msgstr ""
+
+#: message.py:141
+#, python-format
+msgid ""
+"[S03] Record \"%(mpath)s\" occurs %(count)d times, min is %(mincount)d.\n"
+msgstr ""
+
+#: message.py:143
+#, python-format
+msgid ""
+"[S04] Record \"%(mpath)s\" occurs %(count)d times, max is %(maxcount)d.\n"
+msgstr ""
+
+#: message.py:158
+#, python-format
+msgid "[F02] Record \"%(mpath)s\" field \"%(field)s\" is mandatory.\n"
+msgstr ""
+
+#: message.py:168
+#, python-format
+msgid "[F03] Record \"%(mpath)s\" composite \"%(field)s\" is mandatory.\n"
+msgstr ""
+
+#: message.py:175
+#, python-format
+msgid ""
+"[F04] Record \"%(mpath)s\" subfield \"%(field)s\" is mandatory: \"%(record)s"
+"\".\n"
+msgstr ""
+
+#: message.py:195
+msgid ""
+"getrecord($mpath): \"root\" of incoming message is empty; either split "
+"messages or use inn.getloop"
+msgstr ""
+
+#: message.py:201
+msgid ""
+"change($where,$change): \"root\" of incoming message is empty; either split "
+"messages or use inn.getloop"
+msgstr ""
+
+#: message.py:207
 msgid ""
 "delete($mpath): \"root\" of incoming message is empty; either split messages "
 "or use inn.getloop"
 msgstr ""
 
-#: message.py:53 message.py:60 message.py:77
+#: message.py:213 message.py:220 message.py:237
 msgid ""
 "get($mpath): \"root\" of incoming message is empty; either split messages or "
 "use inn.getloop"
 msgstr ""
 
-#: message.py:93
+#: message.py:253
 msgid "put($mpath): \"root\" of outgoing message is empty; use out.putloop"
 msgstr ""
 
-#: message.py:102
+#: message.py:262
 msgid "putloop($mpath): mpath too long???"
 msgstr ""
 
-#: message.py:107
+#: message.py:267
 msgid ""
 "get($mpath): \"root\" of message is empty; either split messages or use inn."
 "getloop"
-msgstr ""
-
-#: message.py:128
-msgid ""
-"Grammar \"$grammar\" has (root)record \"$grammarroot\"; found \"$root\"."
-msgstr ""
-
-#: message.py:137
-msgid ""
-"Record \"$record\" in message has children, but grammar \"$grammar\" not. "
-"Found \"$xx\"."
-msgstr ""
-
-#: message.py:148
-msgid ""
-"Record \"$record\" in message not in structure of grammar \"$grammar\". "
-"Whole record: \"$content\"."
-msgstr ""
-
-#: message.py:172
-msgid "Record: \"$mpath\" field \"$field\" does not exist."
-msgstr ""
-
-#: message.py:192
-msgid "Record \"$mpath\" mandatory but not present."
-msgstr ""
-
-#: message.py:194
-msgid "Record \"$mpath\" occurs to often ($count times)."
-msgstr ""
-
-#: message.py:210
-msgid "Record \"$mpath\" field \"$field\" is mandatory."
-msgstr ""
-
-#: message.py:220
-msgid "Record \"$mpath\" composite \"$field\" is mandatory."
-msgstr ""
-
-#: message.py:227
-msgid "Record \"$mpath\" subfield \"$field\" is mandatory: \"$record\"."
 msgstr ""
 
 #: models.py:9
@@ -1657,200 +1771,285 @@ msgstr ""
 msgid "counter"
 msgstr "teller"
 
-#: node.py:105
+#: node.py:113
 msgid "must be dict, list or tuple: enhancedget($mpath)"
 msgstr ""
 
-#: node.py:113
+#: node.py:133
+msgid "parameter \"where\" must be tuple: getrecord($mpath)"
+msgstr ""
+
+#: node.py:136
+msgid "parameter \"mpaths\" must be dicts in a tuple: getrecord($mpath)"
+msgstr ""
+
+#: node.py:138
+msgid "section without \"BOTSID\": getrecord($mpath)"
+msgstr ""
+
+#: node.py:141
+msgid "keys must be strings: getrecord($mpath)"
+msgstr ""
+
+#: node.py:143
+msgid "values must be strings: getrecord($mpath)"
+msgstr ""
+
+#: node.py:174
 msgid "parameter \"where\" must be tuple: change(where=$where,change=$change)"
 msgstr ""
 
-#: node.py:118
+#: node.py:177
 msgid ""
 "parameter \"where\" must be dicts in a tuple: change(where=$where,change="
 "$change)"
 msgstr ""
 
-#: node.py:120
+#: node.py:179
 msgid "section without \"BOTSID\": change(where=$where,change=$change)"
 msgstr ""
 
-#: node.py:123
+#: node.py:182
 msgid "keys must be strings: change(where=$where,change=$change)"
 msgstr ""
 
-#: node.py:125
+#: node.py:184
 msgid "values must be strings: change(where=$where,change=$change)"
 msgstr ""
 
-#: node.py:128
+#: node.py:189
 msgid "parameter \"change\" must be dict: change(where=$where,change=$change)"
 msgstr ""
 
-#: node.py:134
+#: node.py:194
 msgid "keys in \"change\" must be strings: change(where=$where,change=$change)"
 msgstr ""
 
-#: node.py:136
+#: node.py:196
 msgid ""
 "values in \"change\" must be strings or \"None\": change(where=$where,change="
 "$change)"
 msgstr ""
 
-#: node.py:176 node.py:184
+#: node.py:226 node.py:231
 msgid "must be dicts in tuple: delete($mpath)"
 msgstr ""
 
-#: node.py:178
+#: node.py:228
 msgid "only one dict: not allowed. Use different solution: delete($mpath)"
 msgstr ""
 
-#: node.py:186
+#: node.py:233
 msgid "section without \"BOTSID\": delete($mpath)"
 msgstr ""
 
-#: node.py:189
+#: node.py:236
 msgid "keys must be strings: delete($mpath)"
 msgstr ""
 
-#: node.py:191
+#: node.py:238
 msgid "values must be strings: delete($mpath)"
 msgstr ""
 
-#: node.py:232 node.py:235
+#: node.py:273 node.py:276 node.py:288
 msgid "must be dicts in tuple: get($mpath)"
 msgstr ""
 
-#: node.py:241
+#: node.py:278
 msgid "section without \"BOTSID\": get($mpath)"
 msgstr ""
 
-#: node.py:244
+#: node.py:281
 msgid "keys must be strings: get($mpath)"
 msgstr ""
 
-#: node.py:246
+#: node.py:283
 msgid "values must be strings: get($mpath)"
 msgstr ""
 
-#: node.py:251
+#: node.py:290
 msgid "last section without \"BOTSID\": get($mpath)"
 msgstr ""
 
-#: node.py:255
+#: node.py:294
 msgid "keys must be strings in last section: get($mpath)"
 msgstr ""
 
-#: node.py:259
+#: node.py:298
 msgid "values must be strings (or none) in last section: get($mpath)"
 msgstr ""
 
-#: node.py:261
+#: node.py:300
 msgid "max one \"None\" in last section: get($mpath)"
 msgstr ""
 
-#: node.py:329 node.py:332
+#: node.py:364 node.py:367
 msgid "must be dicts in tuple: getloop($mpath)"
 msgstr ""
 
-#: node.py:334
+#: node.py:369
 msgid "section without \"BOTSID\": getloop($mpath)"
 msgstr ""
 
-#: node.py:337
+#: node.py:372
 msgid "keys must be strings: getloop($mpath)"
 msgstr ""
 
-#: node.py:339
+#: node.py:374
 msgid "values must be strings: getloop($mpath)"
 msgstr ""
 
-#: node.py:377 node.py:380
+#: node.py:415 node.py:418
 msgid "must be dicts in tuple: put($mpath)"
 msgstr ""
 
-#: node.py:385
+#: node.py:420
 msgid "section without \"BOTSID\": put($mpath)"
 msgstr ""
 
-#: node.py:391
+#: node.py:426
 msgid "keys must be strings: put($mpath)"
 msgstr ""
 
-#: node.py:400
+#: node.py:437
 msgid "error in root put \"$mpath\"."
 msgstr ""
 
-#: node.py:417 node.py:420
+#: node.py:455 node.py:458
 msgid "must be dicts in tuple: putloop($mpath)"
 msgstr ""
 
-#: node.py:425
+#: node.py:460
 msgid "section without \"BOTSID\": putloop($mpath)"
 msgstr ""
 
-#: node.py:428
+#: node.py:463
 msgid "keys must be strings: putloop($mpath)"
 msgstr ""
 
-#: node.py:440
+#: node.py:476
 msgid "error in root putloop \"$mpath\"."
 msgstr ""
 
-#: outmessage.py:48
+#: outmessage.py:51
 msgid "Unknown editype for outgoing message: $editype"
 msgstr ""
 
-#: outmessage.py:111 outmessage.py:441 outmessage.py:776 outmessage.py:794
+#: outmessage.py:115 outmessage.py:494 outmessage.py:831 outmessage.py:849
 msgid "No outgoing message"
 msgstr "Er is geen uitgaand bestand"
 
-#: outmessage.py:210 outmessage.py:226 outmessage.py:242
-msgid "record \"$mpath\" field \"$field\" too big (max $max): \"$content\"."
-msgstr ""
-
-#: outmessage.py:212 outmessage.py:228 outmessage.py:244
-msgid "record \"$mpath\" field \"$field\" too small (min $min): \"$content\"."
-msgstr ""
-
-#: outmessage.py:223
-msgid "record \"$mpath\" field \"$field\" no valid date: \"$content\"."
-msgstr ""
-
-#: outmessage.py:239
-msgid "record \"$mpath\" field \"$field\" no valid time: \"$content\"."
-msgstr ""
-
-#: outmessage.py:259 outmessage.py:273 outmessage.py:290 outmessage.py:305
+#: outmessage.py:215
+#, python-format
 msgid ""
-"record \"$mpath\" field \"$field\" numerical format not valid: \"$content\"."
+"[F20] Record \"%(record)s\" field \"%(field)s\" too big (max %(max)s): "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: outmessage.py:310
-msgid "record \"$mpath\" field \"$field\": content to large: \"$content\"."
+#: outmessage.py:217
+#, python-format
+msgid ""
+"[F21] Record \"%(record)s\" field \"%(field)s\" too small (min %(min)s): "
+"\"%(content)s\".\n"
 msgstr ""
 
-#: outmessage.py:325 outmessage.py:331
+#: outmessage.py:228
+#, python-format
+msgid ""
+"[F22] Record \"%(record)s\" date field \"%(field)s\" not a valid date: "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:230
+#, python-format
+msgid ""
+"[F31] Record \"%(record)s\" date field \"%(field)s\" too big (max %(max)s): "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:232
+#, python-format
+msgid ""
+"[F32] Record \"%(record)s\" date field \"%(field)s\" too small (min "
+"%(min)s): \"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:243
+#, python-format
+msgid ""
+"[F23] Record \"%(record)s\" time field \"%(field)s\" not a valid time: "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:245
+#, python-format
+msgid ""
+"[F33] Record \"%(record)s\" time field \"%(field)s\" too big (max %(max)s): "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:247
+#, python-format
+msgid ""
+"[F34] Record \"%(record)s\" time field \"%(field)s\" too small (min "
+"%(min)s): \"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:257
+#, python-format
+msgid ""
+"[F24] Record \"%(record)s\" field \"%(field)s\" numerical format not valid: "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:271
+#, python-format
+msgid ""
+"[F25] Record \"%(record)s\" field \"%(field)s\" numerical format not valid: "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:288
+#, python-format
+msgid ""
+"[F26] Record \"%(record)s\" field \"%(field)s\" numerical format not valid: "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:304
+#, python-format
+msgid ""
+"[F27] Record \"%(record)s\" field \"%(field)s\" numerical format not valid: "
+"\"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:308
+#, python-format
+msgid ""
+"[F28] Record \"%(record)s\" field \"%(field)s\" too big: \"%(content)s\".\n"
+msgstr ""
+
+#: outmessage.py:347 outmessage.py:353
 msgid "Chars in outmessage not in charset \"$char\": $content"
 msgstr ""
 
-#: outmessage.py:384
+#: outmessage.py:406
 msgid ""
 "Character \"$char\" is in use as separator in this x12 file. Field: \"$data"
 "\"."
 msgstr ""
 
-#: outmessage.py:589
+#: outmessage.py:641
 msgid "No field \"BOTSID\" in xml-output in: \"$record\""
 msgstr ""
 
-#: outmessage.py:708 outmessage.py:718 outmessage.py:753 outmessage.py:760
+#: outmessage.py:763 outmessage.py:773 outmessage.py:808 outmessage.py:815
 msgid ""
 "While templating \"$editype.$messagetype\", error:\n"
 "$txt"
 msgstr ""
 
-#: outmessage.py:719 outmessage.py:761
+#: outmessage.py:774 outmessage.py:816
 #, python-format
 msgid "End writing to file \"%s\"."
 msgstr ""
@@ -1918,8 +2117,8 @@ msgstr ""
 msgid "        Renamed existing file \"%(from)s\" to \"%(to)s\"."
 msgstr ""
 
-#: pluglib.py:267 preprocess.py:124 preprocess.py:151 preprocess.py:249
-#: preprocess.py:323
+#: pluglib.py:267 preprocess.py:131 preprocess.py:158 preprocess.py:256
+#: preprocess.py:330
 #, python-format
 msgid "        File written: \"%s\"."
 msgstr ""
@@ -1940,47 +2139,47 @@ msgstr "Schrijven van bestanden is gelukt."
 msgid "    write file \"%s\"."
 msgstr "    schrijf bestand \"%s\"."
 
-#: preprocess.py:84
+#: preprocess.py:85
 msgid "Found no content in mailbag."
 msgstr "Leeg bestand."
 
-#: preprocess.py:112
+#: preprocess.py:119
 msgid "Found no valid envelope trailer in mailbag."
 msgstr "Leeg bestand."
 
-#: preprocess.py:133 preprocess.py:138
+#: preprocess.py:140 preprocess.py:145
 msgid "File is not a zip-file."
 msgstr "Bestand is geen zip-bestand."
 
-#: preprocess.py:135
+#: preprocess.py:142
 msgid "\"pass_non_zip\" is True, just pass the file."
 msgstr ""
 
-#: preprocess.py:217
+#: preprocess.py:224
 msgid "PDF text extraction failed, it may contain just image(s)?"
 msgstr ""
 
-#: preprocess.py:252
+#: preprocess.py:259
 #, python-format
 msgid ""
 "PDF extraction failed, may not be a PDF file? Error:\n"
 "%s"
 msgstr ""
 
-#: preprocess.py:253
+#: preprocess.py:260
 msgid ""
 "PDF extraction failed, may not be a PDF file? Error:\n"
 "$error"
 msgstr ""
 
-#: preprocess.py:326
+#: preprocess.py:333
 #, python-format
 msgid ""
 "Excel extraction failed, may not be an Excel file? Error:\n"
 "%s"
 msgstr ""
 
-#: preprocess.py:327
+#: preprocess.py:334
 msgid ""
 "Excel extraction failed, may not be an Excel file? Error:\n"
 "$error"
@@ -2000,39 +2199,39 @@ msgstr "er is geen (actieve) route \"%s\"."
 msgid "Route \"$route\" is empty: no script, not enough parameters."
 msgstr ""
 
-#: transform.py:89
+#: transform.py:87
 msgid ""
 "Editype \"$editype\", messagetype \"$messagetype\", frompartner "
 "\"$frompartner\", topartner \"$topartner\", alt \"$alt\""
 msgstr ""
 
-#: transform.py:155 transform.py:168
+#: transform.py:150 transform.py:163
 msgid ""
 "Data too long for domein \"$domein\", botskey \"$botskey\", value \"$value\"."
 msgstr ""
 
-#: transform.py:161
+#: transform.py:156
 msgid ""
 "Failed to add for domein \"$domein\", botskey \"$botskey\", value \"$value\"."
 msgstr ""
 
-#: transform.py:219 transform.py:242
+#: transform.py:214 transform.py:237
 msgid "Value \"$value\" not in code-conversion, user table \"$table\"."
 msgstr ""
 
-#: transform.py:285
+#: transform.py:280
 msgid "Value \"$value\" not in file for codeconversion \"$filename\"."
 msgstr ""
 
-#: transform.py:307
+#: transform.py:302
 msgid "Value \"$value\" not in file for reversed codeconversion \"$filename\"."
 msgstr ""
 
-#: transform.py:316
+#: transform.py:311
 msgid "GTIN \"$ean\" should be string with only numericals"
 msgstr ""
 
-#: transform.py:318
+#: transform.py:313
 msgid "GTIN \"$ean\" should be string, but is a \"$type\""
 msgstr ""
 
@@ -2250,15 +2449,23 @@ msgstr ""
 msgid "Sending test mail succeeded."
 msgstr "Zenden van test rapportage is gelukt."
 
-#: webserver.py:65
+#: webserver.py:75
 msgid "Bots web-server started."
 msgstr "Bots webserver is gestart."
 
+#: webserver.py:76
+msgid "Bots web-server configdir: \"%s\"."
+msgstr "Bots webserver configuratie-directory: \"%s\"."
+
 #: webserver.py:77
+msgid "Bots web-server serving at port: \"%s\"."
+msgstr "Bots webserver gebruikt poort: \"%s\"."
+
+#: webserver.py:89
 msgid "Bots web-server uses ssl (https)."
 msgstr "Bots webserver gebruikt ssl (https)."
 
-#: webserver.py:79
+#: webserver.py:91
 msgid "Bots web-server uses plain http (no ssl)."
 msgstr "Bots webserver gebruikt http (geen https)."
 
@@ -2292,23 +2499,33 @@ msgstr "Fout 500 in server"
 
 #: templates/bots/about.html:8 templates1.1/bots/about.html:8
 #: templates1.2/bots/about.html:8
-msgid "Bots Open Source Edi translator"
+msgid "Bots Open Source EDI Translator"
 msgstr "Bots open source edi vertaler"
-
-#: templates/bots/about.html:9 templates1.1/bots/about.html:9
-#: templates1.2/bots/about.html:9
-msgid "Bots documentation"
-msgstr "Bots documentatie"
 
 #: templates/bots/about.html:10 templates1.1/bots/about.html:10
 #: templates1.2/bots/about.html:10
-msgid "Bots mailing list"
-msgstr "Bots email forum"
+msgid "Bots documentation"
+msgstr "Bots documentatie"
 
 #: templates/bots/about.html:11 templates1.1/bots/about.html:11
 #: templates1.2/bots/about.html:11
+msgid "Bots mailing list"
+msgstr "Bots email forum"
+
+#: templates/bots/about.html:12 templates1.1/bots/about.html:12
+#: templates1.2/bots/about.html:12
 msgid "Commercial support by EbbersConsult"
 msgstr "Commerciele ondersteuning door EbbersConsult (Nederlandstalig)."
+
+#: templates/bots/about.html:18 templates1.1/bots/about.html:18
+#: templates1.2/bots/about.html:18
+msgid "Current user"
+msgstr "Huidige gebruiker"
+
+#: templates/bots/about.html:21 templates1.1/bots/about.html:21
+#: templates1.2/bots/about.html:21
+msgid "Last login"
+msgstr "Laatste login"
 
 #: templates/bots/confirm.html:6 templates/bots/detail.html:5
 #: templates/bots/document.html:6 templates/bots/incoming.html:6
@@ -2515,10 +2732,10 @@ msgstr "Fase"
 msgid "Channel"
 msgstr "Kanaal"
 
-#: templates/bots/detail.html:22 templates/bots/document.html:18
+#: templates/bots/detail.html:22 templates/bots/document.html:19
 #: templates/bots/outgoing.html:35 templates1.1/bots/detail.html:22
 #: templates1.1/bots/document.html:19 templates1.1/bots/outgoing.html:35
-#: templates1.2/bots/detail.html:22 templates1.2/bots/document.html:18
+#: templates1.2/bots/detail.html:22 templates1.2/bots/document.html:19
 #: templates1.2/bots/outgoing.html:35
 msgid "Reference"
 msgstr "Referentie"
@@ -2561,9 +2778,10 @@ msgstr ""
 msgid "Mapping"
 msgstr ""
 
-#: templates/bots/document.html:19 templates1.2/bots/document.html:19
-msgid "Botskey"
-msgstr ""
+#: templates/bots/document.html:18 templates1.1/bots/document.html:18
+#: templates1.2/bots/document.html:18
+msgid "Document number"
+msgstr "Documenten"
 
 #: templates/bots/document.html:20 templates1.1/bots/document.html:20
 #: templates1.2/bots/document.html:20
@@ -2585,8 +2803,14 @@ msgstr "Bekijk dit bestand"
 msgid "View incoming file"
 msgstr "Bekijk inkomende bestand"
 
-#: templates/bots/document.html:41 templates1.1/bots/document.html:42
-#: templates1.2/bots/document.html:41
+#: templates/bots/document.html:40 templates/bots/incoming.html:48
+#: templates1.1/bots/document.html:40 templates1.1/bots/incoming.html:48
+#: templates1.2/bots/document.html:40 templates1.2/bots/incoming.html:48
+msgid "Retransmit"
+msgstr "Herzend"
+
+#: templates/bots/document.html:42 templates1.1/bots/document.html:42
+#: templates1.2/bots/document.html:42
 msgid "View outgoing file"
 msgstr "Bekijk uitgaand bestand"
 
@@ -2705,9 +2929,10 @@ msgstr "BestandUit"
 msgid "MappingScript"
 msgstr ""
 
-#: templates/bots/incoming.html:48 templates1.2/bots/incoming.html:48
-msgid "Rerecieve"
-msgstr "Herontvangen"
+#: templates/bots/incoming.html:49 templates1.1/bots/incoming.html:49
+#: templates1.2/bots/incoming.html:49
+msgid "Delete file"
+msgstr "verwijder file"
 
 #: templates/bots/menu.html:6 templates1.1/bots/menu.html:6
 #: templates1.2/bots/menu.html:6
@@ -2716,190 +2941,185 @@ msgstr "Start *"
 
 #: templates/bots/menu.html:7 templates1.1/bots/menu.html:7
 #: templates1.2/bots/menu.html:7
-msgid "Log out"
-msgstr "Uitloggen"
+msgid "Help"
+msgstr ""
 
 #: templates/bots/menu.html:8 templates1.1/bots/menu.html:8
 #: templates1.2/bots/menu.html:8
-msgid "Change password"
-msgstr "Wijzig wachtwoord"
+msgid "Log out"
+msgstr "Uitloggen"
 
 #: templates/bots/menu.html:9 templates1.1/bots/menu.html:9
 #: templates1.2/bots/menu.html:9
-msgid "Current user"
-msgstr "Huidige gebruiker"
+msgid "Change password"
+msgstr "Wijzig wachtwoord"
 
-#: templates/bots/menu.html:10 templates1.1/bots/menu.html:10
-#: templates1.2/bots/menu.html:10
-msgid "Last login"
-msgstr "Laatste login"
-
-#: templates/bots/menu.html:13 templates1.1/bots/menu.html:13
-#: templates1.2/bots/menu.html:13
+#: templates/bots/menu.html:12 templates1.1/bots/menu.html:12
+#: templates1.2/bots/menu.html:12
 msgid "Last run"
 msgstr "Laatste run"
 
-#: templates/bots/menu.html:14 templates1.1/bots/menu.html:14
-#: templates1.2/bots/menu.html:14
+#: templates/bots/menu.html:13 templates1.1/bots/menu.html:13
+#: templates1.2/bots/menu.html:13
 msgid "Report (per run)"
 msgstr "Rapportage (per run)"
 
-#: templates/bots/menu.html:15 templates1.1/bots/menu.html:15
-#: templates1.2/bots/menu.html:15
+#: templates/bots/menu.html:14 templates1.1/bots/menu.html:14
+#: templates1.2/bots/menu.html:14
 msgid "Incoming *"
 msgstr "Inkomend *"
 
-#: templates/bots/menu.html:16 templates/bots/menu.html.py:24
-#: templates1.1/bots/menu.html:16 templates1.1/bots/menu.html.py:24
-#: templates1.2/bots/menu.html:16 templates1.2/bots/menu.html.py:24
+#: templates/bots/menu.html:15 templates/bots/menu.html.py:23
+#: templates1.1/bots/menu.html:15 templates1.1/bots/menu.html.py:23
+#: templates1.2/bots/menu.html:15 templates1.2/bots/menu.html.py:23
 msgid "Document"
 msgstr "Document"
+
+#: templates/bots/menu.html:16 templates/bots/menu.html.py:24
+#: templates/bots/menu.html:33 templates1.1/bots/menu.html:16
+#: templates1.1/bots/menu.html.py:24 templates1.1/bots/menu.html:33
+#: templates1.2/bots/menu.html:16 templates1.2/bots/menu.html.py:24
+#: templates1.2/bots/menu.html:33
+msgid "Outgoing"
+msgstr "Uitgaand"
 
 #: templates/bots/menu.html:17 templates/bots/menu.html.py:25
 #: templates/bots/menu.html:34 templates1.1/bots/menu.html:17
 #: templates1.1/bots/menu.html.py:25 templates1.1/bots/menu.html:34
 #: templates1.2/bots/menu.html:17 templates1.2/bots/menu.html.py:25
 #: templates1.2/bots/menu.html:34
-msgid "Outgoing"
-msgstr "Uitgaand"
-
-#: templates/bots/menu.html:18 templates/bots/menu.html.py:26
-#: templates/bots/menu.html:35 templates1.1/bots/menu.html:18
-#: templates1.1/bots/menu.html.py:26 templates1.1/bots/menu.html:35
-#: templates1.2/bots/menu.html:18 templates1.2/bots/menu.html.py:26
-#: templates1.2/bots/menu.html:35
 msgid "Process Errors"
 msgstr "Procesfouten"
 
-#: templates/bots/menu.html:21 templates1.1/bots/menu.html:21
-#: templates1.2/bots/menu.html:21
+#: templates/bots/menu.html:20 templates1.1/bots/menu.html:20
+#: templates1.2/bots/menu.html:20
 msgid "All runs"
 msgstr "Alle runs"
 
-#: templates/bots/menu.html:22 templates1.1/bots/menu.html:22
-#: templates1.2/bots/menu.html:22
+#: templates/bots/menu.html:21 templates1.1/bots/menu.html:21
+#: templates1.2/bots/menu.html:21
 msgid "Report (per run) *"
 msgstr "Rapportage (per run) *"
 
-#: templates/bots/menu.html:23 templates/bots/menu.html.py:32
-#: templates1.1/bots/menu.html:23 templates1.1/bots/menu.html.py:32
-#: templates1.2/bots/menu.html:23 templates1.2/bots/menu.html.py:32
+#: templates/bots/menu.html:22 templates/bots/menu.html.py:31
+#: templates1.1/bots/menu.html:22 templates1.1/bots/menu.html.py:31
+#: templates1.2/bots/menu.html:22 templates1.2/bots/menu.html.py:31
 msgid "Incoming"
 msgstr "Inkomend"
 
-#: templates/bots/menu.html:27 templates/bots/menu.html.py:36
-#: templates1.1/bots/menu.html:27 templates1.1/bots/menu.html.py:36
-#: templates1.2/bots/menu.html:27 templates1.2/bots/menu.html.py:36
+#: templates/bots/menu.html:26 templates/bots/menu.html.py:35
+#: templates1.1/bots/menu.html:26 templates1.1/bots/menu.html.py:35
+#: templates1.2/bots/menu.html:26 templates1.2/bots/menu.html.py:35
 msgid "Confirmations"
 msgstr "Bevestigingen"
 
-#: templates/bots/menu.html:30 templates1.1/bots/menu.html:30
-#: templates1.2/bots/menu.html:30
+#: templates/bots/menu.html:29 templates1.1/bots/menu.html:29
+#: templates1.2/bots/menu.html:29
 msgid "Select"
 msgstr "Selecties"
 
-#: templates/bots/menu.html:31 templates1.1/bots/menu.html:31
-#: templates1.2/bots/menu.html:31
+#: templates/bots/menu.html:30 templates1.1/bots/menu.html:30
+#: templates1.2/bots/menu.html:30
 msgid "Reports (per run)"
 msgstr "Rapportage (per run)"
 
-#: templates/bots/menu.html:33 templates1.1/bots/menu.html:33
-#: templates1.2/bots/menu.html:33
+#: templates/bots/menu.html:32 templates1.1/bots/menu.html:32
+#: templates1.2/bots/menu.html:32
 msgid "Document *"
 msgstr "Documenten *"
 
-#: templates/bots/menu.html:40 templates1.1/bots/menu.html:40
-#: templates1.2/bots/menu.html:40
+#: templates/bots/menu.html:39 templates1.1/bots/menu.html:39
+#: templates1.2/bots/menu.html:39
 msgid "Configuration"
 msgstr "Configuratie"
 
-#: templates/bots/menu.html:41 templates1.1/bots/menu.html:41
-#: templates1.2/bots/menu.html:41
+#: templates/bots/menu.html:40 templates1.1/bots/menu.html:40
+#: templates1.2/bots/menu.html:40
 msgid "Routes"
 msgstr "Routes"
 
-#: templates/bots/menu.html:42 templates1.1/bots/menu.html:42
-#: templates1.2/bots/menu.html:42
+#: templates/bots/menu.html:41 templates1.1/bots/menu.html:41
+#: templates1.2/bots/menu.html:41
 msgid "Channels"
 msgstr "Kanalen"
 
-#: templates/bots/menu.html:43 templates1.1/bots/menu.html:43
-#: templates1.2/bots/menu.html:43
+#: templates/bots/menu.html:42 templates1.1/bots/menu.html:42
+#: templates1.2/bots/menu.html:42
 msgid "Translations"
 msgstr "Vertalingen"
 
-#: templates/bots/menu.html:44 templates1.1/bots/menu.html:44
-#: templates1.2/bots/menu.html:44
+#: templates/bots/menu.html:43 templates1.1/bots/menu.html:43
+#: templates1.2/bots/menu.html:43
 msgid "Partners &amp; groups"
 msgstr "Partner en groepen"
 
-#: templates/bots/menu.html:45 templates1.1/bots/menu.html:45
-#: templates1.2/bots/menu.html:45
+#: templates/bots/menu.html:44 templates1.1/bots/menu.html:44
+#: templates1.2/bots/menu.html:44
 msgid "Confirmrules"
 msgstr "Regels voor bevestigingen"
 
-#: templates/bots/menu.html:46 templates1.1/bots/menu.html:46
-#: templates1.2/bots/menu.html:46
-msgid "User Codes as list"
+#: templates/bots/menu.html:45 templates1.1/bots/menu.html:45
+#: templates1.2/bots/menu.html:45
+msgid "User Codes list"
 msgstr "Codelijsten"
 
-#: templates/bots/menu.html:47 templates1.1/bots/menu.html:47
-#: templates1.2/bots/menu.html:47
-msgid "User Codes by type"
+#: templates/bots/menu.html:46 templates1.1/bots/menu.html:46
+#: templates1.2/bots/menu.html:46
+msgid "User Code types"
 msgstr "Code lijsten per type"
 
-#: templates/bots/menu.html:52 templates1.1/bots/menu.html:52
-#: templates1.2/bots/menu.html:52
+#: templates/bots/menu.html:51 templates1.1/bots/menu.html:51
+#: templates1.2/bots/menu.html:51
 msgid "SysTasks"
 msgstr "SysteemTaken"
 
-#: templates/bots/menu.html:53 templates1.1/bots/menu.html:53
-#: templates1.2/bots/menu.html:53
+#: templates/bots/menu.html:52 templates1.1/bots/menu.html:52
+#: templates1.2/bots/menu.html:52
 msgid "Read plugin"
 msgstr "Inlezen plugin"
 
-#: templates/bots/menu.html:54 templates1.1/bots/menu.html:54
-#: templates1.2/bots/menu.html:54
+#: templates/bots/menu.html:53 templates1.1/bots/menu.html:53
+#: templates1.2/bots/menu.html:53
 msgid "Write plugin"
 msgstr "Maak plugin"
 
-#: templates/bots/menu.html:56 templates1.1/bots/menu.html:56
-#: templates1.2/bots/menu.html:56
+#: templates/bots/menu.html:55 templates1.1/bots/menu.html:55
+#: templates1.2/bots/menu.html:55
 msgid "Delete from configuration"
 msgstr "Verwijder configuratie"
 
-#: templates/bots/menu.html:58 templates1.1/bots/menu.html:58
-#: templates1.2/bots/menu.html:58
+#: templates/bots/menu.html:57 templates1.1/bots/menu.html:57
+#: templates1.2/bots/menu.html:57
 msgid "Users"
 msgstr "Gebruikers"
 
-#: templates/bots/menu.html:59 templates1.1/bots/menu.html:59
-#: templates1.2/bots/menu.html:59
+#: templates/bots/menu.html:58 templates1.1/bots/menu.html:58
+#: templates1.2/bots/menu.html:58
 msgid "UserGroups"
 msgstr "Gebruikers groepen"
 
-#: templates/bots/menu.html:60 templates1.1/bots/menu.html:60
-#: templates1.2/bots/menu.html:60
+#: templates/bots/menu.html:59 templates1.1/bots/menu.html:59
+#: templates1.2/bots/menu.html:59
 msgid "View/edit counters"
 msgstr "Bekijk/wijzig tellers"
 
-#: templates/bots/menu.html:62 templates1.1/bots/menu.html:62
-#: templates1.2/bots/menu.html:62
+#: templates/bots/menu.html:61 templates1.1/bots/menu.html:61
+#: templates1.2/bots/menu.html:61
 msgid "Unlock database"
 msgstr "Ontgrendel database"
 
-#: templates/bots/menu.html:63 templates1.1/bots/menu.html:63
-#: templates1.2/bots/menu.html:63
+#: templates/bots/menu.html:62 templates1.1/bots/menu.html:62
+#: templates1.2/bots/menu.html:62
 msgid "Only needed in case of database lock/crash recovery.\\n Are you sure?"
 msgstr ""
 
-#: templates/bots/menu.html:63 templates1.1/bots/menu.html:63
-#: templates1.2/bots/menu.html:63
+#: templates/bots/menu.html:62 templates1.1/bots/menu.html:62
+#: templates1.2/bots/menu.html:62
 msgid "Run crash recovery"
 msgstr "Herstel van crash"
 
-#: templates/bots/menu.html:64 templates1.1/bots/menu.html:64
-#: templates1.2/bots/menu.html:64
+#: templates/bots/menu.html:63 templates1.1/bots/menu.html:63
+#: templates1.2/bots/menu.html:63
 msgid "Send test report"
 msgstr "Zend test rapportage"
 
@@ -2908,9 +3128,10 @@ msgstr "Zend test rapportage"
 msgid "Run"
 msgstr ""
 
-#: templates/bots/menu.html:69 templates1.2/bots/menu.html:69
-msgid "Run (only new) *"
-msgstr "Run (alleen nieuwe berichten) *"
+#: templates/bots/menu.html:69 templates1.1/bots/menu.html:69
+#: templates1.2/bots/menu.html:69
+msgid "Run (only new)"
+msgstr "Run (alleen nieuwe berichten)"
 
 #: templates/bots/menu.html:70 templates1.1/bots/menu.html:70
 #: templates1.2/bots/menu.html:70
@@ -2932,13 +3153,14 @@ msgstr "Weet u zeker dat u ALLE voorafgaande fouten opnieuw wilt draaien?"
 msgid "Retry all previous errors"
 msgstr "Start run voor alle eerder opgetreden fouten"
 
-#: templates/bots/menu.html:76 templates1.1/bots/menu.html:76
-#: templates1.2/bots/menu.html:76
+#: templates/bots/menu.html:77 templates1.1/bots/menu.html:77
+#: templates1.2/bots/menu.html:77
 msgid "Log in"
 msgstr "Inloggen"
 
-#: templates/bots/menu.html:79 templates1.2/bots/menu.html:79
-msgid "*****Javascript is not enabled. Bots works beter with javascript*****"
+#: templates/bots/menu.html:80 templates1.1/bots/menu.html:80
+#: templates1.2/bots/menu.html:80
+msgid "*****Javascript is not enabled. Bots works better with javascript*****"
 msgstr "*****Javascript staat uit. Bots werkt beter met Javascript aan.*****"
 
 #: templates/bots/outgoing.html:20 templates/bots/outgoing.html.py:45
@@ -3017,47 +3239,38 @@ msgstr "Bekijk procesfouten"
 msgid "View file errors"
 msgstr "Bekijk files met fouten"
 
-#: templates/bots/reports.html:50 templates1.1/bots/reports.html:54
-#: templates1.2/bots/reports.html:50
+#: templates/bots/reports.html:54 templates1.1/bots/reports.html:54
+#: templates1.2/bots/reports.html:54
 msgid "files with errors"
 msgstr "Fouten in files"
 
-#: templates/bots/reports.html:53 templates1.1/bots/reports.html:57
-#: templates1.2/bots/reports.html:53
+#: templates/bots/reports.html:57 templates1.1/bots/reports.html:57
+#: templates1.2/bots/reports.html:57
 msgid "files got stuck"
 msgstr "Vastgelopen files"
 
-#: templates/bots/reports.html:56 templates1.1/bots/reports.html:60
-#: templates1.2/bots/reports.html:56
+#: templates/bots/reports.html:60 templates1.1/bots/reports.html:60
+#: templates1.2/bots/reports.html:60
 msgid "system errors"
 msgstr "Systeemfouten"
 
-#: templates/bots/reports.html:59 templates1.1/bots/reports.html:63
-#: templates1.2/bots/reports.html:59
+#: templates/bots/reports.html:63 templates1.1/bots/reports.html:63
+#: templates1.2/bots/reports.html:63
 msgid "errors in processes"
 msgstr "Procesfouten"
 
-#: templates/bots/selectform.html:6 templates1.1/bots/selectform.html:6
-#: templates1.2/bots/selectform.html:6
+#: templates/bots/selectform.html:35 templates1.1/bots/selectform.html:6
+#: templates1.2/bots/selectform.html:35
 msgid "Show selection"
 msgstr "Bekijk selectie"
 
-#: templates1.1/bots/document.html:18
-msgid "Document number"
-msgstr "Documenten"
+#~ msgid "Rerecieve"
+#~ msgstr "Herontvangen"
 
-#: templates1.1/bots/document.html:40 templates1.1/bots/incoming.html:48
-msgid "Retransmit"
-msgstr "Herzend"
+#~ msgid "Run (only new) *"
+#~ msgstr "Run (alleen nieuwe berichten) *"
 
-#: templates1.1/bots/incoming.html:49
-msgid "Delete file"
-msgstr "verwijder file"
-
-#: templates1.1/bots/menu.html:69
-msgid "Run (only new)"
-msgstr "Run (alleen nieuwe berichten)"
-
-#: templates1.1/bots/menu.html:79
-msgid "*****Javascript is not enabled. Bots works better with javascript*****"
-msgstr "*****Javascript staat uit. Bots werkt beter met Javascript aan.*****"
+#~ msgid ""
+#~ "*****Javascript is not enabled. Bots works beter with javascript*****"
+#~ msgstr ""
+#~ "*****Javascript staat uit. Bots werkt beter met Javascript aan.*****"

@@ -240,7 +240,7 @@ rcodetconversion = reverse_ccode
 def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):
     ''' as safe_ccode but reversed lookup.'''
     try:
-        return ccode(ccodeid,rightcode,field)
+        return reverse_ccode(ccodeid,rightcode,field)
     except botslib.CodeConversionError:
         return rightcode
 safercodetconversion = safe_reverse_ccode

@@ -26,7 +26,7 @@ class Node(object):
                 if BOTSIDnr:
                     self.record['BOTSIDnr'] = BOTSIDnr
                 else:
-                    self.record['BOTSIDnr'] = '1'
+                    self.record['BOTSIDnr'] = u'1'
         self.children = []
         self._queries = None
 
@@ -142,7 +142,7 @@ class Node(object):
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: getrecord($mpath)'),mpath=mpaths)
             if not 'BOTSIDnr' in part:
-                part['BOTSIDnr'] = '1'
+                part['BOTSIDnr'] = u'1'
         #go get it!
         terug =  self._getrecordcore(*mpaths)
         botsglobal.logmap.debug(u'"%s" for getrecord%s',str(terug),str(mpaths))
@@ -183,7 +183,7 @@ class Node(object):
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: change(where=$where,change=$change)'),where=where,change=change)
             if not 'BOTSIDnr' in part:
-                part['BOTSIDnr'] = '1'
+                part['BOTSIDnr'] = u'1'
         #sanity check 'change' parameter
         if not change or not isinstance(change,dict):
             raise botslib.MappingFormatError(_(u'parameter "change" must be dict: change(where=$where,change=$change)'),where=where,change=change)
@@ -237,7 +237,7 @@ class Node(object):
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: delete($mpath)'),mpath=mpaths)
             if not 'BOTSIDnr' in part:
-                part['BOTSIDnr'] = '1'
+                part['BOTSIDnr'] = u'1'
         #go get it!
         terug =  bool(self._deletecore(*mpaths))
         botsglobal.logmap.debug(u'"%s" for delete%s',terug,str(mpaths))
@@ -282,7 +282,7 @@ class Node(object):
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: get($mpath)'),mpath=mpaths)
             if not 'BOTSIDnr' in part:
-                part['BOTSIDnr'] = '1'
+                part['BOTSIDnr'] = u'1'
         #sanity check of mpaths: None only allowed in last section of Mpath; check last part
         if not isinstance(mpaths[-1],dict):
             raise botslib.MappingFormatError(_(u'must be dicts in tuple: get($mpath)'),mpath=mpaths)
@@ -299,7 +299,7 @@ class Node(object):
         if count > 1:
             raise botslib.MappingFormatError(_(u'max one "None" in last section: get($mpath)'),mpath=mpaths)
         if not 'BOTSIDnr' in mpaths[-1]:
-            mpaths[-1]['BOTSIDnr'] = '1'
+            mpaths[-1]['BOTSIDnr'] = u'1'
         #go get it!
         terug =  self._getcore(*mpaths)
         botsglobal.logmap.debug(u'"%s" for get%s',terug,str(mpaths))
@@ -373,7 +373,7 @@ class Node(object):
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: getloop($mpath)'),mpath=mpaths)
             if not 'BOTSIDnr' in part:
-                part['BOTSIDnr'] = '1'
+                part['BOTSIDnr'] = u'1'
 
         for terug in self._getloopcore(*mpaths):
             botsglobal.logmap.debug(u'getloop %s returns "%s".',mpaths,terug.record)
@@ -429,7 +429,7 @@ class Node(object):
                 else:
                     part[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
             if not 'BOTSIDnr' in part:
-                part['BOTSIDnr'] = '1'
+                part['BOTSIDnr'] = u'1'
 
         if self.sameoccurence(mpaths[0]):
             self._putcore(*mpaths[1:])
@@ -467,7 +467,7 @@ class Node(object):
                     #~ raise botslib.MappingFormatError(_(u'values must be strings in putloop%s'%(str(mpaths)))
                 part[key] = unicode(value).strip()
             if not 'BOTSIDnr' in part:
-                part['BOTSIDnr'] = '1'
+                part['BOTSIDnr'] = u'1'
         if self.sameoccurence(mpaths[0]):
             if len(mpaths)==1:
                return self

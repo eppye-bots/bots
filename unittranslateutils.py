@@ -52,17 +52,41 @@ class TestTranslate(unittest.TestCase):
         transform.persist_update(domein,botskey,value)   #is not there. gives no error...
 
     def testcodeconversion(self):
+        #codeconversion via file (20111116: depreciated): 
         self.assertEqual('TESTOUT',transform.codeconversion('aperakrff2qualifer','TESTIN'),'basis')
+        self.assertEqual('TESTOUT',transform.safecodeconversion('aperakrff2qualifer','TESTIN'),'basis')
+        self.assertEqual('TESTINNOT',transform.safecodeconversion('aperakrff2qualifer','TESTINNOT'),'basis')
         self.assertRaises(botslib.CodeConversionError,transform.codeconversion,'aperakrff2qualifer','TESTINNOT') 
         self.assertEqual('TESTIN',transform.rcodeconversion('aperakrff2qualifer','TESTOUT'),'basis')
+        self.assertEqual('TESTIN',transform.safercodeconversion('aperakrff2qualifer','TESTOUT'),'basis')
+        self.assertEqual('TESTINNOT',transform.safercodeconversion('aperakrff2qualifer','TESTINNOT'),'basis')
         self.assertRaises(botslib.CodeConversionError,transform.rcodeconversion,'aperakrff2qualifer','TESTINNOT') 
         
-        #need article in ccodelist: 
+        #codeconversion via tabel ccode OLD functionnames: 
         self.assertEqual('TESTOUT',transform.codetconversion('artikel','TESTIN'),'basis')
+        self.assertEqual('TESTOUT',transform.safecodetconversion('artikel','TESTIN'),'basis')
+        self.assertEqual('TESTINNOT',transform.safecodetconversion('artikel','TESTINNOT'),'basis')
         self.assertRaises(botslib.CodeConversionError,transform.codetconversion,'artikel','TESTINNOT') 
         self.assertEqual('TESTIN',transform.rcodetconversion('artikel','TESTOUT'),'basis')
+        self.assertEqual('TESTIN',transform.safercodetconversion('artikel','TESTOUT'),'basis')
+        self.assertEqual('TESTINNOT',transform.safercodetconversion('artikel','TESTINNOT'),'basis')
         self.assertRaises(botslib.CodeConversionError,transform.rcodetconversion,'artikel','TESTINNOT') 
+        #attributes
         self.assertEqual('TESTATTR1',transform.codetconversion('artikel','TESTIN','attr1'),'basis')
+        self.assertEqual('TESTATTR1',transform.safecodetconversion('artikel','TESTIN','attr1'),'basis')
+
+        #codeconversion via tabel ccode: 
+        self.assertEqual('TESTOUT',transform.ccode('artikel','TESTIN'),'basis')
+        self.assertEqual('TESTOUT',transform.safe_ccode('artikel','TESTIN'),'basis')
+        self.assertEqual('TESTINNOT',transform.safe_ccode('artikel','TESTINNOT'),'basis')
+        self.assertRaises(botslib.CodeConversionError,transform.ccode,'artikel','TESTINNOT') 
+        self.assertEqual('TESTIN',transform.reverse_ccode('artikel','TESTOUT'),'basis')
+        self.assertEqual('TESTIN',transform.safe_reverse_ccode('artikel','TESTOUT'),'basis')
+        self.assertEqual('TESTINNOT',transform.safe_reverse_ccode('artikel','TESTINNOT'),'basis')
+        self.assertRaises(botslib.CodeConversionError,transform.reverse_ccode,'artikel','TESTINNOT') 
+        #attributes
+        self.assertEqual('TESTATTR1',transform.ccode('artikel','TESTIN','attr1'),'basis')
+        self.assertEqual('TESTATTR1',transform.safe_ccode('artikel','TESTIN','attr1'),'basis')
 
     def testunique(self):
         newdomain = 'test' + transform.unique('test')

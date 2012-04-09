@@ -50,7 +50,7 @@ if len(sys.argv) > 1 and 'bdist_wininst' in sys.argv[1:]:
 
 setup(
     name="bots",
-    version="2.1.0",
+    version="2.2.0rc",
     author = "hjebbers",
     author_email = "hjebbers@gmail.com",
     url = "http://bots.sourceforge.net/",

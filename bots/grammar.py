@@ -318,7 +318,7 @@ class Grammar(object):
                 i[BOTSIDnr] = str(collision[i[ID]] + 1)
                 collision[i[ID]] = collision[i[ID]] + 1
             else:
-                i[BOTSIDnr] = '1'
+                i[BOTSIDnr] = u'1'
                 collision[i[ID]] = 1
             if LEVEL in i:
                 self._checkbotscollision(i[LEVEL])
