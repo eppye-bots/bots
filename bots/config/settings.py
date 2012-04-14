@@ -113,13 +113,11 @@ FILE_UPLOAD_HANDLERS = (
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
     'django.template.loaders.app_directories.load_template_source',
-    #'django.template.loaders.eggs.load_template_source',
     )
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    #~ 'django.contrib.messages.middleware.MessageMiddleware',  #?for django 1.3: message-framework; to keep user auth working?
     'bots.persistfilters.FilterPersistMiddleware',
     )
 INSTALLED_APPS = (
@@ -127,7 +125,6 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.admin',
-    #~ 'django.contrib.messages',  #?for django 1.3: message-framework; to keep user auth working?
     'bots',
     )
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -136,5 +133,5 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
-    #~ 'django.contrib.messages.context_processors.messages',  #?for django 1.3: message-framework; to keep user auth working?
+    'bots.bots_context.set_context',
     )
