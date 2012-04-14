@@ -825,7 +825,7 @@ class x12(var):
             tmpconfirmationlist.append(confirmation)
         self.confirmationlist = tmpconfirmationlist
         for confirmation in self.confirmationlist:
-            reference=str(botslib.unique('messagecounter'))
+            reference=str(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED,reference=reference)
             filename = str(ta_confirmation.idta)
             out = outmessage.outmessage_init(editype='x12',messagetype='997004010',filename=filename)    #make outmessage object
