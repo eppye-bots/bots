@@ -369,14 +369,19 @@ def dateformat(date):
 def datemask(value,frommask,tomask):
     ''' value is formatted according as in frommask; 
         returned is the value formatted according to tomask.
+        example: datemask('12/31/2012','MM/DD/YYYY','YYYYMMDD') returns '20121231'
     '''
     if not value:
         return value
     convdict = collections.defaultdict(list)
-    for key,value in zip(frommask,value):
-        convdict[key].append(value)
-    #~ return ''.join([convdict.get(c,[c]).pop(0) for c in tomask])     #very short, but not faster....
+    for key,val in zip(frommask,value):
+        convdict[key].append(val)
+    #convdict contains for example:  {'Y': [u'2', u'0', u'1', u'2'], 'M': [u'1', u'2'], 'D': [u'3', u'1'], '/': [u'/', u'/']}
     terug = ''
-    for c in tomask:
-        terug += convdict.get(c,[c]).pop(0)
+    try:
+        # alternative implementation: return ''.join([convdict.get(c,[c]).pop(0) for c in tomask])     #very short, but not faster....
+        for c in tomask:
+            terug += convdict.get(c,[c]).pop(0)     #for this character, lookup value in convdict (a list). pop(0) this list: get first member of list, and drop it. If char not in convdict as key, use char itself.
+    except:
+        raise botslib.BotsError(_(u'Error in function datamask("$value", "$frommask", "$tomask").'),value=value,frommask=frommask,tomask=tomask)
     return terug
