@@ -283,7 +283,7 @@ class _comsession(object):
         '''
         whitelist_multipart=['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822','multipart/alternative']
         whitelist_major=['text','application']
-        blacklist_contenttype=['text/html','text/enriched','text/rtf','text/richtext','application/postscript']
+        blacklist_contenttype=['text/html','text/enriched','text/rtf','text/richtext','application/postscript','text/vcard','text/css']
         def savemime(msg):
             ''' save contents of email as separate files.
                 is a nested function.
@@ -676,13 +676,14 @@ class imap4(_comsession):
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
+                    
+        self.session.close()        #Close currently selected mailbox. This is the recommended command before 'LOGOUT'. 
 
     @botslib.log_session
     def postcommunicate(self,fromstatus,tostatus):
         self.mime2file(fromstatus,tostatus)
 
     def disconnect(self):
-        self.session.close()        #Close currently selected mailbox. This is the recommended command before 'LOGOUT'. 
         self.session.logout()
 
 class imap4s(imap4):
