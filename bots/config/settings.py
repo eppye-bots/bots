@@ -19,14 +19,17 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = PROJECT_PATH + '/'
+#~ STATICFILES_DIRS = PROJECT_PATH + '/'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = ''
+#~ STATIC_URL = ''
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
 ADMIN_MEDIA_PREFIX = '/media/'
+#~ STATIC_URL = '/media/'
 #~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
 ROOT_URLCONF = 'bots.urls'
 LOGIN_URL = '/login/'
@@ -43,7 +46,14 @@ TEMPLATE_DIRS = (
 
 #*********database settings*************************
 #django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
-#SQLITE: 
+#SQLITE django >= 1.4:
+#~ DATABASES = {
+    #~ 'default': {
+        #~ 'ENGINE': 'django.db.backends.sqlite3',
+        #~ 'NAME': os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
+    #~ }
+#~ }
+#~ #SQLITE django <1.4: 
 DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
 DATABASE_USER = ''
@@ -51,7 +61,7 @@ DATABASE_PASSWORD = ''
 DATABASE_HOST = ''
 DATABASE_PORT = ''
 DATABASE_OPTIONS = {}
-#~ #MySQL:
+#~ #MySQL django <1.4::
 #~ DATABASE_ENGINE = 'mysql'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
@@ -59,7 +69,7 @@ DATABASE_OPTIONS = {}
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
 #~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#PostgreSQL:
+#PostgreSQL django <1.4::
 #~ DATABASE_ENGINE = 'postgresql_psycopg2'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
@@ -110,6 +120,7 @@ FILE_UPLOAD_HANDLERS = (
     "django.core.files.uploadhandler.TemporaryFileUploadHandler",
     )
 # List of callables that know how to import templates from various sources.
+#disable TEMPLATE_LOADERS for #for django >=1.4 
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
     'django.template.loaders.app_directories.load_template_source',
@@ -125,13 +136,16 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.admin',
+    #~ 'django.contrib.staticfiles',  #for django >=1.4 
     'bots',
     )
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.auth",
+    "django.core.context_processors.auth",  #for django < 1.4
+    #~ "django.contrib.auth.context_processors.auth",  #for django >=1.4 
     "django.core.context_processors.debug",
     "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
+    #~ 'django.core.context_processors.static',  #for django >=1.4 
     'bots.bots_context.set_context',
     )

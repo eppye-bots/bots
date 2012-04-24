@@ -4,6 +4,7 @@ import encodings
 import codecs
 import ConfigParser
 import logging, logging.handlers
+import django
 from django.utils.translation import ugettext as _
 #Bots-modules
 from botsconfig import *
@@ -98,7 +99,7 @@ def generalinit(configdir):
     botsglobal.ini.set('directories','templates',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/template/templates'))
     botsglobal.ini.set('directories','templateshtml',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/templatehtml/templates'))
 
-    #set values in setting.py**********************************************************************
+    #set values in settings.py**********************************************************************
     if botsglobal.ini.get('webserver','environment','development') == 'development':   #values in bots.ini are also used in setting up cherrypy
         settings.DEBUG = True
     else:
@@ -113,6 +114,16 @@ def generalinit(configdir):
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     initbotscharsets()
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #
+    
+    #convert django 1.4 database settings to django 1.3 format; code cna be changed when django 1.2 not supported anymore
+    if django.VERSION[1] >= 4:
+        #~ print botsglobal.settings.DATABASES['default'].get(ENGINE,'')
+        botsglobal.settings.DATABASE_ENGINE = botsglobal.settings.DATABASES['default'].get('ENGINE','')
+        botsglobal.settings.DATABASE_NAME   = botsglobal.settings.DATABASES['default'].get('NAME','')
+        botsglobal.settings.DATABASE_USER   = botsglobal.settings.DATABASES['default'].get('USER','')
+        botsglobal.settings.DATABASE_HOST   = botsglobal.settings.DATABASES['default'].get('HOST','')
+        botsglobal.settings.DATABASE_PORT   = botsglobal.settings.DATABASES['default'].get('PORT','')
+        botsglobal.settings.DATABASE_OPTIONS= botsglobal.settings.DATABASES['default'].get('OPTIONS','')
 
 
 def initbotscharsets():
