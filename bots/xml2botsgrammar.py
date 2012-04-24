@@ -28,7 +28,7 @@ def writefields(tree,node,mpath):
     #~ print node.record
     for key in node.record.keys():
         #~ print key
-        if key != 'BOTSID':
+        if key not in ['BOTSID','BOTSIDnr']:
             putmpath[-1][key]=u'dummy'
             #~ print 'mpath used',mpath
             #~ putmpath = copy.deepcopy(mpath)
@@ -63,7 +63,7 @@ def recorddefs2string(recorddefs,sortedstructurelist):
             if '__' in field[0]:
                 recorddefsstring += "        %s,\n"%field
         for field in recorddefs[i]:
-            if field[0]!='BOTSID' and '__' not in field[0]:
+            if field[0] not in ['BOTSID','BOTSIDnr'] and '__' not in field[0]:
                 recorddefsstring += "        %s,\n"%field
         recorddefsstring += "        ],\n"
     recorddefsstring += "    }\n"
@@ -154,8 +154,9 @@ def start():
     out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    #make outmessage object
     
     #handle root
-    rootmpath = [{'BOTSID':inn.root.record['BOTSID']}]
+    rootmpath = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
     out.put(*rootmpath)
+    #~ out.root.display()
     writefields(out,inn.root,rootmpath)
     #walk tree; write results to out-tree
     for node,mpath in treewalker(inn.root,mpath):
