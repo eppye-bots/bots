@@ -112,11 +112,11 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                     #~ print 'tomessage.ta_info',tomessage.ta_info
                     ta_tomes.update(**tomessage.ta_info) #update outmessage transaction with ta_info;
                     del tomessage
-                    #~ gc.collect()
-                    if not doalttranslation:
-                        break   #out of while loop
+                    #check the value received from the mappingscript to see if another traanslation needs to be doen (chained translation)
+                    if doalttranslation is None:
+                        break   #break out of while loop; do no other translation
                     else:
-                        inn.ta_info['alt'] = doalttranslation
+                        inn.ta_info['alt'] = doalttranslation   #get the alt-value for the next chainded translation
                 #end of while-loop
                 
                 #
