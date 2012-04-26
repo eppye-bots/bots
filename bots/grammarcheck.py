@@ -7,14 +7,17 @@ import grammar
 def showusage():
     print
     print "    Usage:  %s  -c<directory> <editype> <messagetype>"%os.path.basename(sys.argv[0])
+    print "       or   %s  -c<directory> <path to grammar>"%os.path.basename(sys.argv[0])
     print
     print "    Checks a Bots grammar."
     print "    Same checks are used as in translations with bots-engine."
     print "    Searches for grammar in regular place: bots/usersys/grammars/<editype>/<messagetype>.py"
+    print "        (even if a path is passed)"
     print "    Options:"
     print "        -c<directory>   directory for configuration files (default: config)."
-    print "    Example:"
+    print "    Examples:"
     print "        %s -cconfig  edifact  ORDERSD96AUNEAN008"%os.path.basename(sys.argv[0])
+    print "        %s -cconfig  C:/python27/lib/site-packages/bots/usersys/grammars/edifact/ORDERSD96AUNEAN008.py"%os.path.basename(sys.argv[0])
     print
     sys.exit(0)
 
@@ -57,12 +60,18 @@ def start():
         elif arg in ["?", "/?"] or arg.startswith('-'):
             showusage()
         else:
-            if not editype:
+            if os.path.isfile(arg):
+                p1,p2 = os.path.split(arg)
+                editype = os.path.basename(p1)
+                messagetype,ext = os.path.splitext(p2)
+                messagetype = str(messagetype)
+                print 'grammarcheck',editype,messagetype
+            elif not editype:
                 editype = arg
             else:
                 messagetype = arg
     if not (editype and messagetype):
-        print '    !!Both editype and messagetype are required.'
+        print '    !!Both editype and messagetype, or a file path, are required.'
         showusage()
     #********end handling command line arguments**************************
 
