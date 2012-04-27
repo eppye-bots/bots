@@ -7,7 +7,8 @@ def set_context(request):
     botslogo = botsglobal.ini.get('webserver','botslogo',"bots/botslogo.html")
     bots_minDate = 0 - botsglobal.ini.getint('settings','maxdays',30)
 
-    if 'touchscreen' in request.user.groups.all():
+    groups = request.user.groups.values_list('name',flat=True)
+    if groups and 'touchscreen' in groups:
         bots_touchscreen = True
     else:
         bots_touchscreen = False
