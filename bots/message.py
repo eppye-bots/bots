@@ -34,13 +34,13 @@ class Message(object):
                         print '    %s    (veld)'%(veld[VALUE])
                 t += 1
         
-    #~ def checkmessage(self,node,structure,grammarname,subtranslation=False):
     def checkmessage(self,node,grammar,subtranslation=False):
         ''' The node tree is check, sorted, fields are formatted etc.
             For checking: translation & subtranslation
+            parameter subtranslation only used for reporting
         '''
         #checks the root of grammar-structure with root of node tree:
-        #check message against grammar (up till now only minimal tests have been done)
+        #check message against grammar (so far only minimal tests have been done during processing)
         #some different cases:
         #- empy root.record, root.children filled: 
         #  - edifact, x12, tradacoms: each child is an envelope. Check each envelope. (use mailbag to have one UNB per node-tree here)
@@ -72,9 +72,8 @@ class Message(object):
         '''
         deletelist=[]       #list of records not in the grammar; these records are deleted at end of function
         self._checkiffieldsingrammar(node.record,structure)     #check if fields are known in grammar
-        if 'messagetype' in node.queries:   #determine if SUBTRANSLATION
+        if 'messagetype' in node.queries:   #determine if SUBTRANSLATION starts; do not check (is already checked)
             return
-        #only for outmessage:
         if node.children and LEVEL not in structure:            #if record has children, but these are not in the grammar
             if self.ta_info['checkunknownentities']:
                 self.add2errorlist(_(u'[S01] Record "%(record)s" in message has children, but these are not in grammar "%(grammar)s". Found record "%(xx)s".\n')%{'record':node.record['BOTSID'],'grammar':grammarname,'xx':node.children[0].record['BOTSID']})
@@ -88,7 +87,6 @@ class Message(object):
                     self._checkifrecordsingrammar(childnode,structure_record,grammarname)
                     break    #record/childnode is in gramar; go to check next record/childnode
             else:   #record/childnode in not in grammar
-                #only for outmessage
                 if self.ta_info['checkunknownentities']:
                     self.add2errorlist(_(u'[S02] Record "%(record)s" in message but not in grammar "%(grammar)s". Content of record: "%(content)s".\n')%{'record':childnode.record['BOTSID'],'grammar':grammarname,'content':childnode.record})
                 deletelist.append(childnode)
@@ -115,7 +113,6 @@ class Message(object):
                         continue    #nothing found; continue with next gammarfield
                     break   #break out of grammarfield-for-loop
             else:
-                #only for outmessage
                 if self.ta_info['checkunknownentities']:
                     self.add2errorlist(_(u'[F01] Record: "%(mpath)s" field "%(field)s" does not exist in grammar.\n')%{'field':field,'mpath':structure_record[MPATH]})
                 deletelist.append(field)
@@ -142,9 +139,9 @@ class Message(object):
                 if structure_record[MAX] < count:
                     self.add2errorlist(_(u'[S04] Record "%(mpath)s" occurs %(count)d times, max is %(maxcount)d.\n')%{'mpath':structure_record[MPATH],'count':count,'maxcount':structure_record[MAX]})
             node.children=sortednodelist
-            #only for inmessages
-            if QUERIES in structure:
-                node.get_queries_from_edi(structure)
+        #only relevant for inmessages
+        if QUERIES in structure:
+            node.get_queries_from_edi(structure)
 
     def _canonicalfields(self,noderecord,structure_record,headerrecordnumber):
         ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted).

@@ -116,11 +116,13 @@ class Node(object):
         ''' extract information from edifile using QUERIES in grammar.structure; information will be placed in ta_info and in db-ta
         '''
         tmpdict = {}
+        #~ print 'get_queries_from_edi', structurerecord[QUERIES]
         for key,value in structurerecord[QUERIES].items():
             found = self.enhancedget(value)   #search in last added node
             if found:
                 tmpdict[key] = found
         self.queries = tmpdict
+        #~ print 'result:',self.queries,'\n'
 
     #********************************************************
     #*** manipulate node.tree: get, put, change, delete etc *
