@@ -5,9 +5,25 @@ import filecmp
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage
 import bots.botslib as botslib
+import bots.node as node
 import bots.botsinit as botsinit
 
 '''plugin unitnode.zip'''
+
+#fetchqueries is dynamically added to node, to retrieve and check 
+collectqueries = {}
+def fetchqueries(self,level=0):
+    '''for debugging
+        usage: in mapping script:     inn.root.displayqueries()
+    '''
+    if self.record:
+        tmp = self.queries
+        if tmp:
+            collectqueries[self.record['BOTSID']] = tmp
+    for childnode in self.children:
+        childnode.fetchqueries(level+1)
+
+
 
 class Testnode(unittest.TestCase):
     ''' test node.py and message.py.
@@ -115,11 +131,22 @@ class Testnode(unittest.TestCase):
                 self.assertEqual('0',t.getcountsum({'BOTSID':'UNB'},{'BOTSID':'UNH'},{'BOTSID':'LIN'},{'BOTSID':'QTY','C186.6063':'12','C186.6060':None}),'Cmplines')
                 self.assertEqual('0',t.getcountsum({'BOTSID':'UNB'},{'BOTSID':'UNH'},{'BOTSID':'LIN'},{'BOTSID':'MOA','C516.5025':'203','C516.5004':None}),'Cmplines')
 
-    def testedifact02(self):
+    #~ def testedifact02(self):
+        #display query correct? incluuding propagating 'down the tree'?
+        #~ inn = inmessage.edifromfile(editype='edifact',messagetype='invoicwithenvelopetestquery',filename='botssys/infile/unitnode/nodetest01.edi')
+        #~ inn.root.processqueries({},2)
+        #~ inn.root.displayqueries()
+
+    def testedifact03(self):
         #~ #display query correct? incluuding propagating 'down the tree'?
-        inn = inmessage.edifromfile(editype='edifact',messagetype='invoicwithenvelopetestquery',filename='botssys/infile/unitnode/nodetest01.edi')
+        node.Node.fetchqueries = fetchqueries
+        inn = inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitnode/0T0000000015.edi')
         inn.root.processqueries({},2)
-        inn.root.displayqueries()
+        inn.root.fetchqueries()
+        #~ print collectqueries
+        comparequeries = {u'UNH': {'reference': u'UNBREF', 'messagetype': u'ORDERSD96AUNEAN008', 'reference2': u'UNBREF', 'topartner': u'PARTNER2', 'alt': u'50EAB', 'alt2': u'50E9', 'frompartner': u'PARTNER1'}, u'UNB': {'topartner': u'PARTNER2', 'reference2': u'UNBREF', 'reference': u'UNBREF', 'frompartner': u'PARTNER1'}, u'UNZ': {'reference': u'UNBREF', 'reference2': u'UNBREF', 'topartner': u'PARTNER2', 'frompartner': u'PARTNER1'}}
+        self.assertEqual(comparequeries,collectqueries)
+        #~ inn.root.displayqueries()
 
 
 if __name__ == '__main__':
