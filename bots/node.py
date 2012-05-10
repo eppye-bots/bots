@@ -105,7 +105,12 @@ class Node(object):
         elif isinstance(mpaths,list):
             collect = u''
             for mpath in mpaths:
-                found = self.get(mpath)
+                if isinstance(mpath,dict):
+                    found = self.get(mpath)
+                elif isinstance(mpath,tuple):
+                    found = self.get(*mpath)
+                else:
+                    raise botslib.MappingFormatError(_(u'member in list $mpath must be dict or tuple (in enhancedget).'),mpath=mpath)
                 if found:
                     collect += found
             return collect
