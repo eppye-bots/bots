@@ -111,11 +111,22 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                     #problem is that not all values ta_tomes are know to to_message....
                     #~ print 'tomessage.ta_info',tomessage.ta_info
                     ta_tomes.update(**tomessage.ta_info) #update outmessage transaction with ta_info;
-                    del tomessage
-                    #check the value received from the mappingscript to see if another traanslation needs to be doen (chained translation)
+                    #check the value received from the mappingscript to see if another traanslation needs to be done (chained translation)
                     if doalttranslation is None:
+                        del tomessage
                         break   #break out of while loop; do no other translation
+                    elif isinstance(doalttranslation,dict):
+                        #some extended cases; a dict is returned that contains 'instructions'
+                        if 'type' not in doalttranslation:
+                            raise botslib.BotsError("Mapping script returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                        if doalttranslation['type'] == u'out_as_inn':
+                            if 'alt' not in doalttranslation:
+                                raise botslib.BotsError("Mapping script returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                            inn = tomessage
+                            inn.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chainded translation
+                            inn.ta_info.pop('statust')
                     else:
+                        del tomessage
                         inn.ta_info['alt'] = doalttranslation   #get the alt-value for the next chainded translation
                 #end of while-loop
                 
