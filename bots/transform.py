@@ -123,6 +123,8 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                             if 'alt' not in doalttranslation:
                                 raise botslib.BotsError("Mapping script returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
                             inn = tomessage
+                            if isinstance(inn,outmessage.fixed):
+                                inn.root.stripnode()
                             inn.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chainded translation
                             inn.ta_info.pop('statust')
                     else:

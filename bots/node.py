@@ -507,3 +507,14 @@ class Node(object):
         global comparekey
         comparekey = mpaths[1:]
         self.children.sort(key=nodecompare)
+
+    def stripnode(self):
+        ''' removes spaces from all fields in tree.
+            used in alt translations where a dict is returned by mapping-script indicating the out-tree should be used as inn.
+            the out-tree has been formatted already, this is not OK for fixed formats (idoc!)
+        '''
+        if self.record is not None:
+            for key, value in self.record.iteritems():
+                self.record[key] = value.strip()
+        for child in self.children:
+            child.stripnode()
