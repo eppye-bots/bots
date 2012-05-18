@@ -398,3 +398,9 @@ def datemask(value,frommask,tomask):
     except:
         raise botslib.BotsError(_(u'Error in function datamask("$value", "$frommask", "$tomask").'),value=value,frommask=frommask,tomask=tomask)
     return terug
+
+def limitlength(value,maxpos):
+    if value:
+        return value[:maxpos]
+    else:
+        return value
