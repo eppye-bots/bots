@@ -201,10 +201,6 @@ class PlugoutForm(django.forms.Form):
     logfiles = django.forms.BooleanField(required=False,initial=False,label='Log files',help_text='bots/botssys/logging; only for support purposes, on request.')
     config = django.forms.BooleanField(required=False,initial=False,label='configuration files',help_text='bots/config; only for support purposes, on request.')
     database = django.forms.BooleanField(required=False,initial=False,label='SQLite database',help_text='Only for support purposes, on request.')
-    filename = django.forms.CharField(required=True,label='Plugin filename',max_length=250)
-    def __init__(self, *args, **kwargs):
-        super(PlugoutForm, self).__init__(*args, **kwargs)
-        self.fields['filename'].initial = botslib.join(botsglobal.ini.get('directories','botssys'),'myplugin' + time.strftime('_%Y%m%d') + '.zip')
 
 class DeleteForm(django.forms.Form):
     delbackup = django.forms.BooleanField(required=False,label='Delete backups of user scripts',initial=True,help_text='Delete backup files in usersys (purge).')

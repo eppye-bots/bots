@@ -277,8 +277,8 @@ def load(pathzipfile):
 #*************************************************************
 # generate a plugin (plugout)
 #*************************************************************
-def plugoutcore(cleaned_data):
-    pluginzipfilehandler = zipfile.ZipFile(cleaned_data['filename'], 'w', zipfile.ZIP_DEFLATED)
+def plugoutcore(cleaned_data,filename):
+    pluginzipfilehandler = zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED)
     
     tmpbotsindex = plugout_database(cleaned_data)
     pluginzipfilehandler.writestr('botsindex.py',tmpbotsindex)      #write index file to pluginfile

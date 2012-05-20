@@ -408,15 +408,19 @@ def plugout(request,*kw,**kwargs):
         if 'submit' in request.POST:
             form = forms.PlugoutForm(request.POST)
             if form.is_valid():
-                botsglobal.logger.info(_(u'Start writing plugin "%s".'),form.cleaned_data['filename'])
+                filename = botslib.join(botsglobal.ini.get('directories','botssys'),'plugin_temp.zip')
+                botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
                 try:
-                    pluglib.plugoutcore(form.cleaned_data)
+                    pluglib.plugoutcore(form.cleaned_data,filename)
                 except botslib.PluginError, txt:
                     botsglobal.logger.info(u'%s',str(txt))
                     request.user.message_set.create(message='%s'%txt)
                 else:
-                    botsglobal.logger.info(_(u'Plugin "%s" created successful.'),form.cleaned_data['filename'])
-                    request.user.message_set.create(message=_(u'Plugin %s created successful.')%form.cleaned_data['filename'])
+                    botsglobal.logger.info(_(u'Plugin "%s" created successful.'),filename)
+                    response = django.http.HttpResponse(open(filename, 'rb').read(), content_type='application/zip')
+                    #~ response['Content-Length'] = os.path.getsize(filename)
+                    response['Content-Disposition'] = 'attachment; filename=' + 'plugin' + time.strftime('_%Y%m%d') + '.zip'
+                    return response
     return django.shortcuts.redirect('/home')
 
 def delete(request,*kw,**kwargs):
@@ -499,8 +503,8 @@ def delete(request,*kw,**kwargs):
 
 def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
-        #check if bots-engine is not already running
-        if list(models.mutex.objects.filter(mutexk=1).all()):
+        #check if bots-engine is not already running (unless attempting crashrecovery)
+        if list(models.mutex.objects.filter(mutexk=1).all()) and request.GET['clparameter'] != '--crashrecovery':
             request.user.message_set.create(message=_(u'Trying to run "bots-engine", but database is locked by another run in progress. Please try again later.'))
             botsglobal.logger.info(_(u'Trying to run "bots-engine", but database is locked by another run in progress.'))
             return django.shortcuts.redirect('/home')
