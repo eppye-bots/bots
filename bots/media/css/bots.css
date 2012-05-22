@@ -51,7 +51,8 @@ table#about {
 div#menu a {
 	color:      #000000;
 	text-decoration:none;
-	white-space:		nowrap;
+	white-space:		wrap;
+	margin:	2px;
 	}
 div#menu ul {
 	width:      8em;
@@ -59,22 +60,31 @@ div#menu ul {
 	margin:     0;
 	padding:    0;
     }
+div#menu hr {
+    height: 1px;
+	width: 100%;
+	color: #bbb;
+	background-color: #bbb;
+	}
 div#menu ul li {
 	list-style: none;
 	display:    none;
+	font-size:  100%;
 	}
 div#menu ul:hover li, 
 div#menu ul:hover li a {
 	display:    block;
-	width:      20em;
-	background:#F1FBFF;
+	width:      17em;
+    border-left: 1px solid #ddd;
+    color: #666;
+    background: #efefef;
+    border-bottom: 1px solid #efefef;
 	padding:    0;
 	margin:     0;
-	text-transform:		capitalize;
 	}
 div#menu ul:hover li a:hover, 
 div#menu ul:hover a {
-	background: #BCCCE3;
+    color: #028;
     }
 div#menu ul:hover li a:hover, 
 div#menu ul:hover li a:hover {
@@ -86,6 +96,9 @@ div.dropdown {
 	position:relative;
 	float:left;
 	}
+div.dropdown  button {
+    color: #666;
+	}
 div.dropdown  ul {
 	list-style-type:none;
 	margin:0;
@@ -95,7 +108,7 @@ div.dropdown  ul {
 	z-index:598;
 	left:99%;
 	top:1px;
-	background:#F1FBFF;
+	background: #efefef;
 	}
 div.dropdown:hover  ul {
 	visibility:visible;
@@ -104,12 +117,12 @@ div.dropdown  ul  li {
 	list-style: none;
     }
 div.dropdown:hover button{
-	background-color:#F1FBFF;
+	background-color: #efefef;
 	}
 div.dropdown:hover >button,
 div.dropdown  ul li:hover,
 div.dropdown  ul li button:hover{
-	background: #BCCCE3;
+	color: #028;
 	}
 /***********************************************************************/
 /**FILTER***************************************************************/
@@ -137,7 +150,7 @@ div#changelist-filter:hover ul {
 	cursor:				pointer;
 	white-space:		nowrap;
 	color: 				#000000;
-	background:			#FFFFFF;
+	background:			transparent;
 	}
 p.botsheader2	{
 	border-style:		none;
@@ -166,4 +179,10 @@ img.action {
 	}
 table#botstable td {
 	line-height: 1em;
+	}
+.row1 {
+	background: white;
+	}
+.row2 {
+	background: #f8f8f8;
 	}

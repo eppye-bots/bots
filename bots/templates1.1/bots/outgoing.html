@@ -41,7 +41,7 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><a href="/detail/?outidta={{row.idta}}" class="botslink">{% trans 'View detail' %}</a></li>
+                            <li><button class="botsheader" onclick="document.location.href='/detail/?outidta={{row.idta}}'; return false;">{% trans 'View detail' %}</button></li>
                             <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}" />{% trans 'Resend' %}</button></li>
                         </ul>
                     </div>
