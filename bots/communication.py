@@ -25,10 +25,7 @@ try:
 except ImportError:
     import simplejson
 import smtplib
-import poplib
-import imaplib
 import ftplib
-import xmlrpclib
 from django.utils.translation import ugettext as _
 #Bots modules
 import botslib
@@ -538,6 +535,7 @@ class _comsession(object):
 
 class pop3(_comsession):
     def connect(self):
+        import poplib
         self.session = poplib.POP3(host=self.channeldict['host'],port=int(self.channeldict['port']))
         self.session.set_debuglevel(botsglobal.ini.getint('settings','pop3debug',0))    #if used, gives information about session (on screen), for debugging pop3
         self.session.user(self.channeldict['username'])
@@ -608,6 +606,7 @@ class pop3(_comsession):
 
 class pop3s(pop3):
     def connect(self):
+        import poplib
         #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
@@ -621,6 +620,7 @@ class pop3s(pop3):
         
 class pop3apop(pop3):
     def connect(self):
+        import poplib
         self.session = poplib.POP3(host=self.channeldict['host'],port=int(self.channeldict['port']))
         self.session.set_debuglevel(botsglobal.ini.getint('settings','pop3debug',0))    #if used, gives information about session (on screen), for debugging pop3
         self.session.apop(self.channeldict['username'],self.channeldict['secret'])    #python handles apop password encryption
@@ -630,6 +630,7 @@ class imap4(_comsession):
     ''' Fetch email from IMAP server. 
     '''
     def connect(self):
+        import imaplib
         imaplib.Debug = botsglobal.ini.getint('settings','imap4debug',0)    #if used, gives information about session (on screen), for debugging imap4
         self.session = imaplib.IMAP4(host=self.channeldict['host'],port=int(self.channeldict['port']))
         self.session.login(self.channeldict['username'],self.channeldict['secret'])
@@ -694,6 +695,7 @@ class imap4(_comsession):
 
 class imap4s(imap4):
     def connect(self):
+        import imaplib
         #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
@@ -1332,6 +1334,7 @@ class sftp(_comsession):
 class xmlrpc(_comsession):
     scheme = 'http'
     def connect(self):
+        import xmlrpclib
         self.uri = botslib.Uri(scheme=self.scheme,username=self.channeldict['username'],password=self.channeldict['secret'],host=self.channeldict['host'],port=self.channeldict['port'],path=self.channeldict['path'])
         self.session = xmlrpclib.ServerProxy(self.uri.uri)
 
