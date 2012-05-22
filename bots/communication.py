@@ -608,7 +608,13 @@ class pop3(_comsession):
 
 class pop3s(pop3):
     def connect(self):
-        self.session = poplib.POP3_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']))
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #In future these paramaters will be added; for now no change in database.
+        if self.userscript and hasattr(self.userscript,'keyfile'):
+            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        else:
+            keyfile = certfile = None
+        self.session = poplib.POP3_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile)
         self.session.set_debuglevel(botsglobal.ini.getint('settings','pop3debug',0))    #if used, gives information about session (on screen), for debugging pop3
         self.session.user(self.channeldict['username'])
         self.session.pass_(self.channeldict['secret'])
@@ -688,8 +694,14 @@ class imap4(_comsession):
 
 class imap4s(imap4):
     def connect(self):
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #In future these paramaters will be added; for now no change in database.
+        if self.userscript and hasattr(self.userscript,'keyfile'):
+            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        else:
+            keyfile = certfile = None
         imaplib.Debug = botsglobal.ini.getint('settings','imap4debug',0)    #if used, gives information about session (on screen), for debugging imap4
-        self.session = imaplib.IMAP4_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']))
+        self.session = imaplib.IMAP4_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile)
         self.session.login(self.channeldict['username'],self.channeldict['secret'])
 
 
@@ -753,20 +765,32 @@ class smtp(_comsession):
 
 class smtps(smtp):
     def connect(self):
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #In future these paramaters will be added; for now no change in database.
+        if self.userscript and hasattr(self.userscript,'keyfile'):
+            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        else:
+            keyfile = certfile = None
         if hasattr(smtplib,'SMTP_SSL'):
-            self.session = smtplib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port'])) #make connection
+            self.session = smtplib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile) #make connection
         else:   #smtp_ssl not in standard lib for python<=2.5; if not, use 'own' smtps module.
             import bots.smtpssllib as smtpssllib
-            self.session = smtpssllib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port'])) #make connection
+            self.session = smtpssllib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile) #make connection
         self.session.set_debuglevel(botsglobal.ini.getint('settings','smtpdebug',0))    #if used, gives information about session (on screen), for debugging smtp
         self.login()
 
 class smtpstarttls(smtp):
     def connect(self):
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #In future these paramaters will be added; for now no change in database.
+        if self.userscript and hasattr(self.userscript,'keyfile'):
+            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        else:
+            keyfile = certfile = None
         self.session = smtplib.SMTP(host=self.channeldict['host'],port=int(self.channeldict['port'])) #make connection
         self.session.set_debuglevel(botsglobal.ini.getint('settings','smtpdebug',0))    #if used, gives information about session (on screen), for debugging smtp
         self.session.ehlo()
-        self.session.starttls()
+        self.session.starttls(keyfile=keyfile,certfile=certfile)
         self.session.ehlo()
         self.login()
 
@@ -1038,14 +1062,19 @@ class ftps(ftp):
         ftps is supported by python >= 2.7
     '''
     def connect(self):
-        botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_(u'ftps is not supported by your python version, use >=2.7'))
-        self.session = ftplib.FTP_TLS()
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #In future these paramaters will be added; for now no change in database.
+        if self.userscript and hasattr(self.userscript,'keyfile'):
+            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        else:
+            keyfile = certfile = None
+        botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
+        self.session = ftplib.FTP_TLS(keyfile=keyfile,certfile=certfile)
         self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
         self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
         self.session.connect(host=self.channeldict['host'],port=int(self.channeldict['port']))
-        #support key files (PEM, cert)?
         self.session.auth()
         self.session.login(user=self.channeldict['username'],passwd=self.channeldict['secret'],acct=self.channeldict['ftpaccount'])
         self.session.prot_p()
@@ -1109,16 +1138,21 @@ class ftpis(ftp):
         ~ ssl.PROTOCOL_TLSv1  = 3
     '''
     def connect(self):
-        botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_(u'ftpis is not supported by your python version, use >=2.7'))
-        self.session = FTP_TLS_IMPLICIT()
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #In future these paramaters will be added; for now no change in database.
+        if self.userscript and hasattr(self.userscript,'keyfile'):
+            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        else:
+            keyfile = certfile = None
+        botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
+        self.session = FTP_TLS_IMPLICIT(keyfile=keyfile,certfile=certfile)
         if self.channeldict['parameters']:
             self.session.ssl_version = int(self.channeldict['parameters'])
         self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
         self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
         self.session.connect(host=self.channeldict['host'],port=int(self.channeldict['port']))
-        #support key files (PEM, cert)?
         #~ self.session.auth()
         self.session.login(user=self.channeldict['username'],passwd=self.channeldict['secret'],acct=self.channeldict['ftpaccount'])
         self.session.prot_p()
@@ -1126,13 +1160,14 @@ class ftpis(ftp):
 
 
 class sftp(_comsession):
-    ''' SSH File Transfer Protocol (SFTP is not FTP run over SSH, SFTP is not Simple File Transfer Protocol)
+    ''' SFTP: SSH File Transfer Protocol (SFTP is not FTP run over SSH, SFTP is not Simple File Transfer Protocol)
         standard port to connect to is port 22.
         requires paramiko and pycrypto to be installed
         based on class ftp and ftps above with code from demo_sftp.py which is included with paramiko
         Mike Griffin 16/10/2010
         Henk-jan ebbers 20110802: when testing I found that the transport also needs to be closed. So changed transport ->self.transport, and close this in disconnect
         henk-jan ebbers 20111019: disabled the host_key part for now (but is very interesting). Is not tested; keys should be integrated in bots also for other protocols. 
+        henk-jan ebbers 20120522: hostkey and privatekey can now be handled in user exit. 
     '''
     def connect(self):
         # check dependencies
@@ -1160,10 +1195,9 @@ class sftp(_comsession):
         except:
             port = 22 # default port for sftp
 
-        # get host key, if we know one
-        # (I have not tested this, just copied from demo)
-        hostkeytype = None
-        hostkey = None
+        #handling of hostkey and privatekey
+        #code below handled hostkey. not handling hostkey disables the authentication of the server's host key.
+        #handling the hostkey can be done in user exit
         #~ try:
             #~ host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
         #~ except IOError:
@@ -1176,10 +1210,23 @@ class sftp(_comsession):
             #~ hostkeytype = host_keys[hostname].keys()[0]
             #~ hostkey = host_keys[hostname][hostkeytype]
             #~ botsglobal.logger.debug(u'Using host key of type "%s" for sftp',hostkeytype)
+            
+        if self.userscript and hasattr(self.userscript,'hostkey'):
+            hostkey = botslib.runscript(self.userscript,self.scriptname,'hostkey',channeldict=self.channeldict)
+        else:
+            hostkey = None
+        if self.userscript and hasattr(self.userscript,'privatekey'):
+            privatekeyfile,pkeytype,pkeypassword = botslib.runscript(self.userscript,self.scriptname,'privatekey',channeldict=self.channeldict)
+            if pkeytype == 'RSA':
+                pkey = paramiko.RSAKey.from_private_key_file(privatekeyfile=privatekeyfile,password=pkeypassword)
+            else:
+                pkey = paramiko.DSSKey.from_private_key_file(privatekeyfile=privatekeyfile,password=pkeypassword)
+        else:
+            pkey = None
 
         # now, connect and use paramiko Transport to negotiate SSH2 across the connection
         self.transport = paramiko.Transport((hostname,port))
-        self.transport.connect(username=self.channeldict['username'],password=self.channeldict['secret'],hostkey=hostkey)
+        self.transport.connect(username=self.channeldict['username'],password=self.channeldict['secret'],hostkey=hostkey,pkey=pkey)
         self.session = paramiko.SFTPClient.from_transport(self.transport)
         channel = self.session.get_channel()
         channel.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
