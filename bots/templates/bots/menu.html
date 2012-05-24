@@ -79,9 +79,13 @@
 	{% endif %}
 	{% if custom_menus %}
 	<ul>
-		<a>Custom</a>
-		{% for key,value in custom_menus.items %}
-			<li><a href="{{ value }}" >{{ key }}</a></li>
+		<a>{{ custom_menuname }}</a>
+		{% for key,value in custom_menus %}
+			{% ifequal '---' value %}
+				<li><hr/></li>
+			{% else %}
+				<li><a href="{{ value }}" >{{ key }}</a></li>
+			{% endifequal %}
 		{% endfor %}
     </ul>
 	{% endif %}

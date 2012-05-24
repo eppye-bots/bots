@@ -25,17 +25,20 @@ def set_context(request):
     else:
         bots_http_path = 'home'
     
-    #in bots.ini it is possible to indicate that all routes (in config->routes) can be run individually via menu
-    # Run individual routes from the run menu if enabled
-    menu_all_routes = []
+    #in bots.ini can be indicated that all routes (in config->routes, if route is activated) can be run individually via menu
     if botsglobal.ini.getboolean('webserver','menu_all_routes',False):
-        for route in models.routes.objects.values_list('idroute', flat=True).filter(active=True).order_by('idroute').distinct():
-            menu_all_routes.append(route)
+        menu_all_routes = list(models.routes.objects.values_list('idroute', flat=True).filter(active=True).order_by('idroute').distinct())
+    else:
+        menu_all_routes = None
     
     #in bots.ini it is possible to add custom menu's
-    custom_menus = {}
-    for key, value in botsglobal.ini.items('custommenus'):
-        custom_menus[key] = value
+    if botsglobal.ini.has_section('custommenus'):
+        custom_menuname = botsglobal.ini.get('custommenus','menuname','Custom')
+        custom_menus = [(key,value) for key,value in botsglobal.ini.items('custommenus') if key != 'menuname']
+    else:
+        custom_menuname = None
+        custom_menus = None
+
 
     #the variables in the dict are set. eg in template use {{ bots_environment_text }}
     return {'bots_environment_text':bots_environment_text, 
@@ -45,5 +48,6 @@ def set_context(request):
             'bots_touchscreen':bots_touchscreen, 
             'menu_all_routes':menu_all_routes,
             'custom_menus':custom_menus,
+            'custom_menuname':custom_menuname,
             }
 
