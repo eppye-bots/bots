@@ -7,8 +7,11 @@ def set_context(request):
     bots_environment_text = botsglobal.ini.get('webserver','environment_text',' ')
     botslogo = botsglobal.ini.get('webserver','botslogo',"bots/botslogo.html")
     bots_minDate = 0 - botsglobal.ini.getint('settings','maxdays',30)
-
-    groups = request.user.groups.values_list('name',flat=True)
+    
+    try:
+        groups = request.user.groups.values_list('name',flat=True)
+    except AttributeError:
+        groups = None
     if groups and 'touchscreen' in groups:
         bots_touchscreen = True
     else:
