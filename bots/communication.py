@@ -1197,22 +1197,6 @@ class sftp(_comsession):
         except:
             port = 22 # default port for sftp
 
-        #handling of hostkey and privatekey
-        #code below handled hostkey. not handling hostkey disables the authentication of the server's host key.
-        #handling the hostkey can be done in user exit
-        #~ try:
-            #~ host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
-        #~ except IOError:
-            #~ try: # try ~/ssh/ too, because windows can't have a folder named ~/.ssh/
-                #~ host_keys = paramiko.util.load_host_keys(os.path.expanduser('~/ssh/known_hosts'))
-            #~ except IOError:
-                #~ host_keys = {}
-                #~ botsglobal.logger.debug(u'No host keys found for sftp')
-        #~ if host_keys.has_key(hostname):
-            #~ hostkeytype = host_keys[hostname].keys()[0]
-            #~ hostkey = host_keys[hostname][hostkeytype]
-            #~ botsglobal.logger.debug(u'Using host key of type "%s" for sftp',hostkeytype)
-            
         if self.userscript and hasattr(self.userscript,'hostkey'):
             hostkey = botslib.runscript(self.userscript,self.scriptname,'hostkey',channeldict=self.channeldict)
         else:
@@ -1220,15 +1204,19 @@ class sftp(_comsession):
         if self.userscript and hasattr(self.userscript,'privatekey'):
             privatekeyfile,pkeytype,pkeypassword = botslib.runscript(self.userscript,self.scriptname,'privatekey',channeldict=self.channeldict)
             if pkeytype == 'RSA':
-                pkey = paramiko.RSAKey.from_private_key_file(privatekeyfile=privatekeyfile,password=pkeypassword)
+                pkey = paramiko.RSAKey.from_private_key_file(filename=privatekeyfile,password=pkeypassword)
             else:
-                pkey = paramiko.DSSKey.from_private_key_file(privatekeyfile=privatekeyfile,password=pkeypassword)
+                pkey = paramiko.DSSKey.from_private_key_file(filename=privatekeyfile,password=pkeypassword)
         else:
             pkey = None
 
+        if self.channeldict['secret']:  #if password is empty string: use None. Else error can occur.
+            secret = self.channeldict['secret']
+        else:
+            secret = None
         # now, connect and use paramiko Transport to negotiate SSH2 across the connection
         self.transport = paramiko.Transport((hostname,port))
-        self.transport.connect(username=self.channeldict['username'],password=self.channeldict['secret'],hostkey=hostkey,pkey=pkey)
+        self.transport.connect(username=self.channeldict['username'],password=secret,hostkey=hostkey,pkey=pkey)
         self.session = paramiko.SFTPClient.from_transport(self.transport)
         channel = self.session.get_channel()
         channel.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
