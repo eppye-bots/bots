@@ -1220,11 +1220,11 @@ class sftp(_comsession):
         self.session = paramiko.SFTPClient.from_transport(self.transport)
         channel = self.session.get_channel()
         channel.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
+        self.set_cwd()
 
+    def set_cwd(self):
         self.session.chdir('.') # getcwd does not work without this chdir first!
         self.dirpath = self.session.getcwd()
-
-        #set right path on ftp-server
         if self.channeldict['path']:
             self.dirpath = posixpath.normpath(posixpath.join(self.dirpath,self.channeldict['path']))
             try:
