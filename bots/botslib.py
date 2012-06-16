@@ -92,7 +92,7 @@ def setpreprocessnumber(statusnumber):
     botsglobal.preprocessnumber = statusnumber 
 def getpreprocessnumber():
     terug = botsglobal.preprocessnumber
-    botsglobal.preprocessnumber +=2
+    botsglobal.preprocessnumber += 2
     return terug 
     
 #**********************************************************/**
@@ -103,10 +103,10 @@ class _Transaction(object):
         This class is used for communication with db-ta.
     '''
     #filtering values fo db handling (to avoid unknown fields in db.
-    filterlist=['statust','status','divtext','parent','child','script','frompartner','topartner','fromchannel','tochannel','editype','messagetype','merge',
+    filterlist = ['statust','status','divtext','parent','child','script','frompartner','topartner','fromchannel','tochannel','editype','messagetype','merge',
                 'testindicator','reference','frommail','tomail','contenttype','errortext','filename','charset','alt','idroute','nrmessages','retransmit',
                 'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc']
-    processlist=[0]  #stack for bots-processes. last one is the current process; starts with 1 element in list: root
+    processlist = [0]  #stack for bots-processes. last one is the current process; starts with 1 element in list: root
 
     def update(self,**ta_info):
         ''' Updates db-ta with named-parameters/dict.
@@ -142,7 +142,7 @@ class _Transaction(object):
                             {'selfid':self.idta,'rootidta':get_minta4query()})
         rows = cursor.fetchall()
         for row in rows:
-            ta=OldTransaction(row['idta'])
+            ta = OldTransaction(row['idta'])
             ta.failure()
         cursor.execute(u'''DELETE FROM ta
                             WHERE idta>%(rootidta)s
@@ -213,7 +213,7 @@ class OldTransaction(_Transaction):
     def __init__(self,idta,**ta_info):
         '''Use old transaction '''
         self.idta = idta
-        self.talijst=[]
+        self.talijst = []
         for key in ta_info.keys():   #only used by trace
             setattr(self,key,ta_info[key])  #could be done better, but SQLite does not support .items()
 
@@ -262,7 +262,7 @@ def trace_origin(ta,where=None):
         '''
         for idta in get_parent(ta):
             donelijst.append(idta)
-            taparent=OldTransaction(idta=idta)
+            taparent = OldTransaction(idta=idta)
             taparent.synall()
             for key,value in where.items():
                 if getattr(taparent,key) != value:
@@ -298,13 +298,13 @@ def addinfocore(change,where,wherestring):
         returns the number of db-ta that have been changed.
     '''
     if 'rootidta' not in where:
-        where['rootidta']=get_minta4query()
+        where['rootidta'] = get_minta4query()
         wherestring = ' idta > %(rootidta)s AND ' + wherestring
     if 'statust' not in where:  #by default: look only for statust is OK
-        where['statust']=OK
+        where['statust'] = OK
         wherestring += ' AND statust = %(statust)s '
     if 'statust' not in change: #by default: new ta is OK
-        change['statust']= OK
+        change['statust'] = OK
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
         counter += 1
@@ -326,10 +326,10 @@ def updateinfo(change,where):
         returns the number of db-ta that have been changed.
     '''
     if 'statust' not in where:
-        where['statust']=OK
+        where['statust'] = OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
     if 'rootidta' not in where:
-        where['rootidta']=get_minta4query()
+        where['rootidta'] = get_minta4query()
         wherestring = ' idta > %(rootidta)s AND ' + wherestring
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
@@ -339,7 +339,7 @@ def updateinfo(change,where):
         defchange = {}
         for key,value in change.items():
             if value and not getattr(ta_from,key,None): #if there is a value and the key is not set in ta_from:
-                defchange[key]=value
+                defchange[key] = value
         ta_from.update(**defchange)
     return counter
 
@@ -351,10 +351,10 @@ def changestatustinfo(change,where):
     if not isinstance(change,int):
         raise BotsError(_(u'change not valid: expect status to be an integer. Programming error.'))
     if 'statust' not in where:
-        where['statust']=OK
+        where['statust'] = OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
     if 'rootidta' not in where:
-        where['rootidta']=get_minta4query()
+        where['rootidta'] = get_minta4query()
         wherestring = ' idta > %(rootidta)s AND ' + wherestring
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
@@ -417,7 +417,7 @@ def unique(domein):
     return nummer
 
 def checkunique(domein, receivednumber):
-    ''' to check of received number is sequential: value is compare with earlier received value.
+    ''' to check if received number is sequential: value is compare with earlier received value.
         if domain not used before, initialize it . '1' is the first value expected.
     '''
     cursor = botsglobal.db.cursor()
@@ -428,8 +428,8 @@ def checkunique(domein, receivednumber):
         cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
         expectednumber = 1
     if expectednumber == receivednumber:
-        if expectednumber > sys.maxint-2:
-            nummer = 1
+        #~ if expectednumber > sys.maxint-2:
+            #~ nummer = 1
         cursor.execute(u'''UPDATE uniek SET nummer=nummer+1 WHERE domein=%(domein)s''',{'domein':domein})
         terug = True
     else:
@@ -465,21 +465,21 @@ def sendbotserrorreport(subject,reporttext):
         except:
             botsglobal.logger.debug(u'Error in sending error report: %s',txtexc())
 
-def log_session(f):
+def log_session(func):
     ''' used as decorator.
         The decorated functions are logged as processes.
         Errors in these functions are caught and logged.
     '''
     def wrapper(*args,**argv):
         try:
-            ta_session = NewProcess(f.__name__)
+            ta_session = NewProcess(func.__name__)
         except:
             botsglobal.logger.exception(u'System error - no new session made')
             raise
         try:
-            terug =f(*args,**argv)
+            terug = func(*args,**argv)
         except:
-            txt=txtexc()
+            txt = txtexc()
             botsglobal.logger.debug(u'Error in process: %s',txt)
             ta_session.update(statust=ERROR,errortext=txt)
         else:
@@ -493,9 +493,9 @@ def txtexc():
         if botsglobal.ini.getboolean('settings','debug',False):
             limit = None
         else:
-            limit=0
+            limit = 0
     else:
-        limit=0
+        limit = 0
     #problems with char set for some input data that are reported in traces....so always decode this; 
     terug = traceback.format_exc(limit).decode('utf-8','ignore')
     terug = terug.replace(u'Traceback (most recent call last):\n',u'')
@@ -550,7 +550,7 @@ def botsimport(soort,modulename):
         botsglobal.logger.debug(u'no import of "%s".',modulefile)
         raise
     except:             #other errors
-        txt=txtexc()
+        txt = txtexc()
         raise ScriptImportError(_(u'import error in "$module", error:\n$txt'),module=modulefile,txt=txt)
     else:
         botsglobal.logger.debug(u'import "%s".',modulefile)
@@ -597,9 +597,9 @@ def opendata(filename,mode,charset=None,errors=None):
 
 def readdata(filename,charset=None,errors=None):
     ''' read internal data file in memory using the right encoding or no encoding'''
-    f = opendata(filename,'rb',charset,errors)
-    content = f.read()
-    f.close()
+    filehandler = opendata(filename,'rb',charset,errors)
+    content = filehandler.read()
+    filehandler.close()
     return content
 
 #**********************************************************/**
@@ -614,7 +614,7 @@ def runscript(module,modulefile,functioninscript,**argv):
     try:
         return functiontorun(**argv)
     except:
-        txt=txtexc()
+        txt = txtexc()
         raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
 
 def tryrunscript(module,modulefile,functioninscript,**argv):
@@ -630,7 +630,7 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
         for result in functiontorun(**argv):
             yield result
     except:
-        txt=txtexc()
+        txt = txtexc()
         raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
 
 def runexternprogram(*args):
@@ -639,7 +639,7 @@ def runexternprogram(*args):
     try:
         subprocess.call(list(args),cwd=path)
     except:
-        txt=txtexc()
+        txt = txtexc()
         raise OSError(_(u'error running extern program "%(program)s", error:\n%(error)s'%{'program':args,'error':txt}))
 
 #**********************************************************/**
@@ -654,21 +654,21 @@ def checkconfirmrules(confirmtype,**kwargs):
                         ORDER BY negativerule ASC
                         ''',
                         {'active':True,'confirmtype':confirmtype}):
-        if confirmdict['ruletype']=='all':
+        if confirmdict['ruletype'] == 'all':
             terug = not confirmdict['negativerule']
-        elif confirmdict['ruletype']=='route':
+        elif confirmdict['ruletype'] == 'route':
             if 'idroute' in kwargs and confirmdict['idroute'] == kwargs['idroute']:
                 terug = not confirmdict['negativerule']
-        elif confirmdict['ruletype']=='channel':
+        elif confirmdict['ruletype'] == 'channel':
             if 'idchannel' in kwargs and confirmdict['idchannel'] == kwargs['idchannel']:
                 terug = not confirmdict['negativerule']
-        elif confirmdict['ruletype']=='frompartner':
+        elif confirmdict['ruletype'] == 'frompartner':
             if 'frompartner' in kwargs and confirmdict['frompartner'] == kwargs['frompartner']:
                 terug = not confirmdict['negativerule']
-        elif confirmdict['ruletype']=='topartner':
+        elif confirmdict['ruletype'] == 'topartner':
             if 'topartner' in kwargs and confirmdict['topartner'] == kwargs['topartner']:
                 terug = not confirmdict['negativerule']
-        elif confirmdict['ruletype']=='messagetype':
+        elif confirmdict['ruletype'] == 'messagetype':
             if 'editype' in kwargs and confirmdict['editype'] == kwargs['editype'] and 'messagetype' in kwargs and confirmdict['messagetype'] == kwargs['messagetype']:
                 terug = not confirmdict['negativerule']
     #~ print '>>>>>>>>>>>>', terug,confirmtype,kwargs
@@ -678,8 +678,8 @@ def checkconfirmrules(confirmtype,**kwargs):
 #***************###############  codecs   #############
 #**********************************************************/**
 def getcodeccanonicalname(codecname):
-    c = codecs.lookup(codecname)
-    return c.name
+    codeccanonicalname = codecs.lookup(codecname)
+    return codeccanonicalname.name
 
 def checkcodeciscompatible(charset1,charset2):
     ''' check if charset of edifile) is 'compatible' with charset of channel: OK; else: raise exception
@@ -739,12 +739,12 @@ def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
 
 def countunripchars(value,delchars):
-	return len([c for c in value if c not in delchars])
+    return len([c for c in value if c not in delchars])
 
 def updateunlessset(updatedict,fromdict):
     for key, value in fromdict.items():
         if key not in updatedict:
-            updatedict[key]=value
+            updatedict[key] = value
 
 #**********************************************************/**
 #**************  Exception classes ***************************
@@ -754,8 +754,8 @@ class BotsError(Exception):
         self.msg = msg
         self.kwargs = kwargs
     def __str__(self):
-        s = string.Template(self.msg).safe_substitute(self.kwargs)
-        return s.encode(u'utf-8',u'ignore')
+        terug = string.Template(self.msg).safe_substitute(self.kwargs)
+        return terug.encode(u'utf-8',u'ignore')
 class CodeConversionError(BotsError):
     pass
 class CommunicationError(BotsError):

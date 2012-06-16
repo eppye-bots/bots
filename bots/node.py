@@ -9,7 +9,7 @@ import botsglobal
 from botsconfig import *
 
 
-comparekey=None
+comparekey = None
 
 def nodecompare(node2compare):
     global comparekey
@@ -38,7 +38,7 @@ class Node(object):
         '''for debugging
             usage eg in mapping script:     inn.root.display()
         '''
-        if level==0:
+        if level == 0:
             print 'displaying all nodes in node tree:'
         print '    '*level,self.record
         for childnode in self.children:
@@ -79,7 +79,7 @@ class Node(object):
         '''for debugging
             usage: in mapping script:     inn.root.displayqueries()
         '''
-        if level==0:
+        if level == 0:
             print 'displaying queries for nodes in tree'
         print '    '*level,'node:',
         if self.record:
@@ -216,7 +216,7 @@ class Node(object):
                     if value is None:
                         self.record.pop(key,'nep')
                     else:
-                        self.record[key]=value
+                        self.record[key] = value
                 return True
             else:           #go recursive
                 for childnode in self.children:
@@ -438,7 +438,7 @@ class Node(object):
             if not 'BOTSIDnr' in part:
                 part['BOTSIDnr'] = u'1'
 
-        if self.sameoccurence(mpaths[0]):
+        if self._sameoccurence(mpaths[0]):
             self._putcore(*mpaths[1:])
         else:
             raise botslib.MappingRootError(_(u'error in root put "$mpath".'),mpath=mpaths[0])
@@ -449,7 +449,7 @@ class Node(object):
         if not mpaths:  #newmpath is exhausted, stop searching.
             return True
         for childnode in self.children:
-            if childnode.record['BOTSID']==mpaths[0]['BOTSID'] and childnode.sameoccurence(mpaths[0]):    #checking of BOTSID is also done in sameoccurance!->performance!
+            if childnode.record['BOTSID'] == mpaths[0]['BOTSID'] and childnode._sameoccurence(mpaths[0]):    #checking of BOTSID is also done in sameoccurance!->performance!
                 childnode._putcore(*mpaths[1:])
                 return
         else:   #is not present in children, so append mpath as a new node
@@ -475,9 +475,9 @@ class Node(object):
                 part[key] = unicode(value).strip()
             if not 'BOTSIDnr' in part:
                 part['BOTSIDnr'] = u'1'
-        if self.sameoccurence(mpaths[0]):
+        if self._sameoccurence(mpaths[0]):
             if len(mpaths)==1:
-               return self
+                return self
             return self._putloopcore(*mpaths[1:])
         else:
             raise botslib.MappingRootError(_(u'error in root putloop "$mpath".'),mpath=mpaths[0])
@@ -487,17 +487,17 @@ class Node(object):
             self.append(Node(mpaths[0]))
             return self.children[-1]
         for childnode in self.children:  #if first part of mpaths exists already in children go recursive
-            if childnode.record['BOTSID']==mpaths[0]['BOTSID'] and childnode.sameoccurence(mpaths[0]):    #checking of BOTSID is also done in sameoccurance!->performance!
+            if childnode.record['BOTSID'] == mpaths[0]['BOTSID'] and childnode._sameoccurence(mpaths[0]):    #checking of BOTSID is also done in sameoccurance!->performance!
                 return childnode._putloopcore(*mpaths[1:])
         else:   #is not present in children, so append a child, and go recursive
             self.append(Node(mpaths[0]))
             return self.children[-1]._putloopcore(*mpaths[1:])
 
-    def sameoccurence(self, mpath):
+    def _sameoccurence(self, mpath):
         ''' checks if all items that appear in both node and mpath have the same value. If so, all new items in mpath are added to node
         '''
         for key,value in self.record.iteritems():
-            if key in mpath and mpath[key]!=value:
+            if key in mpath and mpath[key] != value:
                 return False
         else:    #all equal keys have same values, thus both are 'equal'.
             self.record.update(mpath)   #add items to self.record that are new
