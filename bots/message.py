@@ -11,7 +11,7 @@ class Message(object):
         is subclassed as outmessage or inmessage object.
     '''
     def __init__(self):
-        self.recordnumber=0                #segment counter. Is not used for UNT of SE record; some editypes want sequential recordnumbering
+        self.recordnumber = 0                #segment counter. Is not used for UNT of SE record; some editypes want sequential recordnumbering
         self.errorlist = []                #to gather all (non-fatal) errors in the edi file.
 
     def add2errorlist(self,errortxt):
@@ -23,18 +23,18 @@ class Message(object):
     def display(records):
         '''for debugging lexed records.'''
         for record in records:
-            t = 0
+            counter = 0
             for veld in record:
-                if t==0:
+                if counter == 0:
                     print '%s    (Record-id)'%(veld[VALUE])
                 else:
                     if veld[SFIELD]:
                         print '        %s    (sub)'%(veld[VALUE])
                     else:
                         print '    %s    (veld)'%(veld[VALUE])
-                t += 1
-        
-    def checkmessage(self,node,grammar,subtranslation=False):
+                counter += 1
+
+    def checkmessage(self,node_instance,grammar,subtranslation=False):
         ''' The node tree is check, sorted, fields are formatted etc.
             For checking: translation & subtranslation
             parameter subtranslation only used for reporting
@@ -42,46 +42,46 @@ class Message(object):
         #checks the root of grammar-structure with root of node tree:
         #check message against grammar (so far only minimal tests have been done during processing)
         #some different cases:
-        #- empy root.record, root.children filled: 
+        #- empy root.record, root.children filled:
         #  - edifact, x12, tradacoms: each child is an envelope. Check each envelope. (use mailbag to have one UNB per node-tree here)
         #  - csv nobotsid: each child is a record. Check all records in one check
-        #  - xml, json: 
+        #  - xml, json:
         # root.record filled, root.children filled: outgoing messages.
         #~ self.root.display() #show tree of nodes (for protocol debugging)
-        if node.record:        #root record contains information; write whole tree in one time
-            self._checkonemessage(node,grammar,subtranslation)
+        if node_instance.record:        #root record contains information; write whole tree in one time
+            self._checkonemessage(node_instance,grammar,subtranslation)
         else:
-            for childnode in node.children:
+            for childnode in node_instance.children:
                 self._checkonemessage(childnode,grammar,subtranslation)
-            
+
         if self.errorlist and not subtranslation:
             raise botslib.MessageError(_(u'$errorlist'),errorlist=''.join(self.errorlist))
 
-    def _checkonemessage(self,node,grammar,subtranslation):
+    def _checkonemessage(self,node_instance,grammar,subtranslation):
         structure = grammar.structure
-        if not node.record['BOTSID'] == structure[0][ID]:
-            raise botslib.MessageError(_(u'Grammar "$grammar" has (root)record "$grammarroot"; found "$root".'),root=node.record['BOTSID'],grammarroot=structure[0][ID],grammar=grammar.grammarname)
-        self._checkifrecordsingrammar(node,structure[0],grammar.grammarname)
-        self._canonicaltree(node,structure[0])
+        if not node_instance.record['BOTSID'] == structure[0][ID]:
+            raise botslib.MessageError(_(u'Grammar "$grammar" has (root)record "$grammarroot"; found "$root".'),root=node_instance.record['BOTSID'],grammarroot=structure[0][ID],grammar=grammar.grammarname)
+        self._checkifrecordsingrammar(node_instance,structure[0],grammar.grammarname)
+        self._canonicaltree(node_instance,structure[0])
         if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the records read) be logged.
-            self._logmessagecontent(node)
-        
-    def _checkifrecordsingrammar(self,node,structure,grammarname):
+            self._logmessagecontent(node_instance)
+
+    def _checkifrecordsingrammar(self,node_instance,structure,grammarname):
         ''' check for every node if in grammar
             recursive
         '''
-        deletelist=[]       #list of records not in the grammar; these records are deleted at end of function
-        self._checkiffieldsingrammar(node.record,structure)     #check if fields are known in grammar
-        if 'messagetype' in node.queries:   #determine if SUBTRANSLATION starts; do not check (is already checked)
+        deletelist = []       #list of records not in the grammar; these records are deleted at end of function
+        self._checkiffieldsingrammar(node_instance.record,structure)     #check if fields are known in grammar
+        if 'messagetype' in node_instance.queries:   #determine if SUBTRANSLATION starts; do not check (is already checked)
             return
-        if node.children and LEVEL not in structure:            #if record has children, but these are not in the grammar
+        if node_instance.children and LEVEL not in structure:            #if record has children, but these are not in the grammar
             if self.ta_info['checkunknownentities']:
-                self.add2errorlist(_(u'[S01] Record "%(record)s" in message has children, but these are not in grammar "%(grammar)s". Found record "%(xx)s".\n')%{'record':node.record['BOTSID'],'grammar':grammarname,'xx':node.children[0].record['BOTSID']})
-            node.children=[]
+                self.add2errorlist(_(u'[S01] Record "%(record)s" in message has children, but these are not in grammar "%(grammar)s". Found record "%(xx)s".\n')%{'record':node_instance.record['BOTSID'],'grammar':grammarname,'xx':node_instance.children[0].record['BOTSID']})
+            node_instance.children = []
             return
-        for childnode in node.children:          #for every record/childnode:
+        for childnode in node_instance.children:          #for every record/childnode:
             for structure_record in structure[LEVEL]:                   #search in grammar-records
-                if childnode.record['BOTSID'] == structure_record[ID]:   
+                if childnode.record['BOTSID'] == structure_record[ID]:
                     #found record in grammar
                     #check recursive:
                     self._checkifrecordsingrammar(childnode,structure_record,grammarname)
@@ -91,13 +91,13 @@ class Message(object):
                     self.add2errorlist(_(u'[S02] Record "%(record)s" in message but not in grammar "%(grammar)s". Content of record: "%(content)s".\n')%{'record':childnode.record['BOTSID'],'grammar':grammarname,'content':childnode.record})
                 deletelist.append(childnode)
         for child in deletelist:
-            node.children.remove(child)
-                
+            node_instance.children.remove(child)
+
 
     def _checkiffieldsingrammar(self,record,structure_record):
         ''' checks for every field in record if field exists in structure_record (from grammar).
         '''
-        deletelist=[]
+        deletelist = []
         for field in record.keys():     #check every field in the record
             if field == 'BOTSIDnr':     #is not in grammar, so skip check
                 continue
@@ -119,16 +119,16 @@ class Message(object):
         for field in deletelist:
             del record[field]
 
-    def _canonicaltree(self,node,structure,headerrecordnumber=0):
+    def _canonicaltree(self,node_instance,structure,headerrecordnumber=0):
         ''' For nodes: check min and max occurence; sort the records conform grammar
             parameter 'headerrecordnumber' is used in subclassing this function.
         '''
         sortednodelist = []
-        self._canonicalfields(node.record,structure,headerrecordnumber)    #handle fields of this record
+        self._canonicalfields(node_instance.record,structure,headerrecordnumber)    #handle fields of this record
         if LEVEL in structure:
             for structure_record in structure[LEVEL]:  #for every structure_record (in grammar) of this level
                 count = 0                           #count number of occurences of record
-                for childnode in node.children:            #for every node in mpathtree; SPEED: delete nodes from list when found
+                for childnode in node_instance.children:            #for every node in mpathtree; SPEED: delete nodes from list when found
                     if childnode.record['BOTSID'] != structure_record[ID] or childnode.record['BOTSIDnr'] != structure_record[BOTSIDnr]:   #if it is not the right NODE":
                         continue
                     count += 1
@@ -138,10 +138,10 @@ class Message(object):
                     self.add2errorlist(_(u'[S03] Record "%(mpath)s" occurs %(count)d times, min is %(mincount)d.\n')%{'mpath':structure_record[MPATH],'count':count,'mincount':structure_record[MIN]})
                 if structure_record[MAX] < count:
                     self.add2errorlist(_(u'[S04] Record "%(mpath)s" occurs %(count)d times, max is %(maxcount)d.\n')%{'mpath':structure_record[MPATH],'count':count,'maxcount':structure_record[MAX]})
-            node.children=sortednodelist
+            node_instance.children = sortednodelist
         #only relevant for inmessages
         if QUERIES in structure:
-            node.get_queries_from_edi(structure)
+            node_instance.get_queries_from_edi(structure)
 
     def _canonicalfields(self,noderecord,structure_record,headerrecordnumber):
         ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted).
@@ -157,29 +157,30 @@ class Message(object):
                 noderecord[grammarfield[ID]] = self._formatfield(value,grammarfield,structure_record)
             else:               #if composite: loop over subfields in grammar
                 #first check if there is any data att all in this composite
-                for grammarsubfield in grammarfield[SUBFIELDS]:   
+                for grammarsubfield in grammarfield[SUBFIELDS]:
                     if noderecord.get(grammarsubfield[ID]):
                         break   #composite has data.
                 else:           #if composite has no data
-                    if grammarfield[MANDATORY]=='M':
+                    if grammarfield[MANDATORY] == 'M':
                         self.add2errorlist(_(u'[F03] Record "%(mpath)s" composite "%(field)s" is mandatory.\n')%{'mpath':structure_record[MPATH],'field':grammarfield[ID]})
                     continue    #there is no data in compisite, and composite is conditional: composite is OK
                 #there is data in the composite!
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
                     value = noderecord.get(grammarsubfield[ID])
                     if not value:
-                        if grammarsubfield[MANDATORY]=='M':
+                        if grammarsubfield[MANDATORY] == 'M':
                             self.add2errorlist(_(u'[F04] Record "%(mpath)s" subfield "%(field)s" is mandatory: "%(record)s".\n')%{'mpath':structure_record[MPATH],'field':grammarsubfield[ID],'record':noderecord})
                         continue
                     noderecord[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,structure_record)
 
-    def _logmessagecontent(self,node):
-        botsglobal.logger.debug(u'record "%s":',node.record['BOTSID'])
-        self._logfieldcontent(node.record)    #handle fields of this record
-        for child in node.children:
+    def _logmessagecontent(self,node_instance):
+        botsglobal.logger.debug(u'record "%s":',node_instance.record['BOTSID'])
+        self._logfieldcontent(node_instance.record)    #handle fields of this record
+        for child in node_instance.children:
             self._logmessagecontent(child)
 
-    def _logfieldcontent(self,noderecord):
+    @staticmethod
+    def _logfieldcontent(noderecord):
         for key,value in noderecord.items():
             if key not in ['BOTSID','BOTSIDnr']:
                 botsglobal.logger.debug(u'    "%s" : "%s"',key,value)
@@ -223,7 +224,7 @@ class Message(object):
 
     def getcountoccurrences(self,*mpaths):
         ''' count number of nodes in self.root. Number of nodes is number of records.'''
-        count = 0 
+        count = 0
         for value in self.getloop(*mpaths):
             count += 1
         return count
@@ -235,7 +236,7 @@ class Message(object):
         return self.root.getcountsum(*mpaths)
 
     def getloop(self,*mpaths):
-        ''' query tree with mpath; generates all the nodes. Is typically used as: for record in inn.get(mpath): 
+        ''' query tree with mpath; generates all the nodes. Is typically used as: for record in inn.get(mpath):
         '''
         if self.root.record:    #self.root is a real root
             for terug in self.root.getloop(*mpaths): #search recursive for rest of mpaths
@@ -255,7 +256,7 @@ class Message(object):
             if len(mpaths) == 1:
                 self.root.append(node.Node(mpaths[0]))
                 return self.root.children[-1]
-            else: #TODO: what if self.root.record is None and len(mpaths) > 1?
+            else:
                 raise botslib.MappingRootError(_(u'putloop($mpath): mpath too long???'),mpath=mpaths)
         return self.root.putloop(*mpaths)
 

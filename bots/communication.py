@@ -15,7 +15,6 @@ import email.encoders
 import glob
 import shutil
 import fnmatch
-import codecs
 if os.name == 'nt':
     import msvcrt
 elif os.name == 'posix':
@@ -48,7 +47,7 @@ def run(idchannel,idroute=''):
             ta_run.update(fromchannel=channeldict['idchannel'])
         else:
             ta_run.update(tochannel=channeldict['idchannel'])
-            
+
         try:
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
         except ImportError:
@@ -56,7 +55,7 @@ def run(idchannel,idroute=''):
         #get the communication class to use:
         if userscript and hasattr(userscript,channeldict['type']):          #check communication class in user script (sub classing)
             classtocall = getattr(userscript,channeldict['type'])
-        elif userscript and hasattr(userscript,'UserCommunicationClass'):   #check for communication class called 'UserCommunicationClass' in user script. 20110920: Obsolete, depreciated. Keep this for now. 
+        elif userscript and hasattr(userscript,'UserCommunicationClass'):   #check for communication class called 'UserCommunicationClass' in user script. 20110920: Obsolete, depreciated. Keep this for now.
             classtocall = getattr(userscript,'UserCommunicationClass')
         else:
             classtocall = globals()[channeldict['type']]                    #get the communication class from this module
@@ -76,11 +75,11 @@ class _comsession(object):
     '''
     def __init__(self,channeldict,idroute,userscript,scriptname):
         ''' All communication is performed in init.'''
-        self.channeldict=channeldict
-        self.idroute=idroute
-        self.userscript=userscript
-        self.scriptname=scriptname
-        if self.channeldict['inorout']=='out':
+        self.channeldict = channeldict
+        self.idroute = idroute
+        self.userscript = userscript
+        self.scriptname = scriptname
+        if self.channeldict['inorout'] == 'out':
             #routes can have the same outchannel.
             #the different outchannels can be 'direct' or deferred (in route)
             nroffiles = self.precommunicate(FILEOUT,RAWOUT)
@@ -115,7 +114,7 @@ class _comsession(object):
             status = FILEOUT
             statust = DONE
             channel = 'tochannel'
-           
+
         if self.userscript and hasattr(self.userscript,'archivepath'):
             archivepath = botslib.runscript(self.userscript,self.scriptname,'archivepath',channeldict=self.channeldict)
         else:
@@ -187,7 +186,7 @@ class _comsession(object):
                 confirmtype = u''
                 confirmasked = False
                 charset = row['charset']
-                
+
                 if row['editype'] == 'email-confirmation': #outgoing MDN: message is already assembled
                     outfilename = row['filename']
                 else:   #assemble message: headers and payload. Bots uses simple MIME-envelope; by default payload is an attachment
@@ -195,7 +194,7 @@ class _comsession(object):
                     #set 'from' header (sender)
                     frommail,ccfrom = self.idpartner2mailaddress(row['frompartner'])    #lookup email address for partnerID
                     message.add_header('From', frommail)
-                    
+
                     #set 'to' header (receiver)
                     if self.userscript and hasattr(self.userscript,'getmailaddressforreceiver'):    #user exit to determine to-address/receiver
                         tomail,ccto = botslib.runscript(self.userscript,self.scriptname,'getmailaddressforreceiver',channeldict=self.channeldict,ta=ta_to)
@@ -204,32 +203,32 @@ class _comsession(object):
                     message.add_header('To',tomail)
                     if ccto:
                         message.add_header('CC',ccto)
-                    
+
                     #set Message-ID
-                    reference=email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
+                    reference = email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
                     message.add_header('Message-ID',reference)
                     ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use correct & updated ta_to in user script)
-                    
+
                     #set date-time stamp
                     message.add_header("Date",email.Utils.formatdate(localtime=True))
-                    
+
                     #set Disposition-Notification-To: ask/ask not a a MDN?
                     if botslib.checkconfirmrules('ask-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
                                                                 frompartner=row['frompartner'],topartner=row['topartner']):
                         message.add_header("Disposition-Notification-To",frommail)
                         confirmtype = u'ask-email-MDN'
                         confirmasked = True
-                    
+
                     #set subject
-                    subject=str(row['idta'])
+                    subject = str(row['idta'])
                     content = botslib.readdata(row['filename'])     #get attachment from data file
                     if self.userscript and hasattr(self.userscript,'subject'):    #user exit to determine subject
                         subject = botslib.runscript(self.userscript,self.scriptname,'subject',channeldict=self.channeldict,ta=ta_to,subjectstring=subject,content=content)
                     message.add_header('Subject',subject)
-                    
+
                     #set MIME-version
                     message.add_header('MIME-Version','1.0')
-                    
+
                     #set attachment filename
                     #create default attachment filename
                     unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
@@ -241,28 +240,28 @@ class _comsession(object):
                         attachmentfilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,ta=ta_to,filename=attachmentfilename)
                     if attachmentfilename:  #Tric: if attachmentfilename is None or empty string: do not send as an attachment.
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
-                    
+
                     #set Content-Type and charset
                     charset = self.convertcodecformime(row['charset'])
                     message.add_header('Content-Type',row['contenttype'].lower(),charset=charset)          #contenttype is set in grammar.syntax
-                    
+
                     #set attachment/payload; the Content-Transfer-Encoding is set by python encoder
                     message.set_payload(content)   #do not use charset; this lead to unwanted encodings...bots always uses base64
                     if self.channeldict['askmdn'] == 'never':       #channeldict['askmdn'] is the Mime encoding
                         email.encoders.encode_7or8bit(message)      #no encoding; but the Content-Transfer-Encoding is set to 7-bit or 8-bt
-                    elif self.channeldict['askmdn'] == 'ascii' and charset=='us-ascii':
+                    elif self.channeldict['askmdn'] == 'ascii' and charset == 'us-ascii':
                         pass        #do nothing: ascii is default encoding
                     else:           #if Mime encoding is 'always' or  (Mime encoding == 'ascii' and charset!='us-ascii'): use base64
                         email.encoders.encode_base64(message)
-                    
+
                     #*******write email to file***************************
                     outfilename = str(ta_to.idta)
                     outfile = botslib.opendata(outfilename, 'wb')
-                    g = email.Generator.Generator(outfile, mangle_from_=False, maxheaderlen=78)
-                    g.flatten(message,unixfrom=False)
+                    generator = email.Generator.Generator(outfile, mangle_from_=False, maxheaderlen=78)
+                    generator.flatten(message,unixfrom=False)
                     outfile.close()
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
                 counter += 1
@@ -278,9 +277,9 @@ class _comsession(object):
             -   save 'attachments' as files
             -   generate MDN if asked and OK from bots-configuration
         '''
-        whitelist_multipart=['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822','multipart/alternative']
-        whitelist_major=['text','application']
-        blacklist_contenttype=['text/html','text/enriched','text/rtf','text/richtext','application/postscript','text/vcard','text/css']
+        whitelist_multipart = ['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822','multipart/alternative']
+        whitelist_major = ['text','application']
+        blacklist_contenttype = ['text/html','text/enriched','text/rtf','text/richtext','application/postscript','text/vcard','text/css']
         def savemime(msg):
             ''' save contents of email as separate files.
                 is a nested function.
@@ -301,7 +300,7 @@ class _comsession(object):
                 content = msg.get_payload(decode=True)
                 if not content or content.isspace():
                     return 0
-                charset=msg.get_content_charset('')
+                charset = msg.get_content_charset('')
                 if not charset:
                     charset = self.channeldict['charset']
                 if self.userscript and hasattr(self.userscript,'accept_incoming_attachment'):
@@ -313,7 +312,7 @@ class _comsession(object):
                 outfile = botslib.opendata(outfilename, 'wb')
                 outfile.write(content)
                 outfile.close()
-                nrmimesaved+=1
+                nrmimesaved += 1
                 ta_file.update(statust=OK,
                                 contenttype=contenttype,
                                 charset=charset,
@@ -364,7 +363,7 @@ class _comsession(object):
             humanmessage.add_header('Content-Type', 'text/plain')
             humanmessage.set_payload('This is an return receipt for the mail that you send to '+tomail)
             message.attach(humanmessage)
-            
+
             #make machine readable message
             machinemessage = email.Message.Message()
             machinemessage.add_header('Content-Type', 'message/disposition-notification')
@@ -374,13 +373,13 @@ class _comsession(object):
             message.attach(machinemessage)
 
             #write email to file;
-            ta_mdn=botslib.NewTransaction(status=MERGED)  #new transaction for group-file
+            ta_mdn = botslib.NewTransaction(status=MERGED)  #new transaction for group-file
             mdn_reference = email.Utils.make_msgid(str(ta_mdn.idta))    #we first have to get the mda-ta to make this reference
             message.add_header('Message-ID', mdn_reference)
             mdnfilename = str(ta_mdn.idta)
             mdnfile = botslib.opendata(mdnfilename, 'wb')
-            g = email.Generator.Generator(mdnfile, mangle_from_=False, maxheaderlen=78)
-            g.flatten(message,unixfrom=False)
+            generator = email.Generator.Generator(mdnfile, mangle_from_=False, maxheaderlen=78)
+            generator.flatten(message,unixfrom=False)
             mdnfile.close()
             ta_mdn.update(statust=OK,
                             idroute=self.idroute,
@@ -420,7 +419,7 @@ class _comsession(object):
                 tos             = email.Utils.getaddresses(msg.get_all('to', []))
                 ccs             = email.Utils.getaddresses(msg.get_all('cc', []))
                 #~ tomail          = tos[0][1]  #tomail is the email address of the first "To"-recipient
-                cc              = ','.join([emailaddress[1] for emailaddress in (tos + ccs)])
+                cc_content      = ','.join([emailaddress[1] for emailaddress in (tos + ccs)])
                 reference       = msg['message-id']
                 subject         = msg['subject']
                 contenttype     = msg.get_content_type()
@@ -442,16 +441,16 @@ class _comsession(object):
                         if not topartner:
                             emailtos = [address[1] for address in tos]
                             raise botslib.CommunicationInError(_(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").'),email=emailtos,idchannel=self.channeldict['idchannel'])
-                        
-                
+
+
                 #update transaction of mail with information found in mail
-                ta_mime.update(frommail=frommail,   #why now why not later: because ta_mime is copied to separate files later, so need the info now 
+                ta_mime.update(frommail=frommail,   #why now why not later: because ta_mime is copied to separate files later, so need the info now
                                 tomail=tomail,
                                 reference=reference,
                                 contenttype=contenttype,
                                 frompartner=frompartner,
                                 topartner=topartner,
-                                cc = cc)
+                                cc = cc_content)
                 if contenttype == 'multipart/report':   #process received MDN confirmation
                     mdnreceive()
                 else:
@@ -465,7 +464,7 @@ class _comsession(object):
                     if not nrmimesaved:
                         raise botslib.CommunicationInError (_(u'No valid attachment in received email'))
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_mime.failure()
                 ta_mime.update(statust=ERROR,errortext=txt)
             else:
@@ -517,7 +516,7 @@ class _comsession(object):
 
     def connect(self):
         pass
-        
+
     def disconnect(self):
         pass
 
@@ -531,7 +530,7 @@ class _comsession(object):
             }
         codec_in = codec_in.lower().replace('_','-')
         return convertdict.get(codec_in,codec_in)
-            
+
 
 class pop3(_comsession):
     def connect(self):
@@ -559,18 +558,18 @@ class pop3(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=RAWIN)
                 filename = str(ta_to.idta)
-                mailID = int(mail.split()[0])	#first 'word' is the message number/ID
-                maillines = self.session.retr(mailID)[1]        #alt: (header, messagelines, octets) = popsession.retr(messageID)
-                fp = botslib.opendata(filename, 'wb')
-                fp.write(os.linesep.join(maillines))
-                fp.close()
+                mailid = int(mail.split()[0])	#first 'word' is the message number/ID
+                maillines = self.session.retr(mailid)[1]        #alt: (header, messagelines, octets) = popsession.retr(messageID)
+                filehandler = botslib.opendata(filename, 'wb')
+                filehandler.write(os.linesep.join(maillines))
+                filehandler.close()
                 if self.channeldict['remove']:      #on server side mail is marked to be deleted. The pop3-server will actually delete the file if the QUIT commnd is receieved!
-                    self.session.dele(mailID)
-                    #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. delete these as they will NOT 
+                    self.session.dele(mailid)
+                    #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. delete these as they will NOT
                     self.listoftamarkedfordelete += [ta_from.idta,ta_to.idta]
-                    
-            except:         #something went wrong for this mail.  
-                txt=botslib.txtexc()
+
+            except:         #something went wrong for this mail.
+                txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='pop3-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
@@ -589,7 +588,7 @@ class pop3(_comsession):
 
     def disconnect(self):
         try:
-            if not self.session: 
+            if not self.session:
                 raise botslib.CommunicationInError(_(u'Pop3 connection not OK'))
             resp = self.session.quit()     #pop3 server will now actually delete the mails
             if resp[:1] != '+':
@@ -607,7 +606,7 @@ class pop3(_comsession):
 class pop3s(pop3):
     def connect(self):
         import poplib
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
@@ -617,7 +616,7 @@ class pop3s(pop3):
         self.session.set_debuglevel(botsglobal.ini.getint('settings','pop3debug',0))    #if used, gives information about session (on screen), for debugging pop3
         self.session.user(self.channeldict['username'])
         self.session.pass_(self.channeldict['secret'])
-        
+
 class pop3apop(pop3):
     def connect(self):
         import poplib
@@ -627,7 +626,7 @@ class pop3apop(pop3):
 
 
 class imap4(_comsession):
-    ''' Fetch email from IMAP server. 
+    ''' Fetch email from IMAP server.
     '''
     def connect(self):
         import imaplib
@@ -648,12 +647,12 @@ class imap4(_comsession):
         response, data = self.session.select(mailbox_name)
         if response != 'OK': # eg. mailbox does not exist
             raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
-            
+
         # Get the message UIDs that should be read
         response, data = self.session.uid('search', None, '(UNDELETED)')
         if response != 'OK': # have never seen this happen, but just in case!
             raise botslib.CommunicationError(mailbox_name + ': ' + data[0])
-            
+
         maillist = data[0].split()
         startdatetime = datetime.datetime.now()
         for mail in maillist:
@@ -665,15 +664,15 @@ class imap4(_comsession):
                 filename = str(ta_to.idta)
                 # Get the message (header and body)
                 response, msg_data = self.session.uid('fetch',mail, '(RFC822)')
-                fp = botslib.opendata(filename, 'wb')
-                fp.write(msg_data[0][1])
-                fp.close()
+                filehandler = botslib.opendata(filename, 'wb')
+                filehandler.write(msg_data[0][1])
+                filehandler.close()
                 # Flag message for deletion AND expunge. Direct expunge has advantages for bad (internet)connections.
                 if self.channeldict['remove']:
                     self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
                     self.session.expunge()
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
@@ -683,8 +682,8 @@ class imap4(_comsession):
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
-                    
-        self.session.close()        #Close currently selected mailbox. This is the recommended command before 'LOGOUT'. 
+
+        self.session.close()        #Close currently selected mailbox. This is the recommended command before 'LOGOUT'.
 
     @botslib.log_session
     def postcommunicate(self,fromstatus,tostatus):
@@ -696,7 +695,7 @@ class imap4(_comsession):
 class imap4s(imap4):
     def connect(self):
         import imaplib
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
@@ -719,15 +718,15 @@ class smtp(_comsession):
 
     def login(self):
         if self.channeldict['username'] and self.channeldict['secret']:
-            try: 
+            try:
                 #error in python 2.6.4....user and password can not be unicode
                 self.session.login(str(self.channeldict['username']),str(self.channeldict['secret']))
             except smtplib.SMTPAuthenticationError:
                 raise botslib.CommunicationOutError(_(u'SMTP server did not accept user/password combination.'))
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 raise botslib.CommunicationOutError(_(u'SMTP login failed. Error:\n$txt'),txt=txt)
-        
+
     @botslib.log_session
     def outcommunicate(self):
         ''' does smtp-session.
@@ -753,12 +752,12 @@ class smtp(_comsession):
                 sendfile.close()
                 self.session.sendmail(row['frommail'], addresslist, msg)
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'])
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'])
-                
+
     def disconnect(self):
         try:    #Google gives/gave error closing connection. Not a real problem.
             self.session.quit()
@@ -767,7 +766,7 @@ class smtp(_comsession):
 
 class smtps(smtp):
     def connect(self):
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
@@ -783,7 +782,7 @@ class smtps(smtp):
 
 class smtpstarttls(smtp):
     def connect(self):
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
@@ -800,8 +799,8 @@ class smtpstarttls(smtp):
 class file(_comsession):
     def connect(self):
         if self.channeldict['lockname']:        #directory locking: create lock-file. If the lockfile is already present an exception is raised.
-            lockname = botslib.join(self.channeldict['path'],self.channeldict['lockname'])
-            lock = os.open(lockname,os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+            self.lockname = botslib.join(self.channeldict['path'],self.channeldict['lockname'])
+            lock = os.open(self.lockname,os.O_WRONLY | os.O_CREAT | os.O_EXCL)
             os.close(lock)
 
     @botslib.log_session
@@ -841,7 +840,7 @@ class file(_comsession):
                 if self.channeldict['remove']:
                     os.remove(fromfilename)
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='file-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
@@ -851,7 +850,7 @@ class file(_comsession):
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
-                
+
     @botslib.log_session
     def outcommunicate(self):
         ''' does output of files to filesystem. To be used via send-dispatcher.
@@ -905,7 +904,7 @@ class file(_comsession):
                 fromfile.close()
                 tofile.close()
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
                 ta_from.update(statust=DONE)
@@ -915,7 +914,7 @@ class file(_comsession):
     def disconnect(self):
         #delete directory-lockfile
         if self.channeldict['lockname']:
-            os.remove(lockname)
+            os.remove(self.lockname)
 
 
 class mimefile(file):
@@ -986,13 +985,13 @@ class ftp(_comsession):
                     raise botslib.BotsError(u'To be catched')
                 if self.channeldict['remove']:
                     self.session.delete(fromfilename)
-            except botslib.BotsError:   #catch this exception and handle it 
+            except botslib.BotsError:   #catch this exception and handle it
                 tofile.close()
                 ta_from.delete()
                 ta_to.delete()
             except:
                 tofile.close()
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='ftp-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
@@ -1002,7 +1001,7 @@ class ftp(_comsession):
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
-        
+
     @botslib.log_session
     def outcommunicate(self):
         ''' do ftp: send files. To be used via receive-dispatcher.
@@ -1045,7 +1044,7 @@ class ftp(_comsession):
                     self.session.storlines(mode + tofilename, fromfile)
                 fromfile.close()
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='ftp:/'+posixpath.join(self.dirpath,tofilename))
             else:
                 ta_from.update(statust=DONE)
@@ -1057,7 +1056,7 @@ class ftp(_comsession):
         except:
             self.session.close()
         botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
-        
+
 class ftps(ftp):
     ''' explicit ftps as defined in RFC 2228 and RFC 4217.
         standard port to connect to is as in normal FTP (port 21)
@@ -1066,7 +1065,7 @@ class ftps(ftp):
     def connect(self):
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_(u'ftps is not supported by your python version, use >=2.7'))
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
@@ -1085,7 +1084,7 @@ class ftps(ftp):
 
 #sub classing of ftplib for ftpis
 if hasattr(ftplib,'FTP_TLS'):
-    class FTP_TLS_IMPLICIT(ftplib.FTP_TLS):
+    class Ftp_tls_implicit(ftplib.FTP_TLS):
         ''' FTPS implicit is not directly supported by python; python>=2.7 supports only ftps explicit.
             So class ftplib.FTP_TLS is sub-classed here, with the needed modifications.
             (code is nicked from ftplib.ftp v. 2.7; additions/changes are indicated)
@@ -1129,7 +1128,7 @@ class ftpis(ftp):
         standard port to connect is port 990.
         FTPS implicit is not supported by python.
         python>=2.7 supports ftps explicit.
-        So used is the sub-class FTP_TLS_IMPLICIT.
+        So used is the sub-class Ftp_tls_implicit.
         Tested with Inovis and VSFTPd.
         Python library FTP_TLS uses ssl_version = ssl.PROTOCOL_TLSv1
         Inovis seems to need PROTOCOL_SSLv3
@@ -1142,14 +1141,14 @@ class ftpis(ftp):
     def connect(self):
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_(u'ftpis is not supported by your python version, use >=2.7'))
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these. 
+        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
         #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
         else:
             keyfile = certfile = None
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
-        self.session = FTP_TLS_IMPLICIT(keyfile=keyfile,certfile=certfile)
+        self.session = Ftp_tls_implicit(keyfile=keyfile,certfile=certfile)
         if self.channeldict['parameters']:
             self.session.ssl_version = int(self.channeldict['parameters'])
         self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
@@ -1168,20 +1167,20 @@ class sftp(_comsession):
         based on class ftp and ftps above with code from demo_sftp.py which is included with paramiko
         Mike Griffin 16/10/2010
         Henk-jan ebbers 20110802: when testing I found that the transport also needs to be closed. So changed transport ->self.transport, and close this in disconnect
-        henk-jan ebbers 20111019: disabled the host_key part for now (but is very interesting). Is not tested; keys should be integrated in bots also for other protocols. 
-        henk-jan ebbers 20120522: hostkey and privatekey can now be handled in user exit. 
+        henk-jan ebbers 20111019: disabled the host_key part for now (but is very interesting). Is not tested; keys should be integrated in bots also for other protocols.
+        henk-jan ebbers 20120522: hostkey and privatekey can now be handled in user exit.
     '''
     def connect(self):
         # check dependencies
         try:
             import paramiko
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "paramiko". Error:\n%s'%txt))
         try:
             from Crypto import Cipher
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "pycrypto". Error:\n%s'%txt))
         # setup logging if required
         ftpdebug = botsglobal.ini.getint('settings','ftpdebug',0)
@@ -1263,7 +1262,7 @@ class sftp(_comsession):
                 if self.channeldict['remove']:
                     self.session.remove(fromfilename)
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='sftp-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
@@ -1312,7 +1311,7 @@ class sftp(_comsession):
                 fromfile.close()
 
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename))
             else:
                 ta_from.update(statust=DONE)
@@ -1352,7 +1351,7 @@ class xmlrpc(_comsession):
                 tocall = getattr(self.session,self.channeldict['filename'])
                 filename = tocall(content)
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
                 ta_from.update(statust=DONE)
@@ -1378,7 +1377,7 @@ class xmlrpc(_comsession):
                 simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
                 tofile.close()
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
@@ -1394,7 +1393,7 @@ class intercommit(_comsession):
     def connect(self):
         #TODO: check if intercommit program is installed/reachable
         pass
-        
+
     @botslib.log_session
     def incommunicate(self):
         botslib.runexternprogram(botsglobal.ini.get('intercommit','path'), '-R')
@@ -1425,7 +1424,7 @@ class intercommit(_comsession):
                     os.remove(fromfilename)
                     os.remove(fromheadername)
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_from.update(statust=ERROR,errortext=txt,filename=fromfilename)
                 ta_to.delete()
             else:
@@ -1465,7 +1464,7 @@ class intercommit(_comsession):
                                     {'idchannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':RAWOUT,'statust':OK,'idroute':self.idroute}):
             try:    #for each db-ta:
-                ta_attr={}    #ta_attr contains attributes used for updating ta
+                ta_attr = {}    #ta_attr contains attributes used for updating ta
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
                 #check encoding for outchannel
@@ -1495,7 +1494,7 @@ class intercommit(_comsession):
                 fromfile.close()
                 tofile.close()
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
                 ta_from.update(statust=DONE)
@@ -1509,7 +1508,7 @@ class intercommit(_comsession):
             for inline in inn.getloop({'BOTSID':'regel'}):
                 statuse = int(inline.get({'BOTSID':'regel','Berichtstatus':None}))
                 ICID = inline.get({'BOTSID':'regel','X-ClientMsgID':None})
-                if statuse==2:
+                if statuse == 2:
                     subject = inline.get({'BOTSID':'regel','Onderwerp':None})
                     botslib.change(u'''UPDATE ta
                                        SET statuse=%(statuse)s, reference=%(newref)s
@@ -1540,14 +1539,14 @@ class database(_comsession):
         self.dbscript,self.dbscriptname = botslib.botsimport('dbconnectors',self.channeldict['idchannel']) #get the dbconnector-script
         if not hasattr(self.dbscript,'main'):
             raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='main',script=self.dbscript)
-        
+
         try:
             import sqlalchemy
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise ImportError(_(u'Dependency failure: communication type "database" requires python library "sqlalchemy". Error:\n%s'%txt))
         from sqlalchemy.orm import sessionmaker
-        engine = sqlalchemy.create_engine(self.channeldict['path'],strategy='threadlocal') 
+        engine = sqlalchemy.create_engine(self.channeldict['path'],strategy='threadlocal')
         self.metadata = sqlalchemy.MetaData()
         self.metadata.bind = engine
         Session = sessionmaker(bind=engine, autoflush=False, transactional=True)
@@ -1598,12 +1597,12 @@ class database(_comsession):
                 self.session.commit()
             except:
                 self.session.rollback()
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'])
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename=self.channeldict['path'])
-        
+
     def disconnect(self):
         self.session.close()
         #~ pass
@@ -1625,13 +1624,13 @@ class db(_comsession):
         #check functions bots assumes to be present in user script:
         if not hasattr(self.userscript,'connect'):
             raise botslib.ScriptImportError(_(u'No function "connect" in imported script "$script".'),script=self.scriptname)
-        if self.channeldict['inorout']=='in' and not hasattr(self.userscript,'incommunicate'):
+        if self.channeldict['inorout'] == 'in' and not hasattr(self.userscript,'incommunicate'):
             raise botslib.ScriptImportError(_(u'No function "incommunicate" in imported script "$script".'),script=self.scriptname)
-        if self.channeldict['inorout']=='out' and not hasattr(self.userscript,'outcommunicate'):
+        if self.channeldict['inorout'] == 'out' and not hasattr(self.userscript,'outcommunicate'):
             raise botslib.ScriptImportError(_(u'No function "outcommunicate" in imported script "$script".'),script=self.scriptname)
         if not hasattr(self.userscript,'disconnect'):
             raise botslib.ScriptImportError(_(u'No function "disconnect" in imported script "$script".'),script=self.scriptname)
-            
+
         self.dbconnection = botslib.runscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict)
 
     @botslib.log_session
@@ -1646,7 +1645,7 @@ class db(_comsession):
             return
         if not isinstance(db_objects,(list,tuple)):
             db_objects = [db_objects]
-        
+
         for db_object in db_objects:
             ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
                                                 status=EXTERNIN,
@@ -1682,12 +1681,12 @@ class db(_comsession):
                 fromfile.close()
                 botslib.runscript(self.userscript,self.scriptname,'outcommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection,db_object=db_object)
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'])
             else:
                 ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename=self.channeldict['path'])
-        
+
     def disconnect(self):
         botslib.runscript(self.userscript,self.scriptname,'disconnect',channeldict=self.channeldict,dbconnection=self.dbconnection)
 
@@ -1695,7 +1694,7 @@ class db(_comsession):
 
 class communicationscript(_comsession):
     """
-    For running an (user maintained) communication script. 
+    For running an (user maintained) communication script.
     Examples of use:
     - call external communication program
     - call external program that extract messages from ERP-database
@@ -1721,8 +1720,8 @@ class communicationscript(_comsession):
     def connect(self):
         if self.userscript is None or not botslib.tryrunscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict):
             raise ImportError(_(u'Channel "%s" is type "communicationscript", but no communicationscript exists.'%self.channeldict['idchannel']))
-            
-            
+
+
     @botslib.log_session
     def incommunicate(self):
         startdatetime = datetime.datetime.now()
@@ -1743,7 +1742,7 @@ class communicationscript(_comsession):
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 except:
-                    txt=botslib.txtexc()
+                    txt = botslib.txtexc()
                     botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
                     ta_from.delete()
                     ta_to.delete()
@@ -1771,7 +1770,7 @@ class communicationscript(_comsession):
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 except:
-                    txt=botslib.txtexc()
+                    txt = botslib.txtexc()
                     botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
                     ta_from.delete()
                     ta_to.delete()
@@ -1782,7 +1781,7 @@ class communicationscript(_comsession):
                     if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                         break
 
-                
+
     @botslib.log_session
     def outcommunicate(self):
         #check if output dir exists, else create it.
@@ -1826,7 +1825,7 @@ class communicationscript(_comsession):
                     if self.channeldict['remove']:
                         os.remove(tofilename)
             except:
-                txt=botslib.txtexc()
+                txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
                 ta_from.update(statust=DONE)
@@ -1834,7 +1833,7 @@ class communicationscript(_comsession):
 
     def disconnect(self):
         botslib.tryrunscript(self.userscript,self.scriptname,'disconnect',channeldict=self.channeldict)
-        if self.channeldict['remove'] and not hasattr(self.userscript,'main'):  #if bots should remove the files, and all files are passed at once, delete these files. 
+        if self.channeldict['remove'] and not hasattr(self.userscript,'main'):  #if bots should remove the files, and all files are passed at once, delete these files.
             outputdir = botslib.join(self.channeldict['path'], self.channeldict['filename'])
             for filename in [c for c in glob.glob(outputdir) if os.path.isfile(c)]:
                 try:

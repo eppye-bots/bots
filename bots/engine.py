@@ -6,7 +6,7 @@ import atexit
 import traceback
 import logging
 import datetime
-logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line. 
+logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line.
                                 #it is better to have a missing log line than an error in a translation....
 from django.utils.translation import ugettext as _
 #bots-modules
@@ -83,12 +83,12 @@ def start():
         sys.exit(1)
     else:
         atexit.register(logging.shutdown)
-        
+
     for key,value in botslib.botsinfo():    #log start info
         botsglobal.logger.info(u'%s: "%s".',key,value)
     #**************connect to database**********************************
     try:
-        botsinit.connect() 
+        botsinit.connect()
     except:
         botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py.'))
         sys.exit(1)
@@ -100,12 +100,12 @@ def start():
         userscript,scriptname = botslib.botsimport('routescripts','botsengine')
     except ImportError:
         userscript = scriptname = None
-        
+
     #**************handle database lock****************************************
     #try to set a lock on the database; if this is not possible, the database is already locked. Either:
     #1 another instance bots bots-engine is (still) running
     #2 or bots-engine had a severe crash.
-    #What to do? 
+    #What to do?
     #first: check ts of database lock. If below a certain value (set in bots.ini) we assume an other instance is running. Exit quietly - no errors, no logging.
     #                                  else: Warn user, give advise on what to do. gather data: nr files in, errors.
     #next:  warn with report & logging. advise a crashrecovery.
@@ -131,15 +131,15 @@ def start():
             botslib.sendbotserrorreport(_(u'[Bots Error Report] User started a forced retry of last run, but this was not needed'),warn)
             botslib.remove_database_lock()
             sys.exit(1)
-            
+
     #*************get list of routes to run****************************************
     #~ raise Exception('locked database')       #for testing database lock: abort, database will be locked
-    if routestorun: 
+    if routestorun:
         botsglobal.logger.info(u'Run routes from command line: "%s".',str(routestorun))
     else:   # no routes from command line parameters: fetch all active routes from database
         for row in botslib.query('''SELECT DISTINCT idroute
                                     FROM routes
-                                    WHERE active=%(active)s 
+                                    WHERE active=%(active)s
                                     AND (notindefaultrun=%(notindefaultrun)s OR notindefaultrun IS NULL)
                                     ORDER BY idroute ''',
                                     {'active':True,'notindefaultrun':False}):
@@ -147,7 +147,7 @@ def start():
         botsglobal.logger.info(_(u'Run active routes from database: "%s".'),str(routestorun))
     #routestorun is now either a list with routes from commandline, or the list of active routes for the routes table in the db.
     #**************run the routes for retry, retransmit and new runs*************************************
-    try: 
+    try:
         #commandstorun determines the type(s) of run
         #routes to run is a listof the routes that are runs (for each command to run
         #botsglobal.incommunicate is used to control if there is communication in; only 'new' incommunicates.
@@ -214,7 +214,7 @@ def start():
             cleanup.cleanup()
         botslib.remove_database_lock()
     except Exception,e:
-        botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(e))    #of course this 'should' not happen. 
+        botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(e))    #of course this 'should' not happen.
         sys.exit(1)
     else:
         if errorinrun:

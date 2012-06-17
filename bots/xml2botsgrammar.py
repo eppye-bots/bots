@@ -13,20 +13,20 @@ from botsconfig import *
 #usage: c:\python25\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
 
 
-def treewalker(node,mpath):
-    mpath.append({'BOTSID':node.record['BOTSID']})
-    for childnode in node.children:
+def treewalker(node_instance,mpath):
+    mpath.append({'BOTSID':node_instance.record['BOTSID']})
+    for childnode in node_instance.children:
         yield childnode,mpath[:]
         for terugnode,terugmpath in treewalker(childnode,mpath):
             yield terugnode,terugmpath 
     mpath.pop()
     
 
-def writefields(tree,node,mpath):
+def writefields(tree,node_instance,mpath):
     putmpath = copy.deepcopy(mpath)
     #~ print mpath
-    #~ print node.record
-    for key in node.record.keys():
+    #~ print node_instance.record
+    for key in node_instance.record.keys():
         #~ print key
         if key not in ['BOTSID','BOTSIDnr']:
             putmpath[-1][key]=u'dummy'
@@ -36,17 +36,17 @@ def writefields(tree,node,mpath):
             #~ del mpath[-1][key]
     #~ print '\n'
         
-def tree2grammar(node,structure,recorddefs):
-    structure.append({ID:node.record['BOTSID'],MIN:0,MAX:99999,LEVEL:[]})
+def tree2grammar(node_instance,structure,recorddefs):
+    structure.append({ID:node_instance.record['BOTSID'],MIN:0,MAX:99999,LEVEL:[]})
     recordlist = []
-    for key in node.record.keys():
+    for key in node_instance.record.keys():
         recordlist.append([key, 'C', 256, 'AN'])
-    if node.record['BOTSID'] in recorddefs:
-        recorddefs[node.record['BOTSID']] = removedoublesfromlist(recorddefs[node.record['BOTSID']] + recordlist)
-        #~ recorddefs[node.record['BOTSID']].extend(recordlist)
+    if node_instance.record['BOTSID'] in recorddefs:
+        recorddefs[node_instance.record['BOTSID']] = removedoublesfromlist(recorddefs[node_instance.record['BOTSID']] + recordlist)
+        #~ recorddefs[node_instance.record['BOTSID']].extend(recordlist)
     else:
-        recorddefs[node.record['BOTSID']] = recordlist
-    for childnode in node.children:
+        recorddefs[node_instance.record['BOTSID']] = recordlist
+    for childnode in node_instance.children:
         tree2grammar(childnode,structure[-1][LEVEL],recorddefs)
 
 def recorddefs2string(recorddefs,sortedstructurelist):
@@ -159,11 +159,11 @@ def start():
     #~ out.root.display()
     writefields(out,inn.root,rootmpath)
     #walk tree; write results to out-tree
-    for node,mpath in treewalker(inn.root,mpath):
-        mpath.append({'BOTSID':node.record['BOTSID']})
+    for node_instance,mpath in treewalker(inn.root,mpath):
+        mpath.append({'BOTSID':node_instance.record['BOTSID']})
         if out.get(*mpath) is None:
             out.put(*mpath)
-        writefields(out,node,mpath)
+        writefields(out,node_instance,mpath)
         
     #~ out.root.display()
     

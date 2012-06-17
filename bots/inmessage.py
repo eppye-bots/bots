@@ -1,6 +1,6 @@
 ''' Reading/lexing/parsing/splitting an edifile.'''
 import time
-import sys
+#~ import sys
 try:
     import cPickle as pickle
 except:
@@ -56,7 +56,7 @@ class Inmessage(message.Message):
         self.records = []        #init list of records
         self.confirminfo = {}
         self.ta_info = ta_info  #here ta_info is only filled with parameters from db-ta
-        
+
     def initfromfile(self):
         ''' initialisation from a edi file '''
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])  #read grammar, after sniffing. Information from sniffing can be used (eg name editype for edifact, using version info from UNB)
@@ -70,7 +70,7 @@ class Inmessage(message.Message):
             del self.rawinput
         #~ self.display(self.records)   #show lexed records (for protocol debugging)
         self.root = node.Node()  #make root Node None.
-        self.iternextrecord=iter(self.records)
+        self.iternextrecord = iter(self.records)
         result = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if result:
             raise botslib.InMessageError(_(u'Unknown data beyond end of message; mostly problem with separators or message structure: "$content"'),content=result)
@@ -81,11 +81,11 @@ class Inmessage(message.Message):
         #~ self.root.display() #show tree of nodes (for protocol debugging)
         #~ self.root.displayqueries() #show queries in tree of nodes (for protocol debugging)
 
-    def initfromparsed(self,node):
+    def initfromparsed(self,node_instance):
         ''' initialisation from a tree (node is passed).
             to initialise message in an envelope
         '''
-        self.root = node
+        self.root = node_instance
 
     def handleconfirm(self,ta_fromfile,error):
         ''' end of edi file handling.
@@ -102,7 +102,7 @@ class Inmessage(message.Message):
         '''
         if grammarfield[BFORMAT] == 'A':
             if isinstance(self,var):  #check length fields in variable records
-                lenght=len(value)
+                lenght = len(value)
                 if lenght > grammarfield[LENGTH]:
                     self.add2errorlist(_(u'[F05] Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
                 if lenght < grammarfield[MINLENGTH]:
@@ -110,9 +110,9 @@ class Inmessage(message.Message):
         elif grammarfield[BFORMAT] == 'D':
             try:
                 lenght = len(value)
-                if lenght==6:
+                if lenght == 6:
                     time.strptime(value,'%y%m%d')
-                elif lenght==8:
+                elif lenght == 8:
                     time.strptime(value,'%Y%m%d')
                 else:
                     raise ValueError(u'To be catched')
@@ -121,11 +121,11 @@ class Inmessage(message.Message):
         elif grammarfield[BFORMAT] == 'T':
             try:
                 lenght = len(value)
-                if lenght==4:
+                if lenght == 4:
                     time.strptime(value,'%H%M')
-                elif lenght==6:
+                elif lenght == 6:
                     time.strptime(value,'%H%M%S')
-                elif lenght==7 or lenght==8:
+                elif lenght == 7 or lenght == 8:
                     time.strptime(value[0:6],'%H%M%S')
                     if not value[6:].isdigit():
                         raise ValueError(u'To be catched')
@@ -186,7 +186,7 @@ class Inmessage(message.Message):
     def _parse(self,structure_level,inode):
         ''' This is the heart of the parsing of incoming messages (but not for xml, json)
             Read the records one by one (self.iternextrecord, is an iterator)
-            - parse the (lexed) records. 
+            - parse the (lexed) records.
             - identify record (lookup in structure)
             - identify fields in the record (use the structurerecord from the grammar).
             - add grammar-info to records: field-tag,mpath.
@@ -198,7 +198,7 @@ class Inmessage(message.Message):
         structure_index = 0     #keep track of where we are in the structure_level
         countnrofoccurences = 0 #number of occurences of current record in structure
         structure_end = len(structure_level)
-        get_next_edi_record = True      #indicate if the next record should be fetched, or if the current_edi_record is still being parsed. 
+        get_next_edi_record = True      #indicate if the next record should be fetched, or if the current_edi_record is still being parsed.
                                         #it might seem logical to test here 'current_edi_record is None', but this is already used to indicate 'no more records'.
         while 1:
             if get_next_edi_record:
@@ -208,7 +208,7 @@ class Inmessage(message.Message):
                     current_edi_record = None
                 get_next_edi_record = False
             if current_edi_record is None or structure_level[structure_index][ID] != current_edi_record[ID][VALUE]:
-                if structure_level[structure_index][MIN] and not countnrofoccurences:   #is record is required in structure_level, and countnrofoccurences==0: error; 
+                if structure_level[structure_index][MIN] and not countnrofoccurences:   #is record is required in structure_level, and countnrofoccurences==0: error;
                                                                                         #enough check here; message is validated more accurate later
                     try:
                         raise botslib.InMessageError(_(u'Line:$line pos:$pos record:"$record": message has an error in its structure; this record is not allowed here. Scanned in message definition until mandatory record: "$looked".'),record=current_edi_record[ID][VALUE],line=current_edi_record[ID][LIN],pos=current_edi_record[ID][POS],looked=structure_level[structure_index][MPATH])
@@ -223,7 +223,7 @@ class Inmessage(message.Message):
             countnrofoccurences += 1
             newnode = node.Node(record=self._parsefields(current_edi_record,structure_level[structure_index]),BOTSIDnr=structure_level[structure_index][BOTSIDnr])  #make new node
             inode.append(newnode)   #succes! append new node as a child to current (parent)node
-            if SUBTRANSLATION in structure_level[structure_index]: 
+            if SUBTRANSLATION in structure_level[structure_index]:
                 # start a SUBTRANSLATION; find the right messagetype, etc
                 messagetype = newnode.enhancedget(structure_level[structure_index][SUBTRANSLATION])
                 if not messagetype:
@@ -234,7 +234,7 @@ class Inmessage(message.Message):
                 try:
                     defmessage = grammar.grammarread(self.__class__.__name__,messagetype)
                 except ImportError:
-                    raise botslib.InMessageError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)                    
+                    raise botslib.InMessageError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)
                 current_edi_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
                 newnode.queries = {'messagetype':messagetype}       #copy messagetype into 1st segment of subtranslation (eg UNH, ST)
                 self.checkmessage(newnode,defmessage,subtranslation=True)      #check the results of the subtranslation
@@ -267,24 +267,24 @@ class Inmessage(message.Message):
         #~ self.root.display()
         if self.defmessage.nextmessage is not None: #if nextmessage defined in grammar: split up messages
             first = True
-            for message in self.getloop(*self.defmessage.nextmessage):  #get node of each message
+            for eachmessage in self.getloop(*self.defmessage.nextmessage):  #get node of each message
                 if first:
                     self.root.processqueries({},len(self.defmessage.nextmessage))
                     first = False
                 ta_info = self.ta_info.copy()
-                ta_info.update(message.queries)
+                ta_info.update(eachmessage.queries)
                 #~ ta_info['botsroot']=self.root
-                yield _edifromparsed(self.__class__.__name__,message,ta_info)
+                yield _edifromparsed(self.__class__.__name__,eachmessage,ta_info)
             if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
                 first = True
-                for message in self.getloop(*self.defmessage.nextmessage2):
+                for eachmessage in self.getloop(*self.defmessage.nextmessage2):
                     if first:
                         self.root.processqueries({},len(self.defmessage.nextmessage2))
                         first = False
                     ta_info = self.ta_info.copy()
-                    ta_info.update(message.queries)
+                    ta_info.update(eachmessage.queries)
                     #~ ta_info['botsroot']=self.root
-                    yield _edifromparsed(self.__class__.__name__,message,ta_info)
+                    yield _edifromparsed(self.__class__.__name__,eachmessage,ta_info)
         elif self.defmessage.nextmessageblock is not None:          #for csv/fixed: nextmessageblock indicates which field determines a message (as long as the field is the same, it is one message)
             #there is only one recordtype (this is checked in grammar.py).
             first = True
@@ -311,7 +311,7 @@ class Inmessage(message.Message):
                     ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
                     #~ ta_info['botsroot']=self.root
                     yield _edifromparsed(self.__class__.__name__,newroot,ta_info)
-        else:   #no split up indicated in grammar; 
+        else:   #no split up indicated in grammar;
             if self.root.record or self.ta_info['pass_all']:    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
@@ -335,26 +335,26 @@ class fixed(Inmessage):
     def _lex(self):
         ''' lexes file with fixed records to list of records (self.records).'''
         linenr = 0
-        startrecordID = self.ta_info['startrecordID']
-        endrecordID = self.ta_info['endrecordID']
+        startrecordid = self.ta_info['startrecordID']
+        endrecordid = self.ta_info['endrecordID']
         for line in self.filehandler:
             linenr += 1
             if not line.isspace():
-                line=line.rstrip('\r\n')
-                self.records += [ [{VALUE:line[startrecordID:endrecordID].strip(),LIN:linenr,POS:0,FIXEDLINE:line}] ]    #append record to recordlist
+                line = line.rstrip('\r\n')
+                self.records += [ [{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line}] ]    #append record to recordlist
 
-    def _parsefields(self,recordEdiFile,structurerecord):
-        ''' Parse fields from one fixed message-record (from recordEdiFile[ID][FIXEDLINE] using positions.
+    def _parsefields(self,record_in_edifile,structurerecord):
+        ''' Parse fields from one fixed message-record (from record_in_edifile[ID][FIXEDLINE] using positions.
             fields are placed in recorddict, where key=field-info from grammar and value is from fixedrecord.'''
         recorddef = structurerecord[FIELDS]
         recorddict = {} #start with empty dict
-        fixedrecord = recordEdiFile[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
+        fixedrecord = record_in_edifile[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
         lenfixed = len(fixedrecord)
         recordlength = sum([field[LENGTH] for field in recorddef])
         if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-            raise botslib.InMessageError(_(u'line $line record "$record" too short; is $pos pos, defined is $defpos pos: "$content".'),line=recordEdiFile[ID][LIN],record=recordEdiFile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
+            raise botslib.InMessageError(_(u'line $line record "$record" too short; is $pos pos, defined is $defpos pos: "$content".'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
         if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-            raise botslib.InMessageError(_(u'line $line record "$record" too long; is $pos pos, defined is $defpos pos: "$content".'),line=recordEdiFile[ID][LIN],record=recordEdiFile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
+            raise botslib.InMessageError(_(u'line $line record "$record" too long; is $pos pos, defined is $defpos pos: "$content".'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
         pos = 0
         for field in recorddef:   #for fields in this record
             value = fixedrecord[pos:pos+field[LENGTH]].strip()
@@ -372,8 +372,8 @@ class idoc(fixed):
     pass
     #~ def _sniff(self):
         #~ #goto char that is not whitespace
-        #~ for count,c in enumerate(self.rawinput):
-            #~ if not c.isspace():
+        #~ for count,char in enumerate(self.rawinput):
+            #~ if not char.isspace():
                 #~ self.rawinput = self.rawinput[count:]  #here the interchange should start
                 #~ break
         #~ else:
@@ -404,76 +404,76 @@ class var(Inmessage):
         countline = 1
         countpos = 0
         #bepaal tekenset, separators etc adhv UNA/UNOB
-        for c in self.rawinput:    #get next char
-            if c == u'\n':    #line within file
+        for char in self.rawinput:    #get next char
+            if char == u'\n':    #line within file
                 countline += 1
                 countpos = 0            #new line, pos back to 0
                 #no continue, because \n can be record separator. In edifact: catched with skip_char
             else:
                 countpos += 1        #position within line
             if mode_quote:          #within a quote: quote-char is also escape-char
-                if mode_2quote and c == quote_char: #thus we were escaping quote_char
+                if mode_2quote and char == quote_char: #thus we were escaping quote_char
                     mode_2quote = 0
-                    value += c    #append quote_char
+                    value += char    #append quote_char
                     continue
                 elif mode_escape:        #tricky: escaping a quote char
                     mode_escape = 0
-                    value += c
+                    value += char
                     continue
                 elif mode_2quote:   #thus is was a end-quote
                     mode_2quote = 0
-                    mode_quote= 0
+                    mode_quote = 0
                     #go on parsing
-                elif c==quote_char:    #either end-quote or escaping quote_char,we do not know yet
+                elif char == quote_char:    #either end-quote or escaping quote_char,we do not know yet
                     mode_2quote = 1
                     continue
-                elif c == escape:
+                elif char == escape:
                     mode_escape = 1
                     continue
                 else:
-                    value += c
+                    value += char
                     continue
             if mode_inrecord:
                 pass               #do nothing, is already in mode_inrecord
-            else: 
-                if c.isspace():   
+            else:
+                if char.isspace():
                     continue       #not in mode_inrecord, and a space: ignore space between records.
                 else:
                     mode_inrecord = 1
-            if c in skip_char:    #after mode_quote, but before mode_escape!!
+            if char in skip_char:    #after mode_quote, but before mode_escape!!
                 continue
             if mode_escape:        #always append in escaped_mode
                 mode_escape = 0
-                value += c
+                value += char
                 continue
             if not value:        #if no char in token: this is a new token, get line and pos for (new) token
                 valueline = countline
                 valuepos = countpos
-            if c == quote_char:
+            if char == quote_char:
                 mode_quote = 1
                 continue
-            if c == escape:
+            if char == escape:
                 mode_escape = 1
                 continue
-            if c in field_sep:  #for tradacoms: record_tag_sep is appended to field_sep; in lexing they have the same function
+            if char in field_sep:  #for tradacoms: record_tag_sep is appended to field_sep; in lexing they have the same function
                 record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
                 value = u''
                 sfield = False
                 continue
-            if c == sfield_sep:
+            if char == sfield_sep:
                 record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
                 value = u''
                 sfield = True
                 continue
-            if c in record_sep:
+            if char in record_sep:
                 record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
                 self.records += [record]    #write record to recordlist
-                record=[]
+                record = []
                 value = u''
                 sfield = False
-                mode_inrecord=0
+                mode_inrecord = 0
                 continue
-            value += c    #just a char: append char to value
+            value += char    #just a char: append char to value
         #end of for-loop. all characters have been processed.
         #in a perfect world, value should always be empty now, but:
         #it appears a csv record is not always closed properly, so force the closing of the last record of csv file:
@@ -483,17 +483,17 @@ class var(Inmessage):
         elif value.strip('\x00\x1a'):
             raise botslib.InMessageError(_(u'translation problem with lexing; probably a seperator-problem, or extra characters after interchange'))
 
-    def _parsefields(self,recordEdiFile,structurerecord):
+    def _parsefields(self,record_in_edifile,structurerecord):
         ''' Identify fields in inmessage-record using grammar
             Build a record (dictionary; field-IDs are unique within record) and return this.
         '''
         recorddef = structurerecord[FIELDS]
-        recordID = structurerecord[ID]
+        recordid = structurerecord[ID]
         recorddict = {}
         #****************** first: identify fields: assign field id to lexed fields
-        tindex = -1     #elementcounter; composites count as one 
-        tsubindex=0     #sub-element counter (within composite))
-        for rfield in recordEdiFile:    #handle both fields and sub-fields
+        tindex = -1     #elementcounter; composites count as one
+        tsubindex = 0     #sub-element counter (within composite))
+        for rfield in record_in_edifile:    #handle both fields and sub-fields
             if rfield[SFIELD]:
                 tsubindex += 1
                 try:
@@ -515,12 +515,12 @@ class var(Inmessage):
                     tsubindex = 0
                     field = recorddef[tindex][SUBFIELDS][tsubindex]
             #*********if field has content: add to recorddictionary
-            if recordID=='ISA' and isinstance(self,x12):    #isa is an exception: no strip()
+            if recordid == 'ISA' and isinstance(self,x12):    #isa is an exception: no strip()
                 value = rfield[VALUE]
             else:
                 value = rfield[VALUE].strip()
             if value:
-                recorddict[field[ID]]=value   #copy string to avoid memory problems
+                recorddict[field[ID]] = value   #copy string to avoid memory problems
         return recorddict
 
 
@@ -539,7 +539,7 @@ class csv(var):
         if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
             for record in self.records:
-                record[0:0]=[{VALUE: botsid, POS: 0, LIN: 0, SFIELD: False}]
+                record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: False}]
 
 
 class edifact(var):
@@ -560,7 +560,7 @@ class edifact(var):
         while True:
             if not self.rawinput[count].isspace():
                 if self.rawinput[count:count+3] == 'UNA':
-                    unacharset=True
+                    unacharset = True
                     self.ta_info['sfield_sep'] = self.rawinput[count+3]
                     self.ta_info['field_sep'] = self.rawinput[count+4]
                     self.ta_info['decimaal'] = self.rawinput[count+5]
@@ -586,14 +586,14 @@ class edifact(var):
             self.ta_info['charset'] = self.rawinput[4:8]
             self.ta_info['version'] = self.rawinput[9:10]
             if not unacharset:
-                if self.rawinput[3]=='+' and self.rawinput[8]==':':     #assume standard separators.
+                if self.rawinput[3] == '+' and self.rawinput[8] == ':':     #assume standard separators.
                     self.ta_info['sfield_sep'] = ':'
                     self.ta_info['field_sep'] = '+'
                     self.ta_info['decimaal'] = '.'
                     self.ta_info['escape'] = '?'
                     self.ta_info['reserve'] = ''    #for now: no support of repeating dataelements
                     self.ta_info['record_sep'] = "'"
-                elif self.rawinput[3]=='\x1D' and self.rawinput[8]=='\x1F':     #check if UNOB separators are used
+                elif self.rawinput[3] == '\x1D' and self.rawinput[8] == '\x1F':     #check if UNOB separators are used
                     self.ta_info['sfield_sep'] = '\x1F'
                     self.ta_info['field_sep'] = '\x1D'
                     self.ta_info['decimaal'] = '.'
@@ -618,60 +618,60 @@ class edifact(var):
             botsglobal.logmap.debug(u'Start parsing edifact envelopes')
             sender = nodeunb.get({'BOTSID':'UNB','S002.0004':None})
             receiver = nodeunb.get({'BOTSID':'UNB','S003.0010':None})
-            UNBreference = nodeunb.get({'BOTSID':'UNB','0020':None})
-            UNZreference = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0020':None})
-            if UNBreference and UNZreference and UNBreference != UNZreference:
-                self.add2errorlist(_(u'[E01] UNB-reference is "%(UNBreference)s"; should be equal to UNZ-reference "%(UNZreference)s".\n')%{'UNBreference':UNBreference,'UNZreference':UNZreference})
-            UNZcount = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0036':None})
+            unbreference = nodeunb.get({'BOTSID':'UNB','0020':None})
+            unzreference = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0020':None})
+            if unbreference and unzreference and unbreference != unzreference:
+                self.add2errorlist(_(u'[E01] UNB-reference is "%(unbreference)s"; should be equal to UNZ-reference "%(unzreference)s".\n')%{'unbreference':unbreference,'unzreference':unzreference})
+            unzcount = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0036':None})
             messagecount = len(nodeunb.children) - 1
             try:
-                if int(UNZcount) != messagecount:
-                    self.add2errorlist(_(u'[E02] Count of messages in UNZ is %(UNZcount)s; should be equal to number of messages %(messagecount)s.\n')%{'UNZcount':UNZcount,'messagecount':messagecount})
+                if int(unzcount) != messagecount:
+                    self.add2errorlist(_(u'[E02] Count of messages in UNZ is %(unzcount)s; should be equal to number of messages %(messagecount)s.\n')%{'unzcount':unzcount,'messagecount':messagecount})
             except:
-                self.add2errorlist(_(u'[E03] Count of messages in UNZ is invalid: "%(count)s".\n')%{'count':UNZcount})
-            self.confirmationlist.append({'UNBreference':UNBreference,'UNZcount':UNZcount,'sender':sender,'receiver':receiver,'UNHlist':[]})   #gather information about functional group (GS-GE)
+                self.add2errorlist(_(u'[E03] Count of messages in UNZ is invalid: "%(count)s".\n')%{'count':unzcount})
+            self.confirmationlist.append({'unbreference':unbreference,'unzcount':unzcount,'sender':sender,'receiver':receiver,'UNHlist':[]})   #gather information about functional group (GS-GE)
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
-                UNHtype = nodeunh.get({'BOTSID':'UNH','S009.0065':None})
-                UNHversion = nodeunh.get({'BOTSID':'UNH','S009.0052':None})
-                UNHrelease = nodeunh.get({'BOTSID':'UNH','S009.0054':None})
-                UNHcontrollingagency = nodeunh.get({'BOTSID':'UNH','S009.0051':None})
-                UNHassociationassigned = nodeunh.get({'BOTSID':'UNH','S009.0057':None})
-                UNHreference = nodeunh.get({'BOTSID':'UNH','0062':None})
-                UNTreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
-                if UNHreference and UNTreference and UNHreference != UNTreference:
-                    self.add2errorlist(_(u'[E04] UNH-reference is "%(UNHreference)s"; should be equal to UNT-reference "%(UNTreference)s".\n')%{'UNHreference':UNHreference,'UNTreference':UNTreference})
-                UNTcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
+                unhtype = nodeunh.get({'BOTSID':'UNH','S009.0065':None})
+                unhversion = nodeunh.get({'BOTSID':'UNH','S009.0052':None})
+                unhrelease = nodeunh.get({'BOTSID':'UNH','S009.0054':None})
+                unhcontrollingagency = nodeunh.get({'BOTSID':'UNH','S009.0051':None})
+                unhassociationassigned = nodeunh.get({'BOTSID':'UNH','S009.0057':None})
+                unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
+                untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
+                if unhreference and untreference and unhreference != untreference:
+                    self.add2errorlist(_(u'[E04] UNH-reference is "%(unhreference)s"; should be equal to UNT-reference "%(untreference)s".\n')%{'unhreference':unhreference,'untreference':untreference})
+                untcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
                 segmentcount = nodeunh.getcount()
                 try:
-                    if int(UNTcount) != segmentcount:
-                        self.add2errorlist(_(u'[E05] Segmentcount in UNT is %(UNTcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'UNTcount':UNTcount,'segmentcount':segmentcount})
+                    if int(untcount) != segmentcount:
+                        self.add2errorlist(_(u'[E05] Segmentcount in UNT is %(untcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'untcount':untcount,'segmentcount':segmentcount})
                 except:
-                    self.add2errorlist(_(u'[E06] Count of segments in UNT is invalid: "%(count)s".\n')%{'count':UNTcount})
-                self.confirmationlist[-1]['UNHlist'].append({'UNHreference':UNHreference,'UNHtype':UNHtype,'UNHversion':UNHversion,'UNHrelease':UNHrelease,'UNHcontrollingagency':UNHcontrollingagency,'UNHassociationassigned':UNHassociationassigned})   #add info per message to interchange
+                    self.add2errorlist(_(u'[E06] Count of segments in UNT is invalid: "%(count)s".\n')%{'count':untcount})
+                self.confirmationlist[-1]['UNHlist'].append({'unhreference':unhreference,'unhtype':unhtype,'unhversion':unhversion,'unhrelease':unhrelease,'unhcontrollingagency':unhcontrollingagency,'unhassociationassigned':unhassociationassigned})   #add info per message to interchange
             for nodeung in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNG'}):
-                UNGreference = nodeung.get({'BOTSID':'UNG','0048':None})
-                UNEreference = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0048':None})
-                if UNGreference and UNEreference and UNGreference != UNEreference:
-                    self.add2errorlist(_(u'[E07] UNG-reference is "%(UNGreference)s"; should be equal to UNE-reference "%(UNEreference)s".\n')%{'UNGreference':UNGreference,'UNEreference':UNEreference})
-                UNEcount = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0060':None})
+                ungreference = nodeung.get({'BOTSID':'UNG','0048':None})
+                unereference = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0048':None})
+                if ungreference and unereference and ungreference != unereference:
+                    self.add2errorlist(_(u'[E07] UNG-reference is "%(ungreference)s"; should be equal to UNE-reference "%(unereference)s".\n')%{'ungreference':ungreference,'unereference':unereference})
+                unecount = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0060':None})
                 groupcount = len(nodeung.children) - 1
                 try:
-                    if int(UNEcount) != groupcount:
-                        self.add2errorlist(_(u'[E08] Groupcount in UNE is %(UNEcount)s; should be equal to number of groups %(groupcount)s.\n')%{'UNEcount':UNEcount,'groupcount':groupcount})
+                    if int(unecount) != groupcount:
+                        self.add2errorlist(_(u'[E08] Groupcount in UNE is %(unecount)s; should be equal to number of groups %(groupcount)s.\n')%{'unecount':unecount,'groupcount':groupcount})
                 except:
-                    self.add2errorlist(_(u'[E09] Groupcount in UNE is invalid: "%(count)s".')%{'count':UNEcount})
+                    self.add2errorlist(_(u'[E09] Groupcount in UNE is invalid: "%(count)s".')%{'count':unecount})
                 for nodeunh in nodeung.getloop({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
-                    UNHreference = nodeunh.get({'BOTSID':'UNH','0062':None})
-                    UNTreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
-                    if UNHreference and UNTreference and UNHreference != UNTreference:
-                        self.add2errorlist(_(u'[E10] UNH-reference is "%(UNHreference)s"; should be equal to UNT-reference "%(UNTreference)s".\n')%{'UNHreference':UNHreference,'UNTreference':UNTreference})
-                    UNTcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
+                    unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
+                    untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
+                    if unhreference and untreference and unhreference != untreference:
+                        self.add2errorlist(_(u'[E10] UNH-reference is "%(unhreference)s"; should be equal to UNT-reference "%(untreference)s".\n')%{'unhreference':unhreference,'untreference':untreference})
+                    untcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
                     segmentcount = nodeunh.getcount()
                     try:
-                        if int(UNTcount) != segmentcount:
-                            self.add2errorlist(_(u'[E11] Segmentcount in UNT is %(UNTcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'UNTcount':UNTcount,'segmentcount':segmentcount})
+                        if int(untcount) != segmentcount:
+                            self.add2errorlist(_(u'[E11] Segmentcount in UNT is %(untcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'untcount':untcount,'segmentcount':segmentcount})
                     except:
-                        self.add2errorlist(_(u'[E12] Count of segments in UNT is invalid: "%(count)s".\n')%{'count':UNTcount})
+                        self.add2errorlist(_(u'[E12] Count of segments in UNT is invalid: "%(count)s".\n')%{'count':untcount})
             botsglobal.logmap.debug(u'Parsing edifact envelopes is OK')
 
     def handleconfirm(self,ta_fromfile,error):
@@ -684,31 +684,31 @@ class edifact(var):
         tmpconfirmationlist = []
         for confirmation in self.confirmationlist:
             tmpmessagelist = []
-            for message in confirmation['UNHlist']:
-                if message['UNHtype'] == 'CONTRL': #do not generate CONTRL for a CONTRL message
+            for message_received in confirmation['UNHlist']:
+                if message_received['unhtype'] == 'CONTRL': #do not generate CONTRL for a CONTRL message
                     continue
                 if botslib.checkconfirmrules('send-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
                                                 topartner=confirmation['sender'],frompartner=confirmation['receiver'],
-                                                editype='edifact',messagetype=message['UNHtype']):
-                    tmpmessagelist.append(message)
+                                                editype='edifact',messagetype=message_received['unhtype']):
+                    tmpmessagelist.append(message_received)
             confirmation['UNHlist'] = tmpmessagelist
             if not tmpmessagelist: #if no messages/transactions in interchange
                 continue
             tmpconfirmationlist.append(confirmation)
         self.confirmationlist = tmpconfirmationlist
         for confirmation in self.confirmationlist:
-            reference=str(botslib.unique('messagecounter'))
+            reference = str(botslib.unique('messagecounter'))
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED,reference=reference)
             filename = str(ta_confirmation.idta)
             out = outmessage.outmessage_init(editype='edifact',messagetype='CONTRL22UNEAN002',filename=filename)    #make outmessage object
-            out.ta_info['frompartner']=confirmation['receiver']
-            out.ta_info['topartner']=confirmation['sender']
+            out.ta_info['frompartner'] = confirmation['receiver']
+            out.ta_info['topartner'] = confirmation['sender']
             out.put({'BOTSID':'UNH','0062':reference,'S009.0065':'CONTRL','S009.0052':'2','S009.0054':'2','S009.0051':'UN','S009.0057':'EAN002'})
-            out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'8','S002.0004':confirmation['sender'],'S003.0010':confirmation['sender'],'0020':confirmation['UNBreference']}) #8: interchange received
-            for message in confirmation['UNHlist']:
+            out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'8','S002.0004':confirmation['sender'],'S003.0010':confirmation['sender'],'0020':confirmation['unbreference']}) #8: interchange received
+            for message_received in confirmation['UNHlist']:
                 lou = out.putloop({'BOTSID':'UNH'},{'BOTSID':'UCM'})
-                lou.put({'BOTSID':'UCM','0083':'7','S009.0065':message['UNHtype'],'S009.0052':message['UNHversion'],'S009.0054':message['UNHrelease'],'S009.0051':message['UNHcontrollingagency'],'0062':message['UNHreference']})
-                lou.put({'BOTSID':'UCM','S009.0057':message['UNHassociationassigned']})
+                lou.put({'BOTSID':'UCM','0083':'7','S009.0065':message_received['unhtype'],'S009.0052':message_received['unhversion'],'S009.0054':message_received['unhrelease'],'S009.0051':message_received['unhcontrollingagency'],'0062':message_received['unhreference']})
+                lou.put({'BOTSID':'UCM','S009.0057':message_received['unhassociationassigned']})
             out.put({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':out.getcount()+1,'0062':reference})  #last line (counts the segments produced in out-message)
             out.writeall()   #write tomessage (result of translation)
             botsglobal.logger.debug(u'Send edifact confirmation (CONTRL) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
@@ -719,7 +719,8 @@ class edifact(var):
 
 class x12(var):
     ''' class for edifact inmessage objects.'''
-    def _getmessagetype(self,messagetypefromsubtranslation,inode):
+    @staticmethod
+    def _getmessagetype(messagetypefromsubtranslation,inode):
         return messagetypefromsubtranslation +  inode.record['GS08']
 
     def _sniff(self):
@@ -727,8 +728,8 @@ class x12(var):
             eg parse ISA, get charset and version
         '''
         #goto char that is not whitespace
-        for count,c in enumerate(self.rawinput):
-            if not c.isspace():
+        for count,char in enumerate(self.rawinput):
+            if not char.isspace():
                 self.rawinput = self.rawinput[count:]  #here the interchange should start
                 break
         else:
@@ -736,19 +737,19 @@ class x12(var):
         if self.rawinput[:3] != 'ISA':
             raise botslib.InMessageError(_(u'expect "ISA", found "$content". Probably no x12?'),content=self.rawinput[:7])
         count = 0
-        for c in self.rawinput[:120]:
-            if c in '\r\n' and count!=105:
+        for char in self.rawinput[:120]:
+            if char in '\r\n' and count != 105:
                 continue
-            count +=1
-            if count==4:
-                self.ta_info['field_sep'] = c
-            elif count==105:
-                self.ta_info['sfield_sep'] = c
-            elif count==106:
-                self.ta_info['record_sep'] = c
+            count += 1
+            if count == 4:
+                self.ta_info['field_sep'] = char
+            elif count == 105:
+                self.ta_info['sfield_sep'] = char
+            elif count == 106:
+                self.ta_info['record_sep'] = char
                 break
         # ISA-version: if <004030: SHOULD use repeating element?
-        self.ta_info['reserve']=''
+        self.ta_info['reserve'] = ''
         self.ta_info['skip_char'] = self.ta_info['skip_char'].replace(self.ta_info['record_sep'],'') #if <CR> is segment terminator: cannot be in the skip_char-string!
         #more ISA's in file: find IEA+
 
@@ -760,46 +761,46 @@ class x12(var):
             botsglobal.logmap.debug(u'Start parsing X12 envelopes')
             sender = nodeisa.get({'BOTSID':'ISA','ISA06':None})
             receiver = nodeisa.get({'BOTSID':'ISA','ISA08':None})
-            ISAreference = nodeisa.get({'BOTSID':'ISA','ISA13':None})
-            IEAreference = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA02':None})
-            if ISAreference and IEAreference and ISAreference != IEAreference:
-                self.add2errorlist(_(u'[E13] ISA-reference is "%(ISAreference)s"; should be equal to IEA-reference "%(IEAreference)s".\n')%{'ISAreference':ISAreference,'IEAreference':IEAreference})
-            IEAcount = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':None})
+            isareference = nodeisa.get({'BOTSID':'ISA','ISA13':None})
+            ieareference = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA02':None})
+            if isareference and ieareference and isareference != ieareference:
+                self.add2errorlist(_(u'[E13] ISA-reference is "%(isareference)s"; should be equal to IEA-reference "%(ieareference)s".\n')%{'isareference':isareference,'ieareference':ieareference})
+            ieacount = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':None})
             groupcount = nodeisa.getcountoccurrences({'BOTSID':'ISA'},{'BOTSID':'GS'})
             try:
-                if int(IEAcount) != groupcount:
-                    self.add2errorlist(_(u'[E14] Count in IEA-IEA01 is %(IEAcount)s; should be equal to number of groups %(groupcount)s.\n')%{'IEAcount':IEAcount,'groupcount':groupcount})
+                if int(ieacount) != groupcount:
+                    self.add2errorlist(_(u'[E14] Count in IEA-IEA01 is %(ieacount)s; should be equal to number of groups %(groupcount)s.\n')%{'ieacount':ieacount,'groupcount':groupcount})
             except:
-                self.add2errorlist(_(u'[E15] Count of messages in IEA is invalid: "%(count)s".\n')%{'count':IEAcount})
+                self.add2errorlist(_(u'[E15] Count of messages in IEA is invalid: "%(count)s".\n')%{'count':ieacount})
             for nodegs in nodeisa.getloop({'BOTSID':'ISA'},{'BOTSID':'GS'}):
-                GSqualifier = nodegs.get({'BOTSID':'GS','GS01':None})
-                GSreference = nodegs.get({'BOTSID':'GS','GS06':None})
-                GEreference = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
-                if GSreference and GEreference and GSreference != GEreference:
-                    self.add2errorlist(_(u'[E16] GS-reference is "%(GSreference)s"; should be equal to GE-reference "%(GEreference)s".\n')%{'GSreference':GSreference,'GEreference':GEreference})
-                GEcount = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE01':None})
+                gsqualifier = nodegs.get({'BOTSID':'GS','GS01':None})
+                gsreference = nodegs.get({'BOTSID':'GS','GS06':None})
+                gereference = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
+                if gsreference and gereference and gsreference != gereference:
+                    self.add2errorlist(_(u'[E16] GS-reference is "%(gsreference)s"; should be equal to GE-reference "%(gereference)s".\n')%{'gsreference':gsreference,'gereference':gereference})
+                gecount = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE01':None})
                 messagecount = len(nodegs.children) - 1
                 try:
-                    if int(GEcount) != messagecount:
-                        self.add2errorlist(_(u'[E17] Count in GE-GE01 is %(GEcount)s; should be equal to number of transactions: %(messagecount)s.\n')%{'GEcount':GEcount,'messagecount':messagecount})
+                    if int(gecount) != messagecount:
+                        self.add2errorlist(_(u'[E17] Count in GE-GE01 is %(gecount)s; should be equal to number of transactions: %(messagecount)s.\n')%{'gecount':gecount,'messagecount':messagecount})
                 except:
-                    self.add2errorlist(_(u'[E18] Count of messages in GE is invalid: "%(count)s".\n')%{'count':GEcount})
-                self.confirmationlist.append({'GSqualifier':GSqualifier,'GSreference':GSreference,'GEcount':GEcount,'sender':sender,'receiver':receiver,'STlist':[]})   #gather information about functional group (GS-GE)
+                    self.add2errorlist(_(u'[E18] Count of messages in GE is invalid: "%(count)s".\n')%{'count':gecount})
+                self.confirmationlist.append({'gsqualifier':gsqualifier,'gsreference':gsreference,'gecount':gecount,'sender':sender,'receiver':receiver,'STlist':[]})   #gather information about functional group (GS-GE)
                 for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
-                    STqualifier = nodest.get({'BOTSID':'ST','ST01':None})
-                    STreference = nodest.get({'BOTSID':'ST','ST02':None})
-                    SEreference = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
+                    stqualifier = nodest.get({'BOTSID':'ST','ST01':None})
+                    streference = nodest.get({'BOTSID':'ST','ST02':None})
+                    sereference = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
                     #referencefields are numerical; should I compare values??
-                    if STreference and SEreference and STreference != SEreference:
-                        self.add2errorlist(_(u'[E19] ST-reference is "%(STreference)s"; should be equal to SE-reference "%(SEreference)s".\n')%{'STreference':STreference,'SEreference':SEreference})
-                    SEcount = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE01':None})
+                    if streference and sereference and streference != sereference:
+                        self.add2errorlist(_(u'[E19] ST-reference is "%(streference)s"; should be equal to SE-reference "%(sereference)s".\n')%{'streference':streference,'sereference':sereference})
+                    secount = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE01':None})
                     segmentcount = nodest.getcount()
                     try:
-                        if int(SEcount) != segmentcount:
-                            self.add2errorlist(_(u'[E20] Count in SE-SE01 is %(SEcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'SEcount':SEcount,'segmentcount':segmentcount})
+                        if int(secount) != segmentcount:
+                            self.add2errorlist(_(u'[E20] Count in SE-SE01 is %(secount)s; should be equal to number of segments %(segmentcount)s.\n')%{'secount':secount,'segmentcount':segmentcount})
                     except:
-                        self.add2errorlist(_(u'[E21] Count of segments in SE is invalid: "%(count)s".\n')%{'count':SEcount})
-                    self.confirmationlist[-1]['STlist'].append({'STreference':STreference,'STqualifier':STqualifier})   #add info per message to functional group
+                        self.add2errorlist(_(u'[E21] Count of segments in SE is invalid: "%(count)s".\n')%{'count':secount})
+                    self.confirmationlist[-1]['STlist'].append({'streference':streference,'stqualifier':stqualifier})   #add info per message to functional group
             botsglobal.logmap.debug(u'Parsing X12 envelopes is OK')
 
     def handleconfirm(self,ta_fromfile,error):
@@ -811,32 +812,32 @@ class x12(var):
         #filter the confirmationlist
         tmpconfirmationlist = []
         for confirmation in self.confirmationlist:
-            if confirmation['GSqualifier'] == 'FA': #do not generate 997 for 997
+            if confirmation['gsqualifier'] == 'FA': #do not generate 997 for 997
                 continue
             tmpmessagelist = []
-            for message in confirmation['STlist']:
+            for message_received in confirmation['STlist']:
                 if botslib.checkconfirmrules('send-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
                                                 topartner=confirmation['sender'],frompartner=confirmation['receiver'],
-                                                editype='x12',messagetype=message['STqualifier']):
-                    tmpmessagelist.append(message)
+                                                editype='x12',messagetype=message_received['stqualifier']):
+                    tmpmessagelist.append(message_received)
             confirmation['STlist'] = tmpmessagelist
             if not tmpmessagelist: #if no messages/transactions in GS-GE
                 continue
             tmpconfirmationlist.append(confirmation)
         self.confirmationlist = tmpconfirmationlist
         for confirmation in self.confirmationlist:
-            reference=str(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
+            reference = str(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED,reference=reference)
             filename = str(ta_confirmation.idta)
             out = outmessage.outmessage_init(editype='x12',messagetype='997004010',filename=filename)    #make outmessage object
-            out.ta_info['frompartner']=confirmation['receiver']
-            out.ta_info['topartner']=confirmation['sender']
+            out.ta_info['frompartner'] = confirmation['receiver']
+            out.ta_info['topartner'] = confirmation['sender']
             out.put({'BOTSID':'ST','ST01':'997','ST02':reference})
-            out.put({'BOTSID':'ST'},{'BOTSID':'AK1','AK101':confirmation['GSqualifier'],'AK102':confirmation['GSreference']})
-            out.put({'BOTSID':'ST'},{'BOTSID':'AK9','AK901':'A','AK902':confirmation['GEcount'],'AK903':confirmation['GEcount'],'AK904':confirmation['GEcount']})
-            for message in confirmation['STlist']:
+            out.put({'BOTSID':'ST'},{'BOTSID':'AK1','AK101':confirmation['gsqualifier'],'AK102':confirmation['gsreference']})
+            out.put({'BOTSID':'ST'},{'BOTSID':'AK9','AK901':'A','AK902':confirmation['gecount'],'AK903':confirmation['gecount'],'AK904':confirmation['gecount']})
+            for message_received in confirmation['STlist']:
                 lou = out.putloop({'BOTSID':'ST'},{'BOTSID':'AK2'})
-                lou.put({'BOTSID':'AK2','AK201':message['STqualifier'],'AK202':message['STreference']})
+                lou.put({'BOTSID':'AK2','AK201':message_received['stqualifier'],'AK202':message_received['streference']})
                 lou.put({'BOTSID':'AK2'},{'BOTSID':'AK5','AK501':'A'})
             out.put({'BOTSID':'ST'},{'BOTSID':'SE','SE01':out.getcount()+1,'SE02':reference})  #last line (counts the segments produced in out-message)
             out.writeall()   #write tomessage (result of translation)
@@ -848,27 +849,27 @@ class x12(var):
 
 class tradacoms(var):
     def checkenvelope(self):
-        for nodeSTX in self.getloop({'BOTSID':'STX'}):
+        for nodestx in self.getloop({'BOTSID':'STX'}):
             botsglobal.logmap.debug(u'Start parsing tradacoms envelopes')
-            ENDcount = nodeSTX.get({'BOTSID':'STX'},{'BOTSID':'END','NMST':None})
-            messagecount = len(nodeSTX.children) - 1
+            endcount = nodestx.get({'BOTSID':'STX'},{'BOTSID':'END','NMST':None})
+            messagecount = len(nodestx.children) - 1
             try:
-                if int(ENDcount) != messagecount:
-                    self.add2errorlist(_(u'[E22] Count in END is %(ENDcount)s; should be equal to number of messages %(messagecount)s.\n')%{'ENDcount':ENDcount,'messagecount':messagecount})
+                if int(endcount) != messagecount:
+                    self.add2errorlist(_(u'[E22] Count in END is %(endcount)s; should be equal to number of messages %(messagecount)s.\n')%{'endcount':endcount,'messagecount':messagecount})
             except:
-                self.add2errorlist(_(u'[E23] Count of messages in END is invalid: "%(count)s".\n')%{'count':ENDcount})
+                self.add2errorlist(_(u'[E23] Count of messages in END is invalid: "%(count)s".\n')%{'count':endcount})
             firstmessage = True
-            for nodeMHD in nodeSTX.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
+            for nodemhd in nodestx.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
                 if firstmessage:    #
-                    nodeSTX.queries = {'messagetype':nodeMHD.queries['messagetype']}
+                    nodestx.queries = {'messagetype':nodemhd.queries['messagetype']}
                     firstmessage = False
-                MTRcount = nodeMHD.get({'BOTSID':'MHD'},{'BOTSID':'MTR','NOSG':None})
-                segmentcount = nodeMHD.getcount()
+                mtrcount = nodemhd.get({'BOTSID':'MHD'},{'BOTSID':'MTR','NOSG':None})
+                segmentcount = nodemhd.getcount()
                 try:
-                    if int(MTRcount) != segmentcount:
-                        self.add2errorlist(_(u'[E24] Count in MTR is %(MTRcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'MTRcount':MTRcount,'segmentcount':segmentcount})
+                    if int(mtrcount) != segmentcount:
+                        self.add2errorlist(_(u'[E24] Count in MTR is %(mtrcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'mtrcount':mtrcount,'segmentcount':segmentcount})
                 except:
-                    self.add2errorlist(_(u'[E25] Count of segments in MTR is invalid: "%(count)s".\n')%{'count':MTRcount})
+                    self.add2errorlist(_(u'[E25] Count of segments in MTR is invalid: "%(count)s".\n')%{'count':mtrcount})
             botsglobal.logmap.debug(u'Parsing tradacoms envelopes is OK')
 
 
@@ -876,16 +877,15 @@ class xml(var):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def initfromfile(self):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
-        filename=botslib.abspathdata(self.ta_info['filename'])
-        
+        filename = botslib.abspathdata(self.ta_info['filename'])
+
         if self.ta_info['messagetype'] == 'mailbag':
-            ''' the messagetype is not know. 
-                bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
-                mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
-                'xpath' is a xpath to use on xml-file (using elementtree xpath functionality)
-                if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
-                if found, and no 'content' in the dict; set messagetype.
-            '''
+                #~ the messagetype is not know.
+                #~ bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
+                #~ mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
+                #~ 'xpath' is a xpath to use on xml-file (using elementtree xpath functionality)
+                #~ if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
+                #~ if found, and no 'content' in the dict; set messagetype.
             try:
                 module,grammarname = botslib.botsimport('grammars','xml.mailbag')
                 mailbagsearch = getattr(module, 'mailbagsearch')
@@ -919,7 +919,7 @@ class xml(var):
                     break
             else:
                 raise botslib.InMessageError(_(u'could not find right xml messagetype for mailbag.'))
-            
+
             self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
             botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
         else:
@@ -931,26 +931,26 @@ class xml(var):
             etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
         self.stack = []
-        self.root = self.etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
+        self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
 
-    def etree2botstree(self,xmlnode):
+    def _etree2botstree(self,xmlnode):
         self.stack.append(xmlnode.tag)
-        newnode = node.Node(record=self.etreenode2botstreenode(xmlnode))
+        newnode = node.Node(record=self._etreenode2botstreenode(xmlnode))
         for xmlchildnode in xmlnode:   #for every node in mpathtree
-            if self.isfield(xmlchildnode):    #if no child entities: treat as 'field': this misses xml where attributes are used as fields....testing for repeating is no good...
+            if self._isfield(xmlchildnode):    #if no child entities: treat as 'field': this misses xml where attributes are used as fields....testing for repeating is no good...
                 if xmlchildnode.text and not xmlchildnode.text.isspace(): #skip empty xml entity
-                    newnode.record[xmlchildnode.tag]=xmlchildnode.text      #add as a field
+                    newnode.record[xmlchildnode.tag] = xmlchildnode.text      #add as a field
                     hastxt = True
                 else:
                     hastxt = False
                 for key,value in xmlchildnode.items():   #convert attributes to fields.
                     if not hastxt:
-                        newnode.record[xmlchildnode.tag]=''      #add empty content
+                        newnode.record[xmlchildnode.tag] = ''      #add empty content
                         hastxt = True
-                    newnode.record[xmlchildnode.tag + self.ta_info['attributemarker'] + key]=value      #add as a field
+                    newnode.record[xmlchildnode.tag + self.ta_info['attributemarker'] + key] = value      #add as a field
             else:   #xmlchildnode is a record
-                newnode.append(self.etree2botstree(xmlchildnode))           #add as a node/record
+                newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
         #~ if botsglobal.ini.getboolean('settings','readrecorddebug',False):
             #~ botsglobal.logger.debug('read record "%s":',newnode.record['BOTSID'])
             #~ for key,value in newnode.record.items():
@@ -959,15 +959,15 @@ class xml(var):
         #~ print self.stack
         return newnode
 
-    def etreenode2botstreenode(self,xmlnode):
+    def _etreenode2botstreenode(self,xmlnode):
         ''' build a dict from xml-node'''
         build = dict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.items())   #convert attributes to fields.
-        build['BOTSID']=xmlnode.tag     #'record' tag
+        build['BOTSID'] = xmlnode.tag     #'record' tag
         if xmlnode.text and not xmlnode.text.isspace():
-            build['BOTSCONTENT']=xmlnode.text
+            build['BOTSCONTENT'] = xmlnode.text
         return build
 
-    def isfield(self,xmlchildnode):
+    def _isfield(self,xmlchildnode):
         ''' check if xmlchildnode is field (or record)'''
         #~ print 'examine record in stack',xmlchildnode.tag,self.stack
         str_recordlist = self.defmessage.structure
@@ -990,14 +990,14 @@ class xml(var):
         if len(xmlchildnode)==0:
             return True
         return False
-        
+
 class xmlnocheck(xml):
     ''' class for ediobjects in XML. Uses ElementTree'''
-    def checkmessage(self,node,defmessage):
+    def checkmessage(self,node_instance,defmessage,subtranslation=False):
         pass
 
-    def isfield(self,xmlchildnode):
-        if len(xmlchildnode)==0:
+    def _isfield(self,xmlchildnode):
+        if len(xmlchildnode) == 0:
             return True
         return False
 
@@ -1006,12 +1006,12 @@ class json(var):
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
         self._readcontent_edifile()
-        
+
         jsonobject = simplejson.loads(self.rawinput)
         del self.rawinput
         if isinstance(jsonobject,list):
-            self.root=node.Node()  #initialise empty node.
-            self.root.children = self.dojsonlist(jsonobject,self.getrootID())   #fill root with children
+            self.root = node.Node()  #initialise empty node.
+            self.root.children = self._dojsonlist(jsonobject,self._getrootid())   #fill root with children
             for child in self.root.children:
                 if not child.record:    #sanity test: the children must have content
                     raise botslib.InMessageError(_(u'no usable content.'))
@@ -1019,54 +1019,54 @@ class json(var):
         elif isinstance(jsonobject,dict):
             if len(jsonobject)==1 and isinstance(jsonobject.values()[0],dict):
                 # best structure: {rootid:{id2:<dict, list>}}
-                self.root = self.dojsonobject(jsonobject.values()[0],jsonobject.keys()[0])
-            elif len(jsonobject)==1 and isinstance(jsonobject.values()[0],list) : 
+                self.root = self._dojsonobject(jsonobject.values()[0],jsonobject.keys()[0])
+            elif len(jsonobject)==1 and isinstance(jsonobject.values()[0],list) :
                 #root dict has no name; use value from grammar for rootID; {id2:<dict, list>}
-                self.root=node.Node(record={'BOTSID': self.getrootID()})  #initialise empty node.
-                self.root.children = self.dojsonlist(jsonobject.values()[0],jsonobject.keys()[0])
+                self.root = node.Node(record={'BOTSID': self._getrootid()})  #initialise empty node.
+                self.root.children = self._dojsonlist(jsonobject.values()[0],jsonobject.keys()[0])
             else:
-                #~ print self.getrootID()
-                self.root = self.dojsonobject(jsonobject,self.getrootID())
+                #~ print self._getrootid()
+                self.root = self._dojsonobject(jsonobject,self._getrootid())
             if not self.root:
                 raise botslib.InMessageError(_(u'no usable content.'))
             self.checkmessage(self.root,self.defmessage)
         else:
-            #root in JSON is neither dict or list. 
+            #root in JSON is neither dict or list.
             raise botslib.InMessageError(_(u'Content must be a "list" or "object".'))
 
-    def getrootID(self):
+    def _getrootid(self):
         return self.defmessage.structure[0][ID]
 
-    def dojsonlist(self,jsonobject,name):
-        lijst=[] #initialise empty list, used to append a listof (converted) json objects
+    def _dojsonlist(self,jsonobject,name):
+        lijst = [] #initialise empty list, used to append a listof (converted) json objects
         for i in jsonobject:
             if isinstance(i,dict):  #check list item is dict/object
-                newnode = self.dojsonobject(i,name)
+                newnode = self._dojsonobject(i,name)
                 if newnode:
                     lijst.append(newnode)
             elif self.ta_info['checkunknownentities']:
                 raise botslib.InMessageError(_(u'List content in must be a "object".'))
         return lijst
 
-    def dojsonobject(self,jsonobject,name):
-        thisnode=node.Node(record={'BOTSID':name})  #initialise empty node.
+    def _dojsonobject(self,jsonobject,name):
+        thisnode = node.Node(record={'BOTSID':name})  #initialise empty node.
         for key,value in jsonobject.items():
             if value is None:
                 continue
             elif isinstance(value,basestring):  #json field; map to field in node.record
-                thisnode.record[key]=value
+                thisnode.record[key] = value
             elif isinstance(value,dict):
-                newnode = self.dojsonobject(value,key)
+                newnode = self._dojsonobject(value,key)
                 if newnode:
                     thisnode.append(newnode)
             elif isinstance(value,list):
-                thisnode.children.extend(self.dojsonlist(value,key))
+                thisnode.children.extend(self._dojsonlist(value,key))
             elif isinstance(value,(int,long,float)):  #json field; map to field in node.record
-                thisnode.record[key]=str(value)
+                thisnode.record[key] = str(value)
             else:
                 if self.ta_info['checkunknownentities']:
                     raise botslib.InMessageError(_(u'Key "$key" value "$value": is not string, list or dict.'),key=key,value=value)
-                thisnode.record[key]=str(value)
+                thisnode.record[key] = str(value)
         if len(thisnode.record)==2 and not thisnode.children:
             return None #node is empty...
         #~ thisnode.record['BOTSID']=name
@@ -1074,10 +1074,10 @@ class json(var):
 
 
 class jsonnocheck(json):
-    def checkmessage(self,node,defmessage):
+    def checkmessage(self,node_instance,defmessage,subtranslation=False):
         pass
 
-    def getrootID(self):
+    def _getrootid(self):
         return self.ta_info['defaultBOTSIDroot']   #as there is no structure in grammar, use value form syntax.
 
 
@@ -1090,10 +1090,10 @@ class db(Inmessage):
     '''
     def initfromfile(self):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
-        f = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
-        self.root = pickle.load(f)
-        f.close()
-        
+        filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
+        self.root = pickle.load(filehandler)
+        filehandler.close()
+
     def nextmessage(self):
         yield self
 
@@ -1103,9 +1103,9 @@ class raw(Inmessage):
     '''
     def initfromfile(self):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
-        f = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
-        self.root = f.read()
-        f.close()
-        
+        filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
+        self.root = filehandler.read()
+        filehandler.close()
+
     def nextmessage(self):
         yield self

@@ -73,9 +73,9 @@ def start(configdir = 'config'):
         cursor.execute('''ALTER TABLE ta ADD COLUMN  envelope VARCHAR(35) DEFAULT '' ''',None)
         cursor.execute('''ALTER TABLE ta ADD COLUMN  botskey VARCHAR(35) DEFAULT '' ''',None)
         cursor.execute('''ALTER TABLE ta ADD COLUMN  cc VARCHAR(512) DEFAULT '' ''',None)
-        if botsglobal.dbinfo.drivername == 'mysql':
+        if botsglobal.db.drivername == 'mysql':
             cursor.execute('''ALTER TABLE ta MODIFY errortext VARCHAR(2048)''',None)
-        elif botsglobal.dbinfo.drivername == 'postgres':
+        elif botsglobal.db.drivername == 'postgres':
             cursor.execute('''ALTER TABLE ta ALTER COLUMN errortext type VARCHAR(2048)''',None)
         #else: #sqlite does not allow modifying existing field, but does not check lengths either so this works.
         cursor.execute('''CREATE TABLE confirmrule (

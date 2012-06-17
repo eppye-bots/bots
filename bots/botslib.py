@@ -89,12 +89,12 @@ def getrouteid():
     return botsglobal.routeid
 
 def setpreprocessnumber(statusnumber):
-    botsglobal.preprocessnumber = statusnumber 
+    botsglobal.preprocessnumber = statusnumber
 def getpreprocessnumber():
     terug = botsglobal.preprocessnumber
     botsglobal.preprocessnumber += 2
-    return terug 
-    
+    return terug
+
 #**********************************************************/**
 #***************** class  Transaction *********************/**
 #**********************************************************/**
@@ -142,8 +142,8 @@ class _Transaction(object):
                             {'selfid':self.idta,'rootidta':get_minta4query()})
         rows = cursor.fetchall()
         for row in rows:
-            ta = OldTransaction(row['idta'])
-            ta.failure()
+            ta_object = OldTransaction(row['idta'])
+            ta_object.failure()
         cursor.execute(u'''DELETE FROM ta
                             WHERE idta>%(rootidta)s
                             AND parent=%(selfid)s''',
@@ -249,7 +249,7 @@ class NewProcess(NewTransaction):
 
 
 def trace_origin(ta,where=None):
-    ''' bots traces back all from the current step/ta. 
+    ''' bots traces back all from the current step/ta.
         where is a dict that is used to indicate a condition.
         eg:  {'status':EXTERNIN}
         If bots finds a ta for which this is true, the ta is added to a list.
@@ -284,7 +284,7 @@ def trace_origin(ta,where=None):
                 if row['idta'] in donelijst:
                     continue
                 yield row['idta']
-        
+
     donelijst = []
     teruglijst = []
     ta.syn('parent')
@@ -369,7 +369,7 @@ def changestatustinfo(change,where):
 def set_database_lock():
     try:
         change(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
-    except: 
+    except:
         return False
     return True
 
@@ -384,7 +384,7 @@ def query(querystring,*args):
     cursor.close()
     for result in results:
         yield result
-    
+
 def change(querystring,*args):
     '''general inset/update. no return'''
     cursor = botsglobal.db.cursor()
@@ -496,12 +496,12 @@ def txtexc():
             limit = 0
     else:
         limit = 0
-    #problems with char set for some input data that are reported in traces....so always decode this; 
+    #problems with char set for some input data that are reported in traces....so always decode this;
     terug = traceback.format_exc(limit).decode('utf-8','ignore')
     terug = terug.replace(u'Traceback (most recent call last):\n',u'')
     #~ botsglobal.logger.debug(u'exception %s',terug)
-    if hasattr(botsglobal,'dbinfo') and botsglobal.dbinfo.drivername != 'sqlite':    #sqlite does not enforce strict lengths
-        return terug[-1848:]    #filed size is 2048; but more text can be prepended. 
+    if botsglobal.db is not None and botsglobal.db.drivername != 'sqlite':    #sqlite does not enforce strict lengths
+        return terug[-1848:]    #filed size is 2048; but more text can be prepended.
     else:
         return terug
 
@@ -535,7 +535,7 @@ def botsbaseimport(modulename):
 
 def botsimport(soort,modulename):
     ''' import modules from usersys.
-        return: imported module, filename imported module; 
+        return: imported module, filename imported module;
         if could not be found or error in module: raise
     '''
     try:    #__import__ is picky on the charset used. Might be different for different OS'es. So: test if charset is us-ascii
@@ -558,7 +558,7 @@ def botsimport(soort,modulename):
 
 def join(*paths):
     '''Does does more as join.....
-        - join the paths (compare os.path.join) 
+        - join the paths (compare os.path.join)
         - if path is not absolute, interpretate this as relative from bots directory.
         - normalize'''
     return os.path.normpath(os.path.join(botsglobal.ini.get('directories','botspath'),*paths))
@@ -729,12 +729,12 @@ class Uri(object):
             fullpath = self.uriparts['path'] + '/' + self.uriparts['filename']
         if fullpath.endswith('/'):
             fullpath = fullpath[:-1]
-            
+
         _uri = urlparse.urlunparse((self.uriparts['scheme'],fullhost,fullpath,self.uriparts['parameters'],urllib.urlencode(self.uriparts['query']),self.uriparts['fragment']))
         if not _uri:
             raise BotsError(_(u'Uri is empty.'))
         return _uri
-    
+
 def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
 

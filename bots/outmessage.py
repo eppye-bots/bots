@@ -129,24 +129,24 @@ class Outmessage(message.Message):
         botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
         self._outstream.close()
 
-    def _write(self,node):
+    def _write(self,node_instance):
         ''' the write method for most classes.
             tree is serialised to sequential records; records are written to file.
             Classses that write using other libraries (xml, json, template, db) use specific write methods. 
         ''' 
-        self.tree2records(node)
+        self.tree2records(node_instance)
         self._records2file()
 
-    def tree2records(self,node):
+    def tree2records(self,node_instance):
         self.records = []                   #tree of nodes is flattened to these records
-        self._tree2recordscore(node,self.defmessage.structure[0])
+        self._tree2recordscore(node_instance,self.defmessage.structure[0])
         
-    def _tree2recordscore(self,node,structure):
+    def _tree2recordscore(self,node_instance,structure):
         ''' Write tree of nodes to flat records.
             The nodes are already sorted 
         '''
-        self._tree2recordfields(node.record,structure)    #write root node->first record
-        for childnode in node.children:            #for every node in mpathtree, these are already sorted #SPEED: node.children is already sorted!
+        self._tree2recordfields(node_instance.record,structure)    #write root node->first record
+        for childnode in node_instance.children:            #for every node in mpathtree, these are already sorted #SPEED: node.children is already sorted!
             BOTSID_childnode = childnode.record['BOTSID'].strip()   #speed up: use local var
             BOTSIDnr_childnode = childnode.record['BOTSIDnr']       #speed up: use local var
             for structure_record in structure[LEVEL]:  #for structure_record of this level in grammar
@@ -518,17 +518,17 @@ class xml(Outmessage):
         So: this works OK for python 2.7
         For python <2.7: do not generate standalone, DOCTYPE, processing instructions for encoding !=utf-8,ascii OR if elementtree package is installed (version 1.3.0 or bigger)
     '''
-    def _write(self,node):
+    def _write(self,node_instance):
         ''' write normal XML messages (no envelope)'''
-        xmltree = ET.ElementTree(self._node2xml(node))
+        xmltree = ET.ElementTree(self._node2xml(node_instance))
         root = xmltree.getroot()
         self._xmlcorewrite(xmltree,root)
 
-    def envelopewrite(self,node):
+    def envelopewrite(self,node_instance):
         ''' write envelope for XML messages'''
         self._initwrite()
-        self.checkmessage(node,self.defmessage)
-        xmltree = ET.ElementTree(self._node2xml(node))
+        self.checkmessage(node_instance,self.defmessage)
+        xmltree = ET.ElementTree(self._node2xml(node_instance))
         root = xmltree.getroot()
         ETI.include(root)
         self._xmlcorewrite(xmltree,root)
@@ -580,11 +580,11 @@ class xml(Outmessage):
             if level and (not elem.tail or not elem.tail.strip()):
                 elem.tail = i
 
-    def _node2xml(self,node):
+    def _node2xml(self,node_instance):
         ''' recursive method.
         '''
-        newnode = self._node2xmlfields(node.record)
-        for childnode in node.children:
+        newnode = self._node2xmlfields(node_instance.record)
+        for childnode in node_instance.children:
             newnode.append(self._node2xml(childnode))
         return newnode
 
@@ -631,7 +631,7 @@ class xml(Outmessage):
         
 
 class xmlnocheck(xml):
-    def checkmessage(self,node,defmessage):
+    def checkmessage(self,node_instance,defmessage,subtranslation=False):
         pass
 
     def _node2xmlfields(self,noderecord):
@@ -678,13 +678,13 @@ class json(Outmessage):
         if self.multiplewrite:
             self._outstream.write(u'[')
 
-    def _write(self,node):
+    def _write(self,node_instance):
         ''' convert node tree to appropriate python object.
             python objects are written to json by simplejson.
         '''
         if self.nrmessagewritten:
             self._outstream.write(u',')
-        jsonobject = {node.record['BOTSID']:self._node2json(node)}
+        jsonobject = {node_instance.record['BOTSID']:self._node2json(node_instance)}
         if self.ta_info['indented']:
             indent=2
         else:
@@ -696,12 +696,12 @@ class json(Outmessage):
             self._outstream.write(u']')
         super(json,self)._closewrite()
 
-    def _node2json(self,node):
+    def _node2json(self,node_instance):
         ''' recursive method.
         '''
         #newjsonobject is the json object assembled in the function.
-        newjsonobject = node.record.copy()    #init newjsonobject with record fields from node 
-        for childnode in node.children: #fill newjsonobject with the records from childnodes. 
+        newjsonobject = node_instance.record.copy()    #init newjsonobject with record fields from node 
+        for childnode in node_instance.children: #fill newjsonobject with the records from childnodes. 
             key=childnode.record['BOTSID']
             if key in newjsonobject:
                 newjsonobject[key].append(self._node2json(childnode))
@@ -711,13 +711,13 @@ class json(Outmessage):
         del newjsonobject['BOTSIDnr']
         return newjsonobject
         
-    def _node2jsonold(self,node):
+    def _node2jsonold(self,node_instance):
         ''' recursive method.
         '''
-        newdict = node.record.copy()
-        if node.children:   #if this node has records in it.
+        newdict = node_instance.record.copy()
+        if node_instance.children:   #if this node has records in it.
             sortedchildren={}   #empty dict 
-            for childnode in node.children:
+            for childnode in node_instance.children:
                 botsid=childnode.record['BOTSID']
                 if botsid in sortedchildren:
                     sortedchildren[botsid].append(self._node2json(childnode))
@@ -732,7 +732,7 @@ class json(Outmessage):
         return newdict
         
 class jsonnocheck(json):
-    def checkmessage(self,node,defmessage):
+    def checkmessage(self,node_instance,defmessage,subtranslation=False):
         pass
 
 class template(Outmessage):
