@@ -759,8 +759,8 @@ class x12(var):
         #~ self.root.display()
         for nodeisa in self.getloop({'BOTSID':'ISA'}):
             botsglobal.logmap.debug(u'Start parsing X12 envelopes')
-            sender = nodeisa.get({'BOTSID':'ISA','ISA06':None})
-            receiver = nodeisa.get({'BOTSID':'ISA','ISA08':None})
+            #~ sender = nodeisa.get({'BOTSID':'ISA','ISA06':None})
+            #~ receiver = nodeisa.get({'BOTSID':'ISA','ISA08':None})
             isareference = nodeisa.get({'BOTSID':'ISA','ISA13':None})
             ieareference = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA02':None})
             if isareference and ieareference and isareference != ieareference:
@@ -773,6 +773,8 @@ class x12(var):
             except:
                 self.add2errorlist(_(u'[E15] Count of messages in IEA is invalid: "%(count)s".\n')%{'count':ieacount})
             for nodegs in nodeisa.getloop({'BOTSID':'ISA'},{'BOTSID':'GS'}):
+                sender = nodegs.get({'BOTSID':'GS','GS02':None})
+                receiver = nodegs.get({'BOTSID':'GS','GS03':None})
                 gsqualifier = nodegs.get({'BOTSID':'GS','GS01':None})
                 gsreference = nodegs.get({'BOTSID':'GS','GS06':None})
                 gereference = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
