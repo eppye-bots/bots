@@ -8,8 +8,8 @@ OK      = 2 #successfull, result is 'save'. But processing has stopped: next ste
 DONE    = 3 #successfull, and result is picked up by next step
 
 #for status in ta:
-PROCESS    = 1
-DISCARD= 3
+PROCESS = 1
+DISCARD = 3
 
 EXTERNIN  = 200      #transaction is OK; file is exported; out of reach
 RAWIN    = 210    #the file as received, unprocessed; eg mail is in email-format (headers, body, attachments)
@@ -22,11 +22,11 @@ SPLITUP    = 320        #the edimessages in the PARSED edifile have been split u
 TRANSLATED = 330        #edimessage is result of translation
 MERGED   =   400        #is enveloped
 FILEOUT    = 500    #edifile ready to be 'send' (just the edi-file)
-RAWOUT    = 510    #file in send format eg email format (including headers, body, attachemnts) 
+RAWOUT    = 510    #file in send format eg email format (including headers, body, attachemnts)
 EXTERNOUT  = 520      #transaction is complete; file is exported; out of reach
 
 #grammar.structure: keys in grammarrecords
-ID = 0 
+ID = 0
 MIN = 1
 MAX = 2
 COUNT = 3
@@ -35,7 +35,7 @@ MPATH = 5
 FIELDS = 6
 QUERIES = 7
 SUBTRANSLATION = 8
-BOTSIDnr = 9
+BOTSIDNR = 9
 
 #grammar.recorddefs: dict keys for fields of record er: record[FIELDS][ID] == 'C124.0034'
 #already definedID = 0
@@ -48,7 +48,7 @@ DECIMALS = 5
 MINLENGTH = 6
 BFORMAT = 7		#internal bots format; formats in grammar are convertd to bformat
 
-#modules inmessage, outmessage; record in self.records; ex: 
+#modules inmessage, outmessage; record in self.records; ex:
 #already defined ID = 0
 VALUE = 1
 POS = 2

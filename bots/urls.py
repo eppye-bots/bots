@@ -1,8 +1,8 @@
 from django.conf.urls.defaults import *
-from django.contrib import admin,auth
+from django.contrib import admin
 from django.views.generic.simple import redirect_to
 from django.contrib.auth.decorators import login_required,user_passes_test
-from bots import views
+import views
 
 admin.autodiscover()
 staff_required = user_passes_test(lambda u: u.is_staff)
@@ -25,8 +25,8 @@ urlpatterns = patterns('',
     #only staff
     (r'^admin/$', login_required(views.home)),  #do not show django admin root page
     (r'^admin/bots/$', login_required(views.home)),  #do not show django admin root page
-    (r'^admin/bots/uniek/.+$', redirect_to, {'url': '/admin/bots/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages. 
-    (r'^admin/', include(admin.site.urls)), 
+    (r'^admin/bots/uniek/.+$', redirect_to, {'url': '/admin/bots/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages.
+    (r'^admin/', include(admin.site.urls)),
     (r'^runengine.+', run_permission(views.runengine)),
     #only superuser
     (r'^delete.*', superuser_required(views.delete)),
@@ -35,7 +35,7 @@ urlpatterns = patterns('',
     (r'^unlock.*', superuser_required(views.unlock)),
     (r'^sendtestmail.*', superuser_required(views.sendtestmailmanagers)),
     #catch-all
-    (r'^.*', 'bots.views.index'), 
+    (r'^.*', 'bots.views.index'),
     )
 
-handler500='bots.views.server_error'
+handler500 = 'bots.views.server_error'

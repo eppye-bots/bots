@@ -3,6 +3,7 @@ import os
 import time
 import shutil
 import subprocess
+import traceback
 import django
 from django.utils.translation import ugettext as _
 import forms
@@ -11,7 +12,6 @@ import viewlib
 import botslib
 import pluglib
 import botsglobal
-import glob
 from botsconfig import *
 
 def server_error(request, template_name='500.html'):
@@ -19,11 +19,10 @@ def server_error(request, template_name='500.html'):
         Templates: `500.html`
         Context: None
     """
-    import traceback
     exc_info = traceback.format_exc(None).decode('utf-8','ignore')
     botsglobal.logger.info(_(u'Ran into server error: "%s"'),str(exc_info))
-    t = django.template.loader.get_template(template_name) # You need to create a 500.html template.
-    return django.http.HttpResponseServerError(t.render(django.template.Context({'exc_info':exc_info})))
+    temp = django.template.loader.get_template(template_name)  #You need to create a 500.html template.
+    return django.http.HttpResponseServerError(temp.render(django.template.Context({'exc_info':exc_info})))
 
 def index(request,*kw,**kwargs):
     return django.shortcuts.render_to_response('admin/base.html', {},context_instance=django.template.RequestContext(request))
@@ -85,13 +84,13 @@ def incoming(request,*kw,**kwargs):
             cleaned_data = {'page':1,'lastrun':True,'sortedby':'ts','sortedasc':False}
     else:                                  # request.method == 'POST'
         if '2outgoing' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='in2out')
+            request.POST = viewlib.changepostparameters(request.POST,soort='in2out')
             return outgoing(request)
         elif '2process' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='2process')
+            request.POST = viewlib.changepostparameters(request.POST,soort='2process')
             return process(request)
         elif '2confirm' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='in2confirm')
+            request.POST = viewlib.changepostparameters(request.POST,soort='in2confirm')
             return process(request)
         elif 'fromselect' in request.POST:        #coming from select criteria screen
             formin = forms.SelectIncoming(request.POST)
@@ -113,9 +112,9 @@ def incoming(request,*kw,**kwargs):
                 idta = int(request.POST[u'delete'])
                 #~ query = models.filereport.objects.filter(idta=int(idta)).all().delete()
                 models.filereport.objects.filter(idta=idta).delete()
-                ta = models.ta.objects.get(idta=idta)
-                viewlib.gettrace(ta)
-                viewlib.trace2delete(ta)
+                ta_object = models.ta.objects.get(idta=idta)
+                viewlib.gettrace(ta_object)
+                viewlib.trace2delete(ta_object)
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
@@ -136,13 +135,13 @@ def outgoing(request,*kw,**kwargs):
             cleaned_data = {'page':1,'lastrun':True,'sortedby':'ts','sortedasc':False}
     else:                                  # request.method == 'POST'
         if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='out2in')
+            request.POST = viewlib.changepostparameters(request.POST,soort='out2in')
             return incoming(request)
         elif '2process' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='2process')
+            request.POST = viewlib.changepostparameters(request.POST,soort='2process')
             return process(request)
         elif '2confirm' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='out2confirm')
+            request.POST = viewlib.changepostparameters(request.POST,soort='out2confirm')
             return process(request)
         elif 'fromselect' in request.POST:        #coming from select criteria screen
             formin = forms.SelectOutgoing(request.POST)
@@ -156,9 +155,9 @@ def outgoing(request,*kw,**kwargs):
                 formout = forms.SelectOutgoing(formin.cleaned_data)
                 return viewlib.render(request,formout)
             elif 'retransmit' in request.POST:        #coming from ViewIncoming
-                ta = models.ta.objects.get(idta=int(request.POST[u'retransmit']))
-                ta.retransmit = not ta.retransmit
-                ta.save()
+                ta_object = models.ta.objects.get(idta=int(request.POST[u'retransmit']))
+                ta_object.retransmit = not ta_object.retransmit
+                ta_object.save()
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
@@ -217,10 +216,10 @@ def process(request,*kw,**kwargs):
             cleaned_data = {'page':1,'lastrun':True,'sortedby':'ts','sortedasc':False}
     else:                                  # request.method == 'POST'
         if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='fromprocess')
+            request.POST = viewlib.changepostparameters(request.POST,soort='fromprocess')
             return incoming(request)
         elif '2outgoing' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='fromprocess')
+            request.POST = viewlib.changepostparameters(request.POST,soort='fromprocess')
             return outgoing(request)
         elif 'fromselect' in request.POST:        #coming from select criteria screen
             formin = forms.SelectProcess(request.POST)
@@ -229,9 +228,9 @@ def process(request,*kw,**kwargs):
         else:
             if 'retry' in request.POST:
                 idta = request.POST[u'retry']
-                ta = models.ta.objects.get(idta=int(idta))
-                ta.retransmit = not ta.retransmit
-                ta.save()
+                ta_object = models.ta.objects.get(idta=int(idta))
+                ta_object.retransmit = not ta_object.retransmit
+                ta_object.save()
             formin = forms.ViewProcess(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
@@ -278,21 +277,21 @@ def confirm(request,*kw,**kwargs):
             cleaned_data = {'page':1,'sortedby':'ts','sortedasc':False}
     else:                                  # request.method == 'POST'
         if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='confirm2in')
+            request.POST = viewlib.changepostparameters(request.POST,soort='confirm2in')
             return incoming(request)
         elif '2outgoing' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,type='confirm2out')
+            request.POST = viewlib.changepostparameters(request.POST,soort='confirm2out')
             return outgoing(request)
         elif 'fromselect' in request.POST:        #coming from select criteria screen
             formin = forms.SelectConfirm(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
         elif 'confirm' in request.POST:        #coming from 'star' menu 'Manual confirm'
-            ta = models.ta.objects.get(idta=int(request.POST[u'confirm']))
-            if ta.confirmed == False and ta.confirmtype.startswith('ask'):
-                ta.confirmed = True
-                ta.confirmidta = '-1'   # to indicate a manual confirmation
-                ta.save()
+            ta_object = models.ta.objects.get(idta=int(request.POST[u'confirm']))
+            if ta_object.confirmed == False and ta_object.confirmtype.startswith('ask'):
+                ta_object.confirmed = True
+                ta_object.confirmidta = '-1'   # to indicate a manual confirmation
+                ta_object.save()
                 request.user.message_set.create(message='Manual confirmed.')
             else:
                 request.user.message_set.create(message='Manual confirm not possible.')
@@ -328,7 +327,7 @@ def filer(request,*kw,**kwargs):
             return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
         try:
             currentta = list(models.ta.objects.filter(idta=idta))[0]
-            if request.GET['action']=='downl':
+            if request.GET['action'] == 'downl':
                 response = django.http.HttpResponse(mimetype=currentta.contenttype)
                 if  currentta.contenttype == 'text/html':
                     dispositiontype = 'inline'
@@ -338,40 +337,40 @@ def filer(request,*kw,**kwargs):
                 #~ response['Content-Length'] = os.path.getsize(absfilename)
                 response.write(botslib.readdata(currentta.filename,charset=currentta.charset,errors='ignore'))
                 return response
-            elif request.GET['action']=='previous':
+            elif request.GET['action'] == 'previous':
                 if currentta.parent:  #has a explicit parent
                     talijst = list(models.ta.objects.filter(idta=currentta.parent))
                 else:   #get list of ta's referring to this idta as child
                     talijst = list(models.ta.objects.filter(child=currentta.idta))
-            elif request.GET['action']=='this':
+            elif request.GET['action'] == 'this':
                 if currentta.status == EXTERNIN:     #jump strait to next file, as EXTERNIN can not be displayed.
                     talijst = list(models.ta.objects.filter(parent=currentta.idta))
                 elif currentta.status == EXTERNOUT:
                     talijst = list(models.ta.objects.filter(idta=currentta.parent))
                 else:
                     talijst = [currentta]
-            elif request.GET['action']=='next':
+            elif request.GET['action'] == 'next':
                 if currentta.child: #has a explicit child
                     talijst = list(models.ta.objects.filter(idta=currentta.child))
                 else:
                     talijst = list(models.ta.objects.filter(parent=currentta.idta))
-            for ta in talijst:
-                ta.has_next = True
-                if ta.status == EXTERNIN:
-                    ta.content = _(u'External file. Can not be displayed. Use "next".')
-                elif ta.status == EXTERNOUT:
-                    ta.content = _(u'External file. Can not be displayed. Use "previous".')
-                    ta.has_next = False
-                elif ta.statust in [OPEN,ERROR]:
-                    ta.content = _(u'File has error status and does not exist. Use "previous".')
-                    ta.has_next = False
-                elif not ta.filename:
-                    ta.content = _(u'File can not be displayed.')
+            for ta_object in talijst:
+                ta_object.has_next = True
+                if ta_object.status == EXTERNIN:
+                    ta_object.content = _(u'External file. Can not be displayed. Use "next".')
+                elif ta_object.status == EXTERNOUT:
+                    ta_object.content = _(u'External file. Can not be displayed. Use "previous".')
+                    ta_object.has_next = False
+                elif ta_object.statust in [OPEN,ERROR]:
+                    ta_object.content = _(u'File has error status and does not exist. Use "previous".')
+                    ta_object.has_next = False
+                elif not ta_object.filename:
+                    ta_object.content = _(u'File can not be displayed.')
                 else:
-                    if ta.charset:  #guess charset; uft-8 is reasonable
-                        ta.content = botslib.readdata(ta.filename,charset=ta.charset,errors='ignore')
+                    if ta_object.charset:  #guess charset; uft-8 is reasonable
+                        ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
                     else:
-                        ta.content = botslib.readdata(ta.filename,charset='utf-8',errors='ignore')
+                        ta_object.content = botslib.readdata(ta_object.filename,charset='utf-8',errors='ignore')
             return  django.shortcuts.render_to_response('bots/filer.html', {'idtas': talijst},context_instance=django.template.RequestContext(request))
         except:
             #~ print botslib.txtexc()
@@ -389,15 +388,15 @@ def plugin(request,*kw,**kwargs):
                 try:
                     if pluglib.load(request.FILES['file'].temporary_file_path()):
                         request.user.message_set.create(message='Renamed existing files.')
-                except botslib.PluginError,txt:
-                    botsglobal.logger.info(u'%s',str(txt))
-                    request.user.message_set.create(message='%s'%txt)
+                except botslib.PluginError,msg:
+                    botsglobal.logger.info(u'%s',str(msg))
+                    request.user.message_set.create(message='%s'%msg)
                 else:
                     botsglobal.logger.info(_(u'Finished reading plugin "%s" successful.'),request.FILES['file'].name)
                     request.user.message_set.create(message='Plugin "%s" is read successful.'%request.FILES['file'].name)
                 request.FILES['file'].close()
             else:
-                 request.user.message_set.create(message=_(u'No plugin read.'))
+                request.user.message_set.create(message=_(u'No plugin read.'))
         return django.shortcuts.redirect('/home')
 
 def plugout(request,*kw,**kwargs):
@@ -412,9 +411,9 @@ def plugout(request,*kw,**kwargs):
                 botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
                 try:
                     pluglib.plugoutcore(form.cleaned_data,filename)
-                except botslib.PluginError, txt:
-                    botsglobal.logger.info(u'%s',str(txt))
-                    request.user.message_set.create(message='%s'%txt)
+                except botslib.PluginError, msg:
+                    botsglobal.logger.info(u'%s',str(msg))
+                    request.user.message_set.create(message='%s'%msg)
                 else:
                     botsglobal.logger.info(_(u'Plugin "%s" created successful.'),filename)
                     response = django.http.HttpResponse(open(filename, 'rb').read(), content_type='application/zip')

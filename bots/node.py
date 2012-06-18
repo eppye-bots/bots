@@ -9,22 +9,15 @@ import botsglobal
 from botsconfig import *
 
 
-comparekey = None
-
-def nodecompare(node2compare):
-    global comparekey
-    return node2compare.get(*comparekey)
-
-
 class Node(object):
     ''' Node class for building trees in inmessage and outmessage
     '''
-    def __init__(self,record=None,BOTSIDnr=None):
+    def __init__(self,record=None,botsidnr=None):
         self.record = record    #record is a dict with fields
         if self.record:
             if not 'BOTSIDnr' in self.record:
-                if BOTSIDnr:
-                    self.record['BOTSIDnr'] = BOTSIDnr
+                if botsidnr:
+                    self.record['BOTSIDnr'] = botsidnr
                 else:
                     self.record['BOTSIDnr'] = u'1'
         self.children = []
@@ -47,14 +40,14 @@ class Node(object):
     #********************************************************
     #*** queries ********************************************
     #********************************************************
-    def getquerie(self):
+    def _getquerie(self):
         ''' getter for queries: get queries of a node '''
         if self._queries:
             return self._queries
         else:
             return {}
 
-    def updatequerie(self,updatequeries):
+    def _updatequerie(self,updatequeries):
         ''' setter for queries: set/update queries of a node with dict queries.
         '''
         if updatequeries:
@@ -63,7 +56,7 @@ class Node(object):
             else:
                 self._queries.update(updatequeries)
 
-    queries = property(getquerie,updatequerie)
+    queries = property(_getquerie,_updatequerie)
 
     def processqueries(self,queries,maxlevel):
         ''' copies values for queries 'down the tree' untill right level.
@@ -335,7 +328,7 @@ class Node(object):
                     return None
 
     def getcount(self):
-        '''count the number of nodes/records uner the node/in whole tree'''
+        '''count the number of nodes/records under the node/in whole tree'''
         count = 0
         if self.record:
             count += 1   #count itself
@@ -345,10 +338,7 @@ class Node(object):
 
     def getcountoccurrences(self,*mpaths):
         ''' count number of occurences of mpath. Eg count nr of LIN's'''
-        count = 0
-        for value in self.getloop(*mpaths):
-            count += 1
-        return count
+        return len(list(self.getloop(*mpaths)))
 
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
@@ -503,10 +493,16 @@ class Node(object):
             self.record.update(mpath)   #add items to self.record that are new
             return True
 
+    def _nodecompare(self,node2compare):
+        ''' helper function for sort '''
+        return node2compare.get(*self.comparekey)
+
     def sort(self,*mpaths):
-        global comparekey
-        comparekey = mpaths[1:]
-        self.children.sort(key=nodecompare)
+        ''' sort nodes. eg in mapping script:     inn.sort({'BOTSID':'UNH'},{'BOTSID':'LIN','C212.7140':None})
+            This will sort the LIN segments by article number.
+        '''
+        self.comparekey = mpaths[1:]
+        self.children.sort(key=self._nodecompare)
 
     def stripnode(self):
         ''' removes spaces from all fields in tree.

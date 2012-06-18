@@ -3,7 +3,7 @@ try:
 except ImportError:
     import sqlite3 as sqlite    #works OK for python26
 
-#~ #bots engine uses: 
+#~ #bots engine uses:
 #~ ''' SELECT *
     #~ FROM  ta
     #~ WHERE idta=%(idta)s ''',
@@ -13,7 +13,7 @@ except ImportError:
     #~ FROM  ta
     #~ WHERE idta=:idta ''',
     #~ {'idta': 12345}
-    
+
 import re
 reformatparamstyle = re.compile(u'%\((?P<name>[^)]+)\)s')
 

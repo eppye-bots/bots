@@ -24,26 +24,26 @@ def showusage():
 def startmulti(grammardir,editype):
     ''' used in seperate tool for bulk checking of gramamrs while developing edifact->botsgramamrs '''
     import glob
-    botslib.generalinit('config')
-    botslib.initenginelogging()
-    for g in glob.glob(grammardir):
-        g1 = os.path.basename(g)
-        g2 = os.path.splitext(g1)[0]
-        if g1 in ['__init__.py']:
+    botsinit.generalinit('config')
+    botsinit.initenginelogging()
+    for filename in glob.glob(grammardir):
+        filename_basename = os.path.basename(filename)
+        filename_noextension = os.path.splitext(filename_basename)[0]
+        if filename_basename in ['__init__.py']:
             continue
-        if g1.startswith('edifact'):
+        if filename_basename.startswith('edifact'):
             continue
-        if g1.startswith('records') or g1.endswith('records.py'):
+        if filename_basename.startswith('records') or filename_basename.endswith('records.py'):
             continue
         try:
-            grammar.grammarread(editype,g2)
+            grammar.grammarread(editype,filename_noextension)
         except:
-            #~ print 'Found error in grammar:',g
+            #~ print 'Found error in grammar:',filename
             print botslib.txtexc()
             print '\n'
         else:
-            print 'OK - no error found in grammar',g,'\n'
-        
+            print 'OK - no error found in grammar',filename,'\n'
+
 def start():
     #********command line arguments**************************
     editype =''
@@ -86,5 +86,5 @@ def start():
         print 'OK - no error found in grammar'
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     start()

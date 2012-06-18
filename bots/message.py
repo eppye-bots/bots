@@ -129,7 +129,7 @@ class Message(object):
             for structure_record in structure[LEVEL]:  #for every structure_record (in grammar) of this level
                 count = 0                           #count number of occurences of record
                 for childnode in node_instance.children:            #for every node in mpathtree; SPEED: delete nodes from list when found
-                    if childnode.record['BOTSID'] != structure_record[ID] or childnode.record['BOTSIDnr'] != structure_record[BOTSIDnr]:   #if it is not the right NODE":
+                    if childnode.record['BOTSID'] != structure_record[ID] or childnode.record['BOTSIDnr'] != structure_record[BOTSIDNR]:   #if it is not the right NODE":
                         continue
                     count += 1
                     self._canonicaltree(childnode,structure_record,self.recordnumber)         #use rest of index in deeper level
@@ -224,10 +224,7 @@ class Message(object):
 
     def getcountoccurrences(self,*mpaths):
         ''' count number of nodes in self.root. Number of nodes is number of records.'''
-        count = 0
-        for value in self.getloop(*mpaths):
-            count += 1
-        return count
+        return len(list(self.getloop(*mpaths)))
 
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''

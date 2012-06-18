@@ -32,7 +32,7 @@ def prepareretransmit():
                                     'status':RAWIN}):
             ta_rereceive = botslib.OldTransaction(row2['idta'])
             ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
-            ta_raw = ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
+            ta_externin.copyta(status=RAWIN,statust=OK)  #reinjected file is ready as new input
     #for resend; this one is slow. Can be improved by having a separate list of idta to resend
     for row in botslib.query('''SELECT idta,parent
                                 FROM  ta
@@ -45,7 +45,7 @@ def prepareretransmit():
         ta_outgoing.update(retransmit=False)     #is reinjected; set retransmit back to False
         ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
         ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
-        ta_raw = ta_externin.copyta(status=RAWOUT,statust=OK)  #reinjected file is ready as new input
+        ta_externin.copyta(status=RAWOUT,statust=OK)  #reinjected file is ready as new input
     return retransmit
 
 
@@ -81,14 +81,14 @@ def preparerecommunication():
         for row4 in botslib.query('''SELECT idta
                                     FROM  ta
                                     WHERE idta<%(endidta)s
-                                    AND idta>%(rootidta)s 
-                                    AND   status=%(status)s 
+                                    AND idta>%(rootidta)s
+                                    AND   status=%(status)s
                                     AND   statust=%(statust)s
                                     AND   tochannel=%(tochannel)s ''',
                                     {'statust':OK,'status':RAWOUT,'rootidta':rootidta,'endidta':endidta,'tochannel':row['tochannel']}):
             retransmit = True
             ta_outgoing = botslib.OldTransaction(row4['idta'])
-            ta_outgoing_copy = ta_outgoing.copyta(status=RAWOUT,statust=OK)
+            ta_outgoing.copyta(status=RAWOUT,statust=OK)
             ta_outgoing.update(statust=DONE)
     return retransmit
 
@@ -104,12 +104,12 @@ def prepareautomaticrecommunication():
     for row4 in botslib.query('''SELECT idta
                                 FROM  ta
                                 WHERE idta>%(startidta)s
-                                AND   status=%(status)s 
+                                AND   status=%(status)s
                                 AND   statust=%(statust)s ''',
                                 {'statust':OK,'status':RAWOUT,'startidta':startidta}):
         retransmit = True
         ta_outgoing = botslib.OldTransaction(row4['idta'])
-        ta_outgoing_copy = ta_outgoing.copyta(status=RAWOUT,statust=OK)
+        ta_outgoing.copyta(status=RAWOUT,statust=OK)
         ta_outgoing.update(statust=DONE)
     return retransmit
 
@@ -129,30 +129,30 @@ def prepareretry():
                                 {'statust':OK,'startidta':startidta}):
         retransmit = True
         ta_outgoing = botslib.OldTransaction(row4['idta'])
-        ta_outgoing_copy = ta_outgoing.copyta(status=row4['status'],statust=OK)
+        ta_outgoing.copyta(status=row4['status'],statust=OK)
         ta_outgoing.update(statust=DONE)
     return retransmit
 
 
 @botslib.log_session
-def routedispatcher(routestorun,type=None):
+def routedispatcher(routestorun,routetype=None):
     ''' run all route(s). '''
-    if type == '--retransmit':
+    if routetype == '--retransmit':
         if not prepareretransmit():
             return 0
-    elif type == '--retrycommunication':
+    elif routetype == '--retrycommunication':
         if not preparerecommunication():
             return 0
-    elif type == '--automaticretrycommunication':
+    elif routetype == '--automaticretrycommunication':
         if not prepareautomaticrecommunication():
             return 0
-    elif type == '--retry':
+    elif routetype == '--retry':
         if not prepareretry():
             return 0
     stuff2evaluate = botslib.getlastrun()
     botslib.set_minta4query()
     for route in routestorun:
-        foundroute=False
+        foundroute = False
         botslib.setpreprocessnumber(SET_FOR_PROCESSING)
         for routedict in botslib.query('''SELECT idroute     ,
                                                  fromchannel_id as fromchannel,
@@ -177,7 +177,7 @@ def routedispatcher(routestorun,type=None):
                                         {'idroute':route,'active':True}):
             botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),{'idroute':routedict['idroute'],'seq':routedict['seq']})
             botslib.setrouteid(routedict['idroute'])
-            foundroute=True
+            foundroute = True
             router(routedict)
             botslib.setrouteid('')
             botsglobal.logger.debug(u'finished route %s %s',routedict['idroute'],routedict['seq'])
@@ -189,7 +189,7 @@ def routedispatcher(routestorun,type=None):
 @botslib.log_session
 def router(routedict):
     ''' communication.run one route. variants:
-        -   a route can be just script; 
+        -   a route can be just script;
         -   a route can do only incoming
         -   a route can do only outgoing
         -   a route can do both incoming and outgoing
@@ -200,69 +200,69 @@ def router(routedict):
         userscript,scriptname = botslib.botsimport('routescripts',routedict['idroute'])
     except ImportError: #other errors, eg syntax errors are just passed
         userscript = scriptname = None
-        
+
     #if user route script has function 'main': communication.run 'main' (and do nothing else)
     if botslib.tryrunscript(userscript,scriptname,'main',routedict=routedict):
         return  #so: if function ' main' : communication.run only the routescript, nothing else.
-    if not (userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']): 
+    if not (userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']):
         raise botslib.ScriptError(_(u'Route "$route" is empty: no script, not enough parameters.'),route=routedict['idroute'])
-    
+
     botslib.tryrunscript(userscript,scriptname,'start',routedict=routedict)
-    
+
     #communication.run incoming channel
     if routedict['fromchannel']:     #do incoming part of route: in-communication; set ready for translation; translate
         botslib.tryrunscript(userscript,scriptname,'preincommunication',routedict=routedict)
         communication.run(idchannel=routedict['fromchannel'],idroute=routedict['idroute'])  #communication.run incommunication
         #add attributes from route to the received files
-        where={'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']}
-        change={'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
+        where = {'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']}
+        change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
         botslib.updateinfo(change=change,where=where)
-            
+
         #all received files have status FILEIN
         botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
         if routedict['fromeditype'] == 'mailbag':               #mailbag for the route.
             preprocess.preprocess(routedict,preprocess.mailbag)
-    
+
     #communication.run translation
     if routedict['translateind']:
         botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
         botslib.addinfo(change={'status':TRANSLATE},where={'status':FILEIN,'idroute':routedict['idroute']})
         transform.translate(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
-        
+
     #merge messages & communication.run outgoing channel
     if routedict['tochannel']:   #do outgoing part of route
         botslib.tryrunscript(userscript,scriptname,'premerge',routedict=routedict)
         envelope.mergemessages(idroute=routedict['idroute'])
         botslib.tryrunscript(userscript,scriptname,'postmerge',routedict=routedict)
-            
+
         #communication.run outgoing channel
-        #build for query: towhere (dict) and wherestring  
-        towhere=dict(status=MERGED,
+        #build for query: towhere (dict) and wherestring
+        towhere = dict(status=MERGED,
                     idroute=routedict['idroute'],
                     editype=routedict['toeditype'],
                     messagetype=routedict['tomessagetype'],
                     testindicator=routedict['testindicator'])
-        towhere=dict([(key, value) for (key, value) in towhere.iteritems() if value])   #remove nul-values from dict
+        towhere = dict([(key, value) for (key, value) in towhere.iteritems() if value])   #remove nul-values from dict
         wherestring = ' AND '.join([key+'=%('+key+')s' for key in towhere])
         if routedict['frompartner_tochannel_id']:   #use frompartner_tochannel in where-clause of query (partner/group dependent outchannel
-            towhere['frompartner_tochannel_id']=routedict['frompartner_tochannel_id']
-            wherestring += ''' AND (frompartner=%(frompartner_tochannel_id)s 
-                                    OR frompartner in (SELECT from_partner_id 
+            towhere['frompartner_tochannel_id'] = routedict['frompartner_tochannel_id']
+            wherestring += ''' AND (frompartner=%(frompartner_tochannel_id)s
+                                    OR frompartner in (SELECT from_partner_id
                                                         FROM partnergroup
                                                         WHERE to_partner_id =%(frompartner_tochannel_id)s ))'''
         if routedict['topartner_tochannel_id']:   #use topartner_tochannel in where-clause of query (partner/group dependent outchannel
-            towhere['topartner_tochannel_id']=routedict['topartner_tochannel_id']
-            wherestring += ''' AND (topartner=%(topartner_tochannel_id)s 
-                                    OR topartner in (SELECT from_partner_id 
+            towhere['topartner_tochannel_id'] = routedict['topartner_tochannel_id']
+            wherestring += ''' AND (topartner=%(topartner_tochannel_id)s
+                                    OR topartner in (SELECT from_partner_id
                                                         FROM partnergroup
                                                         WHERE to_partner_id=%(topartner_tochannel_id)s ))'''
-        toset={'tochannel':routedict['tochannel'],'status':FILEOUT}
+        toset = {'tochannel':routedict['tochannel'],'status':FILEOUT}
         botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
-        
+
         if not routedict['defer']:   #do outgoing part of route
             botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
             communication.run(idchannel=routedict['tochannel'],idroute=routedict['idroute'])    #communication.run outcommunication
             botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)
-    
+
     botslib.tryrunscript(userscript,scriptname,'end',routedict=routedict)

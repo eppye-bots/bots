@@ -39,7 +39,7 @@ def start():
             showusage()
         else:
             showusage()
-    
+
     #***init general: find locating of bots, configfiles, init paths etc.***********************
     botsinit.generalinit(configdir)
 
@@ -47,20 +47,20 @@ def start():
     botsglobal.logger = logging.getLogger('bots-webserver')
     #logging for logfile
     botsglobal.logger.setLevel(logging.DEBUG)
-    h = TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'), backupCount=10)
+    handler = TimedRotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),'webserver.log'), backupCount=10)
     fileformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
-    h.setFormatter(fileformat)
-    botsglobal.logger.addHandler(h)
+    handler.setFormatter(fileformat)
+    botsglobal.logger.addHandler(handler)
     #logging for console/screen
     if botsglobal.ini.getboolean('webserver','webserver_log_console',True):      #handling for logging to screen
-        convertini2logger={'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
+        convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
         logging.addLevelName(25, 'STARTINFO')
         console = logging.StreamHandler()
         console.setLevel(convertini2logger[botsglobal.ini.get('webserver','webserver_log_console_level','STARTINFO')])
         consuleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
         console.setFormatter(consuleformat) # add formatter to console
         botsglobal.logger.addHandler(console)  # add console to logger
-    
+
     #***init cherrypy as webserver*********************************************
     #global configuration for cherrypy
     cherrypy.config.update({'global': {'log.screen': False, 'server.environment': botsglobal.ini.get('webserver','environment','production')}})
@@ -89,7 +89,7 @@ def start():
         botsglobal.logger.log(25,_(u'Bots web-server uses ssl (https).'))
     else:
         botsglobal.logger.log(25,_(u'Bots web-server uses plain http (no ssl).'))
-    
+
     #***start the cherrypy webserver.************************************************
     try:
         botswebserver.start()
@@ -97,5 +97,5 @@ def start():
         botswebserver.stop()
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     start()

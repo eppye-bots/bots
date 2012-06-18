@@ -33,7 +33,7 @@ class BotsConfig(ConfigParser.SafeConfigParser):
             return default
 
 def generalinit(configdir):
-    #Set Configdir 
+    #Set Configdir
     #Configdir MUST be importable. So configdir is relative to PYTHONPATH. Try several options for this import.
     try:                        #configdir outside bots-directory: import configdir.settings.py
         importnameforsettings = os.path.normpath(os.path.join(configdir,'settings')).replace(os.sep,'.')
@@ -52,17 +52,17 @@ def generalinit(configdir):
             importnameforsettings = os.path.normpath(os.path.join(moduletoimport,'settings')).replace(os.sep,'.')
             settings = botslib.botsbaseimport(importnameforsettings)
     #settings are accessed using botsglobal
-    botsglobal.settings = settings  
+    botsglobal.settings = settings
     #Find pathname configdir using imported settings.py.
     configdirectory = os.path.abspath(os.path.dirname(settings.__file__))
-            
+
     #Read configuration-file bots.ini.
     botsglobal.ini = BotsConfig()
     cfgfile = open(os.path.join(configdirectory,'bots.ini'), 'r')
     botsglobal.ini.readfp(cfgfile)
     cfgfile.close()
-    
-    #Set usersys. 
+
+    #Set usersys.
     #usersys MUST be importable. So usersys is relative to PYTHONPATH. Try several options for this import.
     usersys = botsglobal.ini.get('directories','usersys','usersys')
     try:                        #usersys outside bots-directory: import usersys
@@ -81,19 +81,19 @@ def generalinit(configdir):
             sys.path.append(addtopythonpath)
             importnameforusersys = os.path.normpath(usersys).replace(os.sep,'.')
             importedusersys = botslib.botsbaseimport(importnameforusersys)
-            
+
     #set directory settings in bots.ini************************************************************
     botsglobal.ini.set('directories','botspath',botsglobal.settings.PROJECT_PATH)
     botsglobal.ini.set('directories','config',configdirectory)
     botsglobal.ini.set('directories','usersysabs',os.path.abspath(os.path.dirname(importedusersys.__file__)))    #???Find pathname usersys using imported usersys
-    
+
     botsglobal.usersysimportpath = importnameforusersys
     botssys = botsglobal.ini.get('directories','botssys','botssys')
     botsglobal.ini.set('directories','botssys',botslib.join(botssys))
-    
+
     botsglobal.ini.set('directories','data',botslib.join(botssys,'data'))
     botslib.dirshouldbethere(botsglobal.ini.get('directories','data'))
-    
+
     botsglobal.ini.set('directories','logging',botslib.join(botssys,'logging'))
     botslib.dirshouldbethere(botsglobal.ini.get('directories','logging'))
     botsglobal.ini.set('directories','templates',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/template/templates'))
@@ -114,7 +114,7 @@ def generalinit(configdir):
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     initbotscharsets()
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #
-    
+
     #convert django 1.4 database settings to django 1.3 format; code cna be changed when django 1.2 not supported anymore
     if django.VERSION[1] >= 4:
         #~ print botsglobal.settings.DATABASES['default'].get(ENGINE,'')
@@ -123,7 +123,7 @@ def generalinit(configdir):
         botsglobal.settings.DATABASE_USER   = botsglobal.settings.DATABASES['default'].get('USER','')
         botsglobal.settings.DATABASE_HOST   = botsglobal.settings.DATABASES['default'].get('HOST','')
         botsglobal.settings.DATABASE_PORT   = botsglobal.settings.DATABASES['default'].get('PORT','')
-        botsglobal.settings.DATABASE_OPTIONS= botsglobal.settings.DATABASES['default'].get('OPTIONS','')
+        botsglobal.settings.DATABASE_OPTIONS = botsglobal.settings.DATABASES['default'].get('OPTIONS','')
 
 
 def initbotscharsets():
@@ -132,7 +132,7 @@ def initbotscharsets():
     botsglobal.botsreplacechar = unicode(botsglobal.ini.get('settings','botsreplacechar',u' '))
     codecs.register_error('botsreplace', botscharsetreplace)    #define the ' botsreplace' error handling for codecs/charsets.
     for key, value in botsglobal.ini.items('charsets'): #set aliases for charsets in bots.ini
-        encodings.aliases.aliases[key]=value
+        encodings.aliases.aliases[key] = value
 
 def codec_search_function(encoding):
     try:
@@ -150,7 +150,7 @@ def botscharsetreplace(info):
     return (botsglobal.botsreplacechar, info.start+1)
 
 def initenginelogging():
-    convertini2logger={'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL}
+    convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL}
     # create main logger 'bots'
     botsglobal.logger = logging.getLogger('bots')
     botsglobal.logger.setLevel(logging.DEBUG)
@@ -188,10 +188,10 @@ def connect():
     elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
         import MySQLdb
         from MySQLdb import cursors
-        botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASE_HOST, 
-                                        port=int(botsglobal.settings.DATABASE_PORT), 
-                                        db=botsglobal.settings.DATABASE_NAME, 
-                                        user=botsglobal.settings.DATABASE_USER, 
+        botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASE_HOST,
+                                        port=int(botsglobal.settings.DATABASE_PORT),
+                                        db=botsglobal.settings.DATABASE_NAME,
+                                        user=botsglobal.settings.DATABASE_USER,
                                         passwd=botsglobal.settings.DATABASE_PASSWORD,
                                         cursorclass=cursors.DictCursor,
                                         **botsglobal.settings.DATABASE_OPTIONS)

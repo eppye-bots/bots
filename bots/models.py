@@ -1,9 +1,7 @@
-from datetime import datetime
+#~ from datetime import datetime
 from django.db import models
 from django.utils.translation import ugettext as _
-'''
-django is not excellent in generating db. But they have provided a way to customize the generated database using SQL. see bots/sql/*.
-'''
+#django is not excellent in generating db. But they have provided a way to customize the generated database using SQL. see bots/sql/*.
 
 STATUST = [
     (0, _(u'Open')),
@@ -279,7 +277,7 @@ class translate(botsmodel):
         ordering = ['fromeditype','frommessagetype']
     def __unicode__(self):
         return unicode(self.fromeditype) + u' ' + unicode(self.frommessagetype) + u' ' + unicode(self.alt) + u' ' + unicode(self.frompartner) + u' ' + unicode(self.topartner)
-class routes(botsmodel):  
+class routes(botsmodel):
     #~ id = models.IntegerField(primary_key=True)
     idroute = StripCharField(max_length=35,db_index=True,help_text=_(u'identification of route; one route can consist of multiple parts having the same "idroute".'))
     seq = models.PositiveIntegerField(default=1,help_text=_(u'for routes consisting of multiple parts, "seq" indicates the order these parts are run.'))
@@ -353,12 +351,12 @@ class mutex(botsmodel):
     class Meta:
         db_table = 'mutex'
 class persist(botsmodel):
-    #OK, this has gone wrong. There is no primary key here, so django generates this. But there is no ID in the custom sql. 
+    #OK, this has gone wrong. There is no primary key here, so django generates this. But there is no ID in the custom sql.
     #Django still uses the ID in sql manager. This leads to an error in snapshot plugin. Disabled this in snapshot function; to fix this really database has to be changed.
     #specific SQL is used (database defaults are used)
     domein = StripCharField(max_length=35)
     botskey = StripCharField(max_length=35)
-    content = StripCharField(max_length=1024) 
+    content = StripCharField(max_length=1024)
     ts = models.DateTimeField()
     class Meta:
         db_table = 'persist'
@@ -383,7 +381,7 @@ class report(botsmodel):
 #~ CREATE TRIGGER uselocaltime  AFTER INSERT ON ta
 #~ BEGIN
 #~ UPDATE ta
-#~ SET ts = datetime('now','localtime') 
+#~ SET ts = datetime('now','localtime')
 #~ WHERE idta = new.idta ;
 #~ END;
 class ta(botsmodel):

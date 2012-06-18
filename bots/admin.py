@@ -1,13 +1,11 @@
 import django
 from django.contrib import admin
 from django.utils.translation import ugettext as _
-from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.contrib.admin.util import unquote, flatten_fieldsets, get_deleted_objects, model_ngettext, model_format_dict
+from django.http import Http404, HttpResponseRedirect
+from django.contrib.admin.util import unquote
 from django.core.exceptions import PermissionDenied
 from django.utils.encoding import force_unicode
 from django.utils.html import escape
-from django.utils.safestring import mark_safe
-from django.utils.text import capfirst, get_text_list
 #***********
 import models
 import botsglobal
@@ -40,12 +38,14 @@ class BotsAdmin(admin.ModelAdmin):
         if not self.has_change_permission(request, None):
             return HttpResponseRedirect("../../../../")
         return HttpResponseRedirect("../../")
+
     def activate(self, request, queryset):
         ''' admin action.'''
         for obj in queryset:
             obj.active = not obj.active
             obj.save()
     activate.short_description = _(u'activate/de-activate')
+
     def bulk_delete(self, request, queryset):
         ''' admin action.'''
         for obj in queryset:
@@ -115,7 +115,7 @@ class MyPartnerAdminForm(django.forms.ModelForm):
         model = models.partner
     def clean(self):
         super(MyPartnerAdminForm, self).clean()
-        if self.cleaned_data['isgroup'] and self.cleaned_data['group']: 
+        if self.cleaned_data['isgroup'] and self.cleaned_data['group']:
             raise django.forms.util.ValidationError(_(u'A group can not be part of a group.'))
         return self.cleaned_data
 
@@ -145,7 +145,7 @@ class RoutesAdmin(BotsAdmin):
                     'classes':  ('collapse',)
                     }),
         (_(u'Advanced'),{'fields':  ('alt', 'frompartner', 'topartner', 'notindefaultrun','defer'),
-                     'classes': ('collapse',) 
+                     'classes': ('collapse',)
                     }),
     )
 admin.site.register(models.routes,RoutesAdmin)
@@ -156,12 +156,12 @@ class MyTranslateAdminForm(django.forms.ModelForm):
         model = models.translate
     def clean(self):
         super(MyTranslateAdminForm, self).clean()
-        b = models.translate.objects.filter(fromeditype=self.cleaned_data['fromeditype'],
+        blub = models.translate.objects.filter(fromeditype=self.cleaned_data['fromeditype'],
                                             frommessagetype=self.cleaned_data['frommessagetype'],
                                             alt=self.cleaned_data['alt'],
                                             frompartner=self.cleaned_data['frompartner'],
                                             topartner=self.cleaned_data['topartner'])
-        if b and (self.instance.pk is None or self.instance.pk != b[0].id):
+        if blub and (self.instance.pk is None or self.instance.pk != blub[0].id):
             raise django.forms.util.ValidationError(_(u'Combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists.'))
         return self.cleaned_data
 
@@ -193,7 +193,7 @@ admin.site.register(models.uniek,UniekAdmin)
 #User - change the default display of user screen
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-UserAdmin.list_display = ('username', 'first_name', 'last_name','email', 'is_active', 'is_staff', 'is_superuser', 'date_joined','last_login') 
+UserAdmin.list_display = ('username', 'first_name', 'last_name','email', 'is_active', 'is_staff', 'is_superuser', 'date_joined','last_login')
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 

@@ -18,7 +18,7 @@ from botsconfig import *
 #*******************************************************************************************************************
 from botslib import addinfo,updateinfo,changestatustinfo,checkunique
 from envelope import mergemessages
-from communication import run 
+from communication import run
 
 @botslib.log_session
 def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
@@ -39,7 +39,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                 ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
-            ta_fromfile=botslib.OldTransaction(row['idta'])  #TRANSLATE ta
+            ta_fromfile = botslib.OldTransaction(row['idta'])  #TRANSLATE ta
             ta_parsedfile = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented a a tree.
             edifile = inmessage.edifromfile(frompartner=row['frompartner'],
@@ -56,7 +56,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
             botsglobal.logger.debug(u'start read and parse input file "%s" editype "%s" messagetype "%s".',row['filename'],row['editype'],row['messagetype'])
             for inn in edifile.nextmessage():   #for each message in the edifile:
                 #inn.ta_info: parameters from inmessage.edifromfile(), syntax-information and parse-information
-                ta_frommes=ta_parsedfile.copyta(status=SPLITUP)    #copy PARSED to SPLITUP ta
+                ta_frommes = ta_parsedfile.copyta(status=SPLITUP)    #copy PARSED to SPLITUP ta
                 inn.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in user script; used to give idta of 'confirming message'
                 ta_frommes.update(**inn.ta_info)    #update ta-record SLIPTUP with info from message content and/or grammar
                 while 1:    #whileloop continues as long as there are alt-translations
@@ -90,9 +90,9 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                                                                                             frompartner=inn.ta_info['frompartner'],
                                                                                                             topartner=inn.ta_info['topartner'],
                                                                                                             alt=inn.ta_info['alt'])
-                    ta_tomes=ta_frommes.copyta(status=endstatus)  #copy SPLITUP to TRANSLATED ta
+                    ta_tomes = ta_frommes.copyta(status=endstatus)  #copy SPLITUP to TRANSLATED ta
                     tofilename = str(ta_tomes.idta)
-                    tscript=row2['tscript']
+                    tscript = row2['tscript']
                     tomessage = outmessage.outmessage_init(messagetype=row2['tomessagetype'],editype=row2['toeditype'],filename=tofilename,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                     #copy ta_info
                     botsglobal.logger.debug(u'script "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn.ta_info['messagetype'],tomessage.ta_info['messagetype'])
@@ -100,7 +100,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                     doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn,out=tomessage)
                     botsglobal.logger.debug(u'script "%s" finished.',tscript)
                     if 'topartner' not in tomessage.ta_info:    #tomessage does not contain values from ta......
-                        tomessage.ta_info['topartner']=inn.ta_info['topartner']
+                        tomessage.ta_info['topartner'] = inn.ta_info['topartner']
                     if tomessage.ta_info['statust'] == DONE:    #if indicated in user script the message should be discarded
                         botsglobal.logger.debug(u'No output file because mapping script explicitly indicated this.')
                         tomessage.ta_info['filename'] = ''
@@ -131,7 +131,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                         del tomessage
                         inn.ta_info['alt'] = doalttranslation   #get the alt-value for the next chainded translation
                 #end of while-loop
-                
+
                 #
                 #~ print inn.ta_info
                 ta_frommes.update(statust=DONE,**inn.ta_info)   #update db. inn.ta_info could be changed by script. Is this useful?
@@ -140,7 +140,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         #exceptions file_in-level
         except:
             #~ edifile.handleconfirm(ta_fromfile,error=True)    #only useful if errors are reported in acknowledgement (eg x12 997). Not used now.
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             ta_parsedfile.failure()
             ta_parsedfile.update(statust=ERROR,errortext=txt)
             botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
@@ -152,7 +152,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
             del edifile
 
 #*********************************************************************
-#*** utily functions for persist: store things in the bots database. 
+#*** utily functions for persist: store things in the bots database.
 #*** this is intended as a memory stretching across messages.
 #*********************************************************************
 def persist_add(domein,botskey,value):
@@ -174,7 +174,7 @@ def persist_update(domein,botskey,value):
     content = pickle.dumps(value,0)
     if botsglobal.settings.DATABASE_ENGINE != 'sqlite3' and len(content)>1024:
         raise botslib.PersistError(_(u'Data too long for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
-    botslib.change(u'''UPDATE persist 
+    botslib.change(u'''UPDATE persist
                           SET content=%(content)s
                         WHERE domein=%(domein)s
                           AND botskey=%(botskey)s''',
@@ -259,7 +259,7 @@ def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):
 safercodetconversion = safe_reverse_ccode
 
 def getcodeset(ccodeid,leftcode,field='rightcode'):
-    ''' Get a code set 
+    ''' Get a code set
     '''
     return list(botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
@@ -272,7 +272,7 @@ def getcodeset(ccodeid,leftcode,field='rightcode'):
 #***code conversion via file. 20111116: depreciated
 def safecodeconversion(modulename,value):
     ''' converts code using a codelist.
-        converted value is returned. 
+        converted value is returned.
         codelist is first imported from file in codeconversions (lookup right place/mudule in bots.ini)
     '''
     module,filename = botslib.botsimport('codeconversions',modulename)
@@ -283,7 +283,7 @@ def safecodeconversion(modulename,value):
 
 def codeconversion(modulename,value):
     ''' converts code using a codelist.
-        converted value is returned. 
+        converted value is returned.
         codelist is first imported from file in codeconversions (lookup right place/mudule in bots.ini)
     '''
     module,filename = botslib.botsimport('codeconversions',modulename)
@@ -324,7 +324,7 @@ def calceancheckdigit(ean):
             raise botslib.EanError(_(u'GTIN "$ean" should be string with only numericals'),ean=ean)
     except AttributeError:
         raise botslib.EanError(_(u'GTIN "$ean" should be string, but is a "$type"'),ean=ean,type=type(ean))
-    sum1=sum([int(x)*3 for x in ean[-1::-2]]) + sum([int(x) for x in ean[-2::-2]])
+    sum1 = sum([int(x)*3 for x in ean[-1::-2]]) + sum([int(x) for x in ean[-2::-2]])
     return str((1000-sum1)%10)
 
 def calceancheckdigit2(ean):
@@ -336,7 +336,7 @@ def calceancheckdigit2(ean):
         sum1 += int(i) * factor
         factor = 4 - factor         #factor flip-flops between 3 and 1...
     return str(((1000 - sum1) % 10))
-    
+
 def checkean(ean):
     ''' input: EAN; returns: True (valid EAN) of False (EAN not valid)'''
     return (ean[-1] == calceancheckdigit(ean[:-1]))
@@ -359,28 +359,28 @@ def inn2out(inn,out):
     ''' copies inn-message to outmessage
     '''
     out.root = copy.deepcopy(inn.root)
-    
+
 def useoneof(*args):
     for arg in args:
         if arg:
             return arg
     else:
         return None
-    
+
 def dateformat(date):
     ''' for edifact: return right format code for the date. '''
     if not date:
         return None
-    if len(date)==8:
+    if len(date) == 8:
         return '102'
-    if len(date)==12:
+    if len(date) == 12:
         return '203'
-    if len(date)==16:
+    if len(date) == 16:
         return '718'
     return None
 
 def datemask(value,frommask,tomask):
-    ''' value is formatted according as in frommask; 
+    ''' value is formatted according as in frommask;
         returned is the value formatted according to tomask.
         example: datemask('12/31/2012','MM/DD/YYYY','YYYYMMDD') returns '20121231'
     '''
@@ -393,8 +393,8 @@ def datemask(value,frommask,tomask):
     terug = ''
     try:
         # alternative implementation: return ''.join([convdict.get(c,[c]).pop(0) for c in tomask])     #very short, but not faster....
-        for c in tomask:
-            terug += convdict.get(c,[c]).pop(0)     #for this character, lookup value in convdict (a list). pop(0) this list: get first member of list, and drop it. If char not in convdict as key, use char itself.
+        for char in tomask:
+            terug += convdict.get(char,[char]).pop(0)     #for this character, lookup value in convdict (a list). pop(0) this list: get first member of list, and drop it. If char not in convdict as key, use char itself.
     except:
         raise botslib.BotsError(_(u'Error in function datamask("$value", "$frommask", "$tomask").'),value=value,frommask=frommask,tomask=tomask)
     return terug

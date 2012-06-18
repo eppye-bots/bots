@@ -1,4 +1,4 @@
-import os
+#~ import os
 import re
 import zipfile
 from django.utils.translation import ugettext as _
@@ -37,10 +37,10 @@ def preprocess(routedict,function, status=FILEIN,**argv):
             botsglobal.logmap.debug(u'Start preprocessing "%s" for file "%s".',function.__name__,row['filename'])
             ta_set_for_processing = botslib.OldTransaction(row['idta'])
             ta_processing = ta_set_for_processing.copyta(status=preprocessnumber+1)
-            ta_processing.filename=row['filename']
+            ta_processing.filename = row['filename']
             function(ta_from=ta_processing,endstatus=status,routedict=routedict,**argv)
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             ta_processing.failure()
             ta_processing.update(statust=ERROR,errortext=txt)
         else:
@@ -51,7 +51,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
     return nr_files
 
 
-header = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))|(\s*(STX=))',re.DOTALL)
+HEADER = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))|(\s*(STX=))',re.DOTALL)
 #           group:    1   2       3  4            5        6         7                8   9
 
 def mailbag(ta_from,endstatus,**argv):
@@ -68,58 +68,58 @@ def mailbag(ta_from,endstatus,**argv):
         - handle multiple x12 seperators in one file.
     '''
     edifile = botslib.readdata(filename=ta_from.filename)       #read as binary...
-    startpos=0
+    startpos = 0
     while (1):
-        found = header.search(edifile[startpos:])
+        found = HEADER.search(edifile[startpos:])
         if found is None:
             if startpos:    #ISA/UNB have been found in file; no new ISA/UNB is found. So all processing is done.
                 break
             #guess if this is an xml file.....
             sniffxml = edifile[:25]
             sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first ' real' data; some char are because of BOM, UTF-16 etc
-            if sniffxml and sniffxml[0]=='<':
-                ta_to=ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag')  #make transaction for translated message; gets ta_info of ta_frommes
+            if sniffxml and sniffxml[0] == '<':
+                ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag')  #make transaction for translated message; gets ta_info of ta_frommes
                 #~ ta_tomes.update(status=STATUSTMP,statust=OK,filename=ta_set_for_processing.filename,editype='xml') #update outmessage transaction with ta_info;
-                break;
+                break
             else:
                 raise botslib.InMessageError(_(u'Found no content in mailbag.'))
         elif found.group(1):
-            editype='x12'
-            headpos=startpos+ found.start(2)
-            count=0
-            for c in edifile[headpos:headpos+120]:  #search first 120 characters to find separators
-                if c in '\r\n' and count!=105:
+            editype = 'x12'
+            headpos = startpos + found.start(2)
+            count = 0
+            for char in edifile[headpos:headpos+120]:  #search first 120 characters to find separators
+                if char in '\r\n' and count != 105:
                     continue
-                count +=1
-                if count==4:
-                    field_sep = c
-                elif count==106:
-                    record_sep = c
+                count += 1
+                if count == 4:
+                    field_sep = char
+                elif count == 106:
+                    record_sep = char
                     break
             #~ foundtrailer = re.search(re.escape(record_sep)+'\s*IEA'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
             foundtrailer = re.search(re.escape(record_sep)+'\s*I\s*E\s*A\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
         elif found.group(3):
-            editype='edifact'
+            editype = 'edifact'
             if found.group(4):
                 field_sep = edifile[startpos + found.start(4) + 4]
                 record_sep = edifile[startpos + found.start(4) + 8]
-                headpos=startpos+ found.start(4)
+                headpos = startpos + found.start(4)
             else:
                 field_sep = '+'
                 record_sep = "'"
-                headpos=startpos+ found.start(5)
+                headpos = startpos + found.start(5)
             foundtrailer = re.search(re.escape(record_sep)+'\s*U\s*N\s*Z\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
         elif found.group(8):
-            editype='tradacoms'
-            headpos=startpos+ found.start(9)
+            editype = 'tradacoms'
+            headpos = startpos + found.start(9)
             field_sep = '='     #the tradacoms 'after-segment-tag-seperator'
             record_sep = "'"
             foundtrailer = re.search(re.escape(record_sep)+'\s*E\s*N\s*D\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
         if not foundtrailer:
             raise botslib.InMessageError(_(u'Found no valid envelope trailer in mailbag.'))
-        endpos = headpos+foundtrailer.end()
+        endpos = headpos + foundtrailer.end()
         #so: interchange is from headerpos untill endpos
-        #~ if header.search(edifile[headpos+25:endpos]):   #check if there is another header in the interchange
+        #~ if HEADER.search(edifile[headpos+25:endpos]):   #check if there is another header in the interchange
             #~ raise botslib.InMessageError(u'Error in mailbag format: found no valid envelope trailer.')
         ta_to = ta_from.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
         tofilename = str(ta_to.idta)
@@ -127,7 +127,7 @@ def mailbag(ta_from,endstatus,**argv):
         tofile.write(edifile[headpos:endpos])
         tofile.close()
         ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype) #update outmessage transaction with ta_info;
-        startpos=endpos
+        startpos = endpos
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
 
 def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
@@ -143,7 +143,7 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
             ta_to = ta_from.copyta(status=endstatus,statust=OK)
             return
         raise botslib.InMessageError(_(u'File is not a zip-file.'))
-        
+
     if password:
         z.setpassword(password)
     for f in z.infolist():
@@ -154,7 +154,7 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         tofile = botslib.opendata(tofilename,'wb')
         tofile.write(z.read(f.filename))
         tofile.close()
-        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info; 
+        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
 
 def extractpdf(ta_from,endstatus,**argv):
@@ -210,12 +210,12 @@ def extractpdf(ta_from,endstatus,**argv):
 
                 # group the x values (fields) within group tolerance
                 p = 0
-                field_txt=''
+                field_txt = ''
                 for x in sorted(line.keys()):
                     gap = x - p
                     if p > 0 and gap > x_group:
                         csvdata.append(field_txt)
-                        field_txt=''
+                        field_txt = ''
                     field_txt += line[x]
                     p = x
                 csvdata.append(field_txt)
@@ -234,7 +234,7 @@ def extractpdf(ta_from,endstatus,**argv):
     charset = argv.get('charset','utf-8')
     if not escape:
         doublequote = True
-    else: 
+    else:
         doublequote = False
 
     try:
@@ -252,10 +252,10 @@ def extractpdf(ta_from,endstatus,**argv):
         device.close()
         pdf_stream.close()
         csv_stream.close()
-        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info; 
+        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
-        txt=botslib.txtexc()
+        txt = botslib.txtexc()
         botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error:\n%s'),txt)
         raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error:\n$error'),error=txt)
 
@@ -287,7 +287,7 @@ def extractexcel(ta_from,endstatus,**argv):
         #  Clean up the incoming excel data for some data types
         returnrow = []
         if   type == 2:
-            if value == int(value): 
+            if value == int(value):
                 value = int(value)
         elif type == 3:
             datetuple = xlrd.xldate_as_tuple(value, book.datemode)
@@ -300,7 +300,7 @@ def extractexcel(ta_from,endstatus,**argv):
         # Turns a gregorian (year, month, day, hour, minute, nearest_second) into a
         # standard YYYY-MM-DDTHH:MM:SS ISO date.
         (y,m,d, hh,mm,ss) = tupledate
-        nonzero = lambda n: n!=0
+        nonzero = lambda n: n != 0
         date = "%04d-%02d-%02d"  % (y,m,d)    if filter(nonzero, (y,m,d))                else ''
         time = "T%02d:%02d:%02d" % (hh,mm,ss) if filter(nonzero, (hh,mm,ss)) or not date else ''
         return date+time
@@ -318,7 +318,7 @@ def extractexcel(ta_from,endstatus,**argv):
     escape = argv.get('escape','')
     if escape:
         doublequote = False
-    else: 
+    else:
         doublequote = True
     try:
         infilename = botslib.abspathdata(ta_from.filename)
@@ -326,10 +326,10 @@ def extractexcel(ta_from,endstatus,**argv):
         ta_to = ta_from.copyta(status=endstatus)
         tofilename = str(ta_to.idta)
         dump_csv(xlsdata,tofilename)
-        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info; 
+        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
-        txt=botslib.txtexc()
+        txt = botslib.txtexc()
         botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error:\n%s'),txt)
         raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error:\n$error'),error=txt)
 

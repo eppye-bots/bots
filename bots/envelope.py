@@ -33,22 +33,22 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
             #~ for key in row.keys():
                 #~ ta_info[key] = row[key]
             ta_fromfile = botslib.OldTransaction(row['idta'])    #edi message to envelope
-            ta_tofile=ta_fromfile.copyta(status=endstatus)  #edifile for enveloped message; attributes of not-enveloped message are copied...
+            ta_tofile = ta_fromfile.copyta(status=endstatus)  #edifile for enveloped message; attributes of not-enveloped message are copied...
             #~ ta_fromfile.update(child=ta_tofile.idta)        #??there is already a parent-child relation (1-1)...
             ta_info['filename'] = str(ta_tofile.idta)   #create filename for enveloped message
             botsglobal.logger.debug(u'Envelope 1 message editype: %s, messagetype: %s.',ta_info['editype'],ta_info['messagetype'])
             envelope(ta_info,[row['filename']])
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             ta_tofile.update(statust=ERROR,errortext=txt)
         else:
             ta_fromfile.update(statust=DONE)
             ta_tofile.update(statust=OK,**ta_info)  #selection is used to update enveloped message;
-            
+
     #**********for messages to merge & envelope
     #all GROUP BY fields must be used in SELECT!
     #as files get merged: can not copy idta; must extract relevant attributes.
-    outerqueryparameters['merge']=True
+    outerqueryparameters['merge'] = True
     for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,tochannel,testindicator,charset,contenttype,envelope,sum(nrmessages) as nrmessages
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
@@ -64,11 +64,11 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
             ta_info.update({'merge':False,'idroute':idroute})
             #~ for key in row.keys():
                 #~ ta_info[key] = row[key]
-            ta_tofile=botslib.NewTransaction(status=endstatus,idroute=idroute)  #edifile for enveloped messages
+            ta_tofile = botslib.NewTransaction(status=endstatus,idroute=idroute)  #edifile for enveloped messages
             ta_info['filename'] = str(ta_tofile.idta)                           #create filename for enveloped message
             innerqueryparameters = ta_info.copy()
             innerqueryparameters.update(outerqueryparameters)
-            ta_list=[]
+            ta_list = []
             #gather individual idta and filenames
             #explicitly allow formpartner/topartner to be None/NULL
             for row2 in botslib.query(u'''SELECT idta, filename
@@ -85,7 +85,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
                                                     AND testindicator=%(testindicator)s
                                                     AND charset=%(charset)s
                                                     AND idroute=%(idroute)s
-                                                    ''', 
+                                                    ''',
                                                     innerqueryparameters):
                 ta_fromfile = botslib.OldTransaction(row2['idta'])           #edi message to envelope
                 ta_fromfile.update(statust=DONE,child=ta_tofile.idta)   #st child because of n->1 relation
@@ -93,7 +93,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
             botsglobal.logger.debug(u'Merge and envelope: editype: %s, messagetype: %s, %s messages',ta_info['editype'],ta_info['messagetype'],ta_info['nrmessages'])
             envelope(ta_info,ta_list)
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             ta_tofile.mergefailure()
             ta_tofile.update(statust=ERROR,errortext=txt)
         else:
@@ -103,14 +103,14 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
 def envelope(ta_info,ta_list):
     ''' dispatch function for class Envelope and subclasses.
         editype, edimessage and envelope essential for enveloping.
-        
+
         determine the class for enveloping:
         1. empty string: no enveloping (class noenvelope); file(s) is/are just copied. No user scripting for envelope.
         2. if envelope is a class in this module, use it
         3. if editype is a class in this module, use it
         4. if user defined enveloping in usersys/envelope/<editype>/<envelope>.<envelope>, use it (user defined scripting overrides)
-        
-        Always check if user envelope script. user exits extends/replaces default enveloping. 
+
+        Always check if user envelope script. user exits extends/replaces default enveloping.
     '''
     #determine which class to use for enveloping
     userscript = scriptname = None
@@ -131,7 +131,7 @@ def envelope(ta_info,ta_list):
             except KeyError:
                 try:    #check if there is a envelope class with name ta_info['editype'] in this file (envelope.py).
                         #20110919: this should disappear in the long run....use this now for orders2printenvelope and myxmlenvelop
-                        #reason to disappear: confusing when setting up. 
+                        #reason to disappear: confusing when setting up.
                     classtocall = globals()[ta_info['editype']]
                 except KeyError:
                     raise botslib.OutMessageError(_(u'Not found envelope "$envelope".'),envelope=ta_info['editype'])
@@ -151,7 +151,7 @@ class Envelope(object):
         #self.ta_info now contains information from ta: editype, messagetype,testindicator,charset,envelope, contenttype
         self.out = outmessage.outmessage_init(**self.ta_info)    #make outmessage object. Init with self.out.ta_info
         #read grammar for envelopesyntax. Remark: self.ta_info is not updated now
-        self.out.outmessagegrammarread(editype, messagetype_or_envelope)    
+        self.out.outmessagegrammarread(editype, messagetype_or_envelope)
         #self.out.ta_info can contain partner dependent parameters. the partner dependent parameters have overwritten parameters fro mmessage/envelope
 
     def writefilelist(self,tofile):
@@ -174,10 +174,10 @@ class noenvelope(Envelope):
 
 class fixed(noenvelope):
     pass
-    
+
 class csv(noenvelope):
     pass
-    
+
 class csvheader(Envelope):
     def run(self):
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
@@ -187,7 +187,7 @@ class csvheader(Envelope):
         headers = dict([(field[ID],field[ID]) for field in self.out.defmessage.structure[0][FIELDS]])
         self.out.put(headers)
         self.out.tree2records(self.out.root)
-        tofile.write(self.out._record2string(self.out.records[0]))
+        tofile.write(self.out.record2string(self.out.records[0]))
         self.writefilelist(tofile)
         tofile.close()
 
@@ -196,32 +196,32 @@ class edifact(Envelope):
     def run(self):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
             raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "$ta_info".'),ta_info=self.ta_info)
-            
+
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
-        
+
         #version dependent enveloping
-        writeUNA = False
-        if self.ta_info['version']<'4':
+        write_una = False
+        if self.ta_info['version'] < '4':
             date = time.strftime('%y%m%d')
             reserve = ' '
             if self.ta_info['charset'] != 'UNOA':
-                writeUNA = True
+                write_una = True
         else:
             date = time.strftime('%Y%m%d')
             reserve = self.ta_info['reserve']
             if self.ta_info['charset'] not in ['UNOA','UNOB']:
-                writeUNA = True
-        
+                write_una = True
+
         #UNB counter is per sender or receiver
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
             self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['topartner']))
         else:
             self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['frompartner']))
-        
+
         #testindicator is more complex:
-        if self.ta_info['testindicator'] and self.ta_info['testindicator']!='0':    #first check value from ta; do not use default
+        if self.ta_info['testindicator'] and self.ta_info['testindicator'] != '0':    #first check value from ta; do not use default
             testindicator = '1'
         elif self.ta_info['UNB.0035'] != '0':   #than check values from grammar
             testindicator = '1'
@@ -250,16 +250,16 @@ class edifact(Envelope):
         #convert the tree into segments; here only the UNB is written (first segment)
         self.out.checkmessage(self.out.root,self.out.defmessage)
         self.out.tree2records(self.out.root)
-        
+
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        if writeUNA or self.ta_info['forceUNA']:
+        if write_una or self.ta_info['forceUNA']:
             tofile.write('UNA'+self.ta_info['sfield_sep']+self.ta_info['field_sep']+self.ta_info['decimaal']+self.ta_info['escape']+ reserve +self.ta_info['record_sep']+self.ta_info['add_crlfafterrecord_sep'])
-        tofile.write(self.out._record2string(self.out.records[0]))
+        tofile.write(self.out.record2string(self.out.records[0]))
         self.writefilelist(tofile)
-        tofile.write(self.out._record2string(self.out.records[-1]))
+        tofile.write(self.out.record2string(self.out.records[-1]))
         tofile.close()
-        if self.ta_info['messagetype'][:6]!='CONTRL' and botslib.checkconfirmrules('ask-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
+        if self.ta_info['messagetype'][:6] != 'CONTRL' and botslib.checkconfirmrules('ask-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
                                                                                 editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype']):
             self.ta_info['confirmtype'] = u'ask-edifact-CONTRL'
@@ -302,12 +302,12 @@ class tradacoms(Envelope):
         #convert the tree into segments; here only the STX is written (first segment)
         self.out.checkmessage(self.out.root,self.out.defmessage)
         self.out.tree2records(self.out.root)
-        
+
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        tofile.write(self.out._record2string(self.out.records[0]))
+        tofile.write(self.out.record2string(self.out.records[0]))
         self.writefilelist(tofile)
-        tofile.write(self.out._record2string(self.out.records[-1]))
+        tofile.write(self.out.record2string(self.out.records[-1]))
         tofile.close()
 
 
@@ -320,7 +320,7 @@ class template(Envelope):
         try:
             import kid
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid". Error:\n%s'%txt))
         defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
         self.ta_info.update(defmessage.syntax)
@@ -333,15 +333,15 @@ class template(Envelope):
             botsglobal.logger.debug(u'Start writing envelope to file "%s".',self.ta_info['filename'])
             ediprint = kid.Template(file=templatefile, data=ta_list) #init template; pass list with filenames
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
         try:
-            f = botslib.opendata(self.ta_info['filename'],'wb')
-            ediprint.write(f,
+            filehandler = botslib.opendata(self.ta_info['filename'],'wb')
+            ediprint.write(filehandler,
                             encoding=self.ta_info['charset'],
                             output=self.ta_info['output'])
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
 
 
@@ -357,7 +357,7 @@ class templatehtml(Envelope):
         try:
             from genshi.template import TemplateLoader
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi". Error:\n%s'%txt))
         defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
         self.ta_info.update(defmessage.syntax)
@@ -371,14 +371,14 @@ class templatehtml(Envelope):
             loader = TemplateLoader(auto_reload=False)
             tmpl = loader.load(templatefile)
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
         try:
-            f = botslib.opendata(self.ta_info['filename'],'wb')
+            filehandler = botslib.opendata(self.ta_info['filename'],'wb')
             stream = tmpl.generate(data=ta_list)
-            stream.render(method='xhtml',encoding=self.ta_info['charset'],out=f)
+            stream.render(method='xhtml',encoding=self.ta_info['charset'],out=filehandler)
         except:
-            txt=botslib.txtexc()
+            txt = botslib.txtexc()
             raise botslib.OutMessageError(_(u'While enveloping in "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
 
 
@@ -394,10 +394,10 @@ class x12(Envelope):
         self.ta_info['functionalgroup'] = defmessage.syntax['functionalgroup']
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #prepare data for envelope
-        ISA09date = time.strftime('%y%m%d')
+        isa09date = time.strftime('%y%m%d')
         #test indicator can either be from configuration (self.ta_info['ISA15']) or by mapping (self.ta_info['testindicator'])
-        #mapping overrules. 
-        if self.ta_info['testindicator'] and self.ta_info['testindicator']!='0':    #'0' is default value (in db)
+        #mapping overrules.
+        if self.ta_info['testindicator'] and self.ta_info['testindicator'] != '0':    #'0' is default value (in db)
             testindicator = self.ta_info['testindicator']
         else:
             testindicator = self.ta_info['ISA15']
@@ -408,13 +408,13 @@ class x12(Envelope):
             self.ta_info['reference'] = str(botslib.unique('isacounter_' + self.ta_info['frompartner']))
         #ISA06 and GS02 can be different; eg ISA06 is a service provider.
         #ISA06 and GS02 can be in the syntax....
-        ISA06 = self.ta_info.get('ISA06',self.ta_info['frompartner'])
-        ISA06 = ISA06.ljust(15)    #add spaces; is fixed length
-        GS02 = self.ta_info.get('GS02',self.ta_info['frompartner'])
+        isa06sender = self.ta_info.get('ISA06',self.ta_info['frompartner'])
+        isa06sender = isa06sender.ljust(15)    #add spaces; is fixed length
+        gs02sender = self.ta_info.get('GS02',self.ta_info['frompartner'])
         #also for ISA08 and GS03
-        ISA08 = self.ta_info.get('ISA08',self.ta_info['topartner'])
-        ISA08 = ISA08.ljust(15)    #add spaces; is fixed length
-        GS03 = self.ta_info.get('GS03',self.ta_info['topartner'])
+        isa08receiver = self.ta_info.get('ISA08',self.ta_info['topartner'])
+        isa08receiver = isa08receiver.ljust(15)    #add spaces; is fixed length
+        gs03receiver = self.ta_info.get('GS03',self.ta_info['topartner'])
         #build the envelope segments (that is, the tree from which the segments will be generated)
         self.out.put({'BOTSID':'ISA',
                         'ISA01':self.ta_info['ISA01'],
@@ -422,10 +422,10 @@ class x12(Envelope):
                         'ISA03':self.ta_info['ISA03'],
                         'ISA04':self.ta_info['ISA04'],
                         'ISA05':self.ta_info['ISA05'],
-                        'ISA06':ISA06,
+                        'ISA06':isa06sender,
                         'ISA07':self.ta_info['ISA07'],
-                        'ISA08':ISA08,
-                        'ISA09':ISA09date,
+                        'ISA08':isa08receiver,
+                        'ISA09':isa09date,
                         'ISA10':time.strftime('%H%M'),
                         'ISA11':self.ta_info['ISA11'],      #if ISA version > 00403, replaced by reprtion separator
                         'ISA12':self.ta_info['version'],
@@ -433,20 +433,20 @@ class x12(Envelope):
                         'ISA14':self.ta_info['ISA14'],
                         'ISA15':testindicator},strip=False)         #MIND: strip=False: ISA fields shoudl not be stripped as it is soemwhat like fixed-length
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':'1','IEA02':self.ta_info['reference']})
-        GS08 = self.ta_info['messagetype'][3:]
-        if GS08[:6]<'004010':
-            GS04date = time.strftime('%y%m%d')
+        gs08messagetype = self.ta_info['messagetype'][3:]
+        if gs08messagetype[:6] < '004010':
+            gs04date = time.strftime('%y%m%d')
         else:
-            GS04date = time.strftime('%Y%m%d')
+            gs04date = time.strftime('%Y%m%d')
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'GS',
                                         'GS01':self.ta_info['functionalgroup'],
-                                        'GS02':GS02,
-                                        'GS03':GS03,
-                                        'GS04':GS04date,
+                                        'GS02':gs02sender,
+                                        'GS03':gs03receiver,
+                                        'GS04':gs04date,
                                         'GS05':time.strftime('%H%M'),
                                         'GS06':self.ta_info['reference'],
                                         'GS07':self.ta_info['GS07'],
-                                        'GS08':GS08})
+                                        'GS08':gs08messagetype})
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'GS'},{'BOTSID':'GE','GE01':self.ta_info['nrmessages'],'GE02':self.ta_info['reference']})  #dummy segment; is not used
         #user exit
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
@@ -455,18 +455,18 @@ class x12(Envelope):
         self.out.tree2records(self.out.root)
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        ISAstring = self.out._record2string(self.out.records[0])
-        if self.ta_info['version']<'00403':
-            ISAstring = ISAstring[:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + ISAstring[103:] #hack for strange characters at end of ISA; hardcoded
+        isa_string = self.out.record2string(self.out.records[0])
+        if self.ta_info['version'] < '00403':
+            isa_string = isa_string[:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + isa_string[103:] #hack for strange characters at end of ISA; hardcoded
         else:
-            ISAstring = ISAstring[:82] +self.ta_info['reserve'] + ISAstring[83:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + ISAstring[103:] #hack for strange characters at end of ISA; hardcoded
-        tofile.write(ISAstring)                                     #write ISA
-        tofile.write(self.out._record2string(self.out.records[1]))  #write GS
+            isa_string = isa_string[:82] +self.ta_info['reserve'] + isa_string[83:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + isa_string[103:] #hack for strange characters at end of ISA; hardcoded
+        tofile.write(isa_string)                                     #write ISA
+        tofile.write(self.out.record2string(self.out.records[1]))  #write GS
         self.writefilelist(tofile)
-        tofile.write(self.out._record2string(self.out.records[-2])) #write GE
-        tofile.write(self.out._record2string(self.out.records[-1])) #write IEA
+        tofile.write(self.out.record2string(self.out.records[-2])) #write GE
+        tofile.write(self.out.record2string(self.out.records[-1])) #write IEA
         tofile.close()
-        if self.ta_info['functionalgroup']!='FA' and botslib.checkconfirmrules('ask-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
+        if self.ta_info['functionalgroup'] != 'FA' and botslib.checkconfirmrules('ask-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
                                                                                 editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype']):
             self.ta_info['confirmtype'] = u'ask-x12-997'
@@ -496,10 +496,10 @@ class myxmlenvelop(xml):
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #~ self.out.put({'BOTSID':'root','xmlns:xi':"http://www.w3.org/2001/XInclude"})     #works, but attribute is not removed bij ETI.include
         self.out.put({'BOTSID':'root'})     #start filling out-tree
-        ta_list = self.filelist2absolutepaths() 
+        ta_list = self.filelist2absolutepaths()
         for filename in ta_list:
             self.out.put({'BOTSID':'root'},{'BOTSID':include,include + '__parse':'xml',include + '__href':filename})
-        self.out.envelopewrite(self.out.root)   #'resolves' the included xml files 
+        self.out.envelopewrite(self.out.root)   #'resolves' the included xml files
 
 class db(Envelope):
     ''' Only copies the input files to one output file.'''

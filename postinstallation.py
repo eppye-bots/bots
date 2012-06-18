@@ -71,8 +71,8 @@ def start():
     if os.path.exists(join(botsdir,'config','settings.py')):    #use this to see if this is an existing installation
         print '    Found existing configuration files'
         print '        Configuration files bots.ini and settings.py not overwritten.'
-        print '        Manual action is needed.'
-        print '        See bots web site-documentation-migrate for more info.'
+        #~ print '        Manual action is needed.'
+        print '        See bots wiki for more info.'
     else:
         shutil.copy(join(botsdir,'install','bots.ini'),join(botsdir,'config','bots.ini'))
         shutil.copy(join(botsdir,'install','settings.py'),join(botsdir,'config','settings.py'))
@@ -84,8 +84,8 @@ def start():
     sqlitedir = join(botsdir,'botssys','sqlitedb')
     if os.path.exists(join(sqlitedir,'botsdb')):    #use this to see if this is an existing installation
         print '    Found existing database file botssys/sqlitedb/botsdb'
-        print '        Manual action is needed - there is a tool/program to update the database.'
-        print '        See bots web site-documentation-migrate for more info.'
+        #~ print '        Manual action is needed - there is a tool/program to update the database.'
+        print '        See bots wiki for more info.'
     else:
         if not os.path.exists(sqlitedir):    #use this to see if this is an existing installation
             os.makedirs(sqlitedir)
@@ -96,7 +96,7 @@ def start():
 #******************************************************************************
 #******************************************************************************
 
-if __name__=='__main__':
+if __name__ == '__main__':
     if len(sys.argv)>1 and sys.argv[1]=='-install':
         try:
             start()

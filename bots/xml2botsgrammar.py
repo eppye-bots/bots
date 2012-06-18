@@ -8,7 +8,6 @@ import botsinit
 import botsglobal
 from botsconfig import *
 
-#buggy
 #in usersys/grammars/xmlnocheck should be a file xmlnocheck
 #usage: c:\python25\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
 
@@ -18,9 +17,9 @@ def treewalker(node_instance,mpath):
     for childnode in node_instance.children:
         yield childnode,mpath[:]
         for terugnode,terugmpath in treewalker(childnode,mpath):
-            yield terugnode,terugmpath 
+            yield terugnode,terugmpath
     mpath.pop()
-    
+
 
 def writefields(tree,node_instance,mpath):
     putmpath = copy.deepcopy(mpath)
@@ -29,13 +28,13 @@ def writefields(tree,node_instance,mpath):
     for key in node_instance.record.keys():
         #~ print key
         if key not in ['BOTSID','BOTSIDnr']:
-            putmpath[-1][key]=u'dummy'
+            putmpath[-1][key] = u'dummy'
             #~ print 'mpath used',mpath
             #~ putmpath = copy.deepcopy(mpath)
     tree.put(*putmpath)
             #~ del mpath[-1][key]
     #~ print '\n'
-        
+
 def tree2grammar(node_instance,structure,recorddefs):
     structure.append({ID:node_instance.record['BOTSID'],MIN:0,MAX:99999,LEVEL:[]})
     recordlist = []
@@ -43,7 +42,6 @@ def tree2grammar(node_instance,structure,recorddefs):
         recordlist.append([key, 'C', 256, 'AN'])
     if node_instance.record['BOTSID'] in recorddefs:
         recorddefs[node_instance.record['BOTSID']] = removedoublesfromlist(recorddefs[node_instance.record['BOTSID']] + recordlist)
-        #~ recorddefs[node_instance.record['BOTSID']].extend(recordlist)
     else:
         recorddefs[node_instance.record['BOTSID']] = recordlist
     for childnode in node_instance.children:
@@ -55,8 +53,8 @@ def recorddefs2string(recorddefs,sortedstructurelist):
     #~ for key, value in recorddefs.items():
         recorddefsstring += "    '%s':\n        [\n"%i
         for field in recorddefs[i]:
-            if field[0]=='BOTSID':
-                field[1]='M'
+            if field[0] == 'BOTSID':
+                field[1] = 'M'
                 recorddefsstring += "        %s,\n"%field
                 break
         for field in recorddefs[i]:
@@ -68,7 +66,7 @@ def recorddefs2string(recorddefs,sortedstructurelist):
         recorddefsstring += "        ],\n"
     recorddefsstring += "    }\n"
     return recorddefsstring
-    
+
 def structure2string(structure,level=0):
     structurestring = ""
     for i in structure:
@@ -83,12 +81,12 @@ def structure2string(structure,level=0):
 def structure2list(structure):
     structurelist = structure2listcore(structure)
     return removedoublesfromlist(structurelist)
-    
+
 def removedoublesfromlist(orglist):
     list2return = []
-    for e in orglist:
-        if e not in list2return:
-            list2return.append(e)
+    for member in orglist:
+        if member not in list2return:
+            list2return.append(member)
     return list2return
 
 def structure2listcore(structure):
@@ -110,7 +108,7 @@ def showusage():
     print '        <xml_grammar_file> name of the grammar file to write'
     print
     sys.exit(0)
-    
+
 def start():
     #********command line arguments**************************
     edifile =''
@@ -136,23 +134,23 @@ def start():
         showusage()
 
     #********end handling command line arguments**************************
-    editype='xmlnocheck'
-    messagetype='xmlnocheckxxxtemporaryforxml2grammar'
+    editype = 'xmlnocheck'
+    messagetype = 'xmlnocheckxxxtemporaryforxml2grammar'
     mpath = []
-    
+
     botsinit.generalinit(configdir)
     os.chdir(botsglobal.ini.get('directories','botspath'))
     botsinit.initenginelogging()
-    
+
     #the xml file is parsed as an xmlnocheck message....so a (temp) xmlnocheck grammar is needed....without content... this file is not removed....
     tmpgrammarfile = botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars',editype,messagetype+'.py')
-    f = open(tmpgrammarfile,'w')
-    f.close()
+    filehandler = open(tmpgrammarfile,'w')
+    filehandler.close()
 
     inn = inmessage.edifromfile(editype=editype,messagetype=messagetype,filename=edifile)
     #~ inn.root.display()
     out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    #make outmessage object
-    
+
     #handle root
     rootmpath = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
     out.put(*rootmpath)
@@ -164,9 +162,9 @@ def start():
         if out.get(*mpath) is None:
             out.put(*mpath)
         writefields(out,node_instance,mpath)
-        
+
     #~ out.root.display()
-    
+
     #out-tree is finished; represents ' normalised' tree suited for writing as a grammar
     structure = []
     recorddefs = {}
@@ -177,7 +175,7 @@ def start():
     sortedstructurelist = structure2list(structure)
     recorddefsstring = recorddefs2string(recorddefs,sortedstructurelist)
     structurestring = structure2string(structure)
-    
+
     #write grammar file
     grammar = open(grammarfile,'wb')
     grammar.write('#grammar automatically generated by bots open source edi translator.')
@@ -195,4 +193,4 @@ def start():
 
 if __name__ == '__main__':
     start()
-    
+

@@ -956,8 +956,8 @@ class ftp(_comsession):
         files = []
         try:            #some ftp servers give errors when directory is empty; catch these errors here
             files = self.session.nlst()
-        except (ftplib.error_perm,ftplib.error_temp),resp:
-            if str(resp)[:3] not in ['550','450']:
+        except (ftplib.error_perm,ftplib.error_temp),msg:
+            if str(msg)[:3] not in ['550','450']:
                 raise
 
         lijst = fnmatch.filter(files,self.channeldict['filename'])
@@ -975,8 +975,8 @@ class ftp(_comsession):
                         self.session.retrbinary("RETR " + fromfilename, tofile.write)
                     else:
                         self.session.retrlines("RETR " + fromfilename, lambda s, w=tofile.write: w(s+"\n"))
-                except ftplib.error_perm, resp:
-                    if str(resp)[:3] in ['550',]:     #we are trying to download a directory...
+                except ftplib.error_perm, msg:
+                    if str(msg)[:3] in ['550',]:     #we are trying to download a directory...
                         raise botslib.BotsError(u'To be catched')
                     else:
                         raise

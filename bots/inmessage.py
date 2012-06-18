@@ -221,7 +221,7 @@ class Inmessage(message.Message):
                 continue  #continue while-loop: get_next_edi_record is false as no match with structure is made; go and look at next record of structure
             #record is found in grammar
             countnrofoccurences += 1
-            newnode = node.Node(record=self._parsefields(current_edi_record,structure_level[structure_index]),BOTSIDnr=structure_level[structure_index][BOTSIDnr])  #make new node
+            newnode = node.Node(record=self._parsefields(current_edi_record,structure_level[structure_index]),botsidnr=structure_level[structure_index][BOTSIDNR])  #make new node
             inode.append(newnode)   #succes! append new node as a child to current (parent)node
             if SUBTRANSLATION in structure_level[structure_index]:
                 # start a SUBTRANSLATION; find the right messagetype, etc
@@ -609,8 +609,8 @@ class edifact(var):
             self.rawinput = self.rawinput.decode(self.ta_info['charset'],self.ta_info['checkcharsetin'])
         except LookupError:
             raise botslib.InMessageError(_(u'Incoming edifact file has unknown charset "$charset".'),charset=self.ta_info['charset'])
-        except UnicodeDecodeError, flup:
-            raise botslib.InMessageError(_(u'Not allowed chars in incoming edi file (for translation) at/after filepos: $content'),content=flup[2])
+        except UnicodeDecodeError, msg:
+            raise botslib.InMessageError(_(u'Not allowed chars in incoming edi file (for translation) at/after filepos: $content'),content=msg[2])
 
     def checkenvelope(self):
         self.confirmationlist = []              #information about the edifact file for confirmation/CONTRL; for edifact this is done per interchange (UNB-UNZ)

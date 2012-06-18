@@ -1,14 +1,15 @@
-import time
+#~ import time
 import django
 import models
 import viewlib
-import botslib
-import botsglobal
-django.contrib.admin.widgets.AdminSplitDateTime
-HiddenInput = django.forms.widgets.HiddenInput
+#~ import botslib
+#~ import botsglobal
+
+#~ django.contrib.admin.widgets.AdminSplitDateTime
+HIDDENINPUT = django.forms.widgets.HiddenInput
 DEFAULT_ENTRY = ('',"---------")
-editypelist=[DEFAULT_ENTRY] + sorted(models.EDITYPES)
-confirmtypelist=[DEFAULT_ENTRY] + models.CONFIRMTYPE
+EDITYPELIST = [DEFAULT_ENTRY] + sorted(models.EDITYPES)
+CONFIRMTYPELIST = [DEFAULT_ENTRY] + models.CONFIRMTYPE
 
 def getroutelist():     #needed because the routeid is needed (and this is not theprimary key
     return [DEFAULT_ENTRY]+[(l,l) for l in models.routes.objects.values_list('idroute', flat=True).order_by('idroute').distinct() ]
@@ -29,16 +30,16 @@ def gettochannels():
 class Select(django.forms.Form):
     datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom)
     dateuntil = django.forms.DateTimeField(initial=viewlib.datetimeuntil)
-    page = django.forms.IntegerField(required=False,initial=1,widget=HiddenInput())
-    sortedby = django.forms.CharField(initial='ts',widget=HiddenInput())
-    sortedasc = django.forms.BooleanField(initial=False,required=False,widget=HiddenInput())
+    page = django.forms.IntegerField(required=False,initial=1,widget=HIDDENINPUT())
+    sortedby = django.forms.CharField(initial='ts',widget=HIDDENINPUT())
+    sortedasc = django.forms.BooleanField(initial=False,required=False,widget=HIDDENINPUT())
 
 class View(django.forms.Form):
-    datefrom = django.forms.DateTimeField(required=False,initial=viewlib.datetimefrom,widget=HiddenInput())
-    dateuntil = django.forms.DateTimeField(required=False,initial=viewlib.datetimeuntil,widget=HiddenInput())
-    page = django.forms.IntegerField(required=False,initial=1,widget=HiddenInput())
-    sortedby = django.forms.CharField(required=False,initial='ts',widget=HiddenInput())
-    sortedasc = django.forms.BooleanField(required=False,initial=False,widget=HiddenInput())
+    datefrom = django.forms.DateTimeField(required=False,initial=viewlib.datetimefrom,widget=HIDDENINPUT())
+    dateuntil = django.forms.DateTimeField(required=False,initial=viewlib.datetimeuntil,widget=HIDDENINPUT())
+    page = django.forms.IntegerField(required=False,initial=1,widget=HIDDENINPUT())
+    sortedby = django.forms.CharField(required=False,initial='ts',widget=HIDDENINPUT())
+    sortedasc = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
 
 class SelectReports(Select):
     template = 'bots/selectform.html'
@@ -48,7 +49,7 @@ class SelectReports(Select):
 class ViewReports(View):
     template = 'bots/reports.html'
     action = '/reports/'
-    status = django.forms.IntegerField(required=False,initial='',widget=HiddenInput())
+    status = django.forms.IntegerField(required=False,initial='',widget=HIDDENINPUT())
 
 class SelectIncoming(Select):
     template = 'bots/selectform.html'
@@ -57,9 +58,9 @@ class SelectIncoming(Select):
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
-    ineditype = django.forms.ChoiceField(editypelist,required=False)
+    ineditype = django.forms.ChoiceField(EDITYPELIST,required=False)
     inmessagetype = django.forms.ChoiceField([],required=False)
-    outeditype = django.forms.ChoiceField(editypelist,required=False)
+    outeditype = django.forms.ChoiceField(EDITYPELIST,required=False)
     outmessagetype = django.forms.ChoiceField([],required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
     def __init__(self, *args, **kwargs):
@@ -73,16 +74,16 @@ class SelectIncoming(Select):
 class ViewIncoming(View):
     template = 'bots/incoming.html'
     action = '/incoming/'
-    statust = django.forms.IntegerField(required=False,initial='',widget=HiddenInput())
-    idroute = django.forms.CharField(required=False,widget=HiddenInput())
-    frompartner = django.forms.CharField(required=False,widget=HiddenInput())
-    topartner = django.forms.CharField(required=False,widget=HiddenInput())
-    ineditype = django.forms.CharField(required=False,widget=HiddenInput())
-    inmessagetype = django.forms.CharField(required=False,widget=HiddenInput())
-    outeditype = django.forms.CharField(required=False,widget=HiddenInput())
-    outmessagetype = django.forms.CharField(required=False,widget=HiddenInput())
-    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HiddenInput())
-    botskey = django.forms.CharField(required=False,widget=HiddenInput())
+    statust = django.forms.IntegerField(required=False,initial='',widget=HIDDENINPUT())
+    idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    frompartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    topartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    ineditype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    inmessagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    outeditype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    outmessagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
+    botskey = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class SelectDocument(Select):
     template = 'bots/selectform.html'
@@ -90,7 +91,7 @@ class SelectDocument(Select):
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
-    editype = django.forms.ChoiceField(editypelist,required=False)
+    editype = django.forms.ChoiceField(EDITYPELIST,required=False)
     messagetype = django.forms.ChoiceField(required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
     botskey = django.forms.CharField(required=False,label='Document number',max_length=35)
@@ -104,13 +105,13 @@ class SelectDocument(Select):
 class ViewDocument(View):
     template = 'bots/document.html'
     action = '/document/'
-    idroute = django.forms.CharField(required=False,widget=HiddenInput())
-    frompartner = django.forms.CharField(required=False,widget=HiddenInput())
-    topartner = django.forms.CharField(required=False,widget=HiddenInput())
-    editype = django.forms.CharField(required=False,widget=HiddenInput())
-    messagetype = django.forms.CharField(required=False,widget=HiddenInput())
-    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HiddenInput())
-    botskey = django.forms.CharField(required=False,widget=HiddenInput())
+    idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    frompartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    topartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    editype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    messagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
+    botskey = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class SelectOutgoing(Select):
     template = 'bots/selectform.html'
@@ -118,7 +119,7 @@ class SelectOutgoing(Select):
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
-    editype = django.forms.ChoiceField(editypelist,required=False)
+    editype = django.forms.ChoiceField(EDITYPELIST,required=False)
     messagetype = django.forms.ChoiceField(required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
     def __init__(self, *args, **kwargs):
@@ -131,12 +132,12 @@ class SelectOutgoing(Select):
 class ViewOutgoing(View):
     template = 'bots/outgoing.html'
     action = '/outgoing/'
-    idroute = django.forms.CharField(required=False,widget=HiddenInput())
-    frompartner = django.forms.CharField(required=False,widget=HiddenInput())
-    topartner = django.forms.CharField(required=False,widget=HiddenInput())
-    editype = django.forms.CharField(required=False,widget=HiddenInput())
-    messagetype = django.forms.CharField(required=False,widget=HiddenInput())
-    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HiddenInput())
+    idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    frompartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    topartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    editype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    messagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
 
 class SelectProcess(Select):
     template = 'bots/selectform.html'
@@ -150,16 +151,16 @@ class SelectProcess(Select):
 class ViewProcess(View):
     template = 'bots/process.html'
     action = '/process/'
-    idroute = django.forms.CharField(required=False,widget=HiddenInput())
-    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HiddenInput())
+    idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
 
 class SelectConfirm(Select):
     template = 'bots/selectform.html'
     action = '/confirm/'
-    confirmtype = django.forms.ChoiceField(confirmtypelist,required=False,initial='0')
+    confirmtype = django.forms.ChoiceField(CONFIRMTYPELIST,required=False,initial='0')
     confirmed = django.forms.ChoiceField([('0',"All runs"),('1',"Current run"),('2',"Last run")],required=False,initial='0')
     idroute = django.forms.ChoiceField([],required=False,initial='')
-    editype = django.forms.ChoiceField(editypelist,required=False)
+    editype = django.forms.ChoiceField(EDITYPELIST,required=False)
     messagetype = django.forms.ChoiceField([],required=False)
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
@@ -177,15 +178,15 @@ class SelectConfirm(Select):
 class ViewConfirm(View):
     template = 'bots/confirm.html'
     action = '/confirm/'
-    confirmtype = django.forms.CharField(required=False,widget=HiddenInput())
-    confirmed = django.forms.CharField(required=False,widget=HiddenInput())
-    idroute = django.forms.CharField(required=False,widget=HiddenInput())
-    editype = django.forms.CharField(required=False,widget=HiddenInput())
-    messagetype = django.forms.CharField(required=False,widget=HiddenInput())
-    frompartner = django.forms.CharField(required=False,widget=HiddenInput())
-    topartner = django.forms.CharField(required=False,widget=HiddenInput())
-    fromchannel = django.forms.CharField(required=False,widget=HiddenInput())
-    tochannel = django.forms.CharField(required=False,widget=HiddenInput())
+    confirmtype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    confirmed = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    editype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    messagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    frompartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    topartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    fromchannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    tochannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class UploadFileForm(django.forms.Form):
     file  = django.forms.FileField(label='Plugin to read',required=True,widget=django.forms.widgets.FileInput(attrs={'size':'100'}))
