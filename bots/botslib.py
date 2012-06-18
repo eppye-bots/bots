@@ -105,7 +105,7 @@ class _Transaction(object):
     #filtering values fo db handling (to avoid unknown fields in db.
     filterlist = ['statust','status','divtext','parent','child','script','frompartner','topartner','fromchannel','tochannel','editype','messagetype','merge',
                 'testindicator','reference','frommail','tomail','contenttype','errortext','filename','charset','alt','idroute','nrmessages','retransmit',
-                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc']
+                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc','rsrv1']
     processlist = [0]  #stack for bots-processes. last one is the current process; starts with 1 element in list: root
 
     def update(self,**ta_info):

@@ -3,7 +3,7 @@ import botslib
 import botsglobal
 from botsconfig import *
 from django.utils.translation import ugettext as _
-tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script'
+tavars = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script,rsrv1'
 
 
 def evaluate(type,stuff2evaluate):
@@ -75,12 +75,12 @@ def insert_filereport(mytrace):
                                                 infilename,tochannel,frompartner,topartner,frommail,
                                                 tomail,ineditype,inmessagetype,outeditype,outmessagetype,
                                                 incontenttype,outcontenttype,nrmessages,outfilename,errortext,
-                                                divtext,outidta)
+                                                divtext,outidta,rsrv1)
                             VALUES  (%(idta)s,%(statust)s,%(reportidta)s,%(retransmit)s,%(idroute)s,%(fromchannel)s,%(ts)s,
                                     %(infilename)s,%(tochannel)s,%(frompartner)s,%(topartner)s,%(frommail)s,
                                     %(tomail)s,%(ineditype)s,%(inmessagetype)s,%(outeditype)s,%(outmessagetype)s,
                                     %(incontenttype)s,%(outcontenttype)s,%(nrmessages)s,%(outfilename)s,%(errortext)s,
-                                    %(divtext)s,%(outidta)s )
+                                    %(divtext)s,%(outidta)s,%(rsrv1)s )
                             ''',
                             {'idta':mytrace.idta,'statust':mytrace.statusttree,'reportidta':mytrace.reportidta,
                             'retransmit':mytrace.retransmit,'idroute':mytrace.idroute,'fromchannel':mytrace.fromchannel,
@@ -90,7 +90,7 @@ def insert_filereport(mytrace):
                             'outeditype':mytrace.outeditype,'outmessagetype':mytrace.outmessagetype,
                             'incontenttype':mytrace.incontenttype,'outcontenttype':mytrace.outcontenttype,
                             'nrmessages':mytrace.nrmessages,'outfilename':mytrace.outfilename,'errortext':mytrace.errortext,
-                            'divtext':mytrace.divtext,'outidta':mytrace.outidta})
+                            'divtext':mytrace.divtext,'outidta':mytrace.outidta,'rsrv1':mytrace.rsrv1})
 
 def finish_evaluation(stuff2evaluate,resultlast,type):
     #count nr files send
@@ -293,6 +293,7 @@ class Trace(object):
                 self.frommail=ta.frommail
                 self.tomail=ta.tomail
                 self.incontenttype=ta.contenttype
+                self.rsrv1=ta.rsrv1         #email subject
             elif ta.status==RAWOUT:
                 if ta.frommail:
                     if self.frommail:
@@ -400,6 +401,7 @@ class Trace(object):
         self.outidta = 0
         self.errortext = ''
         self.divtext = ''
+        self.rsrv1 = ''         #email subject
         core(self.ta)
 
 

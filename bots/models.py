@@ -340,7 +340,7 @@ class filereport(botsmodel):
     outidta = models.IntegerField()
     divtext = StripCharField(max_length=35)
     errortext = StripCharField(max_length=2048)
-    rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
+    rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501; 20120618: email subject
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
     class Meta:
         db_table = 'filereport'
@@ -423,7 +423,7 @@ class ta(botsmodel):
     envelope = StripCharField(max_length=35)          #added 20091024
     botskey = StripCharField(max_length=35)           #added 20091024
     cc = StripCharField(max_length=512)               #added 20091111
-    rsrv1 = StripCharField(max_length=35)             #added 20100501
+    rsrv1 = StripCharField(max_length=35)             #added 20100501; 20120618: email subject
     rsrv2 = models.IntegerField(null=True)              #added 20100501
     rsrv3 = StripCharField(max_length=35)             #added 20100501
     rsrv4 = models.IntegerField(null=True)              #added 20100501

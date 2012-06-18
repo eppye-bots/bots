@@ -450,7 +450,8 @@ class _comsession(object):
                                 contenttype=contenttype,
                                 frompartner=frompartner,
                                 topartner=topartner,
-                                cc = cc_content)
+                                cc = cc_content,
+                                rsrv1 = subject)
                 if contenttype == 'multipart/report':   #process received MDN confirmation
                     mdnreceive()
                 else:
