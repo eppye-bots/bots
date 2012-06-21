@@ -500,7 +500,7 @@ def txtexc():
     terug = traceback.format_exc(limit).decode('utf-8','ignore')
     terug = terug.replace(u'Traceback (most recent call last):\n',u'')
     #~ botsglobal.logger.debug(u'exception %s',terug)
-    if botsglobal.db is not None and botsglobal.db.drivername != 'sqlite':    #sqlite does not enforce strict lengths
+    if botsglobal.db is not None and botsglobal.settings.DATABASE_ENGINE != 'sqlite3':    #sqlite does not enforce strict lengths
         return terug[-1848:]    #filed size is 2048; but more text can be prepended.
     else:
         return terug
