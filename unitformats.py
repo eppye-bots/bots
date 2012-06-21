@@ -7,7 +7,7 @@ from bots.botsconfig import *
 import utilsunit
 
 ''' plugin unitformats 
-    max_number_errors = 1
+    set bots.ini: max_number_errors = 1
 '''
 #python 2.6 treats -0 different. in outmessage this is adapted, for inmessage: python 2.6 does this correct
 

@@ -16,7 +16,7 @@ from bots.botsconfig import *
 ''' input: mime (complex structure); 2 different edi attachments, and ' tekst' attachemnt
     some user scripts are written in this unit test; so one runs errors will occur; write user script which prevents error in next run
     before running: delete all transactions.
-    runs OK if no errors in unit tests
+    runs OK if no errors in unit tests; that is : no exceptions are raised. The bots-engien runs do give errors, but this is needed for retries 
 '''
     
 
