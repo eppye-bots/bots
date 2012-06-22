@@ -66,6 +66,7 @@
 	<ul>
 		<a>{% trans 'Run' %}</a>
 		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new)' %}</a></li>
+        <li><hr/></li>
 		<li><a href="/runengine/?clparameter=--retransmit" >{% trans 'Run user-indicated retransmits' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retrycommunication" >{% trans 'Retry user-indicated comm errors' %}</a></li>
 		<li><a href="/runengine/?clparameter=--retry"  OnClick = "return confirm('{% trans 'Are you sure you want to retry ALL previous errors?\n' %}');">{% trans 'Retry all previous errors' %}</a></li>
