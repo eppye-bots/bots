@@ -178,7 +178,7 @@ def initenginelogging():
         botsglobal.logger.addHandler(console)  # add console to logger
 
 def connect():
-    #different connect code per tyoe of database
+    #different connect code per type of database
     if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
         #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
         if not os.path.isfile(botsglobal.settings.DATABASE_NAME):

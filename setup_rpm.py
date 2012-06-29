@@ -9,10 +9,10 @@ for scheme in INSTALL_SCHEMES.values():
 
 
 def fullsplit(path, result=None):
-    """
+    '''
     Split a pathname into components (the opposite of os.path.join) in a
     platform-neutral way.
-    """
+    '''
     if result is None:
         result = []
     head, tail = os.path.split(path)
@@ -49,15 +49,15 @@ for dirpath, dirnames, filenames in os.walk('bots'):
 
 
 setup(
-    name="bots",
-    version="2.2.0rc",
-    author = "hjebbers",
-    author_email = "hjebbers@gmail.com",
-    url = "http://bots.sourceforge.net/",
-    description="Bots open source edi translator",
-    long_description = "Bots is complete software for edi (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml",
-    platforms="OS Independent (Written in an interpreted language)",
-    license="GNU General Public License (GPL)",
+    name = 'bots',
+    version = '2.2.0rc',
+    author = 'hjebbers',
+    author_email = 'hjebbers@gmail.com',
+    url = 'http://bots.sourceforge.net/',
+    description = 'Bots open source edi translator',
+    long_description = 'Bots is complete software for edi (Electronic Data Interchange): translate and communicate. All major edi data formats are supported: edifact, x12, tradacoms, xml',
+    platforms = 'OS Independent (Written in an interpreted language)',
+    license ='GNU General Public License (GPL)',
     classifiers = [
         'Development Status :: 5 - Production/Stable',
         'Operating System :: OS Independent',
