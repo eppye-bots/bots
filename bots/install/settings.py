@@ -17,33 +17,43 @@ MANAGERS = (    #bots will send error reports to the MANAGERS
 #*********path settings*************************advised is not to change these values!!
 PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 # Absolute path to the directory that holds media.
-# Example: "/home/media/media.lawrence.com/"
+# Example: '/home/media/media.lawrence.com/'
 MEDIA_ROOT = PROJECT_PATH + '/'
+#~ STATICFILES_DIRS = PROJECT_PATH + '/'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
+# Examples: 'http://media.lawrence.com', 'http://example.com/media/'
 MEDIA_URL = ''
+
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
+# Examples: 'http://foo.com/media/', '/media/'.
 ADMIN_MEDIA_PREFIX = '/media/'
+#~ STATIC_URL = '/media/'
 #~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
 ROOT_URLCONF = 'bots.urls'
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/home'
 LOGOUT_URL = '/logout/'
 #~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
 
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_PATH, 'templates'),
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Put strings here, like '/home/html/django_templates' or 'C:/www/django/templates'.
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     )
 
 #*********database settings*************************
 #django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
-#SQLITE: 
+#SQLITE django >= 1.4:
+#~ DATABASES = {
+    #~ 'default': {
+        #~ 'ENGINE': 'django.db.backends.sqlite3',
+        #~ 'NAME': os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
+    #~ }
+#~ }
+#~ #SQLITE django <1.4: 
 DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
 DATABASE_USER = ''
@@ -51,15 +61,15 @@ DATABASE_PASSWORD = ''
 DATABASE_HOST = ''
 DATABASE_PORT = ''
 DATABASE_OPTIONS = {}
-#~ #MySQL:
+#~ #MySQL django <1.4::
 #~ DATABASE_ENGINE = 'mysql'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
 #~ DATABASE_PASSWORD = 'botsbots'
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
-#~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
-#PostgreSQL:
+#~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'}
+#PostgreSQL django <1.4::
 #~ DATABASE_ENGINE = 'postgresql_psycopg2'
 #~ DATABASE_NAME = 'botsdb'
 #~ DATABASE_USER = 'bots'
@@ -80,9 +90,9 @@ SESSION_SAVE_EVERY_REQUEST = True           #if True: SESSION_COOKIE_AGE is inte
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
 TIME_ZONE = 'Europe/Amsterdam'
-DATE_FORMAT = "Y-m-d"
-DATETIME_FORMAT = "Y-m-d G:i"
-TIME_FORMAT  = "G:i"
+DATE_FORMAT = 'Y-m-d'
+DATETIME_FORMAT = 'Y-m-d G:i'
+TIME_FORMAT  = 'G:i'
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 #~ LANGUAGE_CODE = 'en-us'
@@ -107,13 +117,13 @@ ADMINS = (
 
 #save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
 FILE_UPLOAD_HANDLERS = (
-    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
     )
 # List of callables that know how to import templates from various sources.
+#disable TEMPLATE_LOADERS for #for django >=1.4 
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
     'django.template.loaders.app_directories.load_template_source',
-    #'django.template.loaders.eggs.load_template_source',
     )
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -126,12 +136,16 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.admin',
+    #~ 'django.contrib.staticfiles',  #for django >=1.4 
     'bots',
     )
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.auth",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.media",
-    "django.core.context_processors.request",
+    'django.core.context_processors.auth',  #for django < 1.4
+    #~ 'django.contrib.auth.context_processors.auth',  #for django >=1.4 
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.request',
+    #~ 'django.core.context_processors.static',  #for django >=1.4 
+    'bots.bots_context.set_context',
     )

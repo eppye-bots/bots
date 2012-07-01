@@ -17,17 +17,17 @@ MANAGERS = (    #bots will send error reports to the MANAGERS
 #*********path settings*************************advised is not to change these values!!
 PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 # Absolute path to the directory that holds media.
-# Example: "/home/media/media.lawrence.com/"
+# Example: '/home/media/media.lawrence.com/'
 MEDIA_ROOT = PROJECT_PATH + '/'
 #~ STATICFILES_DIRS = PROJECT_PATH + '/'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
+# Examples: 'http://media.lawrence.com', 'http://example.com/media/'
 MEDIA_URL = ''
-#~ STATIC_URL = ''
+
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
+# Examples: 'http://foo.com/media/', '/media/'.
 ADMIN_MEDIA_PREFIX = '/media/'
 #~ STATIC_URL = '/media/'
 #~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
@@ -39,7 +39,7 @@ LOGOUT_URL = '/logout/'
 
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_PATH, 'templates'),
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Put strings here, like '/home/html/django_templates' or 'C:/www/django/templates'.
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     )
@@ -68,7 +68,7 @@ DATABASE_OPTIONS = {}
 #~ DATABASE_PASSWORD = 'botsbots'
 #~ DATABASE_HOST = '192.168.0.7'
 #~ DATABASE_PORT = '3306'
-#~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8',"init_command": 'SET storage_engine=INNODB'}
+#~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'}
 #PostgreSQL django <1.4::
 #~ DATABASE_ENGINE = 'postgresql_psycopg2'
 #~ DATABASE_NAME = 'botsdb'
@@ -90,9 +90,9 @@ SESSION_SAVE_EVERY_REQUEST = True           #if True: SESSION_COOKIE_AGE is inte
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
 TIME_ZONE = 'Europe/Amsterdam'
-DATE_FORMAT = "Y-m-d"
-DATETIME_FORMAT = "Y-m-d G:i"
-TIME_FORMAT  = "G:i"
+DATE_FORMAT = 'Y-m-d'
+DATETIME_FORMAT = 'Y-m-d G:i'
+TIME_FORMAT  = 'G:i'
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 #~ LANGUAGE_CODE = 'en-us'
@@ -117,7 +117,7 @@ ADMINS = (
 
 #save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
 FILE_UPLOAD_HANDLERS = (
-    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
     )
 # List of callables that know how to import templates from various sources.
 #disable TEMPLATE_LOADERS for #for django >=1.4 
@@ -140,12 +140,12 @@ INSTALLED_APPS = (
     'bots',
     )
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.auth",  #for django < 1.4
-    #~ "django.contrib.auth.context_processors.auth",  #for django >=1.4 
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.media",
-    "django.core.context_processors.request",
+    'django.core.context_processors.auth',  #for django < 1.4
+    #~ 'django.contrib.auth.context_processors.auth',  #for django >=1.4 
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.request',
     #~ 'django.core.context_processors.static',  #for django >=1.4 
     'bots.bots_context.set_context',
     )
