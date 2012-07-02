@@ -5,6 +5,7 @@ import glob
 import shutil
 import subprocess
 import traceback
+import time
 import bots.botsglobal as botsglobal
 
 
@@ -33,39 +34,6 @@ def start():
     print '    Installed bots in "%s".'%(botsdir)
 
 #******************************************************************************
-#***    shortcuts       *******************************************************
-#******************************************************************************
-    scriptpath = join(sys.prefix,'Scripts')
-    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots2.2')
-    try:
-        os.mkdir(shortcutdir)
-    except: 
-        pass
-    else:
-        directory_created(shortcutdir)
-        
-    try:
-        #~ create_shortcut(join(scriptpath,'botswebserver'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'))
-        create_shortcut(join(sys.prefix,'python'),'bots open source edi translator',join(shortcutdir,'bots-webserver.lnk'),join(scriptpath,'bots-webserver.py'))
-        file_created(join(shortcutdir,'bots-webserver.lnk'))
-    except: 
-        print '    Failed to install shortcut/link for bots in your menu.'
-    else:
-        print '    Installed shortcut in "Program Files".'
-    
-#******************************************************************************
-#***    install libraries, dependencies  ***************************************
-#******************************************************************************
-    for library in glob.glob(join(botsdir,'installwin','*.gz')):
-        tar = tarfile.open(library)
-        tar.extractall(path=os.path.dirname(library))
-        tar.close()
-        untar_dir = library[:-len('.tar.gz')]
-        subprocess.call([join(sys.prefix,'pythonw'), 'setup.py','install'],cwd=untar_dir,stdin=open(os.devnull,'r'),stdout=open(os.devnull,'w'),stderr=open(os.devnull,'w'))
-        shutil.rmtree(untar_dir, ignore_errors=True)
-    print '    Installed needed libraries.'
-
-#******************************************************************************
 #***    install configuration files      **************************************
 #******************************************************************************
     if os.path.exists(join(botsdir,'config','settings.py')):    #use this to see if this is an existing installation
@@ -92,7 +60,47 @@ def start():
         shutil.copy(join(botsdir,'install','botsdb'),join(sqlitedir,'botsdb'))
         print '    Installed SQLite database'
 
+#******************************************************************************
+#***    install libraries, dependencies  ***************************************
+#******************************************************************************
+    list_of_setuppers = []
+    for library in glob.glob(join(botsdir,'installwin','*.gz')):
+        tar = tarfile.open(library)
+        tar.extractall(path=os.path.dirname(library))
+        tar.close()
+        untar_dir = library[:-len('.tar.gz')]
+        list_of_setuppers.append(subprocess.Popen([join(sys.prefix,'pythonw.exe'), 'setup.py','--quiet','install'],cwd=untar_dir,bufsize=-1))
+        shutil.rmtree(untar_dir, ignore_errors=True)
+    while True:
+        for setupper in list_of_setuppers:
+            if setupper.poll() is None:
+                break
+        else:
+            break
+        time.sleep(1)
+    print '    Installed needed libraries.'
 
+#******************************************************************************
+#***    shortcuts       *******************************************************
+#******************************************************************************
+    scriptpath = join(sys.prefix,'Scripts')
+    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots2.2')
+    try:
+        os.mkdir(shortcutdir)
+    except: 
+        pass
+    else:
+        directory_created(shortcutdir)
+        
+    try:
+        #~ create_shortcut(join(scriptpath,'botswebserver'),'Bots open source EDI translator',join(shortcutdir,'Bots-webserver.lnk'))
+        create_shortcut(join(sys.prefix,'python.exe'),'bots open source edi translator',join(shortcutdir,'bots-webserver.lnk'),join(scriptpath,'bots-webserver.py'))
+        file_created(join(shortcutdir,'bots-webserver.lnk'))
+    except: 
+        print '    Failed to install shortcut/link for bots in your menu.'
+    else:
+        print '    Installed shortcut in "Program Files".'
+    
 #******************************************************************************
 #******************************************************************************
 
