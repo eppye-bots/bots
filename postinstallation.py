@@ -64,20 +64,25 @@ def start():
 #***    install libraries, dependencies  ***************************************
 #******************************************************************************
     list_of_setuppers = []
+    list_of_dirs_to_remove = []
     for library in glob.glob(join(botsdir,'installwin','*.gz')):
         tar = tarfile.open(library)
         tar.extractall(path=os.path.dirname(library))
         tar.close()
         untar_dir = library[:-len('.tar.gz')]
         list_of_setuppers.append(subprocess.Popen([join(sys.prefix,'pythonw.exe'), 'setup.py','--quiet','install'],cwd=untar_dir,bufsize=-1))
-        shutil.rmtree(untar_dir, ignore_errors=True)
-    while True:
+        list_of_dirs_to_remove.append(untar_dir)
+    ready = False
+    while not ready:
+        time.sleep(1)
         for setupper in list_of_setuppers:
             if setupper.poll() is None:
                 break
         else:
-            break
-        time.sleep(1)
+            ready = True
+    for untar_dir in list_of_dirs_to_remove:
+        shutil.rmtree(untar_dir, ignore_errors=True)
+
     print '    Installed needed libraries.'
 
 #******************************************************************************
