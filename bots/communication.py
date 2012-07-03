@@ -3,7 +3,7 @@ import sys
 import posixpath
 try:
     import cPickle as pickle
-except:
+except ImportError:
     import pickle
 import time
 import datetime

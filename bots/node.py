@@ -1,6 +1,6 @@
 try:
     import cdecimal as decimal
-except:
+except ImportError:
     import decimal
 import copy
 from django.utils.translation import ugettext as _
@@ -268,7 +268,7 @@ class Node(object):
             if more than one value can be found: first one is returned
             starts searching in current node, then deeper
         '''
-        #sanity check of mpaths. None only allowed in last section of Mpath; first check all parts except last one
+        #sanity check of mpaths. None only allowed in last section of Mpath; first checks all parts except last one
         if not mpaths or not isinstance(mpaths,tuple):
             raise botslib.MappingFormatError(_(u'must be dicts in tuple: get($mpath)'),mpath=mpaths)
         for part in mpaths[:-1]:
@@ -398,9 +398,7 @@ class Node(object):
         terug = self.get(*mpaths)
         try:
             value = float(terug)
-        except TypeError:
-            return None
-        except ValueError:
+        except (TypeError,ValueError):
             return None
         if value == 0:
             return None

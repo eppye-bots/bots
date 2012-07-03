@@ -3,7 +3,7 @@ import time
 #~ import sys
 try:
     import cPickle as pickle
-except:
+except ImportError:
     import pickle
 try:
     import cElementTree as ET

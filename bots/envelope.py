@@ -320,8 +320,7 @@ class template(Envelope):
         try:
             import kid
         except:
-            txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid". Error:\n%s'%txt))
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid".'))
         defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
         self.ta_info.update(defmessage.syntax)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -357,8 +356,7 @@ class templatehtml(Envelope):
         try:
             from genshi.template import TemplateLoader
         except:
-            txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi". Error:\n%s'%txt))
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi".'))
         defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
         self.ta_info.update(defmessage.syntax)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)

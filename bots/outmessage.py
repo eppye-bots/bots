@@ -2,11 +2,11 @@ import time
 import sys
 try:
     import cPickle as pickle
-except:
+except ImportError:
     import pickle
 try:
     import cdecimal as decimal
-except:
+except ImportError:
     import decimal
 NODECIMAL = decimal.Decimal(1)
 try:
@@ -749,9 +749,8 @@ class template(Outmessage):
         '''
         try:
             import kid
-        except:
-            txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid". Error:\n%s'%txt))
+        except ImportError:
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid".'))
         #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templates',self.ta_info['template'])
@@ -792,9 +791,8 @@ class templatehtml(Outmessage):
         '''
         try:
             from genshi.template import TemplateLoader
-        except:
-            txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi". Error:\n%s'%txt))
+        except ImportError:
+            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi".'))
         #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templateshtml',self.ta_info['template'])

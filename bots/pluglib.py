@@ -138,7 +138,7 @@ def writetodatabase(orgpluglist):
                     del plug[fieldname]                         #delete old key in plug
                     #~ print 'replace _id for:',fieldname
             except:
-                print 'no field column for:',fieldname          #should this be raised?
+                raise botslib.PluginError(_(u'no field column for: "%s".')%(fieldname))
 
         #get real column names for fields in sleutel; basically the same loop but now for sleutel
         loopdictionary = sleutel.keys()
@@ -149,7 +149,7 @@ def writetodatabase(orgpluglist):
                     sleutel[fieldobject.column] = sleutel[fieldname]
                     del sleutel[fieldname]
             except:
-                print 'no field column for',fieldname
+                raise botslib.PluginError(_(u'no field column for: "%s".')%(fieldname))
         #now we have:
         #- sleutel: unique key fields. mind: translate and confirmrule have empty 'sleutel' now
         #- sleutelorg: original key fields
