@@ -119,7 +119,7 @@ def envelope(ta_info,ta_list):
     else:
         try:    #see if the is user scripted enveloping
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'] + '.' + ta_info['envelope'])
-        except ImportError: #other errors, eg syntax errors are just passed
+        except ImportError:     #script is not there; other errors like syntax errors are not catched
             pass
         #first: check if there is a class with name ta_info['envelope'] in the user scripting
         #this allows complete enveloping in user scripting

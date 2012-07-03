@@ -98,7 +98,7 @@ def start():
     #initialise user exits for the whole bots-engine (this script file)
     try:
         userscript,scriptname = botslib.botsimport('routescripts','botsengine')
-    except ImportError:
+    except ImportError:      #script is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
 
     #**************handle database lock****************************************

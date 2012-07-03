@@ -488,22 +488,31 @@ def log_session(func):
     return wrapper
 
 def txtexc():
-    ''' Get text from last exception    '''
-    if botsglobal.ini:
-        if botsglobal.ini.getboolean('settings','debug',False):
-            limit = None
-        else:
-            limit = 0
-    else:
-        limit = 0
-    #problems with char set for some input data that are reported in traces....so always decode this;
-    terug = traceback.format_exc(limit).decode('utf-8','ignore')
-    terug = terug.replace(u'Traceback (most recent call last):\n',u'')
-    #~ botsglobal.logger.debug(u'exception %s',terug)
+    ''' Process last exception to get (safe) errortext.
+    '''
+    terug = u''
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    if botsglobal.ini and botsglobal.ini.getboolean('settings','debug',False):
+        tracebacklist = traceback.extract_tb(exc_traceback,limit=None)
+        terug += ''.join(traceback.format_list(tracebacklist))
+    terug += str(exc_value)
+    #problems with char set for some input data that are reported in traces....so always decode this:
+    terug = terug.decode('utf-8','ignore')
     if botsglobal.db is not None and botsglobal.settings.DATABASE_ENGINE != 'sqlite3':    #sqlite does not enforce strict lengths
-        return terug[-1848:]    #filed size is 2048; but more text can be prepended.
+        return terug[-1848:]        #field size is 2048; but more text can be prepended.
     else:
         return terug
+
+def isa_direct_importerror():
+    ''' check if module itself is not there, or if there is an import error in the module.
+        this avoid hard-to-find errors/problems.
+    '''
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    #test if direct or indirect import error
+    tracebacklist = traceback.extract_tb(exc_traceback,limit=2) #get complete traceback
+    if len(tracebacklist) == 1: #direct import error 
+        return True
+    return False
 
 class ErrorProcess(NewTransaction):
     ''' Used in logging of errors in processes.
@@ -547,8 +556,12 @@ def botsimport(soort,modulename):
     try:
         module = botsbaseimport(modulepath)
     except ImportError: #if module not found
-        botsglobal.logger.debug(u'no import of "%s".',modulefile)
-        raise
+        if isa_direct_importerror():
+            botsglobal.logger.debug(u'no import of "%s".',modulefile)
+            raise
+        else:
+            txt = txtexc()
+            raise ScriptImportError(_(u'import error in "$module", error:\n$txt'),module=modulefile,txt=txt)
     except:             #other errors
         txt = txtexc()
         raise ScriptImportError(_(u'import error in "$module", error:\n$txt'),module=modulefile,txt=txt)

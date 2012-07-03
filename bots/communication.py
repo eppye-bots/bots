@@ -50,7 +50,7 @@ def run(idchannel,idroute=''):
 
         try:
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
-        except ImportError:
+        except ImportError:       #script is not there; other errors like syntax errors are not catched
             userscript = scriptname = None
         #get the communication class to use:
         if userscript and hasattr(userscript,channeldict['type']):          #check communication class in user script (sub classing)
@@ -1526,7 +1526,7 @@ class intercommit(_comsession):
 
 
 class database(_comsession):
-    ''' ***this class is obsolete and only heere for compatibility reasons.
+    ''' ***this class is obsolete and only here for compatibility reasons.
         ***this class is replaced by class db
         communicate with a database; directly read or write from a database.
         the user HAS to provide a script that does the actual import/export using SQLalchemy API.

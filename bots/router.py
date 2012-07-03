@@ -198,7 +198,7 @@ def router(routedict):
     #is there a user route script?
     try:
         userscript,scriptname = botslib.botsimport('routescripts',routedict['idroute'])
-    except ImportError: #other errors, eg syntax errors are just passed
+    except ImportError:      #script is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
 
     #if user route script has function 'main': communication.run 'main' (and do nothing else)

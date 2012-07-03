@@ -137,7 +137,7 @@ def initbotscharsets():
 def codec_search_function(encoding):
     try:
         module,filename = botslib.botsimport('charsets',encoding)
-    except:
+    except ImportError:         #script is not there; other errors like syntax errors are not catched
         return None
     else:
         if hasattr(module,'getregentry'):
