@@ -17,3 +17,5 @@ syntax: regexp
 ^bots/installwin.*
 glob:bots/botssys/sqlitedb/botsdb
 glob:bots/profile.tmp
+glob:bots/botssys/plugin_temp.zip
+glob:bots-webserver_dev.pid

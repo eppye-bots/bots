@@ -275,16 +275,24 @@ def load(pathzipfile):
 #*************************************************************
 # generate a plugin (plugout)
 #*************************************************************
+def plugoutindex():
+    ''' generate only the index file of the plugin.
+        useful for eg version control systems.
+    '''
+    dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':True,'databasetransactions':False}
+    return plugout_database(dummy_for_cleaned_data)
+    
 def plugoutcore(cleaned_data,filename):
     pluginzipfilehandler = zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED)
 
     tmpbotsindex = plugout_database(cleaned_data)
+    botsglobal.logger.debug(u'    write in index:\n %s',tmpbotsindex)
     pluginzipfilehandler.writestr('botsindex.py',tmpbotsindex)      #write index file to pluginfile
 
     files4plugin = plugout_files(cleaned_data)
     for dirname, defaultdirname in files4plugin:
         pluginzipfilehandler.write(dirname,defaultdirname)
-        botsglobal.logger.debug(_(u'    write file "%s".'),defaultdirname)
+        botsglobal.logger.debug(u'    write file "%s".'%defaultdirname)
 
     pluginzipfilehandler.close()
 
@@ -322,11 +330,25 @@ def plugout_database(cleaned_data):
         pk = table._meta.pk.name
         if pk != 'id':
             plug['fields'][pk] = plug['pk']
-        tmpbotsindex += repr(plug['fields']) + u',\n'
-        botsglobal.logger.debug(u'    write in index: %s',plug['fields'])
+        tmpbotsindex += plugout_database_entry_as_string(plug['fields'])
+        #~ tmpbotsindex += repr(plug['fields']) + u',\n'
         #check confirmrule: id is non-artifical key?
     tmpbotsindex += u']\n'
     return tmpbotsindex
+
+def plugout_database_entry_as_string(plugdict):
+    ''' a bit like repr() for a dict, but:
+        - starts with 'plugintype'
+        - other entries are sorted; this because of predictability
+    '''
+    terug = u'{'
+    terug += repr('plugintype') + ': ' + repr(plugdict.pop('plugintype'))
+    keys = plugdict.keys()
+    keys.sort()
+    for key in keys:
+        terug += ', ' + repr(key) + ': ' + repr(plugdict[key])
+    terug += u'},\n'
+    return terug
 
 def plugout_files(cleaned_data):
     ''' gather list of files for the plugin that is generated '''

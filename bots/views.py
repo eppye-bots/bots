@@ -417,7 +417,7 @@ def plugout(request,*kw,**kwargs):
                 else:
                     botsglobal.logger.info(_(u'Plugin "%s" created successful.'),filename)
                     response = django.http.HttpResponse(open(filename, 'rb').read(), content_type='application/zip')
-                    #~ response['Content-Length'] = os.path.getsize(filename)
+                    # response['Content-Length'] = os.path.getsize(filename)
                     response['Content-Disposition'] = 'attachment; filename=' + 'plugin' + time.strftime('_%Y%m%d') + '.zip'
                     return response
     return django.shortcuts.redirect('/home')
