@@ -509,10 +509,13 @@ def isa_direct_importerror():
     '''
     exc_type, exc_value, exc_traceback = sys.exc_info()
     #test if direct or indirect import error
-    tracebacklist = traceback.extract_tb(exc_traceback,limit=2) #get complete traceback
-    if len(tracebacklist) == 1: #direct import error 
+    tracebacklist = traceback.extract_tb(exc_traceback,limit=2)
+    if tracebacklist[-1][2] == u'botsbaseimport':
         return True
     return False
+    #~ if len(tracebacklist) == 1: #direct import error 
+        #~ return True
+    #~ return False
 
 class ErrorProcess(NewTransaction):
     ''' Used in logging of errors in processes.
