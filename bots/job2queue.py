@@ -16,9 +16,10 @@ def send_job_to_jobqueue(task_args,priority=5):
     '''
     try:
         #~ remote_server = xmlrpclib.ServerProxy('http://localhost:' + str(botsglobal.ini.getint('jobqueue','port',6000)))
-        remote_server = xmlrpclib.ServerProxy('http://localhost:6000')
+        remote_server = xmlrpclib.ServerProxy('http://localhost:' + str(botsglobal.ini.getint('jobqueue','port',6000)))
         return remote_server.addjob(task_args,priority)
-    except socket.error:
+    except socket.error,msg:
+        print 'socket.error',msg
         return 1    #jobqueueserver server not active
 
 def showusage():
@@ -68,7 +69,7 @@ def start():
     if terug == 0:
         print 'OK, job is added to queue'
     elif terug == 1:
-        print 'Error, job not error to jobqueue.'
+        print 'Error, job not to jobqueue.'
     elif terug == 4:
         print 'Duplicate job, not added.'
     sys.exit(terug)
