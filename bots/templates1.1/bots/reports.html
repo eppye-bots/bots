@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<form action="{{ form.action }}" method="post">
+    <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
+    <input type="submit" name="2select" value="{% trans 'Change selection' %}" />
+    {% include "bots/paginator.html" %}
+
+    <table id="botstable">
+        {% for hidden in form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        <thead>
+            <tr>
+                <th></th>
+                <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'State' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="type" />{% trans 'Type' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="lastreceived" />{% trans '#in' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="send" />{% trans '#out' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Error' %}</button></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in queryset.object_list %}
+            <tr  class="{% cycle 'row1' 'row2' %}">
+                <td>
+                    <div class="dropdown"><img class="action" src="/media/images/star.png" />
+                        <ul>
+                            <li><button class="botsheader" type="submit" name="report2incoming" value="{{row.idta}}" />{% trans 'View incoming' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2outgoing" value="{{row.idta}}" />{% trans 'View outgoing' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2process" value="{{row.idta}}" />{% trans 'View process errors' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2errors" value="{{row.idta}}" />{% trans 'View file errors' %}</button></li>
+                        </ul>
+                    </div>
+                </td>
+                <td>{% if row.status %}
+                        {% if row.lasterror or row.lastok or row.lastopen %}
+                            <img src="/media/img/admin/icon_error.gif" style="width: 1em;"/>
+                        {% else %}
+                            <img src="/media/img/admin/icon_alert.gif" style="width: 1em;"/>
+                        {% endif %}
+                    {% else %}
+                        <img src="/media/img/admin/icon_success.gif" style="width: 1em;"/>
+                    {% endif %}
+                </td>
+                <td>{{row.type}}</td>
+                <td>{{row.lastreceived}}</td>
+                <td>{{row.send}}</td>
+                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td>
+                    {% if row.lasterror %}
+                        {{row.lasterror}} {% trans 'files with errors' %}; 
+                    {% endif %}
+                    {% if row.lastok %}
+                        {{row.lastok}} {% trans 'files got stuck' %}; 
+                    {% endif %}
+                    {% if row.lastopen %}
+                        {{row.lastopen}} {% trans 'system errors' %}; 
+                    {% endif %}
+                    {% if row.processerrors %}
+                        {{row.processerrors}} {% trans 'errors in processes' %}; 
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</form>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<br/>
+<h1>Make a plugin</h1>
+<p>The plugin that is made will be offered to you as a download.</p>
+<p>Select what you need in the plugin:</p>
+<br/>
+<form action="/plugout" method="POST" enctype="multipart/form-data">{% csrf_token %}
+    <table>
+        {{ form }}
+    </table>
+    <br/>
+    <input type="submit" name="submit" value="{% trans 'Make plugin' %}" />
+</form>
+{% endblock %}
