@@ -1,6 +1,9 @@
 #~ from datetime import datetime
 from django.db import models
 from django.utils.translation import ugettext as _
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django import forms
 #django is not excellent in generating db. But they have provided a way to customize the generated database using SQL. see bots/sql/*.
 
 STATUST = [
@@ -116,8 +119,19 @@ class StripCharField(models.CharField):
         else:
             return value
 
+def multiple_email_validator(value):
+    emails = value.split(',')
+    for email in emails:
+        try:
+            validate_email(email.strip())
+        except ValidationError as e:
+            raise ValidationError(_(u'Enter valid e-mail address(es) separated by commas.'), code='invalid')
 
+class MultipleEmailField(models.CharField):
+    default_validators = [multiple_email_validator]
+    description = _('One or more e-mail address(es),separated by ",".')
 
+    
 class botsmodel(models.Model):
     class Meta:
         abstract = True
@@ -232,7 +246,7 @@ class partner(botsmodel):
     isgroup = models.BooleanField(default=False)
     name = StripCharField(max_length=256) #only used for user information
     mail = StripCharField(max_length=256,blank=True)
-    cc = models.EmailField(max_length=256,blank=True)
+    cc = MultipleEmailField(max_length=256,blank=True)
     mail2 = models.ManyToManyField(channel, through='chanpar',blank=True)
     group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
@@ -247,7 +261,7 @@ class chanpar(botsmodel):
     idpartner = models.ForeignKey(partner,verbose_name=_(u'partner'))
     idchannel = models.ForeignKey(channel,verbose_name=_(u'channel'))
     mail = StripCharField(max_length=256)
-    cc = models.EmailField(max_length=256,blank=True)           #added 20091111
+    cc = MultipleEmailField(max_length=256,blank=True)           #added 20091111
     askmdn = models.BooleanField(default=False)     #not used anymore 20091019
     sendmdn = models.BooleanField(default=False)    #not used anymore 20091019
     class Meta:
