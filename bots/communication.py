@@ -747,7 +747,9 @@ class smtp(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
-                addresslist = [x for x in (row['tomail'],row['cc']) if x]
+                addresslist = row['cc'].split(',')
+                addresslist.append(row['tomail'])
+                addresslist = [x.strip() for x in addresslist if x]
                 sendfile = botslib.opendata(row['filename'], 'rb')
                 msg = sendfile.read()
                 sendfile.close()
