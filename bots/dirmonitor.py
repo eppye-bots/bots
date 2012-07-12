@@ -34,6 +34,7 @@ if os.name == 'nt':
         ''' detecting right events is not easy in windows :-(
             want to detect: new file,  move, drop, rename, write/append to file
             only FILE_NOTIFY_CHANGE_LAST_WRITE: copy yes, no move
+            for rec=True: event that subdirectory itself is updated (for file deletes in dir)
         '''
         while True:
             results = win32file.ReadDirectoryChangesW(  hDir,
@@ -51,13 +52,13 @@ if os.name == 'nt':
                                                         None
                                                         )
             if results:
-                for action, filename in results:
-                    print filename, ACTIONS.get (action, "Unknown")
                 #for each incoming event: place route to run in a set. Main thread takes action.
                 for action, filename in results:
+                    print filename, ACTIONS.get (action, "Unknown")
+                for action, filename in results:
                     if action in [1,3,5] and fnmatch.fnmatch(filename, dir_watch['filemask']):
-                        if dir_watch['rec'] and os.sep in filename:
-                            continue
+                        #~ if dir_watch['rec'] and os.sep in filename:
+                            #~ continue
                         #~ full_filename = os.path.join (path_to_watch, file)
                         cond.acquire()
                         tasks.add(dir_watch['route'])
@@ -92,13 +93,10 @@ else:
             '''
             #~ print 'event detected',event.name,event.maskname, event.wd
             if fnmatch.fnmatch(event.name, self.watch_data[event.wd][0]):
-                try:
-                    self.cond.acquire()
-                    self.tasks.add(self.watch_data[event.wd][1])
-                    self.cond.notify()
-                    self.cond.release()
-                except Exception, msg:
-                    print 'Error in running task: "%s".'%msg
+                self.cond.acquire()
+                self.tasks.add(self.watch_data[event.wd][1])
+                self.cond.notify()
+                self.cond.release()
 
     def linux_event_handler(cond,tasks):
         #initialize linux directory monitor
@@ -144,6 +142,14 @@ def start():
     tasks= set()    
 
     if os.name == 'nt':
+        dir_watch_data = []
+        for section in botsglobal.ini.sections():
+            if section.startswith('dirmonitor') and section[len('dirmonitor')]:
+                dir_watch_data.append({})
+                dir_watch_data[-1]['path'] = botsglobal.ini.get(section,'path')
+                dir_watch_data[-1]['rec'] = botsglobal.ini.getboolean(section,'recursive',False)
+                dir_watch_data[-1]['filemask'] = botsglobal.ini.getboolean(section,'filemask','*')
+                dir_watch_data[-1]['route'] = botsglobal.ini.getboolean(section,'route','')
          #start a thread per directory watcher
         for dir_watch in dir_watch_data:
             dir_watch_thread = threading.Thread(target=windows_event_handler, args=(dir_watch,cond,tasks))
@@ -172,9 +178,7 @@ def start():
             if not active_receiving:    #first request (after tasks have been  fired, or startup of dirmonitor)
                 active_receiving = True
                 last_time = time.time()
-                print 'no active receiving.'
             else:     #active receiving events
-                print 'active receiving.'
                 current_time = time.time()
                 if current_time - last_time >= TIMEOUT:  #cond.wait returned probably because of a timeout
                     try:
@@ -187,7 +191,7 @@ def start():
                     active_receiving = False
                 else:                                   #cond.wait returned probably because of a timeout
                     print 'time difference to small.'
-                last_time = current_time
+                    last_time = current_time
     cond.release()
     sys.exit(0)
 
