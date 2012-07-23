@@ -1,8 +1,18 @@
+#monitors directories for new files.
+#if a new file, lauch a job to the jobqueue server (so: jobqueue-server is needed).
+#directories to wachs are in config/bots.ini
+#runs as a daemon/service.
+#this module contains separate implementations for linux and windows
+#integrate in bots?? parameters should be in channels....indicate watch or not, have  path, filename. can retrieve route. add: rec
+
 import sys
 import os
 import fnmatch
 import threading
 import time
+import logging
+from logging.handlers import TimedRotatingFileHandler
+logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line.
 #bots imports
 import botsinit
 import botsglobal
@@ -15,12 +25,12 @@ if os.name == 'nt':
     except Exception, msg: 
         raise ImportError(u'Dependency failure: bots directory monitoring requires python library "Python Win32 Extensions" on windows. Error:\n%s'%msg)
    
-    def windows_event_handler(dir_watch,cond,tasks):
-        ACTIONS = { 1 : "Created",      #tekst for printing results
-                    2 : "Deleted",
-                    3 : "Updated",
-                    4 : "Renamed from something",
-                    5 : "Renamed to something",
+    def windows_event_handler(logger,dir_watch,cond,tasks):
+        ACTIONS = { 1 : "Created  ",      #tekst for printing results
+                    2 : "Deleted  ",
+                    3 : "Updated  ",
+                    4 : "Rename from",
+                    5 : "Rename to",
                     }
         FILE_LIST_DIRECTORY = 0x0001
         hDir = win32file.CreateFile(dir_watch['path'],           #path to directory
@@ -54,7 +64,7 @@ if os.name == 'nt':
             if results:
                 #for each incoming event: place route to run in a set. Main thread takes action.
                 for action, filename in results:
-                    print filename, ACTIONS.get (action, "Unknown")
+                    logger.debug(u'Event: %s %s',ACTIONS.get (action, "Unknown"),filename)
                 for action, filename in results:
                     if action in [1,3,5] and fnmatch.fnmatch(filename, dir_watch['filemask']):
                         #~ if dir_watch['rec'] and os.sep in filename:
@@ -65,8 +75,9 @@ if os.name == 'nt':
                         cond.notify()
                         cond.release()
                         break       #the route is triggered, do not need to trigger more often
-    #end of windows-specific functions##################################################################################
+    #end of windows-specific ##################################################################################
 else:
+    #linux specific ###########################################################################################
     try:
         import pyinotify
     except Exception, msg: 
@@ -80,46 +91,61 @@ else:
             maskname=eg IN_MOVED_TO 
             name=<filename>
             path=<path>
-            pathname=<path>/<fielanme> 
+            pathname=<path>/<filename> 
             wd=<int>     #the watch
         ''' 
-        def my_init(self, watch_data,cond,tasks):
-            self.watch_data = watch_data
+        def my_init(self, logger,dir_watch_data,cond,tasks):
+            self.dir_watch_data = dir_watch_data
             self.cond = cond
             self.tasks = tasks
+            self.logger = logger
+            
+        def process_IN_CREATE(self, event):
+            """ these events are not needed, but otherwise auto_add does not work...."""
+            pass
             
         def process_default(self,event):
-            ''' for each incoming event: place route to run in a set. Main thread takes action.
+            ''' for each incoming event: place route to run in a set. Main thread sends actual job.
             '''
+            #~ if event.mask == pyinotify.IN_CLOSE_WRITE and event.dir and self.watch_data[event.wd][2]: 
+                #~ logger.info(u'new directory!!"%s %s".',event.)
             #~ print 'event detected',event.name,event.maskname, event.wd
-            if fnmatch.fnmatch(event.name, self.watch_data[event.wd][0]):
-                self.cond.acquire()
-                self.tasks.add(self.watch_data[event.wd][1])
-                self.cond.notify()
-                self.cond.release()
+            for dir_watch in self.dir_watch_data:
+                if event.pathname.startswith(dir_watch['path']):
+                    if fnmatch.fnmatch(event.name, dir_watch['filemask']):
+                        self.cond.acquire()
+                        self.tasks.add(dir_watch['route'])
+                        self.cond.notify()
+                        self.cond.release()
 
-    def linux_event_handler(cond,tasks):
-        #initialize linux directory monitor
+    def linux_event_handler(logger,dir_watch_data, cond,tasks):
         watch_manager = pyinotify.WatchManager()
-        mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO | pyinotify.IN_MODIFY
-        #loop thru sections of bots.ini to get the information about the directories to monitor
-        #each dir is a separate watch, so multiple watches can be configured....
-        #integrate in bots?? parameters should be in channels....indicate watch or not, have  path, filename. can retrieve route. add: rec
-        watch_data = {}
-        for section in botsglobal.ini.sections():
-            if section.startswith('dirmonitor') and  section[len('dirmonitor'):]:
-                wd = watch_manager.add_watch(path=botsglobal.ini.get(section,'path'),mask=mask,rec=botsglobal.ini.getboolean(section,'recursive',False),auto_add=False,do_glob=True)
-                #one directory can have multiple watches; need to know what watch is related to what configuration section in order to get eg route to call.
-                for watch_id in wd.itervalues():
-                    watch_data[watch_id] = (botsglobal.ini.get(section,'filemask','*'),botsglobal.ini.get(section,'route',''))
-        if not watch_data:
-            print 'nothing to watch!'
-            sys.exit(0)
-        
-        handler = LinuxEventHandler(watch_data=watch_data,cond=cond,tasks=tasks)
+        mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO | pyinotify.IN_MODIFY | pyinotify.IN_CREATE
+        for dir_watch in dir_watch_data:
+                wd = watch_manager.add_watch(path=dir_watch['path'],mask=mask,rec=dir_watch['rec'],auto_add=True,do_glob=True)
+        handler = LinuxEventHandler(logger=logger,dir_watch_data=dir_watch_data,cond=cond,tasks=tasks)
         notifier = pyinotify.Notifier(watch_manager, handler)
         notifier.loop()
-    #end of linux-specific functions##################################################################################
+    #end of linux-specific ##################################################################################
+
+def initlogging(logname):
+    # initialise file logging
+    convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
+    logging.addLevelName(25, 'STARTINFO')
+    logger = logging.getLogger(logname)
+    logger.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_file_level','INFO')])
+    handler = TimedRotatingFileHandler(os.path.join(botsglobal.ini.get('directories','logging'),logname+'.log'),when='midnight',backupCount=10)
+    fileformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
+    handler.setFormatter(fileformat)
+    logger.addHandler(handler)
+    # initialise console/screen logging
+    if botsglobal.ini.getboolean(logname,'log_console',True):      #handling for logging to screen
+        console = logging.StreamHandler()
+        console.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_console_level','STARTINFO')])
+        consoleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
+        console.setFormatter(consoleformat) # add formatter to console
+        logger.addHandler(console)  # add console to logger
+    return logger
 
 
 def start():
@@ -137,32 +163,40 @@ def start():
 
     botsinit.generalinit(configdir)         #needed to read config
     botsenginepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py')        #get path to bots-engine
+
+    PROCESS_NAME = 'dirmonitor'
+    logger = initlogging(PROCESS_NAME)
+    logger.log(25,u'Bots %s started.',PROCESS_NAME)
+    logger.log(25,u'Bots %s configdir: "%s".',PROCESS_NAME,botsglobal.ini.get('directories','config'))
     
     cond = threading.Condition()
     tasks= set()    
+    dir_watch_data = []
+    for section in botsglobal.ini.sections():
+        if section.startswith('dirmonitor') and section[len('dirmonitor'):]:
+            dir_watch_data.append({})
+            dir_watch_data[-1]['path'] = botsglobal.ini.get(section,'path')
+            dir_watch_data[-1]['rec'] = botsglobal.ini.getboolean(section,'recursive',False)
+            dir_watch_data[-1]['filemask'] = botsglobal.ini.get(section,'filemask','*')
+            dir_watch_data[-1]['route'] = botsglobal.ini.get(section,'route','')
+    if not dir_watch_data:
+        logger.error(u'Nothing to watch!')
+        sys.exit(0)
 
     if os.name == 'nt':
-        dir_watch_data = []
-        for section in botsglobal.ini.sections():
-            if section.startswith('dirmonitor') and section[len('dirmonitor')]:
-                dir_watch_data.append({})
-                dir_watch_data[-1]['path'] = botsglobal.ini.get(section,'path')
-                dir_watch_data[-1]['rec'] = botsglobal.ini.getboolean(section,'recursive',False)
-                dir_watch_data[-1]['filemask'] = botsglobal.ini.getboolean(section,'filemask','*')
-                dir_watch_data[-1]['route'] = botsglobal.ini.getboolean(section,'route','')
-         #start a thread per directory watcher
+         #for windows: start a thread per directory watcher
         for dir_watch in dir_watch_data:
-            dir_watch_thread = threading.Thread(target=windows_event_handler, args=(dir_watch,cond,tasks))
+            dir_watch_thread = threading.Thread(target=windows_event_handler, args=(logger,dir_watch,cond,tasks))
             dir_watch_thread.daemon = True  #do not wait for thread when exiting
             dir_watch_thread.start()
     else:
-        #one watch-thread, but multiple watches. 
-        dir_watch_thread = threading.Thread(target=linux_event_handler, args=(cond,tasks))
+        #for linux: one watch-thread, but multiple watches. 
+        dir_watch_thread = threading.Thread(target=linux_event_handler, args=(logger,dir_watch_data,cond,tasks))
         dir_watch_thread.daemon = True  #do not wait for thread when exiting
         dir_watch_thread.start()
 
-    # this main thread get the results from the watch-threads.
-    print 'start watching'
+    # this main thread get the results from the watch-thread(s).
+    logger.info(u'Directory monitor server started.')
     active_receiving = False
     TIMEOUT = 2.0
     cond.acquire()
@@ -183,14 +217,14 @@ def start():
                 if current_time - last_time >= TIMEOUT:  #cond.wait returned probably because of a timeout
                     try:
                         for task in tasks:
-                           job2queue.send_job_to_jobqueue([sys.executable,botsenginepath,task])
-                        print 'send to queue:',[sys.executable,botsenginepath,task]
+                            logger.info(u'Send to queue "%s %s".',botsenginepath,task)
+                            job2queue.send_job_to_jobqueue([sys.executable,botsenginepath,task])
                     except Exception, msg:
-                        print 'Error in running task: "%s".'%msg
+                        logger.info(u'Error in running task: "%s".',msg)
                     tasks.clear()
                     active_receiving = False
                 else:                                   #cond.wait returned probably because of a timeout
-                    print 'time difference to small.'
+                    logger.debug(u'time difference to small.')
                     last_time = current_time
     cond.release()
     sys.exit(0)
