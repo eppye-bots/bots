@@ -41,7 +41,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         try:
             ta_fromfile = botslib.OldTransaction(row['idta'])  #TRANSLATE ta
             ta_parsedfile = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta
-            #read whole edi-file: read, parse and made into a inmessage-object. Message is represented a a tree.
+            #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.edifromfile(frompartner=row['frompartner'],
                                             topartner=row['topartner'],
                                             filename=row['filename'],

@@ -1,11 +1,13 @@
 import django
-from django.contrib import admin
 from django.utils.translation import ugettext as _
-from django.http import Http404, HttpResponseRedirect
-from django.contrib.admin.util import unquote
-from django.core.exceptions import PermissionDenied
 from django.utils.encoding import force_unicode
 from django.utils.html import escape
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
+from django.contrib.admin.util import unquote
+from django.core.exceptions import PermissionDenied
+from django.http import Http404, HttpResponseRedirect
 #***********
 import models
 import botsglobal
@@ -191,8 +193,6 @@ class UniekAdmin(BotsAdmin):     #AKA counters
 admin.site.register(models.uniek,UniekAdmin)
 
 #User - change the default display of user screen
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
 UserAdmin.list_display = ('username', 'first_name', 'last_name','email', 'is_active', 'is_staff', 'is_superuser', 'date_joined','last_login')
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)

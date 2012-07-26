@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bots Open Source EDI Translator 2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-22 01:00+0200\n"
+"POT-Creation-Date: 2012-07-24 16:24+0200\n"
 "PO-Revision-Date: 2010-05-26\n"
 "Last-Translator: hjebbers <hjebbers@gmail.com>\n"
 "Language-Team: Dutch <LL@li.org>\n"
@@ -171,84 +171,72 @@ msgstr ""
 msgid "Severe error: found statust (idta: $idta)."
 msgstr ""
 
-#: botsinit.py:22
-msgid "No entry \"$entry\" in section \"$section\" in \"bots.ini\"."
-msgstr ""
-
-#: botsinit.py:47 botsinit.py:77
-msgid "In initilisation: path to configuration does not exists: \"$path\"."
-msgstr ""
-
-#: botsinit.py:185
-msgid "Could not find database file for SQLite"
-msgstr "Kan geen SQLite-database vinden"
-
-#: botslib.py:20
+#: botslib.py:21
 msgid "server name"
 msgstr "naam server"
 
-#: botslib.py:21
+#: botslib.py:22
 msgid "served at port"
 msgstr "draait op poort"
 
-#: botslib.py:22
+#: botslib.py:23
 msgid "platform"
 msgstr "besturingssysteem"
 
-#: botslib.py:23
+#: botslib.py:24
 msgid "machine"
 msgstr "computer"
 
-#: botslib.py:24
+#: botslib.py:25
 msgid "python version"
 msgstr "python versie"
 
-#: botslib.py:25
+#: botslib.py:26
 msgid "django version"
 msgstr "django versie"
 
-#: botslib.py:26
+#: botslib.py:27
 msgid "bots version"
 msgstr "bots versie"
 
-#: botslib.py:27
+#: botslib.py:28
 msgid "bots installation path"
 msgstr "bots installatie pad"
 
-#: botslib.py:28
+#: botslib.py:29
 msgid "config path"
 msgstr "pad voor configuratie files"
 
-#: botslib.py:29
+#: botslib.py:30
 msgid "botssys path"
 msgstr "pad voor botsssys"
 
-#: botslib.py:30
+#: botslib.py:31
 msgid "usersys path"
 msgstr "pad voor usersys"
 
-#: botslib.py:352
+#: botslib.py:353
 msgid "change not valid: expect status to be an integer. Programming error."
 msgstr ""
 
-#: botslib.py:554
+#: botslib.py:568 botslib.py:571
 msgid ""
 "import error in \"$module\", error:\n"
 "$txt"
 msgstr ""
 
-#: botslib.py:618 botslib.py:634
+#: botslib.py:635 botslib.py:651
 msgid "Script file \"$filename\": \"$txt\"."
 msgstr ""
 
-#: botslib.py:643
+#: botslib.py:660
 #, python-format
 msgid ""
 "error running extern program \"%(program)s\", error:\n"
 "%(error)s"
 msgstr ""
 
-#: botslib.py:700
+#: botslib.py:717
 msgid ""
 "Charset \"$charset2\" for channel not matching with charset \"$charset1\" "
 "for edi-file."
@@ -256,11 +244,11 @@ msgstr ""
 "Tekenset \"$charset2\" voor kanaal komt niet overeen met tekenset "
 "\"$charset1\" van het edi-bestand."
 
-#: botslib.py:716
+#: botslib.py:733
 msgid "No scheme in uri."
 msgstr ""
 
-#: botslib.py:735
+#: botslib.py:752
 msgid "Uri is empty."
 msgstr ""
 
@@ -284,8 +272,7 @@ msgstr "Ontvangen email-MDN bevat fouten."
 msgid ""
 "Emailaddress(es) $email not authorised/unknown (channel \"$idchannel\")."
 msgstr ""
-"Mail-adres(en) $email not geauthoriseerd of onbekend (kanaal \"$idchannel"
-"\")."
+"Mail-adres(en) $email not geauthoriseerd of onbekend (kanaal \"$idchannel\")."
 
 #: communication.py:466
 msgid "No valid attachment in received email"
@@ -323,19 +310,19 @@ msgstr ""
 "SMTP/email login mislukt. Foutmelding:\n"
 "$txt"
 
-#: communication.py:833 communication.py:900
+#: communication.py:835 communication.py:902
 msgid "Can not do a systemlock on this platform"
 msgstr ""
 
-#: communication.py:1068
+#: communication.py:1070
 msgid "ftps is not supported by your python version, use >=2.7"
 msgstr "ftps wordt niet ondersteund door uw python versie, gebruik >=2.7"
 
-#: communication.py:1144
+#: communication.py:1146
 msgid "ftpis is not supported by your python version, use >=2.7"
 msgstr "ftpis wordt niet ondersteund door uw python versie, gebruik >=2.7"
 
-#: communication.py:1180
+#: communication.py:1182
 #, python-format
 msgid ""
 "Dependency failure: communicationtype \"sftp\" requires python library "
@@ -343,7 +330,7 @@ msgid ""
 "%s"
 msgstr ""
 
-#: communication.py:1185
+#: communication.py:1187
 #, python-format
 msgid ""
 "Dependency failure: communicationtype \"sftp\" requires python library "
@@ -351,17 +338,17 @@ msgid ""
 "%s"
 msgstr ""
 
-#: communication.py:1453
+#: communication.py:1455
 msgid ""
 "channel \"$channel\" needs unique filenames (no queue-file); use eg *.edi as "
 "value for \"filename\""
 msgstr ""
 
-#: communication.py:1542
+#: communication.py:1544
 msgid "No function \"$function\" in imported script \"$script\"."
 msgstr ""
 
-#: communication.py:1548
+#: communication.py:1550
 #, python-format
 msgid ""
 "Dependency failure: communication type \"database\" requires python library "
@@ -369,28 +356,28 @@ msgid ""
 "%s"
 msgstr ""
 
-#: communication.py:1624
+#: communication.py:1626
 #, python-format
 msgid "Channel \"%s\" is type \"db\", but no communicationscript exists."
 msgstr ""
 
-#: communication.py:1627
+#: communication.py:1629
 msgid "No function \"connect\" in imported script \"$script\"."
 msgstr ""
 
-#: communication.py:1629
+#: communication.py:1631
 msgid "No function \"incommunicate\" in imported script \"$script\"."
 msgstr ""
 
-#: communication.py:1631
+#: communication.py:1633
 msgid "No function \"outcommunicate\" in imported script \"$script\"."
 msgstr ""
 
-#: communication.py:1633
+#: communication.py:1635
 msgid "No function \"disconnect\" in imported script \"$script\"."
 msgstr ""
 
-#: communication.py:1723
+#: communication.py:1725
 #, python-format
 msgid ""
 "Channel \"%s\" is type \"communicationscript\", but no communicationscript "
@@ -492,36 +479,30 @@ msgstr ""
 msgid "Not found envelope \"$envelope\"."
 msgstr ""
 
-#: envelope.py:198 envelope.py:273 envelope.py:389
+#: envelope.py:198 envelope.py:273 envelope.py:387
 msgid "In enveloping \"frompartner\" or \"topartner\" unknown: \"$ta_info\"."
 msgstr ""
 
-#: envelope.py:324 outmessage.py:754
-#, python-format
+#: envelope.py:323 outmessage.py:753
 msgid ""
-"Dependency failure: editype \"template\" requires python library \"kid\". "
-"Error:\n"
-"%s"
+"Dependency failure: editype \"template\" requires python library \"kid\"."
 msgstr ""
 
-#: envelope.py:329 envelope.py:366
+#: envelope.py:328 envelope.py:364
 msgid ""
 "While enveloping in \"$editype.$messagetype\": syntax option \"envelope-"
 "template\" not filled; is required."
 msgstr ""
 
-#: envelope.py:337 envelope.py:345 envelope.py:375 envelope.py:382
+#: envelope.py:336 envelope.py:344 envelope.py:373 envelope.py:380
 msgid ""
 "While enveloping in \"$editype.$messagetype\", error:\n"
 "$txt"
 msgstr ""
 
-#: envelope.py:361 outmessage.py:797
-#, python-format
+#: envelope.py:359 outmessage.py:795
 msgid ""
-"Dependency failure: editype \"template\" requires python library \"genshi\". "
-"Error:\n"
-"%s"
+"Dependency failure: editype \"template\" requires python library \"genshi\"."
 msgstr ""
 
 #: grammar.py:14
@@ -1258,11 +1239,11 @@ msgid ""
 "getloop"
 msgstr ""
 
-#: models.py:7
+#: models.py:10
 msgid "Open"
 msgstr ""
 
-#: models.py:8 templates/bots/detail.html:27 templates/bots/incoming.html:35
+#: models.py:11 templates/bots/detail.html:27 templates/bots/incoming.html:35
 #: templates/bots/process.html:26 templates/bots/reports.html:22
 #: templates1.1/bots/detail.html:27 templates1.1/bots/incoming.html:35
 #: templates1.1/bots/process.html:26 templates1.1/bots/reports.html:22
@@ -1271,503 +1252,511 @@ msgstr ""
 msgid "Error"
 msgstr "Fout"
 
-#: models.py:9
+#: models.py:12
 msgid "Stuck"
 msgstr "Vastgelopen"
 
-#: models.py:10
+#: models.py:13
 msgid "Done"
 msgstr "Gedaan"
 
-#: models.py:13
+#: models.py:16
 msgid "process"
 msgstr "proces"
 
-#: models.py:14
+#: models.py:17
 msgid "discarded"
 msgstr ""
 
-#: models.py:15
+#: models.py:18
 msgid "FileReceive"
 msgstr "Ontvangen"
 
-#: models.py:16
+#: models.py:19
 msgid "RawInfile"
 msgstr ""
 
-#: models.py:17
+#: models.py:20
 msgid "Mimein"
 msgstr ""
 
-#: models.py:18
+#: models.py:21
 msgid "Infile"
 msgstr ""
 
-#: models.py:19 models.py:21 models.py:23 models.py:25 models.py:27
+#: models.py:22 models.py:24 models.py:26 models.py:28 models.py:30
 msgid "Set for preprocess"
 msgstr ""
 
-#: models.py:20 models.py:22 models.py:24 models.py:26 models.py:28
+#: models.py:23 models.py:25 models.py:27 models.py:29 models.py:31
 msgid "Preprocess"
 msgstr ""
 
-#: models.py:29
+#: models.py:32
 msgid "Translate"
 msgstr ""
 
-#: models.py:30
+#: models.py:33
 msgid "Parsed"
 msgstr ""
 
-#: models.py:31
+#: models.py:34
 msgid "Splitup"
 msgstr ""
 
-#: models.py:32
+#: models.py:35
 msgid "Translated"
 msgstr ""
 
-#: models.py:33
+#: models.py:36
 msgid "Merged"
 msgstr ""
 
-#: models.py:34
+#: models.py:37
 msgid "Outfile"
 msgstr ""
 
-#: models.py:35
+#: models.py:38
 msgid "RawOutfile"
 msgstr ""
 
-#: models.py:36
+#: models.py:39
 msgid "FileSend"
 msgstr ""
 
-#: models.py:39
+#: models.py:42
 msgid "csv"
 msgstr ""
 
-#: models.py:40 models.py:79
+#: models.py:43 models.py:82
 msgid "database (old)"
 msgstr ""
 
-#: models.py:41 models.py:78
+#: models.py:44 models.py:81
 msgid "db"
 msgstr ""
 
-#: models.py:42
+#: models.py:45
 msgid "edifact"
 msgstr ""
 
-#: models.py:43
+#: models.py:46
 msgid "email-confirmation"
 msgstr "email bevestiging"
 
-#: models.py:44
+#: models.py:47
 msgid "fixed"
 msgstr ""
 
-#: models.py:45
+#: models.py:48
 msgid "idoc"
 msgstr ""
 
-#: models.py:46
+#: models.py:49
 msgid "json"
 msgstr ""
 
-#: models.py:47
+#: models.py:50
 msgid "jsonnocheck"
 msgstr ""
 
-#: models.py:48
+#: models.py:51
 msgid "mailbag"
 msgstr ""
 
-#: models.py:49
+#: models.py:52
 msgid "raw"
 msgstr ""
 
-#: models.py:50
+#: models.py:53
 msgid "template"
 msgstr ""
 
-#: models.py:51
+#: models.py:54
 msgid "template-html"
 msgstr ""
 
-#: models.py:52
+#: models.py:55
 msgid "tradacoms"
 msgstr ""
 
-#: models.py:53
+#: models.py:56
 msgid "xml"
 msgstr ""
 
-#: models.py:54
+#: models.py:57
 msgid "xmlnocheck"
 msgstr ""
 
-#: models.py:55
+#: models.py:58
 msgid "x12"
 msgstr ""
 
-#: models.py:58 viewlib.py:184
+#: models.py:61 viewlib.py:184
 msgid "in"
 msgstr ""
 
-#: models.py:59 viewlib.py:190
+#: models.py:62 viewlib.py:190
 msgid "out"
 msgstr "uit"
 
-#: models.py:62 templates/bots/filer.html:25 templates1.1/bots/filer.html:25
+#: models.py:65 templates/bots/filer.html:25 templates1.1/bots/filer.html:25
 #: templates1.2/bots/filer.html:25
 msgid "file"
 msgstr "bestand"
 
-#: models.py:63
+#: models.py:66
 msgid "smtp"
 msgstr ""
 
-#: models.py:64
+#: models.py:67
 msgid "smtps"
 msgstr ""
 
-#: models.py:65
+#: models.py:68
 msgid "smtpstarttls"
 msgstr ""
 
-#: models.py:66
+#: models.py:69
 msgid "pop3"
 msgstr ""
 
-#: models.py:67
+#: models.py:70
 msgid "pop3s"
 msgstr ""
 
-#: models.py:68
+#: models.py:71
 msgid "pop3apop"
 msgstr ""
 
-#: models.py:69
+#: models.py:72
 msgid "imap4"
 msgstr ""
 
-#: models.py:70
+#: models.py:73
 msgid "imap4s"
 msgstr ""
 
-#: models.py:71
+#: models.py:74
 msgid "ftp"
 msgstr ""
 
-#: models.py:72
+#: models.py:75
 msgid "ftps (explicit)"
 msgstr ""
 
-#: models.py:73
+#: models.py:76
 msgid "ftps (implicit)"
 msgstr ""
 
-#: models.py:74
+#: models.py:77
 msgid "sftp (ssh)"
 msgstr ""
 
-#: models.py:75
+#: models.py:78
 msgid "xmlrpc"
 msgstr ""
 
-#: models.py:76
+#: models.py:79
 msgid "mimefile"
 msgstr ""
 
-#: models.py:77
+#: models.py:80
 msgid "communicationscript"
 msgstr ""
 
-#: models.py:80
+#: models.py:83
 msgid "intercommit"
 msgstr ""
 
-#: models.py:83
+#: models.py:86
 msgid "ask an email confirmation (MDN) when sending"
 msgstr ""
 
-#: models.py:84
+#: models.py:87
 msgid "send an email confirmation (MDN) when receiving"
 msgstr ""
 
-#: models.py:85
+#: models.py:88
 msgid "ask a x12 confirmation (997) when sending"
 msgstr ""
 
-#: models.py:86
+#: models.py:89
 msgid "send a x12 confirmation (997) when receiving"
 msgstr ""
 
-#: models.py:87
+#: models.py:90
 msgid "ask an edifact confirmation (CONTRL) when sending"
 msgstr ""
 
-#: models.py:88
+#: models.py:91
 msgid "send an edifact confirmation (CONTRL) when receiving"
 msgstr ""
 
-#: models.py:91
+#: models.py:94
 msgid "all"
 msgstr ""
 
-#: models.py:92 models.py:156 models.py:305
+#: models.py:95 models.py:170 models.py:319
 msgid "route"
 msgstr ""
 
-#: models.py:93 models.py:157 models.py:248
+#: models.py:96 models.py:171 models.py:262
 msgid "channel"
 msgstr "kanaal"
 
-#: models.py:94
+#: models.py:97
 msgid "frompartner"
 msgstr "VanPartner"
 
-#: models.py:95
+#: models.py:98
 msgid "topartner"
 msgstr "NaarPartner"
 
-#: models.py:96 templates/bots/filer.html:23 templates1.1/bots/filer.html:23
+#: models.py:99 templates/bots/filer.html:23 templates1.1/bots/filer.html:23
 #: templates1.2/bots/filer.html:23
 msgid "messagetype"
 msgstr "berichttype"
 
-#: models.py:99
+#: models.py:102
 msgid "base64"
 msgstr ""
 
-#: models.py:100
+#: models.py:103
 msgid "never"
 msgstr ""
 
-#: models.py:101
+#: models.py:104
 msgid "base64 if not ascii"
 msgstr ""
 
-#: models.py:166
+#: models.py:128
+msgid "Enter valid e-mail address(es) separated by commas."
+msgstr ""
+
+#: models.py:132
+msgid "One or more e-mail address(es),separated by \",\"."
+msgstr ""
+
+#: models.py:180
 msgid "confirm rule"
 msgstr "Regel voor bevestigen"
 
-#: models.py:169 models.py:179
+#: models.py:183 models.py:193
 msgid "type code"
 msgstr ""
 
-#: models.py:175
+#: models.py:189
 msgid "user code type"
 msgstr ""
 
-#: models.py:194
+#: models.py:208
 msgid "user code"
 msgstr ""
 
-#: models.py:199
+#: models.py:213
 msgid "in/out"
 msgstr ""
 
-#: models.py:205
+#: models.py:219
 msgid "password"
 msgstr "wachtwoord"
 
-#: models.py:206
+#: models.py:220
 msgid "Do not check if an incoming 'from' email addresses is known."
 msgstr "Geen controle op inkomend 'from' email adres."
 
-#: models.py:207
+#: models.py:221
 msgid "Do not check if an incoming 'to' email addresses is known."
 msgstr "Geen controle op inkomend 'to' email adres."
 
-#: models.py:208
+#: models.py:222
 msgid ""
 "For in-channels: remove the edi files after successful reading. Note: in "
 "production you do want to remove the edi files, else these are read over and "
 "over again!"
 msgstr ""
 
-#: models.py:210
+#: models.py:224
 msgid ""
 "For \"type\" ftp and file; read or write this filename. Wildcards allowed, "
 "eg \"*.edi\". Note for out-channels: if no wildcard is used, all edi message "
 "are written to one file."
 msgstr ""
 
-#: models.py:211
+#: models.py:225
 msgid ""
 "When reading or writing edi files in this directory use this file to "
 "indicate a directory lock."
 msgstr ""
 
-#: models.py:212
+#: models.py:226
 msgid ""
 "Use system file locking for reading & writing edi files on windows, *nix."
 msgstr ""
 
-#: models.py:217
+#: models.py:231
 msgid "mime encoding"
 msgstr ""
 
-#: models.py:217
+#: models.py:231
 msgid ""
 "Should edi-files be base64-encoded in email. Using base64 for edi (default) "
 "is often a good choice."
 msgstr ""
 
-#: models.py:220
+#: models.py:234
 msgid "Archive path"
 msgstr "Pad voor archivering"
 
-#: models.py:220
+#: models.py:234
 msgid ""
 "Write incoming or outgoing edi files to an archive. Use absolute or relative "
 "path; relative path is relative to bots directory. Eg: \"botssys/archive/"
 "mychannel\"."
 msgstr ""
 
-#: models.py:223
+#: models.py:237
 msgid "Max seconds"
 msgstr ""
 
-#: models.py:223
+#: models.py:237
 msgid "Max seconds used for the in-communication time for this channel."
 msgstr ""
 
-#: models.py:230
+#: models.py:244
 msgid "partner identification"
 msgstr "partneridentificatie"
 
-#: models.py:247
+#: models.py:261
 msgid "partner"
 msgstr ""
 
-#: models.py:256 models.py:257
+#: models.py:270 models.py:271
 msgid "email address per channel"
 msgstr "emailadres per kanaal"
 
-#: models.py:263
+#: models.py:277
 msgid "Editype to translate from."
 msgstr ""
 
-#: models.py:264
+#: models.py:278
 msgid "Messagetype to translate from."
 msgstr ""
 
-#: models.py:265
+#: models.py:279
 msgid "Alternative translation"
 msgstr ""
 
-#: models.py:265
+#: models.py:279
 msgid "Do this translation only for this alternative translation."
 msgstr ""
 
-#: models.py:266
+#: models.py:280
 msgid "Do this translation only for this frompartner."
 msgstr ""
 
-#: models.py:267
+#: models.py:281
 msgid "Do this translation only for this topartner."
 msgstr ""
 
-#: models.py:268
+#: models.py:282
 msgid "User mapping script to use for translation."
 msgstr ""
 
-#: models.py:269
+#: models.py:283
 msgid "Editype to translate to."
 msgstr "Editype waar naar vertaald wordt."
 
-#: models.py:270
+#: models.py:284
 msgid "Messagetype to translate to."
 msgstr "Berichttype waar naar vertaald wordt."
 
-#: models.py:276
+#: models.py:290
 msgid "translation"
 msgstr "vertaling"
 
-#: models.py:282
+#: models.py:296
 msgid ""
 "identification of route; one route can consist of multiple parts having the "
 "same \"idroute\"."
 msgstr ""
 
-#: models.py:283
+#: models.py:297
 msgid ""
 "for routes consisting of multiple parts, \"seq\" indicates the order these "
 "parts are run."
 msgstr ""
 
-#: models.py:285
+#: models.py:299
 msgid "incoming channel"
 msgstr "inkomend kanaal"
 
-#: models.py:286
+#: models.py:300
 msgid "the editype of the incoming edi files."
 msgstr ""
 
-#: models.py:287
+#: models.py:301
 msgid ""
 "the messagetype of incoming edi files. For edifact: messagetype=edifact; for "
 "x12: messagetype=x12."
 msgstr ""
 
-#: models.py:288
+#: models.py:302
 msgid "outgoing channel"
 msgstr "uitgaand kanaal"
 
-#: models.py:289
+#: models.py:303
 msgid "Only edi files with this editype to this outgoing channel."
 msgstr ""
 
-#: models.py:290
+#: models.py:304
 msgid "Only edi files of this messagetype to this outgoing channel."
 msgstr ""
 
-#: models.py:291
+#: models.py:305
 msgid ""
 "Only use if there is more than one \"translation\" for the same editype and "
 "messagetype. Advanced use, seldom needed."
 msgstr ""
 
-#: models.py:292
+#: models.py:306
 msgid "The frompartner of the incoming edi files. Seldom needed."
 msgstr "Ken VanPartner toe aan het edi bestand. Zelden nodig."
 
-#: models.py:293
+#: models.py:307
 msgid "The topartner of the incoming edi files. Seldom needed."
 msgstr ""
 
-#: models.py:294
+#: models.py:308
 msgid "Only edi files from this partner/partnergroup for this outgoing channel"
 msgstr ""
 
-#: models.py:295
+#: models.py:309
 msgid "Only edi files to this partner/partnergroup to this channel"
 msgstr ""
 
-#: models.py:296
+#: models.py:310
 msgid "Only edi files with this testindicator to this outgoing channel."
 msgstr "Filter de berichten voor dit uitgaand kanaal op testindicatie."
 
-#: models.py:297
+#: models.py:311
 msgid "Do a translation in this route."
 msgstr "Vertaal in deze route."
 
-#: models.py:298
+#: models.py:312
 msgid ""
 "Do not use this route in a normal run. Advanced, related to scheduling "
 "specific routes or not."
 msgstr ""
 
-#: models.py:302
+#: models.py:316
 msgid ""
 "Set ready for communication, but defer actual communication (this is done in "
 "another route)"
 msgstr ""
 
-#: models.py:436
+#: models.py:450
 msgid "counter"
 msgstr "teller"
 
@@ -1903,35 +1892,35 @@ msgstr ""
 msgid "values must be strings: getloop($mpath)"
 msgstr ""
 
-#: node.py:412 node.py:415
+#: node.py:410 node.py:413
 msgid "must be dicts in tuple: put($mpath)"
 msgstr ""
 
-#: node.py:417
+#: node.py:415
 msgid "section without \"BOTSID\": put($mpath)"
 msgstr ""
 
-#: node.py:423
+#: node.py:421
 msgid "keys must be strings: put($mpath)"
 msgstr ""
 
-#: node.py:434
+#: node.py:432
 msgid "error in root put \"$mpath\"."
 msgstr ""
 
-#: node.py:452 node.py:455
+#: node.py:450 node.py:453
 msgid "must be dicts in tuple: putloop($mpath)"
 msgstr ""
 
-#: node.py:457
+#: node.py:455
 msgid "section without \"BOTSID\": putloop($mpath)"
 msgstr ""
 
-#: node.py:460
+#: node.py:458
 msgid "keys must be strings: putloop($mpath)"
 msgstr ""
 
-#: node.py:473
+#: node.py:471
 msgid "error in root putloop \"$mpath\"."
 msgstr ""
 
@@ -1939,7 +1928,7 @@ msgstr ""
 msgid "Unknown editype for outgoing message: $editype"
 msgstr ""
 
-#: outmessage.py:115 outmessage.py:494 outmessage.py:830 outmessage.py:848
+#: outmessage.py:115 outmessage.py:494 outmessage.py:828 outmessage.py:846
 msgid "No outgoing message"
 msgstr "Er is geen uitgaand bestand"
 
@@ -2047,13 +2036,13 @@ msgstr ""
 msgid "No field \"BOTSID\" in xml-output in: \"$record\""
 msgstr ""
 
-#: outmessage.py:763 outmessage.py:772 outmessage.py:807 outmessage.py:814
+#: outmessage.py:762 outmessage.py:771 outmessage.py:805 outmessage.py:812
 msgid ""
 "While templating \"$editype.$messagetype\", error:\n"
 "$txt"
 msgstr ""
 
-#: outmessage.py:773 outmessage.py:815
+#: outmessage.py:772 outmessage.py:813
 #, python-format
 msgid "End writing to file \"%s\"."
 msgstr ""
@@ -2070,6 +2059,11 @@ msgstr ""
 #: pluglib.py:50
 #, python-format
 msgid "\"plugintype\" missing in: \"%s\". Nothing is written."
+msgstr ""
+
+#: pluglib.py:141 pluglib.py:152
+#, python-format
+msgid "no field column for: \"%s\"."
 msgstr ""
 
 #: pluglib.py:188
@@ -2137,11 +2131,6 @@ msgstr ""
 #: pluglib.py:272
 msgid "Writing files to filesystem is OK."
 msgstr "Schrijven van bestanden is gelukt."
-
-#: pluglib.py:287
-#, python-format
-msgid "    write file \"%s\"."
-msgstr "    schrijf bestand \"%s\"."
 
 #: preprocess.py:85
 msgid "Found no content in mailbag."
@@ -3133,33 +3122,33 @@ msgstr ""
 msgid "Run (only new)"
 msgstr "Run (alleen nieuwe berichten)"
 
-#: templates/bots/menu.html:69 templates1.1/bots/menu.html:69
-#: templates1.2/bots/menu.html:69
+#: templates/bots/menu.html:70 templates1.1/bots/menu.html:70
+#: templates1.2/bots/menu.html:70
 msgid "Run user-indicated retransmits"
 msgstr "Start run voor herzend/herontvangst"
 
-#: templates/bots/menu.html:70 templates1.1/bots/menu.html:70
-#: templates1.2/bots/menu.html:70
+#: templates/bots/menu.html:71 templates1.1/bots/menu.html:71
+#: templates1.2/bots/menu.html:71
 msgid "Retry user-indicated comm errors"
 msgstr "Herstel aangegeven communicatie fouten"
 
-#: templates/bots/menu.html:71 templates1.1/bots/menu.html:71
-#: templates1.2/bots/menu.html:71
+#: templates/bots/menu.html:72 templates1.1/bots/menu.html:72
+#: templates1.2/bots/menu.html:72
 msgid "Are you sure you want to retry ALL previous errors?\\n"
 msgstr "Weet u zeker dat u ALLE voorafgaande fouten opnieuw wilt draaien?"
 
-#: templates/bots/menu.html:71 templates1.1/bots/menu.html:71
-#: templates1.2/bots/menu.html:71
+#: templates/bots/menu.html:72 templates1.1/bots/menu.html:72
+#: templates1.2/bots/menu.html:72
 msgid "Retry all previous errors"
 msgstr "Start run voor alle eerder opgetreden fouten"
 
-#: templates/bots/menu.html:95 templates1.1/bots/menu.html:95
-#: templates1.2/bots/menu.html:95
+#: templates/bots/menu.html:96 templates1.1/bots/menu.html:96
+#: templates1.2/bots/menu.html:96
 msgid "Log in"
 msgstr "Inloggen"
 
-#: templates/bots/menu.html:98 templates1.1/bots/menu.html:98
-#: templates1.2/bots/menu.html:98
+#: templates/bots/menu.html:99 templates1.1/bots/menu.html:99
+#: templates1.2/bots/menu.html:99
 msgid "*****Javascript is not enabled. Bots works better with javascript*****"
 msgstr "*****Javascript staat uit. Bots werkt beter met Javascript aan.*****"
 
@@ -3258,6 +3247,12 @@ msgstr "Procesfouten"
 #: templates1.2/bots/selectform.html:33
 msgid "Show selection"
 msgstr "Bekijk selectie"
+
+#~ msgid "Could not find database file for SQLite"
+#~ msgstr "Kan geen SQLite-database vinden"
+
+#~ msgid "    write file \"%s\"."
+#~ msgstr "    schrijf bestand \"%s\"."
 
 #~ msgid "Plugin %s created successful."
 #~ msgstr "Plugin %s gemaakt."
