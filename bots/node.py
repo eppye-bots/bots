@@ -117,8 +117,10 @@ class Node(object):
         #~ print 'get_queries_from_edi', structurerecord[QUERIES]
         for key,value in structurerecord[QUERIES].items():
             found = self.enhancedget(value)   #search in last added node
-            if found:
-                tmpdict[key] = found
+            if found is not None:
+                found = found.strip()         #needed to get correct ISA-fields 
+                if found:
+                    tmpdict[key] = found
         self.queries = tmpdict
         #~ print 'result:',self.queries,'\n'
 
