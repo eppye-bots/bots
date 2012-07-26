@@ -29,6 +29,10 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
         runs the mapping-script for the translation;
         Function takes db-ta with status=TRANSLATE->PARSED->SPLITUP->TRANSLATED
     '''
+    try:
+        userscript,scriptname = botslib.botsimport('mappings','translation')
+    except ImportError:       #script is not there; other errors like syntax errors are not catched
+        userscript = scriptname = None
     #select edifiles to translate; fill ta-object
     for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel
                                 FROM  ta
@@ -61,7 +65,7 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                 ta_frommes.update(**inn.ta_info)    #update ta-record SLIPTUP with info from message content and/or grammar
                 while 1:    #whileloop continues as long as there are alt-translations
                     #************select parameters for translation(script):
-                    for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
+                    for tscript,tomessagetype,toeditype in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
                                                 FROM    translate
                                                 WHERE   frommessagetype = %(frommessagetype)s
                                                 AND     fromeditype = %(fromeditype)s
@@ -82,18 +86,23 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                                  'frompartner':inn.ta_info['frompartner'],
                                                  'topartner':inn.ta_info['topartner'],
                                                 'booll':True}):
-                        break  #escape if found; we need only the first - ORDER BY in the query
-                    else:   #no translation record is found
-                        raise botslib.TranslationNotFoundError(_(u'Editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"'),
-                                                                                                            editype=inn.ta_info['editype'],
-                                                                                                            messagetype=inn.ta_info['messagetype'],
-                                                                                                            frompartner=inn.ta_info['frompartner'],
-                                                                                                            topartner=inn.ta_info['topartner'],
-                                                                                                            alt=inn.ta_info['alt'])
+                        break   #translation is found; break because only the first one is used - this is what the ORDER BY in the query takes care of
+                    else:       #no translation is found in translate table
+                        raiseTranslationNotFoundError = True
+                        if userscript and hasattr(self.userscript,'gettranslation'):      #check if user scripting to determine translation
+                            tscript,tomessagetype,toeditype = botslib.runscript(self.userscript,self.scriptname,'gettranslation',idroute=idroute,message=inn)
+                            if tscript is not None:
+                                raiseTranslationNotFoundError = False
+                        if raiseTranslationNotFoundError:
+                            raise botslib.TranslationNotFoundError(_(u'Editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"'),
+                                                                        editype=inn.ta_info['editype'],
+                                                                        messagetype=inn.ta_info['messagetype'],
+                                                                        frompartner=inn.ta_info['frompartner'],
+                                                                        topartner=inn.ta_info['topartner'],
+                                                                        alt=inn.ta_info['alt'])
                     ta_tomes = ta_frommes.copyta(status=endstatus)  #copy SPLITUP to TRANSLATED ta
                     tofilename = str(ta_tomes.idta)
-                    tscript = row2['tscript']
-                    tomessage = outmessage.outmessage_init(messagetype=row2['tomessagetype'],editype=row2['toeditype'],filename=tofilename,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
+                    tomessage = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=tofilename,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                     #copy ta_info
                     botsglobal.logger.debug(u'script "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn.ta_info['messagetype'],tomessage.ta_info['messagetype'])
                     translationscript,scriptfilename = botslib.botsimport('mappings',inn.ta_info['editype'] + '.' + tscript) #get the mapping-script
