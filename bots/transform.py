@@ -89,8 +89,8 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                         break   #translation is found; break because only the first one is used - this is what the ORDER BY in the query takes care of
                     else:       #no translation is found in translate table
                         raiseTranslationNotFoundError = True
-                        if userscript and hasattr(self.userscript,'gettranslation'):      #check if user scripting to determine translation
-                            tscript,tomessagetype,toeditype = botslib.runscript(self.userscript,self.scriptname,'gettranslation',idroute=idroute,message=inn)
+                        if userscript and hasattr(userscript,'gettranslation'):      #check if user scripting to determine translation
+                            tscript,tomessagetype,toeditype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=idroute,message=inn)
                             if tscript is not None:
                                 raiseTranslationNotFoundError = False
                         if raiseTranslationNotFoundError:
