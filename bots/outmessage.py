@@ -817,7 +817,8 @@ class database(jsonnocheck):
     pass
 
 class db(Outmessage):
-    ''' out.root is pickled, and saved.
+    ''' For database connector. 
+        out.root is pickled, and saved.
     '''
     def __init__(self,ta_info):
         super(db,self).__init__(ta_info)

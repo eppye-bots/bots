@@ -84,10 +84,9 @@ def _cleantransactions():
         best indexes are on idta/reportidta; this should go fast.
     '''
     vanaf = datetime.datetime.today() - datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
-    for row in botslib.query('''SELECT max(idta) as max FROM report WHERE ts < %(vanaf)s''',{'vanaf':vanaf}):
-        maxidta = row['max']
-        break
-    else:       #if there is no maxidta to delete, do nothing
+    for row in botslib.query('''SELECT MAX(idta) as max_idta FROM report WHERE ts < %(vanaf)s''',{'vanaf':vanaf}):
+        maxidta = row['max_idta']
+    if maxidta is None:   #if there is no maxidta to delete, do nothing
         return
     botslib.change('''DELETE FROM report WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
     botslib.change('''DELETE FROM filereport WHERE reportidta < %(maxidta)s''',{'maxidta':maxidta})

@@ -1088,7 +1088,8 @@ class database(jsonnocheck):
 
 
 class db(Inmessage):
-    ''' the database-object is unpickled, and passed to the mapping script.
+    ''' For database connector.
+        the database-object is unpickled, and passed to the mapping script.
     '''
     def initfromfile(self):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])

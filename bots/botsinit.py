@@ -110,7 +110,7 @@ def generalinit(configdir):
     initbotscharsets()
     #set environment for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
-    initbotscharsets()
+    #~ initbotscharsets()
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #
 
     #convert django 1.4 database settings to django 1.3 format; code cna be changed when django 1.2 not supported anymore
