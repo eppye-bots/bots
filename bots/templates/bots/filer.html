@@ -13,9 +13,9 @@
 			{% for ta in idtas %}
 				<table border="1" cellpadding="3" cellspacing="0" width="100%">
 				<tr>
-				<td width="90px" align="center">{% ifnotequal ta.status 200 %}<a href="/filer/?action=previous&amp;idta={{ta.idta}}">{% trans 'Previous' %}</a>{% endifnotequal %}</td>
+				<td width="90px" align="center">{% if ta.has_previous %}<a href="/filer/?action=previous&amp;idta={{ta.idta}}">{% trans 'Previous' %}</a>{% endif %}</td>
 				<td width="90px" align="center">{% if ta.has_next %}<a href="/filer/?action=next&amp;idta={{ta.idta}}">{% trans 'Next' %}</a>{% endif %}</td>
-				<td width="90px" align="center">{% if ta.filename %}<a href="/filer/?action=downl&amp;idta={{ta.idta}}">{% trans 'Download' %}</a>{% endif %}</td>
+				<td width="90px" align="center">{% if ta.has_file %}<a href="/filer/?action=downl&amp;idta={{ta.idta}}">{% trans 'Download' %}</a>{% endif %}</td>
 				<td width="*" align="left">{% trans 'Route' %} &quot;{{ ta.idroute }}&quot;;
 											{% trans 'phase' %} &quot;{{ ta.get_status_display }}&quot;;
 											{% trans 'status' %} &quot;{{ ta.get_statust_display }}&quot;;

@@ -158,11 +158,19 @@ def outgoing(request,*kw,**kwargs):
                 ta_object = models.ta.objects.get(idta=int(request.POST[u'retransmit']))
                 ta_object.retransmit = not ta_object.retransmit
                 ta_object.save()
+            elif 'resendall' in request.POST:
+                #select all objects with parameters and set retransmit
+                query = models.ta.objects.filter(status=EXTERNOUT).all()
+                outgoingfiles = viewlib.filterquery2(query,formin.cleaned_data)
+                for outgoingfile in outgoingfiles:
+                    outgoingfile.retransmit = not outgoingfile.retransmit
+                    outgoingfile.save()
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
 
-    query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE).all()
+    #~ query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE).all()
+    query = models.ta.objects.filter(status=EXTERNOUT).all()
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewOutgoing(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
@@ -226,11 +234,6 @@ def process(request,*kw,**kwargs):
             if not formin.is_valid():
                 return viewlib.render(request,formin)
         else:
-            if 'retry' in request.POST:
-                idta = request.POST[u'retry']
-                ta_object = models.ta.objects.get(idta=int(idta))
-                ta_object.retransmit = not ta_object.retransmit
-                ta_object.save()
             formin = forms.ViewProcess(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
@@ -317,15 +320,12 @@ def confirm(request,*kw,**kwargs):
 
 def filer(request,*kw,**kwargs):
     ''' handles bots file viewer. Only files in data dir of Bots are displayed.'''
-    nosuchfile = _(u'No such file.')
     if request.method == 'GET':
         try:
             idta = request.GET['idta']
-        except:
-            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
-        if idta == 0: #for the 'starred' file names (eg multiple output)
-            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
-        try:
+            if idta == 0: #for the 'starred' file names (eg multiple output)
+                raise Exception('to be caught')
+                
             currentta = list(models.ta.objects.filter(idta=idta))[0]
             if request.GET['action'] == 'downl':
                 response = django.http.HttpResponse(mimetype=currentta.contenttype)
@@ -338,43 +338,50 @@ def filer(request,*kw,**kwargs):
                 response.write(botslib.readdata(currentta.filename,charset=currentta.charset,errors='ignore'))
                 return response
             elif request.GET['action'] == 'previous':
-                if currentta.parent:  #has a explicit parent
+                if currentta.parent:    #has a explicit parent
                     talijst = list(models.ta.objects.filter(idta=currentta.parent))
-                else:   #get list of ta's referring to this idta as child
+                else:                   #get list of ta's referring to this idta as child
                     talijst = list(models.ta.objects.filter(child=currentta.idta))
             elif request.GET['action'] == 'this':
-                if currentta.status == EXTERNIN:     #jump strait to next file, as EXTERNIN can not be displayed.
+                if currentta.status == EXTERNIN:        #EXTERNIN can not be displayed, so go to first FILEIN
                     talijst = list(models.ta.objects.filter(parent=currentta.idta))
-                elif currentta.status == EXTERNOUT:
+                elif currentta.status == EXTERNOUT:     #EXTERNOUT can not be displayed, so go to last FILEOUT
                     talijst = list(models.ta.objects.filter(idta=currentta.parent))
                 else:
                     talijst = [currentta]
             elif request.GET['action'] == 'next':
-                if currentta.child: #has a explicit child
+                if currentta.child:     #has a explicit child
                     talijst = list(models.ta.objects.filter(idta=currentta.child))
                 else:
                     talijst = list(models.ta.objects.filter(parent=currentta.idta))
             for ta_object in talijst:
-                ta_object.has_next = True
-                if ta_object.status == EXTERNIN:
-                    ta_object.content = _(u'External file. Can not be displayed. Use "next".')
-                elif ta_object.status == EXTERNOUT:
-                    ta_object.content = _(u'External file. Can not be displayed. Use "previous".')
-                    ta_object.has_next = False
-                elif ta_object.statust in [OPEN,ERROR]:
-                    ta_object.content = _(u'File has error status and does not exist. Use "previous".')
-                    ta_object.has_next = False
-                elif not ta_object.filename:
-                    ta_object.content = _(u'File can not be displayed.')
+                #determine if can display file
+                ta_object.has_file = False
+                if ta_object.filename and ta_object.filename.isdigit():
+                    try:
+                        if ta_object.charset:  #guess charset if not available; uft-8 is reasonable
+                            ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
+                        else:
+                            ta_object.content = botslib.readdata(ta_object.filename,charset='utf-8',errors='ignore')
+                        ta_object.has_file = True
+                    except:
+                        pass
+                if not ta_object.has_file:
+                    ta_object.content = _(u'No file available for display.')
+                #determine has previous:
+                if ta_object.parent or ta_object.status == MERGED:
+                    ta_object.has_previous = True
                 else:
-                    if ta_object.charset:  #guess charset; uft-8 is reasonable
-                        ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
-                    else:
-                        ta_object.content = botslib.readdata(ta_object.filename,charset='utf-8',errors='ignore')
+                    ta_object.has_previous = False
+                #determine: has next:
+                if ta_object.status == EXTERNOUT or ta_object.statust in [OPEN,ERROR]:
+                    ta_object.has_next = False
+                else:
+                    ta_object.has_next = True
             return  django.shortcuts.render_to_response('bots/filer.html', {'idtas': talijst},context_instance=django.template.RequestContext(request))
         except:
             #~ print botslib.txtexc()
-            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': nosuchfile},context_instance=django.template.RequestContext(request))
+            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': _(u'No such file.')},context_instance=django.template.RequestContext(request))
 
 def plugin(request,*kw,**kwargs):
     if request.method == 'GET':

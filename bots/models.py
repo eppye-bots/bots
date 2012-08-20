@@ -11,31 +11,18 @@ STATUST = [
     (1, _(u'Error')),
     (2, _(u'Stuck')),
     (3, _(u'Done')),
+    (4, _(u'Resend')),
     ]
 STATUS = [
     (1,_(u'process')),
     (3,_(u'discarded')),
     (200,_(u'FileReceive')),
-    (210,_(u'RawInfile')),
-    (215,_(u'Mimein')),
     (220,_(u'Infile')),
-    (230,_(u'Set for preprocess')),
-    (231,_(u'Preprocess')),
-    (232,_(u'Set for preprocess')),
-    (233,_(u'Preprocess')),
-    (234,_(u'Set for preprocess')),
-    (235,_(u'Preprocess')),
-    (236,_(u'Set for preprocess')),
-    (237,_(u'Preprocess')),
-    (238,_(u'Set for preprocess')),
-    (239,_(u'Preprocess')),
-    (300,_(u'Translate')),
     (310,_(u'Parsed')),
     (320,_(u'Splitup')),
     (330,_(u'Translated')),
     (400,_(u'Merged')),
     (500,_(u'Outfile')),
-    (510,_(u'RawOutfile')),
     (520,_(u'FileSend')),
     ]
 EDITYPES = [
@@ -359,9 +346,9 @@ class filereport(botsmodel):
         unique_together = (("idta","reportidta"),)
 class mutex(botsmodel):
     #specific SQL is used (database defaults are used)
-    mutexk = models.IntegerField(primary_key=True)
-    mutexer = models.IntegerField()
-    ts = models.DateTimeField()
+    mutexk = models.IntegerField(primary_key=True)  #always value '1'
+    mutexer = models.IntegerField()     #20120810: set to '1' to indicate error-email has been send for databaselock
+    ts = models.DateTimeField()         #timestamp when mutex is set
     class Meta:
         db_table = 'mutex'
 class persist(botsmodel):
@@ -436,7 +423,7 @@ class ta(botsmodel):
     botskey = StripCharField(max_length=35)           #added 20091024
     cc = StripCharField(max_length=512)               #added 20091111
     rsrv1 = StripCharField(max_length=35)             #added 20100501; 20120618: email subject
-    rsrv2 = models.IntegerField(null=True)              #added 20100501
+    rsrv2 = models.IntegerField(null=True)              #added 20100501; 20120802: file size
     rsrv3 = StripCharField(max_length=35)             #added 20100501
     rsrv4 = models.IntegerField(null=True)              #added 20100501
     class Meta:

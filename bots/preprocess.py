@@ -1,4 +1,4 @@
-#~ import os
+import os
 import re
 import zipfile
 from django.utils.translation import ugettext as _
@@ -12,7 +12,6 @@ def preprocess(routedict,function, status=FILEIN,**argv):
     ''' for pre- and postprocessing of files.
         these are NOT translations; translation involve grammars, mapping scripts etc. think of eg:
         - unzipping zipped files.
-        - convert excel to csv
         - password protected files.
         Select files from INFILE -> SET_FOR_PROCESSING using criteria
         Than the actual processing function is called.
@@ -21,9 +20,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
         preprocess is called right after the in-communicatiation
     '''
     nr_files = 0
-    preprocessnumber = botslib.getpreprocessnumber()
-    if not botslib.addinfo(change={'status':preprocessnumber},where={'status':status,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel']}):    #check if there is something to do
-        return 0
+    #process all files in (status) FILEIN with statust OK
     for row in botslib.query(u'''SELECT idta,filename,charset
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
@@ -32,21 +29,19 @@ def preprocess(routedict,function, status=FILEIN,**argv):
                                 AND     idroute=%(idroute)s
                                 AND     fromchannel=%(fromchannel)s
                                 ''',
-                                {'status':preprocessnumber,'statust':OK,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel'],'rootidta':botslib.get_minta4query()}):
+                                {'status':status,'statust':OK,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel'],'rootidta':botslib.get_minta4query()}):
         try:
             botsglobal.logmap.debug(u'Start preprocessing "%s" for file "%s".',function.__name__,row['filename'])
-            ta_set_for_processing = botslib.OldTransaction(row['idta'])
-            ta_processing = ta_set_for_processing.copyta(status=preprocessnumber+1)
-            ta_processing.filename = row['filename']
-            function(ta_from=ta_processing,endstatus=status,routedict=routedict,**argv)
+            ta_from = botslib.OldTransaction(row['idta'])
+            ta_from.filename = row['filename']
+            function(ta_from=ta_from,endstatus=status,routedict=routedict,**argv)
         except:
             txt = botslib.txtexc()
-            ta_processing.failure()
-            ta_processing.update(statust=ERROR,errortext=txt)
+            ta_from.update(statust=ERROR,errortext=txt)
+            ta_from.deletechildren()
         else:
             botsglobal.logmap.debug(u'OK preprocessing  "%s" for file "%s".',function.__name__,row['filename'])
-            ta_set_for_processing.update(statust=DONE)
-            ta_processing.update(statust=DONE)
+            ta_from.update(statust=DONE)
             nr_files += 1
     return nr_files
 
@@ -123,10 +118,11 @@ def mailbag(ta_from,endstatus,**argv):
             #~ raise botslib.InMessageError(u'Error in mailbag format: found no valid envelope trailer.')
         ta_to = ta_from.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
         tofilename = str(ta_to.idta)
+        filesize = len(edifile[headpos:endpos])
         tofile = botslib.opendata(tofilename,'wb')
         tofile.write(edifile[headpos:endpos])
         tofile.close()
-        ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype) #update outmessage transaction with ta_info;
+        ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype,rsrv2=filesize) #update outmessage transaction with ta_info;
         startpos = endpos
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
 
@@ -135,7 +131,7 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         editype & messagetype are unchanged.
     '''
     try:
-        z = zipfile.ZipFile(botslib.abspathdata(filename=ta_from.filename),mode='r')
+        myzipfile = zipfile.ZipFile(botslib.abspathdata(filename=ta_from.filename),mode='r')
     except zipfile.BadZipfile:
         botsglobal.logger.debug(_(u'File is not a zip-file.'))
         if pass_non_zip:        #just pass the file
@@ -145,17 +141,20 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         raise botslib.InMessageError(_(u'File is not a zip-file.'))
 
     if password:
-        z.setpassword(password)
-    for f in z.infolist():
-        if f.filename[-1] == '/':    #check if this is a dir; if so continue
+        myzipfile.setpassword(password)
+    for info_file_in_zip in myzipfile.infolist():
+        if info_file_in_zip.filename[-1] == '/':    #check if this is a dir; if so continue
             continue
         ta_to = ta_from.copyta(status=endstatus)
         tofilename = str(ta_to.idta)
+        content = myzipfile.read(info_file_in_zip.filename)    #read fiel in zipfile
+        filesize = len(content)
         tofile = botslib.opendata(tofilename,'wb')
-        tofile.write(z.read(f.filename))
+        tofile.write(content)
         tofile.close()
-        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info;
+        ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
+    myzipfile.close()
 
 def extractpdf(ta_from,endstatus,**argv):
     ''' Try to extract text content of a PDF file to a csv.
@@ -252,7 +251,8 @@ def extractpdf(ta_from,endstatus,**argv):
         device.close()
         pdf_stream.close()
         csv_stream.close()
-        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info;
+        filesize = os.path.getsize(botslib.abspathdata(tofilename))
+        ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
         txt = botslib.txtexc()
@@ -326,7 +326,8 @@ def extractexcel(ta_from,endstatus,**argv):
         ta_to = ta_from.copyta(status=endstatus)
         tofilename = str(ta_to.idta)
         dump_csv(xlsdata,tofilename)
-        ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info;
+        filesize = os.path.getsize(botslib.abspathdata(tofilename))
+        ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
         txt = botslib.txtexc()

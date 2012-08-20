@@ -1,4 +1,4 @@
-''' Base library for bots. Botslib should not import from other Bots-modules.'''
+''' Base library for bots. Botslib should not import code from other Bots-modules.'''
 import sys
 import os
 import codecs
@@ -11,9 +11,9 @@ import urllib
 import platform
 import django
 from django.utils.translation import ugettext as _
-#Bots-modules
-from botsconfig import *
-import botsglobal #as botsglobal
+#Bots-modules (no code)
+from botsconfig import *    #constants
+import botsglobal           #globals
 
 def botsinfo():
     return [
@@ -40,60 +40,16 @@ def botsinfo():
 #**************getters/setters for some globals***********************/**
 #**********************************************************/**
 def get_minta4query():
-    ''' get the first idta for queries etc.'''
+    ''' get the first idta for queries etc.
+        botsglobal.minta4query is set in router.py
+    '''
     return botsglobal.minta4query
-
-def set_minta4query():
-    if botsglobal.minta4query:    #if already set, do nothing
-        return
-    else:
-        botsglobal.minta4query = _Transaction.processlist[1]  #set root-idta of current run
-
-def set_minta4query_retry():
-    botsglobal.minta4query = get_idta_last_error()
-    return botsglobal.minta4query
-
-def get_idta_last_error():
-    for row in query('''SELECT idta
-                        FROM  filereport
-                        GROUP BY idta
-                        HAVING MAX(statust) != %(statust)s''',
-                        {'statust':DONE}):
-        #found incoming file with error
-        for row2 in query('''SELECT min(reportidta) as min
-                            FROM  filereport
-                            WHERE idta = %(idta)s ''',
-                            {'idta':row['idta']}):
-            return row2['min']
-    return 0    #if no error found.
-
-def set_minta4query_crashrecovery():
-    ''' set/return rootidta of last run - that is supposed to crashed'''
-    for row in query('''SELECT max(idta) as max
-                        FROM  ta
-                        WHERE script= 0
-                        '''):
-        if row['max'] is None:
-            return 0
-        botsglobal.minta4query = row['max']
-        return botsglobal.minta4query
-    return 0
-
-def getlastrun():
-    return _Transaction.processlist[1]  #get root-idta of last run
 
 def setrouteid(routeid):
     botsglobal.routeid = routeid
 
 def getrouteid():
     return botsglobal.routeid
-
-def setpreprocessnumber(statusnumber):
-    botsglobal.preprocessnumber = statusnumber
-def getpreprocessnumber():
-    terug = botsglobal.preprocessnumber
-    botsglobal.preprocessnumber += 2
-    return terug
 
 #**********************************************************/**
 #***************** class  Transaction *********************/**
@@ -102,10 +58,10 @@ class _Transaction(object):
     ''' abstract class for db-ta.
         This class is used for communication with db-ta.
     '''
-    #filtering values fo db handling (to avoid unknown fields in db.
+    #filtering values for db handling to avoid unknown fields in db.
     filterlist = ['statust','status','divtext','parent','child','script','frompartner','topartner','fromchannel','tochannel','editype','messagetype','merge',
                 'testindicator','reference','frommail','tomail','contenttype','errortext','filename','charset','alt','idroute','nrmessages','retransmit',
-                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc','rsrv1']
+                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc','rsrv1','rsrv2']
     processlist = [0]  #stack for bots-processes. last one is the current process; starts with 1 element in list: root
 
     def update(self,**ta_info):
@@ -115,7 +71,7 @@ class _Transaction(object):
         setstring = ','.join([key+'=%('+key+')s' for key in ta_info if key in _Transaction.filterlist])
         if not setstring:   #nothing to update
             return
-        ta_info['selfid'] = self.idta   #always set this...I'm not sure if this is needed...take no chances
+        ta_info['selfid'] = self.idta
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''UPDATE ta
                             SET '''+setstring+ '''
@@ -128,49 +84,37 @@ class _Transaction(object):
         '''Deletes current transaction '''
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''DELETE FROM ta
-                            WHERE idta=%(selfid)s''',
-                            {'selfid':self.idta})
+                            WHERE idta=%(idta)s''',
+                            {'idta':self.idta})
         botsglobal.db.commit()
         cursor.close()
 
-    def failure(self):
-        '''Failure: deletes all children of transaction (and children of children etc)'''
+    def deletechildren(self):
         cursor = botsglobal.db.cursor()
+        self.deleteonlychildren_core(cursor,self.idta)
+        botsglobal.db.commit()
+        cursor.close()
+        
+    def deleteonlychildren_core(self,cursor,idta):
         cursor.execute(u'''SELECT idta FROM ta
                            WHERE idta>%(rootidta)s
-                           AND parent=%(selfid)s''',
-                            {'selfid':self.idta,'rootidta':get_minta4query()})
-        rows = cursor.fetchall()
-        for row in rows:
-            ta_object = OldTransaction(row['idta'])
-            ta_object.failure()
-        cursor.execute(u'''DELETE FROM ta
-                            WHERE idta>%(rootidta)s
-                            AND parent=%(selfid)s''',
-                            {'selfid':self.idta,'rootidta':get_minta4query()})
-        botsglobal.db.commit()
-        cursor.close()
-
-    def mergefailure(self):
-        '''Failure while merging: all parents of transaction get status OK (turn back)'''
-        cursor = botsglobal.db.cursor()
-        cursor.execute(u'''UPDATE ta
-                           SET statust=%(statustnew)s
-                           WHERE idta>%(rootidta)s
-                           AND child=%(selfid)s
-                           AND statust=%(statustold)s''',
-                            {'selfid':self.idta,'statustold':DONE,'statustnew':OK,'rootidta':get_minta4query()})
-        botsglobal.db.commit()
-        cursor.close()
-
+                           AND parent=%(idta)s''',
+                            {'idta':idta,'rootidta':get_minta4query()})
+        tmp_idtastodelete = [row['idta' ] for row  in cursor.fetchall()]
+        for child in tmp_idtastodelete:
+            self.deleteonlychildren_core(cursor,child)
+            cursor.execute(u'''DELETE FROM ta
+                                WHERE idta=%(idta)s''',
+                                {'idta':child})
+        
     def syn(self,*ta_vars):
         '''access of attributes of transaction as ta.fromid, ta.filename etc'''
         cursor = botsglobal.db.cursor()
         varsstring = ','.join(ta_vars)
         cursor.execute(u'''SELECT ''' + varsstring + '''
                             FROM ta
-                            WHERE idta=%(selfid)s''',
-                            {'selfid':self.idta})
+                            WHERE idta=%(idta)s''',
+                            {'idta':self.idta})
         result = cursor.fetchone()
         for key in result.keys():
             setattr(self,key,result[key])
@@ -182,22 +126,24 @@ class _Transaction(object):
         varsstring = ','.join(self.filterlist)
         cursor.execute(u'''SELECT ''' + varsstring + '''
                             FROM ta
-                            WHERE idta=%(selfid)s''',
-                            {'selfid':self.idta})
+                            WHERE idta=%(idta)s''',
+                            {'idta':self.idta})
         result = cursor.fetchone()
         for key in result.keys():
             setattr(self,key,result[key])
         cursor.close()
 
     def copyta(self,status,**ta_info):
-        ''' copy: make a new transaction, copy '''
+        ''' copy old transaction, return new transaction.
+            parameters for new transaction are in ta_info (new transaction is updated with these values).
+        '''
         script = _Transaction.processlist[-1]
         cursor = botsglobal.db.cursor()
         cursor.execute(u'''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey)
                                 SELECT   %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey
                                 FROM  ta
-                                WHERE idta=%(selfid)s''',
-                                {'selfid':self.idta,'script':script,'newstatus':status})
+                                WHERE idta=%(idta)s''',
+                                {'idta':self.idta,'script':script,'newstatus':status})
         newidta = cursor.lastrowid
         if not newidta:   #if botsglobal.settings.DATABASE_ENGINE ==
             cursor.execute('''SELECT lastval() as idta''')
@@ -210,18 +156,15 @@ class _Transaction(object):
 
 
 class OldTransaction(_Transaction):
-    def __init__(self,idta,**ta_info):
-        '''Use old transaction '''
+    ''' Resurrect old transaction '''
+    def __init__(self,idta):
         self.idta = idta
-        self.talijst = []
-        for key in ta_info.keys():   #only used by trace
-            setattr(self,key,ta_info[key])  #could be done better, but SQLite does not support .items()
 
 
 class NewTransaction(_Transaction):
+    ''' Generate new transaction. '''
     def __init__(self,**ta_info):
-        '''Generates new transaction, returns key of transaction '''
-        updatedict = dict([(key,value) for key,value in ta_info.items() if key in _Transaction.filterlist])
+        updatedict = dict([(key,value) for key,value in ta_info.items() if key in _Transaction.filterlist])     #filter ta_info
         updatedict['script'] = _Transaction.processlist[-1]
         namesstring = ','.join([key for key in updatedict])
         varsstring = ','.join(['%('+key+')s' for key in updatedict])
@@ -238,12 +181,16 @@ class NewTransaction(_Transaction):
 
 
 class NewProcess(NewTransaction):
-    ''' Used in logging of processes. Each process is placed on stack processlist'''
+    ''' Create a new process (which is very much like a transaction).
+        Used in logging of processes. 
+        Each process is placed on stack processlist
+    '''
     def __init__(self,functionname=''):
         super(NewProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid())
         _Transaction.processlist.append(self.idta)
 
     def update(self,**ta_info):
+        ''' update process, delete from process-stack. '''
         super(NewProcess,self).update(**ta_info)
         _Transaction.processlist.pop()
 
@@ -369,7 +316,7 @@ def changestatustinfo(change,where):
 def set_database_lock():
     try:
         change(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
-    except:
+    except Exception,msg:
         return False
     return True
 
@@ -390,8 +337,7 @@ def change(querystring,*args):
     cursor = botsglobal.db.cursor()
     try:
         cursor.execute(querystring,*args)
-    except: #IntegrityError from postgresql
-        botsglobal.db.rollback()
+    except:
         raise
     botsglobal.db.commit()
     cursor.close()
@@ -438,22 +384,6 @@ def checkunique(domein, receivednumber):
     cursor.close()
     return terug
 
-def keeptrackoflastretry(domein,newlastta):
-    ''' keep track of last automaticretrycommunication/retry
-        if domain not used before, initialize it . '1' is the first value expected.
-    '''
-    cursor = botsglobal.db.cursor()
-    try:
-        cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
-        oldlastta = cursor.fetchone()['nummer']
-    except: # ???.DatabaseError; domein does not exist
-        cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
-        oldlastta = 1
-    cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':newlastta})
-    botsglobal.db.commit()
-    cursor.close()
-    return oldlastta
-
 #**********************************************************/**
 #*************************Logging, Error handling********************/**
 #**********************************************************/**
@@ -472,18 +402,18 @@ def log_session(func):
     '''
     def wrapper(*args,**argv):
         try:
-            ta_session = NewProcess(func.__name__)
+            ta_process = NewProcess(func.__name__)
         except:
-            botsglobal.logger.exception(u'System error - no new session made')
+            botsglobal.logger.exception(u'System error - no new process made')
             raise
         try:
             terug = func(*args,**argv)
         except:
             txt = txtexc()
             botsglobal.logger.debug(u'Error in process: %s',txt)
-            ta_session.update(statust=ERROR,errortext=txt)
+            ta_process.update(statust=ERROR,errortext=txt)
         else:
-            ta_session.update(statust=DONE)
+            ta_process.update(statust=DONE)
             return terug
     return wrapper
 
@@ -497,29 +427,11 @@ def txtexc():
         terug += ''.join(traceback.format_list(tracebacklist))
     terug += str(exc_value)
     #problems with char set for some input data that are reported in traces....so always decode this:
-    terug = terug.decode('utf-8','ignore')
-    if botsglobal.db is not None and botsglobal.settings.DATABASE_ENGINE != 'sqlite3':    #sqlite does not enforce strict lengths
-        return terug[-1848:]        #field size is 2048; but more text can be prepended.
-    else:
-        return terug
-
-def isa_direct_importerror():
-    ''' check if module itself is not there, or if there is an import error in the module.
-        this avoid hard-to-find errors/problems.
-    '''
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    #test if direct or indirect import error
-    tracebacklist = traceback.extract_tb(exc_traceback,limit=2)
-    if tracebacklist[-1][2] == u'botsbaseimport':
-        return True
-    return False
-    #~ if len(tracebacklist) == 1: #direct import error 
-        #~ return True
-    #~ return False
+    return terug.decode('utf-8','ignore')
 
 class ErrorProcess(NewTransaction):
     ''' Used in logging of errors in processes.
-        20110828: used in communication.py
+        20110828: used in communication.py to indicate errors in receiving files (files have not been received)
     '''
     def __init__(self,functionname='',errortext='',channeldict=None):
         fromchannel = tochannel = ''
@@ -531,8 +443,19 @@ class ErrorProcess(NewTransaction):
         super(ErrorProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid(),statust=ERROR,errortext=errortext,fromchannel=fromchannel,tochannel=tochannel)
 
 #**********************************************************/**
-#*************************File handling os.path, imports etc***********************/**
+#*************************import ***********************/**
 #**********************************************************/**
+def isa_direct_importerror():
+    ''' check if module itself is not there, or if there is an import error in the module.
+        this avoid hard-to-find errors/problems.
+    '''
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    #test if direct or indirect import error
+    tracebacklist = traceback.extract_tb(exc_traceback,limit=2)
+    if tracebacklist[-1][2] == u'botsbaseimport':
+        return True
+    return False
+    
 def botsbaseimport(modulename):
     ''' Do a dynamic import.
         Errors/exceptions are handled in calling functions.
@@ -571,7 +494,9 @@ def botsimport(soort,modulename):
     else:
         botsglobal.logger.debug(u'import "%s".',modulefile)
         return module,modulefile
-
+#**********************************************************/**
+#*************************File handling os.path etc***********************/**
+#**********************************************************/**
 def join(*paths):
     '''Does does more as join.....
         - join the paths (compare os.path.join)
@@ -659,7 +584,32 @@ def runexternprogram(*args):
         raise OSError(_(u'error running extern program "%(program)s", error:\n%(error)s'%{'program':args,'error':txt}))
 
 #**********************************************************/**
-#***************###############  mdn   #############
+#***************###############  codecs   #############
+#**********************************************************/**
+def getcodeccanonicalname(codecname):
+    codeccanonicalname = codecs.lookup(codecname)
+    return codeccanonicalname.name
+
+def checkcodeciscompatible(charset1,charset2):
+    ''' check if charset of edifile) is 'compatible' with charset of channel: OK; else: raise exception
+    '''
+    #some codecs are upward compatible (subsets); charsetcompatible is used to check if charsets are upward compatibel with each other.
+    #some charset are 1 byte (ascii, ISO-8859-*). others are more bytes (UTF-16, utf-32. UTF-8 is more bytes, but is ascii compatible.
+    charsetcompatible = {
+        'unoa':['unob','ascii','utf-8','iso8859-1','cp1252','iso8859-15'],
+        'unob':['ascii','utf-8','iso8859-1','cp1252','iso8859-15'],
+        'ascii':['utf-8','iso8859-1','cp1252','iso8859-15'],
+        }
+    charset_edifile = getcodeccanonicalname(charset1)
+    charset_channel = getcodeccanonicalname(charset2)
+    if charset_channel == charset_edifile:
+        return True
+    if charset_edifile in charsetcompatible and charset_channel in charsetcompatible[charset_edifile]:
+        return True
+    raise CommunicationOutError(_(u'Charset "$charset2" for channel not matching with charset "$charset1" for edi-file.'),charset1=charset1,charset2=charset2)
+
+#**********************************************************/**
+#***************###############  misc.   #############
 #**********************************************************/**
 def checkconfirmrules(confirmtype,**kwargs):
     terug = False       #boolean to return: ask a confirm of not?
@@ -690,34 +640,6 @@ def checkconfirmrules(confirmtype,**kwargs):
     #~ print '>>>>>>>>>>>>', terug,confirmtype,kwargs
     return terug
 
-#**********************************************************/**
-#***************###############  codecs   #############
-#**********************************************************/**
-def getcodeccanonicalname(codecname):
-    codeccanonicalname = codecs.lookup(codecname)
-    return codeccanonicalname.name
-
-def checkcodeciscompatible(charset1,charset2):
-    ''' check if charset of edifile) is 'compatible' with charset of channel: OK; else: raise exception
-    '''
-    #some codecs are upward compatible (subsets); charsetcompatible is used to check if charsets are upward compatibel with each other.
-    #some charset are 1 byte (ascii, ISO-8859-*). others are more bytes (UTF-16, utf-32. UTF-8 is more bytes, but is ascii compatible.
-    charsetcompatible = {
-        'unoa':['unob','ascii','utf-8','iso8859-1','cp1252','iso8859-15'],
-        'unob':['ascii','utf-8','iso8859-1','cp1252','iso8859-15'],
-        'ascii':['utf-8','iso8859-1','cp1252','iso8859-15'],
-        }
-    charset_edifile = getcodeccanonicalname(charset1)
-    charset_channel = getcodeccanonicalname(charset2)
-    if charset_channel == charset_edifile:
-        return True
-    if charset_edifile in charsetcompatible and charset_channel in charsetcompatible[charset_edifile]:
-        return True
-    raise CommunicationOutError(_(u'Charset "$charset2" for channel not matching with charset "$charset1" for edi-file.'),charset1=charset1,charset2=charset2)
-
-#**********************************************************/**
-#***************###############  misc.   #############
-#**********************************************************/**
 class Uri(object):
     ''' generate uri from parts. '''
     def __init__(self,**kw):
@@ -782,7 +704,7 @@ class CommunicationOutError(BotsError):
     pass
 class EanError(BotsError):
     pass
-class GrammarError(BotsError):            #grammar.py
+class GrammarError(BotsError):         #grammar.py
     pass
 class InMessageError(BotsError):
     pass
@@ -792,7 +714,7 @@ class MessageError(BotsError):
     pass
 class MappingRootError(BotsError):
     pass
-class MappingFormatError(BotsError):            #mpath is not valid; mapth will mostly come from mapping-script
+class MappingFormatError(BotsError):   #mpath is not valid; mapth will mostly come from mapping-script
     pass
 class OutMessageError(BotsError):
     pass
@@ -802,9 +724,9 @@ class PersistError(BotsError):
     pass
 class PluginError(BotsError):
     pass
-class ScriptImportError(BotsError):   #can not find script; not for errors in a script
+class ScriptImportError(BotsError):    #can not find script; not for errors in a script
     pass
-class ScriptError(BotsError):   #runtime errors in a script
+class ScriptError(BotsError):          #runtime errors in a script
     pass
 class TraceError(BotsError):
     pass

@@ -34,7 +34,7 @@ import outmessage
 from botsconfig import *
 
 @botslib.log_session
-def run(idchannel,idroute=''):
+def run(idchannel,command,idroute=''):
     '''run a communication session (dispatcher for communication functions).'''
     for channeldict in botslib.query('''SELECT *
                                 FROM channel
@@ -60,7 +60,7 @@ def run(idchannel,idroute=''):
         else:
             classtocall = globals()[channeldict['type']]                    #get the communication class from this module
 
-        classtocall(channeldict,idroute,userscript,scriptname) #call the class for this type of channel
+        classtocall(channeldict,idroute,userscript,scriptname,command) #call the class for this type of channel
         botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
     else:
@@ -73,7 +73,7 @@ class _comsession(object):
         Often 'idroute' is passed as a parameter. This is ONLY because of the @botslib.log_session-wrapper!
         use self.idroute!!
     '''
-    def __init__(self,channeldict,idroute,userscript,scriptname):
+    def __init__(self,channeldict,idroute,userscript,scriptname,command):
         ''' All communication is performed in init.'''
         self.channeldict = channeldict
         self.idroute = idroute
@@ -82,16 +82,16 @@ class _comsession(object):
         if self.channeldict['inorout'] == 'out':
             #routes can have the same outchannel.
             #the different outchannels can be 'direct' or deferred (in route)
-            nroffiles = self.precommunicate(FILEOUT,RAWOUT)
+            if command == 'new': #for out-communicate: only precommunicate/mime if new run.
+                self.precommunicate()
             if self.countoutfiles() > 0: #for out-comm: send if something to send
                 self.connect()
                 self.outcommunicate()
                 self.disconnect()
                 self.archive()
         else:   #incommunication
-            if botsglobal.incommunicate: #for in-communication: only communicate for new run
+            if command == 'new': #only in-communicate for new run
                 #handle maxsecondsperchannel: use global value from bots.ini unless specified in channel. (In database this is field 'rsrv2'.)
-                #~ print "self.channeldict['rsrv2']",self.channeldict['rsrv2']
                 if self.channeldict['rsrv2'] <= 0:
                     self.maxsecondsperchannel = botsglobal.ini.getint('settings','maxsecondsperchannel',sys.maxint)
                 else:
@@ -99,7 +99,7 @@ class _comsession(object):
                 self.connect()
                 self.incommunicate()
                 self.disconnect()
-            self.postcommunicate(RAWIN,FILEIN)
+            self.postcommunicate()
             self.archive()
 
     def archive(self):
@@ -149,26 +149,21 @@ class _comsession(object):
                                     AND   statust=%(statust)s
                                     AND   tochannel=%(tochannel)s
                                     ''',
-                                    {'idroute':self.idroute,'status':RAWOUT,'statust':OK,
+                                    {'idroute':self.idroute,'status':FILEOUT,'statust':OK,
                                     'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query()}):
             return row['count']
 
+    def postcommunicate(self):
+        pass
 
-    @botslib.log_session
-    def postcommunicate(self,fromstatus,tostatus):
-        ''' transfer communication-file from status RAWIN to FILEIN '''
-        return botslib.addinfo(change={'status':tostatus},where={'status':fromstatus,'fromchannel':self.channeldict['idchannel'],'idroute':self.idroute})
+    def precommunicate(self):
+        pass
 
-    @botslib.log_session
-    def precommunicate(self,fromstatus,tostatus):
-        ''' transfer communication-file from status FILEOUT to RAWOUT'''
-        return botslib.addinfo(change={'status':tostatus},where={'status':fromstatus,'tochannel':self.channeldict['idchannel']})
-
-    def file2mime(self,fromstatus,tostatus):
-        ''' transfer communication-file from status FILEOUT to RAWOUT and convert to mime.
-            1 part/file always in 1 mail.
+    def file2mime(self):
+        ''' convert 'plain' files into email (mime-document).
+            1 edi file always in 1 mail.
+            from status FILEOUT to FILEOUT
         '''
-        counter = 0 #count the number of correct processed files
         #select files with right statust, status and channel.
         for row in botslib.query('''SELECT idta,filename,frompartner,topartner,charset,contenttype,editype
                                     FROM  ta
@@ -177,11 +172,11 @@ class _comsession(object):
                                     AND   statust=%(statust)s
                                     AND   tochannel=%(idchannel)s
                                     ''',
-                                    {'idchannel':self.channeldict['idchannel'],'status':fromstatus,
+                                    {'idchannel':self.channeldict['idchannel'],'status':FILEOUT,
                                     'statust':OK,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
-                ta_to = ta_from.copyta(status=tostatus)
+                ta_to = ta_from.copyta(status=FILEOUT)
                 ta_to.synall()  #needed for user exits: get all parameters of ta_to from database;
                 confirmtype = u''
                 confirmasked = False
@@ -264,18 +259,21 @@ class _comsession(object):
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
-                counter += 1
-                ta_from.update(statust=DONE)
                 ta_to.update(statust=OK,filename=outfilename,confirmtype=confirmtype,confirmasked=confirmasked,charset=charset)
-        return counter
+            finally:
+                ta_from.update(statust=DONE)
+        return
 
     def mime2file(self,fromstatus,tostatus):
-        ''' transfer communication-file from RAWIN to FILEIN, convert from Mime to file.
-            process mime-files:
+        ''' convert emails (mime-documents) to 'plain' files.
+            from status FILEIN to FILEIN
+            process emails:
             -   extract information (eg sender-address)
-            -   do emailtransport-handling: generate MDN, process MDN
+            -   generate MDN (if asked and OK from bots-configuration)
+            -   process MDN
             -   save 'attachments' as files
-            -   generate MDN if asked and OK from bots-configuration
+            -   filter emails/attachments based on contenttype
+            -   email-address should be know by bots (can be turned off)
         '''
         whitelist_multipart = ['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822','multipart/alternative']
         whitelist_major = ['text','application']
@@ -288,7 +286,7 @@ class _comsession(object):
                 -   whitelist of body-contentmajor
                 -   blacklist of body-contentytpe
             '''
-            nrmimesaved = 0
+            nrmimesaved = 0     #count nr of valid 'attachments'
             contenttype     = msg.get_content_type()
             if msg.is_multipart():
                 if contenttype in whitelist_multipart:
@@ -300,14 +298,13 @@ class _comsession(object):
                 content = msg.get_payload(decode=True)
                 if not content or content.isspace():
                     return 0
-                charset = msg.get_content_charset('')
-                if not charset:
-                    charset = self.channeldict['charset']
+                charset = msg.get_content_charset(self.channeldict['charset'])
                 if self.userscript and hasattr(self.userscript,'accept_incoming_attachment'):
-                    accept_attachment = botslib.runscript(self.userscript,self.scriptname,'accept_incoming_attachment',channeldict=self.channeldict,ta=ta_mime,charset=charset,content=content,contenttype=contenttype)
-                    if accept_attachment == False:
+                    accept_attachment = botslib.runscript(self.userscript,self.scriptname,'accept_incoming_attachment',channeldict=self.channeldict,ta=ta_from,charset=charset,content=content,contenttype=contenttype)
+                    if not accept_attachment:
                         return 0
-                ta_file = ta_mime.copyta(status=tostatus)
+                filesize = len(content)
+                ta_file = ta_from.copyta(status=FILEIN)
                 outfilename = str(ta_file.idta)
                 outfile = botslib.opendata(outfilename, 'wb')
                 outfile.write(content)
@@ -316,7 +313,8 @@ class _comsession(object):
                 ta_file.update(statust=OK,
                                 contenttype=contenttype,
                                 charset=charset,
-                                filename=outfilename)
+                                filename=outfilename,
+                                rsrv2=filesize)
             return nrmimesaved
         #*****************end of nested function savemime***************************
         @botslib.log_session
@@ -338,9 +336,9 @@ class _comsession(object):
                                AND   confirmasked=%(confirmasked)s
                                AND   confirmtype=%(confirmtype)s
                                ''',
-                                {'status':RAWOUT,'reference':originalmessageid,'confirmed':True,'confirmtype':'ask-email-MDN','confirmidta':ta_mail.idta,'confirmasked':True})
+                                {'status':OUTFILE,'reference':originalmessageid,'confirmed':True,'confirmtype':'ask-email-MDN','confirmidta':ta_mail.idta,'confirmasked':True})
             #for now no checking if processing was OK.....
-            #performance: not good. Another way is to extract the original idta from the original messageid
+            #performance: not good. Index should be on the reference.
         @botslib.log_session
         def mdnsend():
             if not botslib.checkconfirmrules('send-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
@@ -396,22 +394,22 @@ class _comsession(object):
             return ta_mdn.idta
         #*****************end of nested function dispositionnotification***************************
         #select received mails for channel
-        for row in botslib.query('''SELECT    idta,filename
-                                    FROM  ta
+        for row in botslib.query('''SELECT  idta,filename
+                                    FROM    ta
                                     WHERE   idta>%(rootidta)s
                                     AND     status=%(status)s
                                     AND     statust=%(statust)s
                                     AND     fromchannel=%(fromchannel)s
                                     ''',
-                                    {'status':fromstatus,'statust':OK,'rootidta':botslib.get_minta4query(),
+                                    {'status':FILEIN,'statust':OK,'rootidta':botslib.get_minta4query(),
                                     'fromchannel':self.channeldict['idchannel'],'idroute':self.idroute}):
             try:
+                #default values for sending MDN; used to update ta if MDN is not asked
                 confirmtype = ''
                 confirmed = False
                 confirmasked = False
                 confirmidta = 0
-                ta_mail = botslib.OldTransaction(row['idta'])
-                ta_mime = ta_mail.copyta(status=MIMEIN)
+                ta_from = botslib.OldTransaction(row['idta'])
                 infile = botslib.opendata(row['filename'], 'rb')
                 msg             = email.message_from_file(infile)   #read and parse mail
                 infile.close()
@@ -423,28 +421,28 @@ class _comsession(object):
                 reference       = msg['message-id']
                 subject         = msg['subject']
                 contenttype     = msg.get_content_type()
-                #authorize: find the frompartner for the email addresses in the message
+                #authorize: find the frompartner
                 frompartner = ''
-                if not self.channeldict['starttls']:    #reusing old database name; 'no check on "from:" email adress'
+                if not self.channeldict['starttls']:    #starttls in channeldict is: 'no check on "from:" email adress'
                     frompartner = self.mailaddress2idpartner(frommail)
+                    if frompartner is None:
+                        raise botslib.CommunicationInError(_(u'"From" emailaddress(es) $email not authorised/unknown for channel "$idchannel".'),email=frommail,idchannel=self.channeldict['idchannel'])
+                #authorize: find the topartner
                 topartner = ''  #initialise topartner
-                tomail = ''  #initialise tomail
-                if not self.channeldict['apop']:    #reusing old database name; 'no check on "to:" email adress'
+                tomail = ''     #initialise tomail
+                if not self.channeldict['apop']:    #apop in channeldict is: 'no check on "to:" email adress'
                     for toname,tomail_tmp in tos:   #all tos-addresses are checked; only one needs to be authorised.
-                        try:
-                            topartner =  self.mailaddress2idpartner(tomail_tmp)
-                            tomail = tomail_tmp
+                        topartner =  self.mailaddress2idpartner(tomail_tmp)
+                        tomail = tomail_tmp
+                        if topartner is not None:   #if topartner found: break out of loop
                             break
-                        except botslib.CommunicationInError:
-                            pass
-                    else:
-                        if not topartner:
-                            emailtos = [address[1] for address in tos]
-                            raise botslib.CommunicationInError(_(u'Emailaddress(es) $email not authorised/unknown (channel "$idchannel").'),email=emailtos,idchannel=self.channeldict['idchannel'])
+                    else:   #if no valid topartner was found:
+                        emailtos = [address[1] for address in tos]      #make list of email-to-addresses
+                        raise botslib.CommunicationInError(_(u'"To" emailaddress(es) $email not authorised/unknown for channel "$idchannel".'),email=emailtos,idchannel=self.channeldict['idchannel'])
 
 
                 #update transaction of mail with information found in mail
-                ta_mime.update(frommail=frommail,   #why now why not later: because ta_mime is copied to separate files later, so need the info now
+                ta_from.update(frommail=frommail,   #why now why not later: because ta_mime is copied to separate files later, so need the info now
                                 tomail=tomail,
                                 reference=reference,
                                 contenttype=contenttype,
@@ -466,14 +464,15 @@ class _comsession(object):
                         raise botslib.CommunicationInError (_(u'No valid attachment in received email'))
             except:
                 txt = botslib.txtexc()
-                ta_mime.failure()
-                ta_mime.update(statust=ERROR,errortext=txt)
+                ta_from.update(statust=ERROR,errortext=txt)
+                ta_from.deletechildren()
             else:
-                ta_mime.update(statust=DONE)
-                ta_mail.update(statust=DONE,confirmtype=confirmtype,confirmed=confirmed,confirmasked=confirmasked,confirmidta=confirmidta)
-        return 0    #is not useful, as mime2file is used in postcommunication, and #files processed is not checked in postcommunication.
+                ta_from.update(statust=DONE,confirmtype=confirmtype,confirmed=confirmed,confirmasked=confirmasked,confirmidta=confirmidta)
+        return
 
     def mailaddress2idpartner(self,mailaddress):
+        ''' lookup email address to see if know in configuration. '''
+        #first check in chanpar email-addresses for this channel
         for row in botslib.query(u'''SELECT chanpar.idpartner_id as idpartner
                                     FROM chanpar,channel,partner
                                     WHERE chanpar.idchannel_id=channel.idchannel
@@ -483,14 +482,14 @@ class _comsession(object):
                                     AND LOWER(chanpar.mail)=%(mail)s''',
                                     {'active':True,'idchannel':self.channeldict['idchannel'],'mail':mailaddress.lower()}):
             return row['idpartner']
-        else:   #if not found
-            for row in botslib.query(u'''SELECT idpartner
-                                        FROM partner
-                                        WHERE active=%(active)s
-                                        AND LOWER(mail)=%(mail)s''',
-                                        {'active':True,'mail':mailaddress.lower()}):
-                return row['idpartner']
-            raise botslib.CommunicationInError(_(u'Emailaddress "$email" unknown (or not authorised for channel "$idchannel").'),email=mailaddress,idchannel=self.channeldict['idchannel'])
+        #if not found, check in partner-tabel (is less specific)
+        for row in botslib.query(u'''SELECT idpartner
+                                    FROM partner
+                                    WHERE active=%(active)s
+                                    AND LOWER(mail)=%(mail)s''',
+                                    {'active':True,'mail':mailaddress.lower()}):
+            return row['idpartner']
+        return None     #indicate email address is unknown
 
 
     def idpartner2mailaddress(self,idpartner):
@@ -504,16 +503,14 @@ class _comsession(object):
                                     {'active':True,'idchannel':self.channeldict['idchannel'],'idpartner':idpartner}):
             if row['mail']:
                 return row['mail'],row['cc']
-        else:   #if not found
-            for row in botslib.query(u'''SELECT mail,cc
-                                        FROM    partner
-                                        WHERE   active=%(active)s
-                                        AND     idpartner=%(idpartner)s''',
-                                        {'active':True,'idpartner':idpartner}):
-                if row['mail']:
-                    return row['mail'],row['cc']
-            else:
-                raise botslib.CommunicationOutError(_(u'No mail-address for partner "$partner" (channel "$idchannel").'),partner=idpartner,idchannel=self.channeldict['idchannel'])
+        for row in botslib.query(u'''SELECT mail,cc
+                                    FROM    partner
+                                    WHERE   active=%(active)s
+                                    AND     idpartner=%(idpartner)s''',
+                                    {'active':True,'idpartner':idpartner}):
+            if row['mail']:
+                return row['mail'],row['cc']
+        raise botslib.CommunicationOutError(_(u'No mail-address for partner "$partner" (channel "$idchannel").'),partner=idpartner,idchannel=self.channeldict['idchannel'])
 
     def connect(self):
         pass
@@ -533,6 +530,127 @@ class _comsession(object):
         return convertdict.get(codec_in,codec_in)
 
 
+class file(_comsession):
+    def connect(self):
+        if self.channeldict['lockname']:        #directory locking: create lock-file. If the lockfile is already present an exception is raised.
+            self.lockname = botslib.join(self.channeldict['path'],self.channeldict['lockname'])
+            lock = os.open(self.lockname,os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+            os.close(lock)
+        #~ if self.channeldict['inorout'] == 'out':
+            #~ raise Exception('test')
+
+    @botslib.log_session
+    def incommunicate(self):
+        ''' gets files from filesystem.
+        '''
+        frompath = botslib.join(self.channeldict['path'],self.channeldict['filename'])
+        startdatetime = datetime.datetime.now()
+        for fromfilename in [filename for filename in glob.glob(frompath) if os.path.isfile(filename)]:
+            try:
+                ta_from = botslib.NewTransaction(filename=fromfilename,
+                                                status=EXTERNIN,
+                                                fromchannel=self.channeldict['idchannel'],
+                                                charset=self.channeldict['charset'],idroute=self.idroute)
+                ta_to =   ta_from.copyta(status=FILEIN)
+                #open fromfile, syslock if indicated
+                fromfile = open(fromfilename,'rb')
+                if self.channeldict['syslock']:
+                    if os.name == 'nt':
+                        msvcrt.locking(fromfile.fileno(), msvcrt.LK_LOCK, 0x0fffffff)
+                    elif os.name == 'posix':
+                        fcntl.lockf(fromfile.fileno(), fcntl.LOCK_SH|fcntl.LOCK_NB)
+                    else:
+                        raise botslib.LockedFileError(_(u'Can not do a systemlock on this platform'))
+                #open tofile
+                tofilename = str(ta_to.idta)
+                tofile = botslib.opendata(tofilename, 'wb')
+                #copy
+                content = fromfile.read()
+                filesize = len(content)
+                tofile.write(content)
+                tofile.close()
+                fromfile.close()
+            except:
+                txt = botslib.txtexc()
+                botslib.ErrorProcess(functionname='file-incommunicate',errortext=txt,channeldict=self.channeldict)
+                ta_from.delete()
+                ta_to.delete()
+            else:
+                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                ta_from.update(statust=DONE)
+                if self.channeldict['remove']:
+                    os.remove(fromfilename)
+            finally:
+                if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
+                    break
+
+    @botslib.log_session
+    def outcommunicate(self):
+        ''' does output of files to filesystem. To be used via send-dispatcher.
+            Output is either:
+            1.  1 outputfile, messages are appended; filename is a fixed name
+            2.  to directory; new file for each db-ta; if file exits: overwrite. File has to have a unique name.
+        '''
+        #check if output dir exists, else create it.
+        outputdir = botslib.join(self.channeldict['path'])
+        botslib.dirshouldbethere(outputdir)
+        #output to one file or a queue of files (with unique names)
+        if not self.channeldict['filename'] or '*' not in self.channeldict['filename']:
+            mode = 'ab'  #fixed filename; not unique: append to file
+        else:
+            mode = 'wb'  #unique filenames; (over)write
+        #select the db-ta's for this channel
+        for row in botslib.query(u'''SELECT idta,filename,charset
+                                       FROM ta
+                                      WHERE idta>%(rootidta)s
+                                        AND status=%(status)s
+                                        AND statust=%(statust)s
+                                        AND tochannel=%(tochannel)s
+                                        ''',
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    'status':FILEOUT,'statust':OK}):
+            try:    #for each db-ta:
+                ta_from = botslib.OldTransaction(row['idta'])
+                ta_to =   ta_from.copyta(status=EXTERNOUT)
+                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
+                #open tofile, incl syslock if indicated
+                unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
+                if self.channeldict['filename']:
+                    filename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
+                else:
+                    filename = unique
+                if self.userscript and hasattr(self.userscript,'filename'):
+                    filename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=filename,ta=ta_from)
+                tofilename = botslib.join(outputdir,filename)
+                tofile = open(tofilename, mode)
+                if self.channeldict['syslock']:
+                    if os.name == 'nt':
+                        msvcrt.locking(tofile.fileno(), msvcrt.LK_LOCK, 0x0fffffff)
+                    elif os.name == 'posix':
+                        fcntl.lockf(tofile.fileno(), fcntl.LOCK_EX|fcntl.LOCK_NB)
+                    else:
+                        raise botslib.LockedFileError(_(u'Can not do a systemlock on this platform'))
+                #open fromfile
+                fromfile = botslib.opendata(row['filename'], 'rb')
+                #copy
+                shutil.copyfileobj(fromfile,tofile)
+                fromfile.close()
+                tofile.close()
+                #~ raise Exception('test')
+            except:
+                txt = botslib.txtexc()
+                ta_to.update(statust=ERROR,errortext=txt)
+            else:
+                ta_to.update(statust=DONE,filename=tofilename)
+            finally:
+                ta_from.update(statust=DONE)
+
+    def disconnect(self):
+        #delete directory-lockfile
+        if self.channeldict['lockname']:
+            os.remove(self.lockname)
+
+
 class pop3(_comsession):
     def connect(self):
         import poplib
@@ -544,7 +662,7 @@ class pop3(_comsession):
     @botslib.log_session
     def incommunicate(self):
         ''' Fetch messages from Pop3-mailbox.
-            A bad connection is tricky, because mails are actually deleted on the server when QUIT is successful.
+            A bad connection is tricky, because mails are actually only deleted on the server when QUIT is successful.
             A solution would be to connect, fetch, delete and quit for each mail, but this might introduce other problems.
             So: keep a list of idta received OK.
             If QUIT is not successful than delete these ta's
@@ -557,16 +675,18 @@ class pop3(_comsession):
                 ta_from = botslib.NewTransaction(filename='pop3://'+self.channeldict['username']+'@'+self.channeldict['host'],
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
-                ta_to =   ta_from.copyta(status=RAWIN)
-                filename = str(ta_to.idta)
+                ta_to =   ta_from.copyta(status=FILEIN)
+                tofilename = str(ta_to.idta)
                 mailid = int(mail.split()[0])	#first 'word' is the message number/ID
                 maillines = self.session.retr(mailid)[1]        #alt: (header, messagelines, octets) = popsession.retr(messageID)
-                filehandler = botslib.opendata(filename, 'wb')
-                filehandler.write(os.linesep.join(maillines))
-                filehandler.close()
+                tofile = botslib.opendata(tofilename, 'wb')
+                content = os.linesep.join(maillines)
+                filesize = len(content)
+                tofile.write(content)
+                tofile.close()
                 if self.channeldict['remove']:      #on server side mail is marked to be deleted. The pop3-server will actually delete the file if the QUIT commnd is receieved!
                     self.session.dele(mailid)
-                    #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. delete these as they will NOT
+                    #add idta's of received mail in a list. If connection is not OK, QUIT command to POP3 server will not work. deleted mail will still be on server.
                     self.listoftamarkedfordelete += [ta_from.idta,ta_to.idta]
 
             except:         #something went wrong for this mail.
@@ -581,8 +701,8 @@ class pop3(_comsession):
                     self.session = None     #indicate session is not valid anymore
                     break
             else:
+                ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize)
                 ta_from.update(statust=DONE)
-                ta_to.update(statust=OK,filename=filename)
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
@@ -590,19 +710,19 @@ class pop3(_comsession):
     def disconnect(self):
         try:
             if not self.session:
-                raise botslib.CommunicationInError(_(u'Pop3 connection not OK'))
+                raise Exception(_(u'Pop3 connection not OK'))
             resp = self.session.quit()     #pop3 server will now actually delete the mails
             if resp[:1] != '+':
-                raise botslib.CommunicationInError(_(u'QUIT command to POP3 server failed'))
-        except:
+                raise Exception(_(u'QUIT command to POP3 server failed'))
+        except Exception:   #connection is gone. Delete everything that is received to avoid double receiving.
             botslib.ErrorProcess(functionname='pop3-incommunicate',errortext='Could not fetch emails via POP3; probably communication problems',channeldict=self.channeldict)
             for idta in self.listoftamarkedfordelete:
                 ta = botslib.OldTransaction(idta)
                 ta.delete()
 
     @botslib.log_session
-    def postcommunicate(self,fromstatus,tostatus):
-        self.mime2file(fromstatus,tostatus)
+    def postcommunicate(self):
+        self.mime2file()
 
 class pop3s(pop3):
     def connect(self):
@@ -661,25 +781,26 @@ class imap4(_comsession):
                 ta_from = botslib.NewTransaction(filename='imap4://'+self.channeldict['username']+'@'+self.channeldict['host'],
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
-                ta_to =   ta_from.copyta(status=RAWIN)
+                ta_to =   ta_from.copyta(status=FILEIN)
                 filename = str(ta_to.idta)
                 # Get the message (header and body)
                 response, msg_data = self.session.uid('fetch',mail, '(RFC822)')
                 filehandler = botslib.opendata(filename, 'wb')
+                filesize = len(msg_data[0][1])
                 filehandler.write(msg_data[0][1])
                 filehandler.close()
                 # Flag message for deletion AND expunge. Direct expunge has advantages for bad (internet)connections.
-                if self.channeldict['remove']:
-                    self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
-                    self.session.expunge()
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
             else:
+                ta_to.update(statust=OK,filename=filename,rsrv2=filesize)
                 ta_from.update(statust=DONE)
-                ta_to.update(statust=OK,filename=filename)
+                if self.channeldict['remove']:
+                    self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
+                    self.session.expunge()
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
@@ -687,8 +808,8 @@ class imap4(_comsession):
         self.session.close()        #Close currently selected mailbox. This is the recommended command before 'LOGOUT'.
 
     @botslib.log_session
-    def postcommunicate(self,fromstatus,tostatus):
-        self.mime2file(fromstatus,tostatus)
+    def postcommunicate(self):
+        self.mime2file()
 
     def disconnect(self):
         self.session.logout()
@@ -709,8 +830,8 @@ class imap4s(imap4):
 
 class smtp(_comsession):
     @botslib.log_session
-    def precommunicate(self,fromstatus,tostatus):
-        return self.file2mime(fromstatus,tostatus)
+    def precommunicate(self):
+        self.file2mime()
 
     def connect(self):
         self.session = smtplib.SMTP(host=self.channeldict['host'],port=int(self.channeldict['port'])) #make connection
@@ -731,7 +852,6 @@ class smtp(_comsession):
     @botslib.log_session
     def outcommunicate(self):
         ''' does smtp-session.
-            SSL/TLS supported (no keys-file/cert-file supported yet)
             SMTP does not allow rollback. So if the sending of a mail fails, other mails may have been send.
         '''
         #send messages
@@ -742,7 +862,7 @@ class smtp(_comsession):
                                     AND   statust=%(statust)s
                                     AND   tochannel=%(tochannel)s
                                     ''',
-                                    {'status':RAWOUT,'statust':OK,'rootidta':botslib.get_minta4query(),
+                                    {'status':FILEOUT,'statust':OK,'rootidta':botslib.get_minta4query(),
                                     'tochannel':self.channeldict['idchannel']}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -758,8 +878,9 @@ class smtp(_comsession):
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'])
             else:
-                ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'])
+            finally:
+                ta_from.update(statust=DONE)
 
     def disconnect(self):
         try:    #Google gives/gave error closing connection. Not a real problem.
@@ -799,134 +920,13 @@ class smtpstarttls(smtp):
         self.login()
 
 
-class file(_comsession):
-    def connect(self):
-        if self.channeldict['lockname']:        #directory locking: create lock-file. If the lockfile is already present an exception is raised.
-            self.lockname = botslib.join(self.channeldict['path'],self.channeldict['lockname'])
-            lock = os.open(self.lockname,os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-            os.close(lock)
-
-    @botslib.log_session
-    def incommunicate(self):
-        ''' gets files from filesystem. To be used via receive-dispatcher.
-            each to be imported file is transaction.
-            each imported file is transaction.
-            IF error in importing: imported files are either OK or ERROR.
-                                    what could not be imported is not removed
-        '''
-        frompath = botslib.join(self.channeldict['path'],self.channeldict['filename'])
-        #fetch messages from filesystem.
-        startdatetime = datetime.datetime.now()
-        for fromfilename in [c for c in glob.glob(frompath) if os.path.isfile(c)]:
-            try:
-                ta_from = botslib.NewTransaction(filename=fromfilename,
-                                                status=EXTERNIN,
-                                                fromchannel=self.channeldict['idchannel'],
-                                                charset=self.channeldict['charset'],idroute=self.idroute)
-                ta_to =   ta_from.copyta(status=RAWIN)
-                #open fromfile, syslock if indicated
-                fromfile = open(fromfilename,'rb')
-                if self.channeldict['syslock']:
-                    if os.name == 'nt':
-                        msvcrt.locking(fromfile.fileno(), msvcrt.LK_LOCK, 0x0fffffff)
-                    elif os.name == 'posix':
-                        fcntl.lockf(fromfile.fileno(), fcntl.LOCK_SH|fcntl.LOCK_NB)
-                    else:
-                        raise botslib.LockedFileError(_(u'Can not do a systemlock on this platform'))
-                #open tofile
-                tofilename = str(ta_to.idta)
-                tofile = botslib.opendata(tofilename, 'wb')
-                #copy
-                shutil.copyfileobj(fromfile,tofile)
-                fromfile.close()
-                tofile.close()
-                if self.channeldict['remove']:
-                    os.remove(fromfilename)
-            except:
-                txt = botslib.txtexc()
-                botslib.ErrorProcess(functionname='file-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
-            else:
-                ta_from.update(statust=DONE)
-                ta_to.update(filename=tofilename,statust=OK)
-            finally:
-                if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
-                    break
-
-    @botslib.log_session
-    def outcommunicate(self):
-        ''' does output of files to filesystem. To be used via send-dispatcher.
-            Output is either:
-            1.  1 outputfile, messages are appended; filename is a fixed name
-            2.  to directory; new file for each db-ta; if file exits: overwrite. File has to have a unique name.
-        '''
-        #check if output dir exists, else create it.
-        outputdir = botslib.join(self.channeldict['path'])
-        botslib.dirshouldbethere(outputdir)
-        #output to one file or a queue of files (with unique names)
-        if not self.channeldict['filename'] or '*' not in self.channeldict['filename']:
-            mode = 'ab'  #fixed filename; not unique: append to file
-        else:
-            mode = 'wb'  #unique filenames; (over)write
-        #select the db-ta's for this channel
-        for row in botslib.query(u'''SELECT idta,filename,charset
-                                       FROM ta
-                                      WHERE idta>%(rootidta)s
-                                        AND status=%(status)s
-                                        AND statust=%(statust)s
-                                        AND tochannel=%(tochannel)s
-                                        ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK}):
-            try:    #for each db-ta:
-                ta_from = botslib.OldTransaction(row['idta'])
-                ta_to =   ta_from.copyta(status=EXTERNOUT)
-                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
-                #open tofile, incl syslock if indicated
-                unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
-                if self.channeldict['filename']:
-                    filename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
-                else:
-                    filename = unique
-                if self.userscript and hasattr(self.userscript,'filename'):
-                    filename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=filename,ta=ta_from)
-                tofilename = botslib.join(outputdir,filename)
-                tofile = open(tofilename, mode)
-                if self.channeldict['syslock']:
-                    if os.name == 'nt':
-                        msvcrt.locking(tofile.fileno(), msvcrt.LK_LOCK, 0x0fffffff)
-                    elif os.name == 'posix':
-                        fcntl.lockf(tofile.fileno(), fcntl.LOCK_EX|fcntl.LOCK_NB)
-                    else:
-                        raise botslib.LockedFileError(_(u'Can not do a systemlock on this platform'))
-                #open fromfile
-                fromfile = botslib.opendata(row['filename'], 'rb')
-                #copy
-                shutil.copyfileobj(fromfile,tofile)
-                fromfile.close()
-                tofile.close()
-            except:
-                txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt)
-            else:
-                ta_from.update(statust=DONE)
-                ta_to.update(statust=DONE,filename=tofilename)
-
-
-    def disconnect(self):
-        #delete directory-lockfile
-        if self.channeldict['lockname']:
-            os.remove(self.lockname)
-
-
 class mimefile(file):
     @botslib.log_session
-    def postcommunicate(self,fromstatus,tostatus):
-        self.mime2file(fromstatus,tostatus)
+    def postcommunicate(self):
+        self.mime2file()
     @botslib.log_session
-    def precommunicate(self,fromstatus,tostatus):
-        return self.file2mime(fromstatus,tostatus)
+    def precommunicate(self):
+        self.file2mime()
 
 class ftp(_comsession):
     def connect(self):
@@ -969,7 +969,7 @@ class ftp(_comsession):
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
                                                     charset=self.channeldict['charset'],idroute=self.idroute)
-                ta_to =   ta_from.copyta(status=RAWIN)
+                ta_to =   ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 try:
@@ -985,22 +985,20 @@ class ftp(_comsession):
                 tofile.close()
                 filesize = os.path.getsize(botslib.abspathdata(tofilename))
                 if not filesize:
-                    raise botslib.BotsError(u'To be catched')
-                if self.channeldict['remove']:
-                    self.session.delete(fromfilename)
-            except botslib.BotsError:   #catch this exception and handle it
-                tofile.close()
+                    raise botslib.BotsError(u'To be catched; directory (or empty file)')
+            except botslib.BotsError:   #directory or empty file; handle exception but generate no error.
                 ta_from.delete()
                 ta_to.delete()
             except:
-                tofile.close()
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='ftp-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
             else:
+                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
                 ta_from.update(statust=DONE)
-                ta_to.update(filename=tofilename,statust=OK)
+                if self.channeldict['remove']:
+                    self.session.delete(fromfilename)
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
@@ -1025,7 +1023,7 @@ class ftp(_comsession):
                                       AND tochannel=%(tochannel)s
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK}):
+                                    'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
@@ -1041,7 +1039,6 @@ class ftp(_comsession):
                     fromfile = botslib.opendata(row['filename'], 'rb')
                     self.session.storbinary(mode + tofilename, fromfile)
                 else:
-                    #~ self.channeldict['charset'] = 'us-ascii'
                     botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                     fromfile = botslib.opendata(row['filename'], 'r')
                     self.session.storlines(mode + tofilename, fromfile)
@@ -1050,8 +1047,9 @@ class ftp(_comsession):
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='ftp:/'+posixpath.join(self.dirpath,tofilename))
             else:
-                ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename='ftp:/'+posixpath.join(self.dirpath,tofilename))
+            finally:
+                ta_from.update(statust=DONE)
 
     def disconnect(self):
         try:
@@ -1254,24 +1252,25 @@ class sftp(_comsession):
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
                                                     charset=self.channeldict['charset'],idroute=self.idroute)
-                ta_to =   ta_from.copyta(status=RAWIN)
+                ta_to =   ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
-
-                # SSH treats all files as binary
+                fromfile = self.session.open(fromfilename, 'r')    # SSH treats all files as binary
+                content = fromfile.read()
+                filesize = len(content)
                 tofile = botslib.opendata(tofilename, 'wb')
-                tofile.write(self.session.open(fromfilename, 'r').read())
+                tofile.write(content)
                 tofile.close()
-
-                if self.channeldict['remove']:
-                    self.session.remove(fromfilename)
+                fromfile.close()
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='sftp-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
             else:
+                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
                 ta_from.update(statust=DONE)
-                ta_to.update(filename=tofilename,statust=OK)
+                if self.channeldict['remove']:
+                    self.session.remove(fromfilename)
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
@@ -1295,7 +1294,7 @@ class sftp(_comsession):
                                       AND tochannel=%(tochannel)s
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK}):
+                                    'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
@@ -1307,18 +1306,19 @@ class sftp(_comsession):
                 if self.userscript and hasattr(self.userscript,'filename'):
                     tofilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta_from)
 
-                # SSH treats all files as binary
                 botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 fromfile = botslib.opendata(row['filename'], 'rb')
-                self.session.open(tofilename, mode).write(fromfile.read())
+                tofile = self.session.open(tofilename, mode)    # SSH treats all files as binary
+                tofile.write(fromfile.read())
+                tofile.close()
                 fromfile.close()
-
             except:
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename))
             else:
-                ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename='sftp:/'+posixpath.join(self.dirpath,tofilename))
+            finally:
+                ta_from.update(statust=DONE)
 
 
 class xmlrpc(_comsession):
@@ -1343,7 +1343,7 @@ class xmlrpc(_comsession):
                                       AND idta>%(rootidta)s
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK}):
+                                    'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
@@ -1357,14 +1357,15 @@ class xmlrpc(_comsession):
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
-                ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename=self.uri.update(path=self.channeldict['path'],filename=str(filename)))
+            finally:
+                ta_from.update(statust=DONE)
 
 
     @botslib.log_session
     def incommunicate(self):
         startdatetime = datetime.datetime.now()
-        while (True):
+        while True:
             try:
                 tocall = getattr(self.session,self.channeldict['path'])
                 content = tocall()
@@ -1374,241 +1375,23 @@ class xmlrpc(_comsession):
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
                                                     charset=self.channeldict['charset'],idroute=self.idroute)
-                ta_to =   ta_from.copyta(status=RAWIN)
+                ta_to =   ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
                 tofile.close()
+                filesize = os.path.getsize(botslib.abspathdata(tofilename))
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
                 ta_from.delete()
                 ta_to.delete()
             else:
+                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
                 ta_from.update(statust=DONE)
-                ta_to.update(filename=tofilename,statust=OK)
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
-
-
-class intercommit(_comsession):
-    def connect(self):
-        #TODO: check if intercommit program is installed/reachable
-        pass
-
-    @botslib.log_session
-    def incommunicate(self):
-        botslib.runexternprogram(botsglobal.ini.get('intercommit','path'), '-R')
-        frompath = botslib.join(self.channeldict['path'],self.channeldict['filename'])
-        for fromheadername in [c for c in glob.glob(frompath) if os.path.isfile(c)]:    #get intercommit xml-header
-            try:
-                #open  db-ta's
-                ta_from = botslib.NewTransaction(filename=fromheadername,
-                                                status=EXTERNIN,
-                                                fromchannel=self.channeldict['idchannel'],
-                                                charset=self.channeldict['charset'],
-                                                idroute=self.idroute)
-                ta_to = ta_from.copyta(status=RAWIN)
-                #parse the intercommit 'header'-file (named *.edi)
-                self.parsestuurbestand(filename=fromheadername,charset=self.channeldict['charset'])
-                #convert parameters (mail-addresses to partners-ID's; flename)
-                self.p['frompartner'] = self.mailaddress2idpartner(self.p['frommail'])
-                self.p['topartner'] =  self.mailaddress2idpartner(self.p['tomail'])
-                fromfilename = botslib.join(self.channeldict['path'],self.p['Attachment'])
-                self.p['filename'] = str(ta_to.idta)
-                #read/write files (xml=header is already done
-                fromfile = open(fromfilename,'rb')
-                tofile = botslib.opendata(self.p['filename'], 'wb')
-                shutil.copyfileobj(fromfile,tofile)
-                fromfile.close()
-                tofile.close()
-                if self.channeldict['remove']:
-                    os.remove(fromfilename)
-                    os.remove(fromheadername)
-            except:
-                txt = botslib.txtexc()
-                ta_from.update(statust=ERROR,errortext=txt,filename=fromfilename)
-                ta_to.delete()
-            else:
-                ta_from.update(statust=DONE,filename=fromfilename)
-                ta_to.update(statust=OK,**self.p)
-
-    def parsestuurbestand(self,filename,charset):
-        self.p = {}
-        edifile = inmessage.edifromfile(filename=filename,messagetype='intercommitenvelope',editype='xml',charset=charset)
-        for inn in edifile.nextmessage():
-            break
-        self.p['frommail'] = inn.get({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'From','BOTSCONTENT':None})
-        self.p['tomail'] = inn.get({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'To','BOTSCONTENT':None})
-        self.p['reference'] = inn.get({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'X-ClientMsgID','BOTSCONTENT':None})
-        self.p['Subject'] = inn.get({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'Subject','BOTSCONTENT':None})
-        self.p['Attachment'] = inn.get({'BOTSID':'Edicon'},{'BOTSID':'Body'},{'BOTSID':'Attachment','BOTSCONTENT':None})
-
-    @botslib.log_session
-    def outcommunicate(self):
-        #check if output dir exists, else create it.
-        dirforintercommitsend = botslib.join(self.channeldict['path'])
-        botslib.dirshouldbethere(dirforintercommitsend)
-        #output to one file or a queue of files (with unique names)
-        if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
-            raise botslib.CommunicationOutError(_(u'channel "$channel" needs unique filenames (no queue-file); use eg *.edi as value for "filename"'),channel=self.channeldict['idchannel'])
-        else:
-            mode = 'wb'  #unique filenames; (over)write
-        #select the db-ta's for this channel
-        for row in botslib.query('''SELECT idta,filename,frompartner,topartner,charset
-                                    FROM  ta
-                                    WHERE idta>%(rootidta)s
-                                    AND   status=%(status)s
-                                    AND   statust=%(statust)s
-                                    AND   tochannel=%(idchannel)s
-                                    AND   idroute=%(idroute)s
-                                    ''',
-                                    {'idchannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK,'idroute':self.idroute}):
-            try:    #for each db-ta:
-                ta_attr = {}    #ta_attr contains attributes used for updating ta
-                ta_from = botslib.OldTransaction(row['idta'])
-                ta_to =   ta_from.copyta(status=EXTERNOUT)
-                #check encoding for outchannel
-                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
-                #create unique for filenames of xml-header file and contentfile
-                uniquepart = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filenames
-                statusfilename = self.channeldict['filename'].replace('*',uniquepart) #filename is filename in channel where '*' is replaced by idta
-                statusfilenamewithpath = botslib.join(dirforintercommitsend,statusfilename)
-                (filenamewithoutext,ext)=os.path.splitext(statusfilename)
-                datafilename = filenamewithoutext + '.dat'
-                ta_attr['filename'] = botslib.join(dirforintercommitsend,datafilename)
-                ta_attr['frompartner'],nep = self.idpartner2mailaddress(row['frompartner'])
-                ta_attr['topartner'],nep = self.idpartner2mailaddress(row['topartner'])
-                ta_attr['reference'] = email.Utils.make_msgid(str(row['idta']))[1:-1]  #[1:-1]: strip angle brackets
-                #create xml-headerfile
-                out = outmessage.outmessage_init(messagetype='intercommitenvelope',editype='xml',filename=statusfilenamewithpath)    #make outmessage object
-                out.put({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'From','BOTSCONTENT':ta_attr['frompartner']})
-                out.put({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'To','BOTSCONTENT':ta_attr['topartner']})
-                out.put({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'Subject','BOTSCONTENT':ta_attr['reference']})
-                out.put({'BOTSID':'Edicon'},{'BOTSID':'Body'},{'BOTSID':'Attachment','Type':'external','BOTSCONTENT':datafilename})
-                out.put({'BOTSID':'Edicon'},{'BOTSID':'Header'},{'BOTSID':'X-mtype','BOTSCONTENT':'EDI'})
-                out.writeall()   #write tomessage (result of translation)
-                #read/write datafiles
-                tofile = open(ta_attr['filename'], mode)
-                fromfile = open(row['filename'], 'rb')
-                shutil.copyfileobj(fromfile,tofile)
-                fromfile.close()
-                tofile.close()
-            except:
-                txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt)
-            else:
-                ta_from.update(statust=DONE)
-                ta_to.update(statust=DONE,**ta_attr)
-        botslib.runexternprogram(botsglobal.ini.get('intercommit','path'),'-s')
-
-    def disconnect(self):
-        statusfilenaam = botslib.join(botsglobal.ini.get('intercommit','logfile'))
-        edifile = inmessage.edifromfile(filename=statusfilenaam,messagetype='intercommitstatus',editype='csv',charset='utf-8')
-        for inn in edifile.nextmessage():
-            for inline in inn.getloop({'BOTSID':'regel'}):
-                statuse = int(inline.get({'BOTSID':'regel','Berichtstatus':None}))
-                ICID = inline.get({'BOTSID':'regel','X-ClientMsgID':None})
-                if statuse == 2:
-                    subject = inline.get({'BOTSID':'regel','Onderwerp':None})
-                    botslib.change(u'''UPDATE ta
-                                       SET statuse=%(statuse)s, reference=%(newref)s
-                                       WHERE reference = %(oldref)s
-                                       AND status=%(status)s''',
-                                       {'status':EXTERNOUT,'oldref':subject,'newref':ICID,'statuse':statuse})
-                else:
-                    botslib.change(u'''UPDATE ta
-                                       SET statuse=%(statuse)s
-                                       WHERE reference = %(reference)s
-                                       AND status=%(status)s''',
-                                       {'status':EXTERNOUT,'reference':ICID,'statuse':statuse})
-        os.remove(statusfilenaam)
-
-
-class database(_comsession):
-    ''' ***this class is obsolete and only here for compatibility reasons.
-        ***this class is replaced by class db
-        communicate with a database; directly read or write from a database.
-        the user HAS to provide a script that does the actual import/export using SQLalchemy API.
-        use of channel parameters:
-        - path: contains the connection string (a sqlachlemy db uri)
-        - idchannel: name user script that does the database query & data formatting. in usersys/dbconnectors. ' main' function is called.
-        incommunicate (read from database) expects a json object. In the mapping script this is presented the usual way - use inn.get() etc.
-        outcommunicate (write to database) gets a json object.
-    '''
-    def connect(self):
-        self.dbscript,self.dbscriptname = botslib.botsimport('dbconnectors',self.channeldict['idchannel']) #get the dbconnector-script
-        if not hasattr(self.dbscript,'main'):
-            raise botslib.ScriptImportError(_(u'No function "$function" in imported script "$script".'),function='main',script=self.dbscript)
-
-        try:
-            import sqlalchemy
-        except:
-            txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: communication type "database" requires python library "sqlalchemy". Error:\n%s'%txt))
-        from sqlalchemy.orm import sessionmaker
-        engine = sqlalchemy.create_engine(self.channeldict['path'],strategy='threadlocal')
-        self.metadata = sqlalchemy.MetaData()
-        self.metadata.bind = engine
-        Session = sessionmaker(bind=engine, autoflush=False, transactional=True)
-        self.session = Session()
-
-    @botslib.log_session
-    def incommunicate(self):
-        ''' read data from database.
-        '''
-        jsonobject = botslib.runscript(self.dbscript,self.dbscriptname,'main',channeldict=self.channeldict,session=self.session,metadata=self.metadata)
-        self.session.flush()
-        self.session.commit()
-        #should be checked more elaborate if jsonobject has 'real' data?
-        if jsonobject:
-            ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
-                                                status=EXTERNIN,
-                                                fromchannel=self.channeldict['idchannel'],
-                                                charset=self.channeldict['charset'],idroute=self.idroute)
-            ta_to =   ta_from.copyta(status=RAWIN)
-            tofilename = str(ta_to.idta)
-            tofile = botslib.opendata(tofilename,'wb',charset=u'utf-8')
-            simplejson.dump(jsonobject, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
-            tofile.close()
-            ta_from.update(statust=DONE)
-            ta_to.update(filename=tofilename,statust=OK)
-
-    @botslib.log_session
-    def outcommunicate(self):
-        ''' write data to database.
-        '''
-        for row in botslib.query('''SELECT idta,filename
-                                    FROM  ta
-                                    WHERE idta>%(rootidta)s
-                                        AND status=%(status)s
-                                        AND statust=%(statust)s
-                                        AND tochannel=%(tochannel)s
-                                        ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK}):
-            try:
-                ta_from = botslib.OldTransaction(row['idta'])
-                ta_to = ta_from.copyta(status=EXTERNOUT)
-                fromfile = botslib.opendata(row['filename'], 'rb',charset=u'utf-8')
-                jsonobject = simplejson.load(fromfile)
-                fromfile.close()
-                botslib.runscript(self.dbscript,self.dbscriptname,'main',channeldict=self.channeldict,session=self.session,metadata=self.metadata,content=jsonobject)
-                self.session.flush()
-                self.session.commit()
-            except:
-                self.session.rollback()
-                txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'])
-            else:
-                ta_from.update(statust=DONE)
-                ta_to.update(statust=DONE,filename=self.channeldict['path'])
-
-    def disconnect(self):
-        self.session.close()
-        #~ pass
 
 class db(_comsession):
     ''' communicate with a database; directly read or write from a database.
@@ -1639,29 +1422,40 @@ class db(_comsession):
     @botslib.log_session
     def incommunicate(self):
         ''' read data from database.
-            returns db_objects;
+            user script should return a 'db_objects'.
+            This can be one edi-message or several edi-messages.
+            if a list or tuple is passed: each element of list/tuple is treated as seperate edi-message.
             if this is None, do nothing
-            if this is a list, treat each member of the list as a separate 'message'
+            if this is a list/tuple, each member of the list is send as a separate 'message'
+            if you want all information from user script to be passed as one edi message: pass as dict, eg {'data': <list of queries>}
         '''
         db_objects = botslib.runscript(self.userscript,self.scriptname,'incommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection)
-        if not db_objects:
-            return
+        if not db_objects:      #there should be a useful db_objects; if not just return (do nothing)
+            return              
         if not isinstance(db_objects,(list,tuple)):
-            db_objects = [db_objects]
+            db_objects = [db_objects]   #a list or tuple is expected: pack received object in a list (list with one member). 
 
         for db_object in db_objects:
-            ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
-                                                status=EXTERNIN,
-                                                fromchannel=self.channeldict['idchannel'],
-                                                charset=self.channeldict['charset'],
-                                                idroute=self.idroute)
-            ta_to = ta_from.copyta(status=RAWIN)
-            tofilename = str(ta_to.idta)
-            tofile = botslib.opendata(tofilename,'wb')
-            pickle.dump(db_object, tofile,2)
-            tofile.close()
-            ta_from.update(statust=DONE)
-            ta_to.update(filename=tofilename,statust=OK)
+            try:
+                ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
+                                                    status=EXTERNIN,
+                                                    fromchannel=self.channeldict['idchannel'],
+                                                    charset=self.channeldict['charset'],
+                                                    idroute=self.idroute)
+                ta_to = ta_from.copyta(status=FILEIN)
+                tofilename = str(ta_to.idta)
+                tofile = botslib.opendata(tofilename,'wb')
+                pickle.dump(db_object, tofile,2)
+                tofile.close()
+                filesize = os.path.getsize(botslib.abspathdata(tofilename))
+            except:
+                txt = botslib.txtexc()
+                botslib.ErrorProcess(functionname='db-incommunicate',errortext=txt,channeldict=self.channeldict)
+                ta_from.delete()
+                ta_to.delete()
+            else:
+                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                ta_from.update(statust=DONE)
 
     @botslib.log_session
     def outcommunicate(self):
@@ -1670,12 +1464,12 @@ class db(_comsession):
         for row in botslib.query('''SELECT idta,filename
                                     FROM  ta
                                     WHERE idta>%(rootidta)s
-                                        AND status=%(status)s
-                                        AND statust=%(statust)s
-                                        AND tochannel=%(tochannel)s
+                                    AND status=%(status)s
+                                    AND statust=%(statust)s
+                                    AND tochannel=%(tochannel)s
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK}):
+                                    'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
@@ -1687,8 +1481,9 @@ class db(_comsession):
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'])
             else:
-                ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename=self.channeldict['path'])
+            finally:
+                ta_from.update(statust=DONE)
 
     def disconnect(self):
         botslib.runscript(self.userscript,self.scriptname,'disconnect',channeldict=self.channeldict,dbconnection=self.dbconnection)
@@ -1735,23 +1530,25 @@ class communicationscript(_comsession):
                                                     status = EXTERNIN,
                                                     fromchannel = self.channeldict['idchannel'],
                                                     charset = self.channeldict['charset'], idroute = self.idroute)
-                    ta_to = ta_from.copyta(status = RAWIN)
+                    ta_to = ta_from.copyta(status = FILEIN)
                     fromfile = open(fromfilename, 'rb')
                     tofilename = str(ta_to.idta)
                     tofile = botslib.opendata(tofilename, 'wb')
-                    shutil.copyfileobj(fromfile,tofile)
+                    content = fromfile.read()
+                    filesize = len(content)
+                    tofile.write(content)
                     fromfile.close()
                     tofile.close()
-                    if self.channeldict['remove']:
-                        os.remove(fromfilename)
                 except:
                     txt = botslib.txtexc()
                     botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
                     ta_from.delete()
                     ta_to.delete()
                 else:
+                    ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
                     ta_from.update(statust=DONE)
-                    ta_to.update(filename=tofilename,statust=OK)
+                    if self.channeldict['remove']:
+                        os.remove(fromfilename)
                 finally:
                     if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                         break
@@ -1763,23 +1560,25 @@ class communicationscript(_comsession):
                                                     status = EXTERNIN,
                                                     fromchannel = self.channeldict['idchannel'],
                                                     charset = self.channeldict['charset'], idroute = self.idroute)
-                    ta_to = ta_from.copyta(status = RAWIN)
+                    ta_to = ta_from.copyta(status = FILEIN)
                     fromfile = open(fromfilename, 'rb')
                     tofilename = str(ta_to.idta)
                     tofile = botslib.opendata(tofilename, 'wb')
-                    shutil.copyfileobj(fromfile,tofile)
+                    content = fromfile.read()
+                    filesize = len(content)
+                    tofile.write(content)
                     fromfile.close()
                     tofile.close()
-                    if self.channeldict['remove']:
-                        os.remove(fromfilename)
                 except:
                     txt = botslib.txtexc()
                     botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
                     ta_from.delete()
                     ta_to.delete()
                 else:
+                    ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
                     ta_from.update(statust=DONE)
-                    ta_to.update(filename=tofilename,statust=OK)
+                    if self.channeldict['remove']:
+                        os.remove(fromfilename)
                 finally:
                     if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                         break
@@ -1797,14 +1596,13 @@ class communicationscript(_comsession):
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel
         for row in botslib.query(u'''SELECT idta,filename,charset
-                                       FROM ta
-                                      WHERE idta>%(rootidta)s
-                                        AND status=%(status)s
-                                        AND statust=%(statust)s
-                                        AND tochannel=%(tochannel)s
-                                        ''',
+                                    FROM ta
+                                    WHERE idta>%(rootidta)s
+                                    AND status=%(status)s
+                                    AND statust=%(statust)s
+                                    AND tochannel=%(tochannel)s ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':RAWOUT,'statust':OK}):
+                                    'status':FILEOUT,'statust':OK}):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
@@ -1831,14 +1629,15 @@ class communicationscript(_comsession):
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt)
             else:
-                ta_from.update(statust=DONE)
                 ta_to.update(statust=DONE,filename=tofilename)
+            finally:
+                ta_from.update(statust=DONE)
 
     def disconnect(self):
         botslib.tryrunscript(self.userscript,self.scriptname,'disconnect',channeldict=self.channeldict)
         if self.channeldict['remove'] and not hasattr(self.userscript,'main'):  #if bots should remove the files, and all files are passed at once, delete these files.
             outputdir = botslib.join(self.channeldict['path'], self.channeldict['filename'])
-            for filename in [c for c in glob.glob(outputdir) if os.path.isfile(c)]:
+            for filename in [namefile for namefile in glob.glob(outputdir) if os.path.isfile(namefile)]:
                 try:
                     os.remove(filename)
                 except:

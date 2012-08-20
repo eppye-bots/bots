@@ -1,4 +1,5 @@
-'''module contains the functions to be called from user scripts'''
+''' module contains functions to be called from user scripts. '''
+import os
 try:
     import cPickle as pickle
 except ImportError:
@@ -21,13 +22,14 @@ from envelope import mergemessages
 from communication import run
 
 @botslib.log_session
-def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
-    ''' translates edifiles in one or more edimessages.
-        reads and parses edifiles that have to be translated.
-        tries to split files into messages (using 'nextmessage' of grammar); if no splitting: edifile is one message.
-        searches the right translation in translate-table;
-        runs the mapping-script for the translation;
-        Function takes db-ta with status=TRANSLATE->PARSED->SPLITUP->TRANSLATED
+def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
+    ''' main translation loop.
+        get edifiles to be translated, than:
+        -   read, lex, parse, make tree of nodes.
+        -   split up files into messages (using 'nextmessage' of grammar); if no splitting: edifile is one message.
+        -   get translation script, start translation script.
+        -   write the results of translation (no enveloping yet)
+        status: FILEIN--PARSED-<SPLITUP--TRANSLATED
     '''
     try:
         userscript,scriptname = botslib.botsimport('mappings','translation')
@@ -36,15 +38,15 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
     #select edifiles to translate; fill ta-object
     for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel
                                 FROM  ta
-                                WHERE   idta>%(rootidta)s
-                                AND     status=%(status)s
-                                AND     statust=%(statust)s
-                                AND     idroute=%(idroute)s
-                                ''',
+                                WHERE idta>%(rootidta)s
+                                AND   status=%(status)s
+                                AND   statust=%(statust)s
+                                AND   idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
             ta_fromfile = botslib.OldTransaction(row['idta'])  #TRANSLATE ta
-            ta_parsedfile = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta
+            ta_parsed = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta
+            botsglobal.logger.debug(u'start translating file "%s" editype "%s" messagetype "%s".',row['filename'],row['editype'],row['messagetype'])
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.edifromfile(frompartner=row['frompartner'],
                                             topartner=row['topartner'],
@@ -56,109 +58,113 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
                                             alt=row['alt'],
                                             fromchannel=row['fromchannel'],
                                             idroute=idroute)
-
-            botsglobal.logger.debug(u'start read and parse input file "%s" editype "%s" messagetype "%s".',row['filename'],row['editype'],row['messagetype'])
-            for inn in edifile.nextmessage():   #for each message in the edifile:
-                #inn.ta_info: parameters from inmessage.edifromfile(), syntax-information and parse-information
-                ta_frommes = ta_parsedfile.copyta(status=SPLITUP)    #copy PARSED to SPLITUP ta
-                inn.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in user script; used to give idta of 'confirming message'
-                ta_frommes.update(**inn.ta_info)    #update ta-record SLIPTUP with info from message content and/or grammar
-                while 1:    #whileloop continues as long as there are alt-translations
-                    #************select parameters for translation(script):
-                    for tscript,tomessagetype,toeditype in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
-                                                FROM    translate
-                                                WHERE   frommessagetype = %(frommessagetype)s
-                                                AND     fromeditype = %(fromeditype)s
-                                                AND     active=%(booll)s
-                                                AND     alt=%(alt)s
-                                                AND     (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
-                                                                                                                            FROM partnergroup
-                                                                                                                            WHERE from_partner_id=%(frompartner)s ))
-                                                AND     (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
-                                                                                                                            FROM partnergroup
-                                                                                                                            WHERE from_partner_id=%(topartner)s ))
-                                                ORDER BY alt DESC,
-                                                         CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id ,
-                                                         CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
-                                                {'frommessagetype':inn.ta_info['messagetype'],
-                                                 'fromeditype':inn.ta_info['editype'],
-                                                 'alt':inn.ta_info['alt'],
-                                                 'frompartner':inn.ta_info['frompartner'],
-                                                 'topartner':inn.ta_info['topartner'],
-                                                'booll':True}):
-                        break   #translation is found; break because only the first one is used - this is what the ORDER BY in the query takes care of
-                    else:       #no translation is found in translate table
-                        raiseTranslationNotFoundError = True
-                        if userscript and hasattr(userscript,'gettranslation'):      #check if user scripting to determine translation
-                            tscript,tomessagetype,toeditype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=idroute,message=inn)
-                            if tscript is not None:
-                                raiseTranslationNotFoundError = False
-                        if raiseTranslationNotFoundError:
-                            raise botslib.TranslationNotFoundError(_(u'Editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"'),
-                                                                        editype=inn.ta_info['editype'],
-                                                                        messagetype=inn.ta_info['messagetype'],
-                                                                        frompartner=inn.ta_info['frompartner'],
-                                                                        topartner=inn.ta_info['topartner'],
-                                                                        alt=inn.ta_info['alt'])
-                    ta_tomes = ta_frommes.copyta(status=endstatus)  #copy SPLITUP to TRANSLATED ta
-                    tofilename = str(ta_tomes.idta)
-                    tomessage = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=tofilename,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
-                    #copy ta_info
-                    botsglobal.logger.debug(u'script "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn.ta_info['messagetype'],tomessage.ta_info['messagetype'])
-                    translationscript,scriptfilename = botslib.botsimport('mappings',inn.ta_info['editype'] + '.' + tscript) #get the mapping-script
-                    doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn,out=tomessage)
-                    botsglobal.logger.debug(u'script "%s" finished.',tscript)
-                    if 'topartner' not in tomessage.ta_info:    #tomessage does not contain values from ta......
-                        tomessage.ta_info['topartner'] = inn.ta_info['topartner']
-                    if tomessage.ta_info['statust'] == DONE:    #if indicated in user script the message should be discarded
-                        botsglobal.logger.debug(u'No output file because mapping script explicitly indicated this.')
-                        tomessage.ta_info['filename'] = ''
-                        tomessage.ta_info['status'] = DISCARD
-                    else:
-                        botsglobal.logger.debug(u'Start writing output file editype "%s" messagetype "%s".',tomessage.ta_info['editype'],tomessage.ta_info['messagetype'])
-                        tomessage.writeall()   #write tomessage (result of translation).
-                    #problem is that not all values ta_tomes are know to to_message....
-                    #~ print 'tomessage.ta_info',tomessage.ta_info
-                    ta_tomes.update(**tomessage.ta_info) #update outmessage transaction with ta_info;
-                    #check the value received from the mappingscript to see if another traanslation needs to be done (chained translation)
-                    if doalttranslation is None:
-                        del tomessage
-                        break   #break out of while loop; do no other translation
-                    elif isinstance(doalttranslation,dict):
-                        #some extended cases; a dict is returned that contains 'instructions'
-                        if 'type' not in doalttranslation:
-                            raise botslib.BotsError("Mapping script returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
-                        if doalttranslation['type'] == u'out_as_inn':
-                            if 'alt' not in doalttranslation:
-                                raise botslib.BotsError("Mapping script returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
-                            inn = tomessage
-                            if isinstance(inn,outmessage.fixed):
-                                inn.root.stripnode()
-                            inn.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chainded translation
-                            inn.ta_info.pop('statust')
-                    else:
-                        del tomessage
-                        inn.ta_info['alt'] = doalttranslation   #get the alt-value for the next chainded translation
-                #end of while-loop
-
-                #
-                #~ print inn.ta_info
-                ta_frommes.update(statust=DONE,**inn.ta_info)   #update db. inn.ta_info could be changed by script. Is this useful?
-                del inn
+            #if no exception: infile has been lexed and parsed OK.
+            for inn_splitup in edifile.nextmessage():   #for each message in the edifile:
+                try:
+                    #inn_splitup.ta_info: parameters from inmessage.edifromfile(), syntax-information and parse-information
+                    ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
+                    inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in user script; used to give idta of 'confirming message'
+                    while 1:    #continue as long as there are (alt-)translations
+                        #***lookup the translation: t(ranslation)script, tomessagetype, toeditype**********************
+                        for tscript,tomessagetype,toeditype in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
+                                                    FROM    translate
+                                                    WHERE   frommessagetype = %(frommessagetype)s
+                                                    AND     fromeditype = %(fromeditype)s
+                                                    AND     active=%(booll)s
+                                                    AND     alt=%(alt)s
+                                                    AND     (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
+                                                                                                                                            FROM partnergroup
+                                                                                                                                            WHERE from_partner_id=%(frompartner)s ))
+                                                    AND     (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
+                                                                                                                                    FROM partnergroup
+                                                                                                                                    WHERE from_partner_id=%(topartner)s ))
+                                                    ORDER BY alt DESC,
+                                                             CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id ,
+                                                             CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
+                                                    {'frommessagetype':inn_splitup.ta_info['messagetype'],
+                                                     'fromeditype':inn_splitup.ta_info['editype'],
+                                                     'alt':inn_splitup.ta_info['alt'],
+                                                     'frompartner':inn_splitup.ta_info['frompartner'],
+                                                     'topartner':inn_splitup.ta_info['topartner'],
+                                                    'booll':True}):
+                            break   #translation is found; break because only the first one is used - this is what the ORDER BY in the query takes care of
+                        else:       #no translation found in translate table
+                            raiseTranslationNotFoundError = True
+                            #check if user scripting can determine translation
+                            if userscript and hasattr(userscript,'gettranslation'):      
+                                tscript,tomessagetype,toeditype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=idroute,message=inn_splitup)
+                                if tscript is not None:
+                                    raiseTranslationNotFoundError = False
+                            if raiseTranslationNotFoundError:
+                                raise botslib.TranslationNotFoundError(_(u'Editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"'),
+                                                                            editype=inn_splitup.ta_info['editype'],
+                                                                            messagetype=inn_splitup.ta_info['messagetype'],
+                                                                            frompartner=inn_splitup.ta_info['frompartner'],
+                                                                            topartner=inn_splitup.ta_info['topartner'],
+                                                                            alt=inn_splitup.ta_info['alt'])
+                        ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message
+                        filename_translated = str(ta_translated.idta)
+                        out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
+                        botsglobal.logger.debug(u'script "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn_splitup.ta_info['messagetype'],out_translated.ta_info['messagetype'])
+                        translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mapping-script
+                        doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
+                        botsglobal.logger.debug(u'script "%s" finished.',tscript)
+                        if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
+                            out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
+                        if out_translated.ta_info['statust'] == DONE:    #if indicated in user script the message should be discarded
+                            botsglobal.logger.debug(u'No output file because mapping script explicitly indicated this.')
+                            out_translated.ta_info['filename'] = ''
+                            out_translated.ta_info['status'] = DISCARD
+                        else:
+                            botsglobal.logger.debug(u'Start writing output file editype "%s" messagetype "%s".',out_translated.ta_info['editype'],out_translated.ta_info['messagetype'])
+                            out_translated.writeall()   #write out_translated (result of translation).
+                            out_translated.ta_info['rsrv2'] = os.path.getsize(botslib.abspathdata(out_translated.ta_info['filename']))  #get filesize
+                        #problem is that not all values ta_translated are know to to_message....
+                        #~ print 'out_translated.ta_info',out_translated.ta_info
+                        ta_translated.update(**out_translated.ta_info)  #update outmessage transaction with ta_info; statust = OK
+                        #check the value received from the mappingscript to see if another translation needs to be done (chained translation)
+                        if doalttranslation is None:
+                            del out_translated
+                            break   #break out of while loop; do no other translation
+                        elif isinstance(doalttranslation,dict):
+                            #some extended cases; a dict is returned that contains 'instructions'
+                            if 'type' not in doalttranslation:
+                                raise botslib.BotsError("Mapping script returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                            if doalttranslation['type'] == u'out_as_inn':
+                                if 'alt' not in doalttranslation:
+                                    raise botslib.BotsError("Mapping script returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                                inn_splitup = out_translated
+                                if isinstance(inn_splitup,outmessage.fixed):
+                                    inn_splitup.root.stripnode()
+                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chainded translation
+                                inn_splitup.ta_info.pop('statust')
+                        else:
+                            del out_translated
+                            inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chainded translation
+                    #end of while-loop (trans**********************************************************************************
+                    #~ del inn_splitup
+                #exceptions file_out-level: exception in mapping script or writing of out-file
+                except:
+                    #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mapping script/outfile only affect that branche 
+                    txt = botslib.txtexc()
+                    ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by script. Is this useful?
+                    ta_splitup.deletechildren()
+                else:
+                    ta_splitup.update(statust=DONE,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by script. Is this useful?
+                    
 
         #exceptions file_in-level
         except:
-            #~ edifile.handleconfirm(ta_fromfile,error=True)    #only useful if errors are reported in acknowledgement (eg x12 997). Not used now.
             txt = botslib.txtexc()
-            ta_parsedfile.failure()
-            ta_parsedfile.update(statust=ERROR,errortext=txt)
+            ta_parsed.update(statust=ERROR,errortext=txt)
+            ta_parsed.deletechildren()
             botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
-            ta_fromfile.update(statust=DONE)
-            ta_parsedfile.update(statust=DONE,**edifile.confirminfo)
+            ta_parsed.update(statust=DONE,**edifile.confirminfo)
             botsglobal.logger.debug(u'translated input file "%s".',row['filename'])
-            del edifile
+        finally:
+            ta_fromfile.update(statust=DONE)
 
 #*********************************************************************
 #*** utily functions for persist: store things in the bots database.
@@ -167,27 +173,23 @@ def translate(startstatus=TRANSLATE,endstatus=TRANSLATED,idroute=''):
 def persist_add(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value,0)
-    if botsglobal.settings.DATABASE_ENGINE != 'sqlite3' and len(content)>1024:
-        raise botslib.PersistError(_(u'Data too long for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
+    content = pickle.dumps(value,2)
     try:
-        botslib.change(u'''INSERT INTO persist (domein,botskey,content)
-                                VALUES   (%(domein)s,%(botskey)s,%(content)s)''',
-                                {'domein':domein,'botskey':botskey,'content':content})
+        botslib.change(u''' INSERT INTO persist (domein,botskey,content)
+                            VALUES   (%(domein)s,%(botskey)s,%(content)s)''',
+                            {'domein':domein,'botskey':botskey,'content':content})
     except:
         raise botslib.PersistError(_(u'Failed to add for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
 
 def persist_update(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value,0)
-    if botsglobal.settings.DATABASE_ENGINE != 'sqlite3' and len(content)>1024:
-        raise botslib.PersistError(_(u'Data too long for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
-    botslib.change(u'''UPDATE persist
-                          SET content=%(content)s
+    content = pickle.dumps(value,2)
+    botslib.change(u''' UPDATE persist
+                        SET content=%(content)s
                         WHERE domein=%(domein)s
-                          AND botskey=%(botskey)s''',
-                            {'domein':domein,'botskey':botskey,'content':content})
+                        AND botskey=%(botskey)s''',
+                        {'domein':domein,'botskey':botskey,'content':content})
 
 def persist_add_update(domein,botskey,value):
     # add the record, or update it if already there.
@@ -199,19 +201,19 @@ def persist_add_update(domein,botskey,value):
 def persist_delete(domein,botskey):
     ''' store persistent values in db.
     '''
-    botslib.change(u'''DELETE FROM persist
-                            WHERE domein=%(domein)s
-                              AND botskey=%(botskey)s''',
-                            {'domein':domein,'botskey':botskey})
+    botslib.change(u''' DELETE FROM persist
+                        WHERE domein=%(domein)s
+                        AND botskey=%(botskey)s''',
+                        {'domein':domein,'botskey':botskey})
 
 def persist_lookup(domein,botskey):
     ''' lookup persistent values in db.
     '''
     for row in botslib.query(u'''SELECT content
                                 FROM persist
-                               WHERE domein=%(domein)s
-                                 AND botskey=%(botskey)s''',
-                            {'domein':domein,'botskey':botskey}):
+                                WHERE domein=%(domein)s
+                                AND botskey=%(botskey)s''',
+                                {'domein':domein,'botskey':botskey}):
         return pickle.loads(str(row['content']))
     return None
 
@@ -229,9 +231,7 @@ def ccode(ccodeid,leftcode,field='rightcode'):
                                 FROM    ccode
                                 WHERE   ccodeid_id = %(ccodeid)s
                                 AND     leftcode = %(leftcode)s''',
-                                {'ccodeid':ccodeid,
-                                 'leftcode':leftcode,
-                                }):
+                                {'ccodeid':ccodeid,'leftcode':leftcode}):
         return row[field]
     raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
 codetconversion = ccode
@@ -252,9 +252,7 @@ def reverse_ccode(ccodeid,rightcode,field='leftcode'):
                                 FROM    ccode
                                 WHERE   ccodeid_id = %(ccodeid)s
                                 AND     rightcode = %(rightcode)s''',
-                                {'ccodeid':ccodeid,
-                                 'rightcode':rightcode,
-                                }):
+                                {'ccodeid':ccodeid,'rightcode':rightcode}):
         return row[field]
     raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=rightcode,table=ccodeid)
 rcodetconversion = reverse_ccode
@@ -274,9 +272,7 @@ def getcodeset(ccodeid,leftcode,field='rightcode'):
                                 FROM    ccode
                                 WHERE   ccodeid_id = %(ccodeid)s
                                 AND     leftcode = %(leftcode)s''',
-                                {'ccodeid':ccodeid,
-                                 'leftcode':leftcode,
-                                }))
+                                {'ccodeid':ccodeid,'leftcode':leftcode}))
 
 #***code conversion via file. 20111116: depreciated
 def safecodeconversion(modulename,value):

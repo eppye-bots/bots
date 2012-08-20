@@ -208,14 +208,11 @@ def trace2detail(ta_object):
     return detaillist
 
 def datetimefrom():
-    #~ terug = datetime.datetime.today()-datetime.timedelta(1860)
     terug = datetime.datetime.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
-    #~ return terug.strftime('%Y-%m-%d %H:%M:%S')
     return terug.strftime('%Y-%m-%d 00:00:00')
 
 def datetimeuntil():
     terug = datetime.datetime.today()
-    #~ return terug.strftime('%Y-%m-%d %H:%M:%S')
     return terug.strftime('%Y-%m-%d 23:59:59')
 
 def handlepagination(requestpost,cleaned_data):
@@ -255,7 +252,6 @@ def filterquery(query , org_cleaned_data, incoming=False):
     if 'datefrom' in cleaned_data:
         query = query.filter(ts__gte=cleaned_data.pop('datefrom'))
     if 'botskey' in cleaned_data and cleaned_data['botskey']:
-        #~ query = query.filter(botskey__icontains=cleaned_data.pop('botskey'))         #is slow for big databases.
         query = query.filter(botskey__exact=cleaned_data.pop('botskey'))
     if 'sortedby' in cleaned_data:
         query = query.order_by({True:'',False:'-'}[cleaned_data.pop('sortedasc')] + cleaned_data.pop('sortedby'))
@@ -278,4 +274,29 @@ def filterquery(query , org_cleaned_data, incoming=False):
         lastpage = paginator.num_pages
         org_cleaned_data['page'] = lastpage  #change value in form as well!!
         return paginator.page(lastpage)
+
+def filterquery2(query , org_cleaned_data, incoming=False):
+    ''' use the data of the form (mostly in hidden fields) to do the query.
+        is like 'filterquery' , but does not use paginator. Just reterun the resulting (filtered) query.'''
+    cleaned_data = copy.copy(org_cleaned_data)    #copy because it it destroyed in setting up query
+    if 'dateuntil' in cleaned_data:
+        query = query.filter(ts__lt=cleaned_data.pop('dateuntil'))
+    if 'datefrom' in cleaned_data:
+        query = query.filter(ts__gte=cleaned_data.pop('datefrom'))
+    if 'botskey' in cleaned_data and cleaned_data['botskey']:
+        query = query.filter(botskey__exact=cleaned_data.pop('botskey'))
+    if 'sortedby' in cleaned_data:
+        query = query.order_by({True:'',False:'-'}[cleaned_data.pop('sortedasc')] + cleaned_data.pop('sortedby'))
+    if 'lastrun' in cleaned_data:
+        if cleaned_data.pop('lastrun'):
+            idtalastrun = getidtalastrun()
+            if idtalastrun:     #if no result (=None): there are no filereports.
+                if incoming:    #detect if incoming; do other selection
+                    query = query.filter(reportidta=idtalastrun)
+                else:
+                    query = query.filter(idta__gt=idtalastrun)
+    for key,value in cleaned_data.items():
+        if not value:
+            del cleaned_data[key]
+    return query.filter(**cleaned_data)
 

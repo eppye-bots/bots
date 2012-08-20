@@ -8,6 +8,7 @@
     <input type="submit" name="2incoming" value="{% trans 'Incoming (same selection)' %}" />
     <input type="submit" name="2process" value="{% trans 'Process Errors (same selection)' %}" />
     <input type="submit" name="2confirm" value="{% trans 'Confirm (same selection)' %}" />
+    <input type="submit" name="resendall" value="{% trans 'Resend All' %}" />
     {% include "bots/paginator.html" %}
 
     <table id="botstable">
@@ -17,11 +18,12 @@
         <thead>
             <tr>
                 <th></th>
-                <th><button class="botsheader" type="submit" name="order" value="retransmit" title="Resend">{% trans 'Resend' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="statust" >{% trans 'status' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="retransmit" title="Resend">{% trans 'Re*' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="ts" >{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="idroute" >{% trans 'Route' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="nrmessages" >{% trans '#messages' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="filename" >{% trans 'OutFile' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="idroute" >{% trans 'Route' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="tochannel" >{% trans 'ToChannel' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="frompartner" >{% trans 'FromPartner' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="topartner" >{% trans 'ToPartner' %}</button></th>
@@ -46,11 +48,12 @@
                         </ul>
                     </div>
                 </td>
+                <td>{{ row.get_statust_display}}</td>
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td>{{row.idroute}}</td>
                 <td>{{row.nrmessages}}</td>
                 <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.filename}}</a></td>
-                <td>{{row.idroute}}</td>
                 <td>{{row.tochannel}}</td>
                 <td>{{row.frompartner}}</td>
                 <td>{{row.topartner}}</td>

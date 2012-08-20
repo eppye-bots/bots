@@ -4,13 +4,13 @@ import bots
 
 #*******settings for bots error reports**********************************
 MANAGERS = (    #bots will send error reports to the MANAGERS
-    ('name_manager', 'manager@domain.org'),
+    ('name_manager', 'hjebbers@gmail.com'),
     )
-#~ EMAIL_HOST = 'smtp.gmail.com'             #Default: 'localhost'
-#~ EMAIL_PORT = '587'             #Default: 25
-#~ EMAIL_USE_TLS = True       #Default: False
-#~ EMAIL_HOST_USER = 'user@gmail.com'        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
-#~ EMAIL_HOST_PASSWORD = ''    #Default: ''. PASSWORD to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
+EMAIL_HOST = 'smtp.gmail.com'             #Default: 'localhost'
+EMAIL_PORT = '587'             #Default: 25
+EMAIL_USE_TLS = True       #Default: False
+EMAIL_HOST_USER = 'hjebbers@gmail.com'        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
+EMAIL_HOST_PASSWORD = 'ankieepankiee02'    #Default: ''. PASSWORD to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
 #~ SERVER_EMAIL = 'user@gmail.com'           #Sender of bots error reports. Default: 'root@localhost'
 #~ EMAIL_SUBJECT_PREFIX = ''   #This is prepended on email subject.
 
@@ -95,9 +95,9 @@ DATETIME_FORMAT = 'Y-m-d G:i'
 TIME_FORMAT  = 'G:i'
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-#~ LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-us'
 #~ LANGUAGE_CODE = 'en'
-LANGUAGE_CODE = 'nl'
+#~ LANGUAGE_CODE = 'nl'
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
