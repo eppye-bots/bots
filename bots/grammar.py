@@ -205,12 +205,13 @@ class Grammar(object):
             self._manipulatefieldformat(field,recordid)
             if field[BFORMAT] in ['N','I','R']:
                 if isinstance(field[LENGTH],float):
-                    field[DECIMALS] = int( round((field[LENGTH]-int(field[LENGTH]))*10) )  #fill DECIMALS
-                    field[LENGTH] = int( round(field[LENGTH]))
+                    length,nrdecimals = divmod(field[LENGTH],1)     #divide by 1 to get whole number and leftover
+                    field[DECIMALS] = int( round(nrdecimals*10) )   #fill DECIMALS with leftover*10. Does not work for more than 9 decimal places...
+                    field[LENGTH] = int(length)
                     if field[DECIMALS] >= field[LENGTH]:
                         raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": field length "$len" has to be greater that nr of decimals "$decimals".'),grammar=self.grammarname,record=recordid,field=field[ID],len=field[LENGTH],decimals=field[DECIMALS])
                 if isinstance(field[MINLENGTH],float):
-                    field[MINLENGTH] = int( round(field[MINLENGTH]))
+                    field[MINLENGTH] = int(field[MINLENGTH]//1)
             else:   #if format 'R', A, D, T
                 if isinstance(field[LENGTH],float):
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": if format "$format", no length "$len".'),grammar=self.grammarname,record=recordid,field=field[ID],format=field[FORMAT],len=field[LENGTH])
