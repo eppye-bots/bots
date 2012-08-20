@@ -526,7 +526,7 @@ def abspathdata(filename):
             datasubdir = '0'
         return join(directory,datasubdir,filename)
 
-def opendata(filename,mode,charset=None,errors=None):
+def opendata(filename,mode,charset=None,errors='strict'):
     ''' open internal data file. if no encoding specified: read file raw/binary.'''
     filename = abspathdata(filename)
     if 'w' in mode:
@@ -536,7 +536,7 @@ def opendata(filename,mode,charset=None,errors=None):
     else:
         return open(filename,mode)
 
-def readdata(filename,charset=None,errors=None):
+def readdata(filename,charset=None,errors='strict'):
     ''' read internal data file in memory using the right encoding or no encoding'''
     filehandler = opendata(filename,'rb',charset,errors)
     content = filehandler.read()
