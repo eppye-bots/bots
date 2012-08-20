@@ -48,13 +48,13 @@
                 <td><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">{{row.botskey}}</a></td>
                 <td>{{row.reference}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
-                <td  style="white-space: pre;">{{row.confirmtext}}</td>
-                <td>{{row.idroute}}</td>
-                <td>{{row.channel}}</td>
-                <td>{{row.frompartner}}</td>
-                <td>{{row.topartner}}</td>
-                <td>{{row.editype}}</td>
-                <td>{{row.messagetype}}</td>
+                <td style="white-space: pre;">{{row.confirmtext}}</td>
+                <td class="nowrap">{{row.idroute}}</td>
+                <td class="nowrap">{{row.channel}}</td>
+                <td class="nowrap">{{row.frompartner}}</td>
+                <td class="nowrap">{{row.topartner}}</td>
+                <td class="nowrap">{{row.editype}}</td>
+                <td class="nowrap">{{row.messagetype}}</td>
             </tr>
         {% endfor %}
         </tbody>

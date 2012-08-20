@@ -176,7 +176,7 @@ class Trace(object):
 
     def _collectdataforfilereport(self):
         ''' Walk the ta-tree again in order to retrieve information/data belonging to incoming file (but not statust).
-            If information is different in different ta's: place '*' (but there is a setting in bots.ini to show only the first one)
+            If information is different in different ta's: place '(several values)' (but there is a setting in bots.ini to show only the first one)
         '''
         def core(ta_object):
             if ta_object['status'] == FILEIN:   #data for incoming email #only used last FILEIN, or has extra status??
@@ -193,72 +193,72 @@ class Trace(object):
             elif ta_object['status'] == PARSED:
                 if self.ineditype:
                     if self.ineditype != ta_object['editype'] and asterisk:
-                        self.ineditype = '*'
+                        self.ineditype = '(several values)'
                 else:
                     self.ineditype = ta_object['editype']
             elif ta_object['status'] == SPLITUP:
                 self.nrmessages += 1
                 if self.inmessagetype:
                     if self.inmessagetype != ta_object['messagetype'] and asterisk:
-                        self.inmessagetype = '*'
+                        self.inmessagetype = '(several values)'
                 else:
                     self.inmessagetype = ta_object['messagetype']
             elif ta_object['status'] == TRANSLATED:
                 if self.divtext:
                     if self.divtext != ta_object['divtext'] and asterisk:
-                        self.divtext = '*'
+                        self.divtext = '(several values)'
                 else:
                     self.divtext = ta_object['divtext']
             elif ta_object['status'] == EXTERNOUT:
                 if self.outeditype:
                     if self.outeditype != ta_object['editype'] and asterisk:
-                        self.outeditype = '*'
+                        self.outeditype = '(several values)'
                 else:
                     self.outeditype = ta_object['editype']
                 if self.outmessagetype:
                     if self.outmessagetype != ta_object['messagetype'] and asterisk:
-                        self.outmessagetype = '*'
+                        self.outmessagetype = '(several values)'
                 else:
                     self.outmessagetype = ta_object['messagetype']
                 if ta_object['frommail']:
                     if self.frommail:
                         if self.frommail != ta_object['frommail'] and asterisk:
-                            self.frommail = '*'
+                            self.frommail = '(several values)'
                     else:
                         self.frommail = ta_object['frommail']
                 if ta_object['tomail']:
                     if self.tomail:
                         if self.tomail != ta_object['tomail'] and asterisk:
-                            self.tomail = '*'
+                            self.tomail = '(several values)'
                     else:
                         self.tomail = ta_object['tomail']
                 if ta_object['contenttype']:
                     if self.outcontenttype:
                         if self.outcontenttype != ta_object['contenttype'] and asterisk:
-                            self.outcontenttype = '*'
+                            self.outcontenttype = '(several values)'
                     else:
                         self.outcontenttype = ta_object['contenttype']
                 if self.outfilename:
                     if self.outfilename != ta_object['filename'] and asterisk:
-                        self.outfilename = '*'
+                        self.outfilename = '(several values)'
                 else:
                     self.outfilename = ta_object['filename']
                 if self.tochannel:
                     if self.tochannel != ta_object['tochannel'] and asterisk:
-                        self.tochannel = '*'
+                        self.tochannel = '(several values)'
                 else:
                     self.tochannel = ta_object['tochannel']
             #for every status
             if ta_object['frompartner']:
                 if self.frompartner:
                     if self.frompartner != ta_object['frompartner'] and asterisk:
-                        self.frompartner = '*'
+                        self.frompartner = '(several values)'
                 else:
                     self.frompartner = ta_object['frompartner']
             if ta_object['topartner']:
                 if self.topartner:
                     if self.topartner != ta_object['topartner'] and asterisk:
-                        self.topartner =    '*'
+                        self.topartner =    '(several values)'
                 else:
                     self.topartner = ta_object['topartner']
             if ta_object['errortext']:

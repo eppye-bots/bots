@@ -53,20 +53,20 @@
                 <td>{{ row.get_statust_display}}</td>
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s" }}</td>
-                <td>{{row.idroute}}</td>
+                <td class="nowrap">{{row.idroute}}</td>
                 <td>{{row.nrmessages}}</td>
-                <td>{{row.ineditype}}</td>
-                <td>{{row.inmessagetype}}</td>
-                <td>{{row.fromchannel}}</td>
-                <td>{{row.frompartner}}</td>
-                <td>{{row.tochannel}}</td>
-                <td>{{row.topartner}}</td>
-                <td>{{row.outeditype}}</td>
-                <td>{{row.outmessagetype}}</td>
-                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.infilename}}</a></td>
-                <td><a href="/filer/?action=this&amp;idta={{row.outidta}}" target="_blank" class="botslink">{{row.outfilename}}</a></td>
+                <td class="nowrap">{{row.ineditype}}</td>
+                <td class="nowrap">{{row.inmessagetype}}</td>
+                <td class="nowrap">{{row.fromchannel}}</td>
+                <td class="nowrap">{{row.frompartner}}</td>
+                <td class="nowrap">{{row.tochannel}}</td>
+                <td class="nowrap">{{row.topartner}}</td>
+                <td class="nowrap">{{row.outeditype}}</td>
+                <td class="nowrap">{{row.outmessagetype}}</td>
+                <td>{% if row.infilename != '(several values)' %}<a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.infilename}}</a>{% else %}{{row.infilename}}{% endif %}</td>
+                <td>{% if row.outfilename != '(several values)' %}<a href="/filer/?action=this&amp;idta={{row.outidta}}" target="_blank" class="botslink">{{row.outfilename}}</a>{% else %}{{row.outfilename}}{% endif %}</td>
                 <td style="white-space: pre;">{{row.errortext}}</td>
-                <td>{{row.divtext}}</td>
+                <td class="nowrap">{{row.divtext}}</td>
                 <td>{{row.frommail}}</td>
                 <td>{{row.tomail}}</td>
             </tr>
