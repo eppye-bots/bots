@@ -10,7 +10,6 @@
 	</ul>
 	<ul>
 		<a {% if not bots_touchscreen %} href="/incoming/?last" {% endif %} >{% trans 'Last run' %}</a>
-		<li><a href="/reports/?all" >{% trans 'Report (per run)' %}</a></li>
 		<li><a href="/incoming/?last" >{% trans 'Incoming' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
 		<li><a href="/document/?last" >{% trans 'Document' %}</a></li>
 		<li><a href="/outgoing/?last" >{% trans 'Outgoing' %}</a></li>
