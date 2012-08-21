@@ -179,17 +179,15 @@ def trace2delete(trace):
 def trace2detail(ta_object):
     def newbranche(ta_object,level=0):
         def dota(ta_object, isfirststep = False):
-            if isfirststep:
-                if not level:
-                    ta_object.ind = _(u'in')
-                else:
-                    ta_object.ind = _(u'split>>>')
+            levelindicator = (level)*'| '
+            if isfirststep and level:
+                ta_object.ind = levelindicator[:-2] + '___'
             elif ta_object.status == MERGED and ta_object.nrmessages > 1:
-                ta_object.ind = _(u'merge<<<')
+                ta_object.ind = levelindicator
             elif ta_object.status == EXTERNOUT:
-                ta_object.ind = _(u'out')
+                ta_object.ind = levelindicator[:-2] + 'o=='
             else:
-                ta_object.ind =''
+                ta_object.ind = levelindicator
             #~ ta_object.action = models.ta.objects.only('filename').get(idta=ta_object.script)
             ta_object.channel = ta_object.fromchannel
             if ta_object.tochannel:

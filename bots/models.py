@@ -16,14 +16,14 @@ STATUST = [
 STATUS = [
     (1,_(u'process')),
     (3,_(u'discarded')),
-    (200,_(u'FileReceive')),
+    (200,_(u'Received')),
     (220,_(u'Infile')),
     (310,_(u'Parsed')),
-    (320,_(u'Splitup')),
+    (320,_(u'Split')),
     (330,_(u'Translated')),
     (400,_(u'Merged')),
     (500,_(u'Outfile')),
-    (520,_(u'FileSend')),
+    (520,_(u'Send')),
     ]
 EDITYPES = [
     ('csv', _(u'csv')),
@@ -338,7 +338,7 @@ class filereport(botsmodel):
     outfilename = StripCharField(max_length=256)
     outidta = models.IntegerField()
     divtext = StripCharField(max_length=35)
-    errortext = models.Textfield()
+    errortext = models.TextField()
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501; 20120618: email subject
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
     class Meta:
@@ -357,7 +357,7 @@ class persist(botsmodel):
     #specific SQL is used (database defaults are used)
     domein = StripCharField(max_length=35)
     botskey = StripCharField(max_length=35)
-    content = models.Textfield()
+    content = models.TextField()
     ts = models.DateTimeField()
     class Meta:
         db_table = 'persist'
@@ -413,7 +413,7 @@ class ta(botsmodel):
     statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module
     retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
-    errortext = models.Textfield()
+    errortext = models.TextField()
     ts = models.DateTimeField()
     confirmasked = models.BooleanField()                #added 20091019; confirmation asked or send
     confirmed = models.BooleanField()                   #added 20091019; is confirmation received (when asked)

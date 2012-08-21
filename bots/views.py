@@ -259,17 +259,13 @@ def detail(request,*kw,**kwargs):
         than make up the details for the trace
     '''
     if request.method == 'GET':
-        if 'inidta' in request.GET:
+        if 'inidta' in request.GET: #detail for incoming screen
             rootta = models.ta.objects.get(idta=int(request.GET['inidta']))
-            viewlib.gettrace(rootta)
-            detaillist = viewlib.trace2detail(rootta)
-            return django.shortcuts.render_to_response('bots/detail.html', {'detaillist':detaillist,'rootta':rootta,},context_instance=django.template.RequestContext(request))
-        else:
-            #trace back to root:
+        else:                       #detail for outgoing: trace back to EXTERNIN first
             rootta = viewlib.django_trace_origin(int(request.GET['outidta']),{'status':EXTERNIN})[0]
-            viewlib.gettrace(rootta)
-            detaillist = viewlib.trace2detail(rootta)
-            return django.shortcuts.render_to_response('bots/detail.html', {'detaillist':detaillist,'rootta':rootta,},context_instance=django.template.RequestContext(request))
+        viewlib.gettrace(rootta)
+        detaillist = viewlib.trace2detail(rootta)
+        return django.shortcuts.render_to_response('bots/detail.html', {'detaillist':detaillist,'rootta':rootta,},context_instance=django.template.RequestContext(request))
 
 def confirm(request,*kw,**kwargs):
     if request.method == 'GET':
