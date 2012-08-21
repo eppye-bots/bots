@@ -1622,7 +1622,7 @@ class communicationscript(_comsession):
                 fromfile.close()
                 tofile.close()
                 #one file is written; call external
-                if botslib.tryrunscript(self.userscript,self.scriptname,'main',channeldict=self.channeldict,filename=tofilename):
+                if botslib.tryrunscript(self.userscript,self.scriptname,'main',channeldict=self.channeldict,filename=tofilename,ta=ta_from):
                     if self.channeldict['remove']:
                         os.remove(tofilename)
             except:
