@@ -338,7 +338,7 @@ class filereport(botsmodel):
     outfilename = StripCharField(max_length=256)
     outidta = models.IntegerField()
     divtext = StripCharField(max_length=35)
-    errortext = StripCharField(max_length=2048)
+    errortext = models.Textfield()
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501; 20120618: email subject
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
     class Meta:
@@ -357,7 +357,7 @@ class persist(botsmodel):
     #specific SQL is used (database defaults are used)
     domein = StripCharField(max_length=35)
     botskey = StripCharField(max_length=35)
-    content = StripCharField(max_length=1024)
+    content = models.Textfield()
     ts = models.DateTimeField()
     class Meta:
         db_table = 'persist'
@@ -413,7 +413,7 @@ class ta(botsmodel):
     statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module
     retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
-    errortext = StripCharField(max_length=2048)
+    errortext = models.Textfield()
     ts = models.DateTimeField()
     confirmasked = models.BooleanField()                #added 20091019; confirmation asked or send
     confirmed = models.BooleanField()                   #added 20091019; is confirmation received (when asked)
