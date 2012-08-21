@@ -242,7 +242,7 @@ class partner(botsmodel):
         ordering = ['idpartner']
         db_table = 'partner'
     def __unicode__(self):
-        return unicode(self.idpartner)
+        return unicode(self.idpartner) + ' (' + unicode(self.name) + ')'
 class chanpar(botsmodel):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idpartner = models.ForeignKey(partner,verbose_name=_(u'partner'))
