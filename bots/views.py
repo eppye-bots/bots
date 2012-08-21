@@ -104,8 +104,8 @@ def incoming(request,*kw,**kwargs):
                 formout = forms.SelectIncoming(formin.cleaned_data)
                 return viewlib.render(request,formout)
             elif 'retransmit' in request.POST:        #coming from ViewIncoming
-                idta,reportidta = request.POST[u'retransmit'].split('-')
-                filereport = models.filereport.objects.get(idta=int(idta),reportidta=int(reportidta))
+                idta = request.POST[u'retransmit']
+                filereport = models.filereport.objects.get(idta=int(idta))
                 filereport.retransmit = not filereport.retransmit
                 filereport.save()
             elif 'delete' in request.POST:        #coming from ViewIncoming

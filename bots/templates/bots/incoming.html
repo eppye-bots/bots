@@ -45,7 +45,7 @@
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
                             <li><button class="botsheader" onclick="document.location.href='/detail/?inidta={{row.idta}}'; return false;">{% trans 'View detail' %}</button></li>
-                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}-{{row.reportidta}}" />{% trans 'Rereceive' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}" />{% trans 'Rereceive' %}</button></li>
                             <li><button class="botsheader" type="submit" name="delete" value="{{row.idta}}" />{% trans 'Delete file' %}</button></li>
                         </ul>
                     </div>

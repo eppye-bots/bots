@@ -89,7 +89,7 @@ def _cleantransactions():
     if maxidta is None:   #if there is no maxidta to delete, do nothing
         return
     botslib.change('''DELETE FROM report WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
-    botslib.change('''DELETE FROM filereport WHERE reportidta < %(maxidta)s''',{'maxidta':maxidta})
+    botslib.change('''DELETE FROM filereport WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
     botslib.change('''DELETE FROM ta WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
     #the most recent run that is older than maxdays is kept (using < instead of <=).
     #Reason: when deleting in ta this would leave the ta-records of the most recent run older than maxdays (except the first ta-record).
