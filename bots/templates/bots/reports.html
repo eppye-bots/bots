@@ -50,7 +50,7 @@
                 <td>{{row.lastreceived}}</td>
                 <td>{{row.send}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
-                <td class="nowrap">{{row.rsrv2|filesizeformat}}</td>
+                <td class="nowrap">{% if row.rsrv2 %}{{row.rsrv2|filesizeformat}}{% endif %}</td>
                 <td>
                     {% if row.lasterror %}
                         {{row.lasterror}} {% trans 'files with errors' %}; 

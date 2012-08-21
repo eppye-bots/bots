@@ -156,15 +156,17 @@ def outgoing(request,*kw,**kwargs):
                 return viewlib.render(request,formout)
             elif 'retransmit' in request.POST:        #coming from ViewIncoming
                 ta_object = models.ta.objects.get(idta=int(request.POST[u'retransmit']))
-                ta_object.retransmit = not ta_object.retransmit
-                ta_object.save()
+                if ta_object.statust != RESEND:
+                    ta_object.retransmit = not ta_object.retransmit
+                    ta_object.save()
             elif 'resendall' in request.POST:
                 #select all objects with parameters and set retransmit
                 query = models.ta.objects.filter(status=EXTERNOUT).all()
                 outgoingfiles = viewlib.filterquery2(query,formin.cleaned_data)
                 for outgoingfile in outgoingfiles:
-                    outgoingfile.retransmit = not outgoingfile.retransmit
-                    outgoingfile.save()
+                    if outgoingfile.statust != RESEND:
+                        outgoingfile.retransmit = not outgoingfile.retransmit
+                        outgoingfile.save()
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data

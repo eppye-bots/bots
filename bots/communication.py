@@ -600,7 +600,7 @@ class file(_comsession):
         else:
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel
-        for row in botslib.query(u'''SELECT idta,filename,charset
+        for row in botslib.query(u'''SELECT idta,filename,charset,rsrv4
                                        FROM ta
                                       WHERE idta>%(rootidta)s
                                         AND status=%(status)s
@@ -639,9 +639,9 @@ class file(_comsession):
                 #~ raise Exception('test')
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt)
+                ta_to.update(statust=ERROR,errortext=txt,rsrv4=row['rsrv4']+1)
             else:
-                ta_to.update(statust=DONE,filename=tofilename)
+                ta_to.update(statust=DONE,filename=tofilename,rsrv4=row['rsrv4']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -855,7 +855,7 @@ class smtp(_comsession):
             SMTP does not allow rollback. So if the sending of a mail fails, other mails may have been send.
         '''
         #send messages
-        for row in botslib.query(u'''SELECT idta,filename,frommail,tomail,cc
+        for row in botslib.query(u'''SELECT idta,filename,frommail,tomail,cc,rsrv4
                                     FROM  ta
                                     WHERE idta>%(rootidta)s
                                     AND   status=%(status)s
@@ -876,9 +876,9 @@ class smtp(_comsession):
                 self.session.sendmail(row['frommail'], addresslist, msg)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'])
+                ta_to.update(statust=ERROR,errortext=txt,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'],rsrv4=row['rsrv4']+1)
             else:
-                ta_to.update(statust=DONE,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'])
+                ta_to.update(statust=DONE,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'],rsrv4=row['rsrv4']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1015,7 +1015,7 @@ class ftp(_comsession):
             mode = 'APPE '  #fixed filename; not unique: append to file
         else:
             mode = 'STOR '  #unique filenames; (over)write
-        for row in botslib.query('''SELECT idta,filename,charset
+        for row in botslib.query('''SELECT idta,filename,charset,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                       AND status=%(status)s
@@ -1045,9 +1045,9 @@ class ftp(_comsession):
                 fromfile.close()
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename='ftp:/'+posixpath.join(self.dirpath,tofilename))
+                ta_to.update(statust=ERROR,errortext=txt,filename='ftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
             else:
-                ta_to.update(statust=DONE,filename='ftp:/'+posixpath.join(self.dirpath,tofilename))
+                ta_to.update(statust=DONE,filename='ftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1286,7 +1286,7 @@ class sftp(_comsession):
             mode = 'a'  #fixed filename; not unique: append to file
         else:
             mode = 'w'  #unique filenames; (over)write
-        for row in botslib.query('''SELECT idta,filename,charset
+        for row in botslib.query('''SELECT idta,filename,charset,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                       AND status=%(status)s
@@ -1314,9 +1314,9 @@ class sftp(_comsession):
                 fromfile.close()
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename))
+                ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
             else:
-                ta_to.update(statust=DONE,filename='sftp:/'+posixpath.join(self.dirpath,tofilename))
+                ta_to.update(statust=DONE,filename='sftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1335,7 +1335,7 @@ class xmlrpc(_comsession):
             each to be send file is transaction.
             each send file is transaction.
         '''
-        for row in botslib.query('''SELECT idta,filename,charset
+        for row in botslib.query('''SELECT idta,filename,charset,rsrv4
                                     FROM ta
                                     WHERE tochannel=%(tochannel)s
                                       AND status=%(status)s
@@ -1355,9 +1355,9 @@ class xmlrpc(_comsession):
                 filename = tocall(content)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt)
+                ta_to.update(statust=ERROR,errortext=txt,rsrv4=row['rsrv4']+1)
             else:
-                ta_to.update(statust=DONE,filename=self.uri.update(path=self.channeldict['path'],filename=str(filename)))
+                ta_to.update(statust=DONE,filename=self.uri.update(path=self.channeldict['path'],filename=str(filename)),rsrv4=row['rsrv4']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1461,7 +1461,7 @@ class db(_comsession):
     def outcommunicate(self):
         ''' write data to database.
         '''
-        for row in botslib.query('''SELECT idta,filename
+        for row in botslib.query('''SELECT idta,filename,rsrv4
                                     FROM  ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -1479,9 +1479,9 @@ class db(_comsession):
                 botslib.runscript(self.userscript,self.scriptname,'outcommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection,db_object=db_object)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'])
+                ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'],rsrv4=row['rsrv4']+1)
             else:
-                ta_to.update(statust=DONE,filename=self.channeldict['path'])
+                ta_to.update(statust=DONE,filename=self.channeldict['path'],rsrv4=row['rsrv4']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1595,7 +1595,7 @@ class communicationscript(_comsession):
         else:
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel
-        for row in botslib.query(u'''SELECT idta,filename,charset
+        for row in botslib.query(u'''SELECT idta,filename,charset,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -1627,9 +1627,9 @@ class communicationscript(_comsession):
                         os.remove(tofilename)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt)
+                ta_to.update(statust=ERROR,errortext=txt,rsrv4=row['rsrv4']+1)
             else:
-                ta_to.update(statust=DONE,filename=tofilename)
+                ta_to.update(statust=DONE,filename=tofilename,rsrv4=row['rsrv4']+1)
             finally:
                 ta_from.update(statust=DONE)
 

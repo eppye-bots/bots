@@ -268,7 +268,7 @@ class automaticretrycommunication(new):
         startidta = self.get_idta_last_error(idta_lastretry)
         if not startidta:
             return False
-        for row in botslib.query('''SELECT idta
+        for row in botslib.query('''SELECT idta,rsrv4
                                     FROM  ta
                                     WHERE idta>%(startidta)s
                                     AND   status=%(status)s
@@ -278,7 +278,7 @@ class automaticretrycommunication(new):
             ta_resend = botslib.OldTransaction(row['idta'])
             ta_resend.update(statust=RESEND)
             ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE) #inject; status is DONE so this ta is not used further
-            ta_externin.copyta(status=FILEOUT,statust=OK)  #reinjected file is ready as new input
+            ta_externin.copyta(status=FILEOUT,statust=OK,rsrv4=row['rsrv4'])  #reinjected file is ready as new input
         return do_retransmit
 
         
@@ -288,18 +288,17 @@ class resend(new):
         ''' prepare the files indicated by user to be resend. Return: indication if files should be resend.'''
         do_retransmit = False
         #for resend; this one is slow. Can be improved by having a separate list of idta to resend
-        for row in botslib.query('''SELECT idta,parent
+        for row in botslib.query('''SELECT idta,parent,rsrv4
                                     FROM  ta
                                     WHERE retransmit=%(retransmit)s
                                     AND   status=%(status)s''',
-                                    {'retransmit':True,
-                                    'status':EXTERNOUT}):
+                                    {'retransmit':True,'status':EXTERNOUT}):
             do_retransmit = True
             ta_outgoing = botslib.OldTransaction(row['idta'])
             ta_outgoing.update(retransmit=False,statust=RESEND)     #set retransmit back to False
             ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
             ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE) #inject; status is DONE so this ta is not used further
-            ta_externin.copyta(status=FILEOUT,statust=OK)  #reinjected file is ready as new input
+            ta_externin.copyta(status=FILEOUT,statust=OK,rsrv4=row['rsrv4'])  #reinjected file is ready as new input
         return do_retransmit
 
 

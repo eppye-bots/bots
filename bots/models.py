@@ -425,7 +425,7 @@ class ta(botsmodel):
     rsrv1 = StripCharField(max_length=35)             #added 20100501; 20120618: email subject
     rsrv2 = models.IntegerField(null=True)              #added 20100501; 20120802: file size
     rsrv3 = StripCharField(max_length=35)             #added 20100501
-    rsrv4 = models.IntegerField(null=True)              #added 20100501
+    rsrv4 = models.IntegerField(null=True)              #added 20100501; 20120821: number of resends; if all OK (no resend) this is 0
     class Meta:
         db_table = 'ta'
 class uniek(botsmodel):
