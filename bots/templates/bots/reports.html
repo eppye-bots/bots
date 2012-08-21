@@ -19,6 +19,7 @@
                 <th><button class="botsheader" type="submit" name="order" value="lastreceived" />{% trans '#in' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="send" />{% trans '#out' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader"/>{% trans 'Size' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Error' %}</button></th>
             </tr>
         </thead>
@@ -49,6 +50,7 @@
                 <td>{{row.lastreceived}}</td>
                 <td>{{row.send}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td class="nowrap">{{row.rsrv2|filesizeformat}}</td>
                 <td>
                     {% if row.lasterror %}
                         {{row.lasterror}} {% trans 'files with errors' %}; 

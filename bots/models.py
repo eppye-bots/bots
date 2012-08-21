@@ -340,7 +340,7 @@ class filereport(botsmodel):
     divtext = StripCharField(max_length=35)
     errortext = models.TextField()
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501; 20120618: email subject
-    rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    rsrv2 = models.IntegerField(null=True)                        #added 20100501 #20120821: filesize of messages translated.
     class Meta:
         db_table = 'filereport'
         unique_together = (("idta","reportidta"),)
@@ -375,7 +375,7 @@ class report(botsmodel):
     type = StripCharField(max_length=35)
     status = models.BooleanField()
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
-    rsrv2 = models.IntegerField(null=True)                       ##added 20100501
+    rsrv2 = models.IntegerField(null=True)                       ##added 20100501 #20120821: total size of messages that have been translated.
     class Meta:
         db_table = 'report'
 #~ #trigger for sqlite to use local time (instead of utc). I can not add this to sqlite specific sql code, as django does not allow complex (begin ... end) sql here.

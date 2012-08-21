@@ -27,6 +27,7 @@
                 <th><button class="botsheader" />{% trans 'Channel' %}</button></th>
                 <th><button class="botsheader" />{% trans 'FromMail' %}</button></th>
                 <th><button class="botsheader" />{% trans 'ToMail' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Size' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Charset' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Contenttype' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Alt' %}</button></th>
@@ -52,6 +53,7 @@
                 <td class="nowrap">{{row.channel}}</td>
                 <td>{{row.frommail}}</td>
                 <td>{{row.tomail}}</td>
+                <td class="nowrap">{% if row.rsrv2 %}{{row.rsrv2|filesizeformat}}{% endif %}</td>
                 <td>{{row.charset}}</td>
                 <td>{{row.contenttype}}</td>
                 <td>{{row.alt}}</td>

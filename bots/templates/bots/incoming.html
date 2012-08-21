@@ -33,6 +33,7 @@
                 <th><button class="botsheader" type="submit" name="order" value="infilename" />{% trans 'InFile' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="outfilename" />{% trans 'OutFile' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="errortext" />{% trans 'Error' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="rsrv2" />{% trans 'Size' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="divtext" />{% trans 'MappingScript' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="frommail" />{% trans 'FromMail' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="tomail" />{% trans 'ToMail' %}</button></th>
@@ -66,6 +67,7 @@
                 <td>{% if row.infilename != '(several values)' %}<a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.infilename}}</a>{% else %}{{row.infilename}}{% endif %}</td>
                 <td>{% if row.outfilename != '(several values)' %}<a href="/filer/?action=this&amp;idta={{row.outidta}}" target="_blank" class="botslink">{{row.outfilename}}</a>{% else %}{{row.outfilename}}{% endif %}</td>
                 <td style="white-space: pre;">{{row.errortext}}</td>
+                <td class="nowrap">{{row.rsrv2|filesizeformat}}</td>
                 <td class="nowrap">{{row.divtext}}</td>
                 <td>{{row.frommail}}</td>
                 <td>{{row.tomail}}</td>

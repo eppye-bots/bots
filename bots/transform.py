@@ -36,7 +36,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
     except ImportError:       #script is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
     #select edifiles to translate; fill ta-object
-    for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel
+    for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,rsrv2
                                 FROM  ta
                                 WHERE idta>%(rootidta)s
                                 AND   status=%(status)s
@@ -156,12 +156,12 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
         #exceptions file_in-level
         except:
             txt = botslib.txtexc()
-            ta_parsed.update(statust=ERROR,errortext=txt)
+            ta_parsed.update(statust=ERROR,rsrv2=row['rsrv2'],errortext=txt)
             ta_parsed.deletechildren()
             botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
-            ta_parsed.update(statust=DONE,**edifile.confirminfo)
+            ta_parsed.update(statust=DONE,rsrv2=row['rsrv2'],**edifile.confirminfo)
             botsglobal.logger.debug(u'translated input file "%s".',row['filename'])
         finally:
             ta_fromfile.update(statust=DONE)
