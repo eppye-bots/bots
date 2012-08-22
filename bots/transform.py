@@ -48,7 +48,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             ta_parsed = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta
             botsglobal.logger.debug(u'start translating file "%s" editype "%s" messagetype "%s".',row['filename'],row['editype'],row['messagetype'])
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
-            edifile = inmessage.edifromfile(frompartner=row['frompartner'],
+            edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
                                             topartner=row['topartner'],
                                             filename=row['filename'],
                                             messagetype=row['messagetype'],
@@ -61,7 +61,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             #if no exception: infile has been lexed and parsed OK.
             for inn_splitup in edifile.nextmessage():   #for each message in the edifile:
                 try:
-                    #inn_splitup.ta_info: parameters from inmessage.edifromfile(), syntax-information and parse-information
+                    #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
                     inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in user script; used to give idta of 'confirming message'
                     while 1:    #continue as long as there are (alt-)translations

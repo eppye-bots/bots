@@ -28,7 +28,7 @@ import node
 import grammar
 from botsconfig import *
 
-def edifromfile(**ta_info):
+def parse_edi_file(**ta_info):
     ''' Read,lex, parse edi-file. Is a dispatch function for Inmessage and subclasses.'''
     try:
         classtocall = globals()[ta_info['editype']]  #get inmessage class to call (subclass of Inmessage)
@@ -36,14 +36,6 @@ def edifromfile(**ta_info):
         raise botslib.InMessageError(_(u'Unknown editype for incoming message: $editype'),editype=ta_info['editype'])
     ediobject = classtocall(ta_info)
     ediobject.initfromfile()
-    return ediobject
-
-def _edifromparsed(editype,inode,ta_info):
-    ''' Get a edi-message (inmessage-object) from node in tree.
-        is used in splitting edi-messages.'''
-    classtocall = globals()[editype]
-    ediobject = classtocall(ta_info)
-    ediobject.initfromparsed(inode)
     return ediobject
 
 #*****************************************************************************
@@ -80,12 +72,6 @@ class Inmessage(message.Message):
         self.checkmessage(self.root,self.defmessage)
         #~ self.root.display() #show tree of nodes (for protocol debugging)
         #~ self.root.displayqueries() #show queries in tree of nodes (for protocol debugging)
-
-    def initfromparsed(self,node_instance):
-        ''' initialisation from a tree (node is passed).
-            to initialise message in an envelope
-        '''
-        self.root = node_instance
 
     def handleconfirm(self,ta_fromfile,error):
         ''' end of edi file handling.
@@ -274,7 +260,7 @@ class Inmessage(message.Message):
                 ta_info = self.ta_info.copy()
                 ta_info.update(eachmessage.queries)
                 #~ ta_info['botsroot']=self.root
-                yield _edifromparsed(self.__class__.__name__,eachmessage,ta_info)
+                yield self._getmessagefromenvelope(eachmessage,ta_info)
             if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
                 first = True
                 for eachmessage in self.getloop(*self.defmessage.nextmessage2):
@@ -284,7 +270,7 @@ class Inmessage(message.Message):
                     ta_info = self.ta_info.copy()
                     ta_info.update(eachmessage.queries)
                     #~ ta_info['botsroot']=self.root
-                    yield _edifromparsed(self.__class__.__name__,eachmessage,ta_info)
+                    yield self._getmessagefromenvelope(eachmessage,ta_info)
         elif self.defmessage.nextmessageblock is not None:          #for csv/fixed: nextmessageblock indicates which field determines a message (as long as the field is the same, it is one message)
             #there is only one recordtype (this is checked in grammar.py).
             first = True
@@ -298,7 +284,7 @@ class Inmessage(message.Message):
                     ta_info = self.ta_info.copy()
                     ta_info.update(oldline.queries)        #update ta_info with information (from previous line) 20100905
                     #~ ta_info['botsroot']=self.root   #give mapping script access to all information in edi file: all records
-                    yield _edifromparsed(self.__class__.__name__,newroot,ta_info)
+                    yield self._getmessagefromenvelope(newroot,ta_info)
                     newroot = node.Node()  #make new empty root node.
                     oldkriterium = kriterium
                 else:
@@ -310,19 +296,28 @@ class Inmessage(message.Message):
                     ta_info = self.ta_info.copy()
                     ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
                     #~ ta_info['botsroot']=self.root
-                    yield _edifromparsed(self.__class__.__name__,newroot,ta_info)
+                    yield self._getmessagefromenvelope(newroot,ta_info)
         else:   #no split up indicated in grammar;
             if self.root.record or self.ta_info['pass_all']:    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
                 #~ ta_info['botsroot']=None        #??is the same as self.root, so I use None??.
-                yield _edifromparsed(self.__class__.__name__,self.root,ta_info)
+                yield self._getmessagefromenvelope(self.root,ta_info)
             else:   #pass nodes under root one by one
                 for child in self.root.children:
                     ta_info = self.ta_info.copy()
                     ta_info.update(child.queries)
                     #~ ta_info['botsroot']=self.root   #give mapping script access to all information in edi file: all roots
-                    yield _edifromparsed(self.__class__.__name__,child,ta_info)
+                    yield self._getmessagefromenvelope(child,ta_info)
+                    
+    def _getmessagefromenvelope(self,inode,ta_info):
+        ''' Get a edi-message (inmessage-object) from node in tree.
+            is used in splitting edi-messages.'''
+        classtocall = globals()[self.__class__.__name__]
+        messagefromenvelope = classtocall(ta_info)
+        messagefromenvelope.root = node_instance
+        return messagefromenvelope
+
 
 class fixed(Inmessage):
     ''' class for record of fixed length.'''

@@ -147,7 +147,7 @@ def start():
     filehandler = open(tmpgrammarfile,'w')
     filehandler.close()
 
-    inn = inmessage.edifromfile(editype=editype,messagetype=messagetype,filename=edifile)
+    inn = inmessage.parse_edi_file(editype=editype,messagetype=messagetype,filename=edifile)
     #~ inn.root.display()
     out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    #make outmessage object
 
