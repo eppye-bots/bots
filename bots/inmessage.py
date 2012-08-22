@@ -1084,6 +1084,7 @@ class jsonnocheck(json):
 
 
 class database(jsonnocheck):
+    #20120101 depreciated. use class db
     pass
 
 

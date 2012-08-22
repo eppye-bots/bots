@@ -736,7 +736,9 @@ class jsonnocheck(json):
         pass
 
 class template(Outmessage):
-    ''' uses Kid library for templating.'''
+    ''' uses Kid library for templating.
+        #20120101 depreciated. use class templatehtml
+    '''
     class TemplateData(object):
         pass
     def __init__(self,ta_info):
@@ -774,7 +776,7 @@ class template(Outmessage):
 
 class templatehtml(Outmessage):
     ''' uses Genshi library for templating. Genshi is very similar to Kid, and is the fork/follow-up of Kid.
-        Kid is not being deveolped further; in time Kid will not be in repositories etc.
+        Kid is not being developed further; in time Kid will not be in repositories etc.
         Templates for Genshi are like Kid templates. Changes:
         - other namespace: xmlns:py="http://genshi.edgewall.org/" instead of xmlns:py="http://purl.org/kid/ns#"
         - enveloping is different: <xi:include href="${message}" /> instead of <div py:replace="document(message)"/>
@@ -814,6 +816,7 @@ class templatehtml(Outmessage):
 
 
 class database(jsonnocheck):
+    #20120101 depreciated. use class db
     pass
 
 class db(Outmessage):
@@ -832,7 +835,8 @@ class db(Outmessage):
         pickle.dump(self.root,self._outstream,2)
         self._outstream.close()
         botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
-        self.ta_info['envelope'] = 'db'     #use right enveloping for db: no copying etc, use same file.
+        self.ta_info['envelope'] = 'db'
+        self.ta_info['merge'] = False
 
 
 class raw(Outmessage):
@@ -850,4 +854,5 @@ class raw(Outmessage):
         self._outstream.write(self.root)
         self._outstream.close()
         botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
-        self.ta_info['envelope'] = 'raw'     #use right enveloping for raw: no coping etc, use same file.
+        self.ta_info['envelope'] = 'raw'
+        self.ta_info['merge'] = False

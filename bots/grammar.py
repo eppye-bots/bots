@@ -19,7 +19,7 @@ def grammarread(editype,grammarname):
 
 def syntaxread(soortpythonfile,editype,grammarname):
     ''' dispatch function for class Grammar or subclass
-        read only grammar
+        read only syntax of grammar
     '''
     try:
         classtocall = globals()[editype]
@@ -580,6 +580,7 @@ class xmlnocheck(xml):
         'version':'1.0',        #as used in xml prolog
         }
 class template(Grammar):
+    #20120101 depreciated. use class templatehtml
     _checkstructurerequired = False
     defaultsyntax = { \
         'add_crlfafterrecord_sep':'',
@@ -861,4 +862,5 @@ class tradacoms(Grammar):
         '9V9':'I',
         }
 class database(jsonnocheck):
+    #20120101 depreciated. use 'db'
     pass

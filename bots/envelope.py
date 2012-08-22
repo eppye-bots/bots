@@ -325,6 +325,7 @@ class template(Envelope):
         ''' class for (test) orderprint; delevers a valid html-file.
             Uses a kid-template for the enveloping/merging.
             use kid to write; no envelope grammar is used
+            #20120101 depreciated. use class templatehtml
         '''
         try:
             import kid
