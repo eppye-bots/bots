@@ -32,7 +32,6 @@ urlpatterns = patterns('',
     (r'^delete.*', superuser_required(views.delete)),
     (r'^plugin.*', superuser_required(views.plugin)),
     (r'^plugout.*', superuser_required(views.plugout)),
-    (r'^unlock.*', superuser_required(views.unlock)),
     (r'^sendtestmail.*', superuser_required(views.sendtestmailmanagers)),
     #catch-all
     (r'^.*', 'bots.views.index'),

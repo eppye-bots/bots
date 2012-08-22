@@ -528,18 +528,6 @@ def runengine(request,*kw,**kwargs):
             botsglobal.logger.info(_(u'Errors while trying to run bots-engine:\n%s.'),txt)
     return django.shortcuts.redirect('/home')
 
-def unlock(request,*kw,**kwargs):
-    if request.method == 'GET':
-        lijst = list(models.mutex.objects.filter(mutexk=1).all())
-        if lijst:
-            lijst[0].delete()
-            request.user.message_set.create(message=_(u'Unlocked database.'))
-            botsglobal.logger.info(_(u'Unlocked database.'))
-        else:
-            request.user.message_set.create(message=_(u'Request to unlock database, but database was not locked.'))
-            botsglobal.logger.info(_(u'Request to unlock database, but database was not locked.'))
-    return django.shortcuts.redirect('/home')
-
 def sendtestmailmanagers(request,*kw,**kwargs):
     try:
         sendornot = botsglobal.ini.getboolean('settings','sendreportiferror',False)
