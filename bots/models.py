@@ -118,44 +118,20 @@ class MultipleEmailField(models.CharField):
     default_validators = [multiple_email_validator]
     description = _('One or more e-mail address(es),separated by ",".')
 
-    
-class botsmodel(models.Model):
-    class Meta:
-        abstract = True
-    def delete(self, *args, **kwargs):
-        ''' bots does not use cascaded deletes!; so for delete: set references to null'''
-        self.clear_nullable_related()
-        super(botsmodel, self).delete(*args, **kwargs)
-    def clear_nullable_related(self):
-        """
-        Recursively clears any nullable foreign key fields on related objects.
-        Django is hard-wired for cascading deletes, which is very dangerous for
-        us. This simulates ON DELETE SET NULL behavior manually.
-        """
-        for related in self._meta.get_all_related_objects():
-            accessor = related.get_accessor_name()
-            related_set = getattr(self, accessor)
-
-            if related.field.null:
-                related_set.clear()
-            else:
-                for related_object in related_set.all():
-                    related_object.clear_nullable_related()
-
 #***********************************************************************************
 #******** written by webserver ********************************************************
 #***********************************************************************************
-class confirmrule(botsmodel):
+class confirmrule(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
     confirmtype = StripCharField(max_length=35,choices=CONFIRMTYPE)
     ruletype = StripCharField(max_length=35,choices=RULETYPE)
     negativerule = models.BooleanField(default=False)
-    frompartner = models.ForeignKey('partner',related_name='cfrompartner',null=True,blank=True)
-    topartner = models.ForeignKey('partner',related_name='ctopartner',null=True,blank=True)
+    frompartner = models.ForeignKey('partner',related_name='cfrompartner',null=True,on_delete=models.CASCADE,blank=True)
+    topartner = models.ForeignKey('partner',related_name='ctopartner',null=True,on_delete=models.CASCADE,blank=True)
     #~ idroute = models.ForeignKey('routes',null=True,blank=True,verbose_name='route')
     idroute = StripCharField(max_length=35,null=True,blank=True,verbose_name=_(u'route'))
-    idchannel = models.ForeignKey('channel',null=True,blank=True,verbose_name=_(u'channel'))
+    idchannel = models.ForeignKey('channel',null=True,on_delete=models.CASCADE,blank=True,verbose_name=_(u'channel'))
     editype = StripCharField(max_length=35,choices=EDITYPES,blank=True)
     messagetype = StripCharField(max_length=35,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
@@ -166,7 +142,7 @@ class confirmrule(botsmodel):
         db_table = 'confirmrule'
         verbose_name = _(u'confirm rule')
         ordering = ['confirmtype','ruletype']
-class ccodetrigger(botsmodel):
+class ccodetrigger(models.Model):
     ccodeid = StripCharField(primary_key=True,max_length=35,verbose_name=_(u'type code'))
     ccodeid_desc = StripCharField(max_length=35,null=True,blank=True)
     def __unicode__(self):
@@ -175,9 +151,9 @@ class ccodetrigger(botsmodel):
         db_table = 'ccodetrigger'
         verbose_name = _(u'user code type')
         ordering = ['ccodeid']
-class ccode(botsmodel):
+class ccode(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
-    ccodeid = models.ForeignKey(ccodetrigger,verbose_name=_(u'type code'))
+    ccodeid = models.ForeignKey(ccodetrigger,on_delete=models.CASCADE,verbose_name=_(u'type code'))
     leftcode = StripCharField(max_length=35,db_index=True)
     rightcode = StripCharField(max_length=35,db_index=True)
     attr1 = StripCharField(max_length=35,blank=True)
@@ -195,7 +171,7 @@ class ccode(botsmodel):
         verbose_name = _(u'user code')
         unique_together = (('ccodeid','leftcode','rightcode'),)
         ordering = ['ccodeid']
-class channel(botsmodel):
+class channel(models.Model):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
     type = StripCharField(max_length=35,choices=CHANNELTYPE)    #protocol type
@@ -227,7 +203,7 @@ class channel(botsmodel):
         db_table = 'channel'
     def __unicode__(self):
         return self.idchannel
-class partner(botsmodel):
+class partner(models.Model):
     idpartner = StripCharField(max_length=35,primary_key=True,verbose_name=_(u'partner identification'))
     active = models.BooleanField(default=False)
     isgroup = models.BooleanField(default=False)
@@ -243,10 +219,10 @@ class partner(botsmodel):
         db_table = 'partner'
     def __unicode__(self):
         return unicode(self.idpartner) + ' (' + unicode(self.name) + ')'
-class chanpar(botsmodel):
+class chanpar(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
-    idpartner = models.ForeignKey(partner,verbose_name=_(u'partner'))
-    idchannel = models.ForeignKey(channel,verbose_name=_(u'channel'))
+    idpartner = models.ForeignKey(partner,on_delete=models.CASCADE,verbose_name=_(u'partner'))
+    idchannel = models.ForeignKey(channel,on_delete=models.CASCADE,verbose_name=_(u'channel'))
     mail = StripCharField(max_length=256)
     cc = MultipleEmailField(max_length=256,blank=True)           #added 20091111
     askmdn = models.BooleanField(default=False)     #not used anymore 20091019
@@ -258,14 +234,14 @@ class chanpar(botsmodel):
         verbose_name_plural = _(u'email address per channel')
     def __unicode__(self):
         return str(self.idpartner) + ' ' + str(self.idchannel) + ' ' + str(self.mail)
-class translate(botsmodel):
+class translate(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
     fromeditype = StripCharField(max_length=35,choices=EDITYPES,help_text=_(u'Editype to translate from.'))
     frommessagetype = StripCharField(max_length=35,help_text=_(u'Messagetype to translate from.'))
     alt = StripCharField(max_length=35,null=False,blank=True,verbose_name=_(u'Alternative translation'),help_text=_(u'Do this translation only for this alternative translation.'))
-    frompartner = models.ForeignKey(partner,related_name='tfrompartner',null=True,blank=True,help_text=_(u'Do this translation only for this frompartner.'))
-    topartner = models.ForeignKey(partner,related_name='ttopartner',null=True,blank=True,help_text=_(u'Do this translation only for this topartner.'))
+    frompartner = models.ForeignKey(partner,related_name='tfrompartner',null=True,blank=True,on_delete=models.PROTECT,help_text=_(u'Do this translation only for this frompartner.'))
+    topartner = models.ForeignKey(partner,related_name='ttopartner',null=True,blank=True,on_delete=models.PROTECT,help_text=_(u'Do this translation only for this topartner.'))
     tscript = StripCharField(max_length=35,help_text=_(u'User mapping script to use for translation.'))
     toeditype = StripCharField(max_length=35,choices=EDITYPES,help_text=_(u'Editype to translate to.'))
     tomessagetype = StripCharField(max_length=35,help_text=_(u'Messagetype to translate to.'))
@@ -278,22 +254,22 @@ class translate(botsmodel):
         ordering = ['fromeditype','frommessagetype']
     def __unicode__(self):
         return unicode(self.fromeditype) + u' ' + unicode(self.frommessagetype) + u' ' + unicode(self.alt) + u' ' + unicode(self.frompartner) + u' ' + unicode(self.topartner)
-class routes(botsmodel):
+class routes(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     idroute = StripCharField(max_length=35,db_index=True,help_text=_(u'identification of route; one route can consist of multiple parts having the same "idroute".'))
     seq = models.PositiveIntegerField(default=1,help_text=_(u'for routes consisting of multiple parts, "seq" indicates the order these parts are run.'))
     active = models.BooleanField(default=False)
-    fromchannel = models.ForeignKey(channel,related_name='rfromchannel',null=True,blank=True,verbose_name=_(u'incoming channel'),limit_choices_to = {'inorout': 'in'})
+    fromchannel = models.ForeignKey(channel,related_name='rfromchannel',null=True,on_delete=models.SET_NULL,blank=True,verbose_name=_(u'incoming channel'),limit_choices_to = {'inorout': 'in'})
     fromeditype = StripCharField(max_length=35,choices=EDITYPES,blank=True,help_text=_(u'the editype of the incoming edi files.'))
     frommessagetype = StripCharField(max_length=35,blank=True,help_text=_(u'the messagetype of incoming edi files. For edifact: messagetype=edifact; for x12: messagetype=x12.'))
-    tochannel = models.ForeignKey(channel,related_name='rtochannel',null=True,blank=True,verbose_name=_(u'outgoing channel'),limit_choices_to = {'inorout': 'out'})
+    tochannel = models.ForeignKey(channel,related_name='rtochannel',null=True,on_delete=models.SET_NULL,blank=True,verbose_name=_(u'outgoing channel'),limit_choices_to = {'inorout': 'out'})
     toeditype = StripCharField(max_length=35,choices=EDITYPES,blank=True,help_text=_(u'Only edi files with this editype to this outgoing channel.'))
     tomessagetype = StripCharField(max_length=35,blank=True,help_text=_(u'Only edi files of this messagetype to this outgoing channel.'))
     alt = StripCharField(max_length=35,default=u'',blank=True,verbose_name='Alternative translation',help_text=_(u'Only use if there is more than one "translation" for the same editype and messagetype. Advanced use, seldom needed.'))
-    frompartner = models.ForeignKey(partner,related_name='rfrompartner',null=True,blank=True,help_text=_(u'The frompartner of the incoming edi files. Seldom needed.'))
-    topartner = models.ForeignKey(partner,related_name='rtopartner',null=True,blank=True,help_text=_(u'The topartner of the incoming edi files. Seldom needed.'))
-    frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,blank=True,help_text=_(u'Only edi files from this partner/partnergroup for this outgoing channel'))
-    topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,blank=True,help_text=_(u'Only edi files to this partner/partnergroup to this channel'))
+    frompartner = models.ForeignKey(partner,related_name='rfrompartner',null=True,on_delete=models.SET_NULL,blank=True,help_text=_(u'The frompartner of the incoming edi files. Seldom needed.'))
+    topartner = models.ForeignKey(partner,related_name='rtopartner',null=True,on_delete=models.SET_NULL,blank=True,help_text=_(u'The topartner of the incoming edi files. Seldom needed.'))
+    frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Only edi files from this partner/partnergroup for this outgoing channel'))
+    topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Only edi files to this partner/partnergroup to this channel'))
     testindicator = StripCharField(max_length=1,blank=True,help_text=_(u'Only edi files with this testindicator to this outgoing channel.'))
     translateind = models.BooleanField(default=True,blank=True,verbose_name='translate',help_text=_(u'Do a translation in this route.'))
     notindefaultrun = models.BooleanField(default=False,blank=True,help_text=_(u'Do not use this route in a normal run. Advanced, related to scheduling specific routes or not.'))
@@ -312,7 +288,7 @@ class routes(botsmodel):
 #***********************************************************************************
 #******** written by engine ********************************************************
 #***********************************************************************************
-class filereport(botsmodel):
+class filereport(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     idta = models.IntegerField(db_index=True)
     reportidta = models.IntegerField(db_index=True)
@@ -344,14 +320,14 @@ class filereport(botsmodel):
     class Meta:
         db_table = 'filereport'
         unique_together = (("idta","reportidta"),)
-class mutex(botsmodel):
+class mutex(models.Model):
     #specific SQL is used (database defaults are used)
     mutexk = models.IntegerField(primary_key=True)  #always value '1'
     mutexer = models.IntegerField()     #20120810: set to '1' to indicate error-email has been send for databaselock
     ts = models.DateTimeField()         #timestamp when mutex is set
     class Meta:
         db_table = 'mutex'
-class persist(botsmodel):
+class persist(models.Model):
     #OK, this has gone wrong. There is no primary key here, so django generates this. But there is no ID in the custom sql.
     #Django still uses the ID in sql manager. This leads to an error in snapshot plugin. Disabled this in snapshot function; to fix this really database has to be changed.
     #specific SQL is used (database defaults are used)
@@ -362,7 +338,7 @@ class persist(botsmodel):
     class Meta:
         db_table = 'persist'
         unique_together = (("domein","botskey"),)
-class report(botsmodel):
+class report(models.Model):
     idta = models.IntegerField(primary_key=True)    #rename to reportidta
     lastreceived = models.IntegerField()
     lastdone = models.IntegerField()
@@ -385,7 +361,7 @@ class report(botsmodel):
 #~ SET ts = datetime('now','localtime')
 #~ WHERE idta = new.idta ;
 #~ END;
-class ta(botsmodel):
+class ta(models.Model):
     #specific SQL is used (database defaults are used)
     idta = models.AutoField(primary_key=True)
     statust = models.IntegerField(choices=STATUST)
@@ -428,7 +404,7 @@ class ta(botsmodel):
     rsrv4 = models.IntegerField(null=True)              #added 20100501; 20120821: number of resends; if all OK (no resend) this is 0
     class Meta:
         db_table = 'ta'
-class uniek(botsmodel):
+class uniek(models.Model):
     #specific SQL is used (database defaults are used)
     domein = StripCharField(max_length=35,primary_key=True)
     nummer = models.IntegerField()
