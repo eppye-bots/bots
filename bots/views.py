@@ -6,6 +6,7 @@ import subprocess
 import traceback
 import django
 from django.utils.translation import ugettext as _
+from django.contrib import messages
 import forms
 import models
 import viewlib
@@ -293,9 +294,9 @@ def confirm(request,*kw,**kwargs):
                 ta_object.confirmed = True
                 ta_object.confirmidta = '-1'   # to indicate a manual confirmation
                 ta_object.save()
-                request.user.message_set.create(message='Manual confirmed.')
+                messages.add_message(request, messages.INFO, _(u'Manual confirmed.'))
             else:
-                request.user.message_set.create(message='Manual confirm not possible.')
+                messages.add_message(request, messages.INFO, _(u'Manual confirm not possible.'))
             # then just refresh the current view
             formin = forms.ViewConfirm(request.POST)
             if not formin.is_valid():
@@ -392,16 +393,16 @@ def plugin(request,*kw,**kwargs):
                 botsglobal.logger.info(_(u'Start reading plugin "%s".'),request.FILES['file'].name)
                 try:
                     if pluglib.load(request.FILES['file'].temporary_file_path()):
-                        request.user.message_set.create(message='Renamed existing files.')
+                        messages.add_message(request, messages.INFO, _(u'Renamed existing files.'))
                 except botslib.PluginError,msg:
                     botsglobal.logger.info(u'%s',str(msg))
-                    request.user.message_set.create(message='%s'%msg)
+                    messages.add_message(request, messages.INFO, msg)
                 else:
                     botsglobal.logger.info(_(u'Finished reading plugin "%s" successful.'),request.FILES['file'].name)
-                    request.user.message_set.create(message='Plugin "%s" is read successful.'%request.FILES['file'].name)
+                    messages.add_message(request, messages.INFO, _(u'Plugin "%s" is read successful.')%request.FILES['file'].name)
                 request.FILES['file'].close()
             else:
-                request.user.message_set.create(message=_(u'No plugin read.'))
+                messages.add_message(request, messages.INFO, _(u'No plugin read.'))
         return django.shortcuts.redirect('/home')
 
 def plugout(request,*kw,**kwargs):
@@ -418,7 +419,7 @@ def plugout(request,*kw,**kwargs):
                     pluglib.plugoutcore(form.cleaned_data,filename)
                 except botslib.PluginError, msg:
                     botsglobal.logger.info(u'%s',str(msg))
-                    request.user.message_set.create(message='%s'%msg)
+                    messages.add_message(request, messages.INFO, msg)
                 else:
                     botsglobal.logger.info(_(u'Plugin "%s" created successful.'),filename)
                     response = django.http.HttpResponse(open(filename, 'rb').read(), content_type='application/zip')
@@ -444,37 +445,37 @@ def delete(request,*kw,**kwargs):
                     cursor.execute("DELETE FROM filereport")
                     cursor.execute("DELETE FROM report")
                     transaction.commit_unless_managed()
-                    request.user.message_set.create(message=_(u'Transactions are deleted.'))
+                    messages.add_message(request, messages.INFO, _(u'Transactions are deleted.'))
                     botsglobal.logger.info(_(u'    Transactions are deleted.'))
                     #clean data files
                     deletefrompath = botsglobal.ini.get('directories','data','botssys/data')
                     shutil.rmtree(deletefrompath,ignore_errors=True)
                     botslib.dirshouldbethere(deletefrompath)
-                    request.user.message_set.create(message=_(u'Data files are deleted.'))
+                    messages.add_message(request, messages.INFO, _(u'Data files are deleted.'))
                     botsglobal.logger.info(_(u'    Data files are deleted.'))
                 if form.cleaned_data['delconfiguration']:
                     models.confirmrule.objects.all().delete()
+                    models.routes.objects.all().delete()
                     models.channel.objects.all().delete()
                     models.chanpar.objects.all().delete()
-                    models.partner.objects.all().delete()
                     models.translate.objects.all().delete()
-                    models.routes.objects.all().delete()
-                    request.user.message_set.create(message=_(u'Database configuration is deleted.'))
+                    models.partner.objects.all().delete()
+                    messages.add_message(request, messages.INFO, _(u'Database configuration is deleted.'))
                     botsglobal.logger.info(_(u'    Database configuration is deleted.'))
                 if form.cleaned_data['delcodelists']:
                     models.ccode.objects.all().delete()
                     models.ccodetrigger.objects.all().delete()
-                    request.user.message_set.create(message=_(u'User code lists are deleted.'))
+                    messages.add_message(request, messages.INFO, _(u'User code lists are deleted.'))
                     botsglobal.logger.info(_(u'    User code lists are deleted.'))
                 if form.cleaned_data['delinfile']:
                     deletefrompath = botslib.join(botsglobal.ini.get('directories','botssys','botssys'),'infile')
                     shutil.rmtree('bots/botssys/infile',ignore_errors=True)
-                    request.user.message_set.create(message=_(u'Files in botssys/infile are deleted.'))
+                    messages.add_message(request, messages.INFO, _(u'Files in botssys/infile are deleted.'))
                     botsglobal.logger.info(_(u'    Files in botssys/infile are deleted.'))
                 if form.cleaned_data['deloutfile']:
                     deletefrompath = botslib.join(botsglobal.ini.get('directories','botssys','botssys'),'outfile')
                     shutil.rmtree('bots/botssys/outfile',ignore_errors=True)
-                    request.user.message_set.create(message=_(u'Files in botssys/outfile are deleted.'))
+                    messages.add_message(request, messages.INFO, _(u'Files in botssys/outfile are deleted.'))
                     botsglobal.logger.info(_(u'    Files in botssys/outfile are deleted.'))
                 if form.cleaned_data['deluserscripts']:
                     deletefrompath = botsglobal.ini.get('directories','usersysabs')
@@ -486,7 +487,7 @@ def delete(request,*kw,**kwargs):
                         for bestand in files:
                             if bestand != '__init__.py':
                                 os.remove(os.path.join(root,bestand))
-                    request.user.message_set.create(message=_(u'User scripts are deleted (in usersys).'))
+                    messages.add_message(request, messages.INFO, _(u'User scripts are deleted (in usersys).'))
                     botsglobal.logger.info(_(u'    User scripts are deleted (in usersys).'))
                 elif form.cleaned_data['delbackup']:
                     deletefrompath = botsglobal.ini.get('directories','usersysabs')
@@ -499,7 +500,7 @@ def delete(request,*kw,**kwargs):
                             name,ext = os.path.splitext(bestand)
                             if ext and len(ext) == 15 and ext[1:].isdigit() :
                                 os.remove(os.path.join(root,bestand))
-                    request.user.message_set.create(message=_(u'Backupped user scripts are deleted/purged (in usersys).'))
+                    messages.add_message(request, messages.INFO, _(u'Backupped user scripts are deleted/purged (in usersys).'))
                     botsglobal.logger.info(_(u'    Backupped user scripts are deleted/purged (in usersys).'))
                 botsglobal.logger.info(_(u'Finished deleting in configuration.'))
     return django.shortcuts.redirect('/home')
@@ -509,7 +510,7 @@ def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
         #check if bots-engine is not already running (unless attempting crashrecovery)
         if list(models.mutex.objects.filter(mutexk=1).all()) and request.GET['clparameter'] != '--crashrecovery':
-            request.user.message_set.create(message=_(u'Trying to run "bots-engine", but database is locked by another run in progress. Please try again later.'))
+            messages.add_message(request, messages.INFO, _(u'Trying to run "bots-engine", but database is locked by another run in progress. Please try again later.'))
             botsglobal.logger.info(_(u'Trying to run "bots-engine", but database is locked by another run in progress.'))
             return django.shortcuts.redirect('/home')
         #find out the right arguments to use
@@ -521,10 +522,10 @@ def runengine(request,*kw,**kwargs):
         try:
             botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
             terug = subprocess.Popen(lijst).pid
-            request.user.message_set.create(message=_(u'Bots-engine is started.'))
+            messages.add_message(request, messages.INFO, _(u'Bots-engine is started.'))
         except:
             txt =  botslib.txtexc()
-            request.user.message_set.create(message=_(u'Errors while trying to run bots-engine.'))
+            messages.add_message(request, messages.INFO, _(u'Errors while trying to run bots-engine.'))
             botsglobal.logger.info(_(u'Errors while trying to run bots-engine:\n%s.'),txt)
     return django.shortcuts.redirect('/home')
 
@@ -535,7 +536,7 @@ def sendtestmailmanagers(request,*kw,**kwargs):
         sendornot = False
     if not sendornot:
         botsglobal.logger.info(_(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".'))
-        request.user.message_set.create(message=_(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".'))
+        messages.add_message(request, messages.INFO, _(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".'))
         return django.shortcuts.redirect('/home')
 
     from django.core.mail import mail_managers
@@ -543,10 +544,10 @@ def sendtestmailmanagers(request,*kw,**kwargs):
         mail_managers(_(u'testsubject'), _(u'test content of report'))
     except:
         txt = botslib.txtexc()
-        request.user.message_set.create(message=_(u'Sending test mail failed.'))
+        messages.add_message(request, messages.INFO, _(u'Sending test mail failed.'))
         botsglobal.logger.info(_(u'Sending test mail failed, error:\n%s'), txt)
         return django.shortcuts.redirect('/home')
-    request.user.message_set.create(message=_(u'Sending test mail succeeded.'))
+    messages.add_message(request, messages.INFO, _(u'Sending test mail succeeded.'))
     botsglobal.logger.info(_(u'Sending test mail succeeded.'))
     return django.shortcuts.redirect('/home')
 

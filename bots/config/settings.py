@@ -1,87 +1,57 @@
 # Django settings for bots project.
 import os
 import bots
+import django
+PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 
-#*******settings for bots error reports**********************************
+#*******settings for sending bots error reports via email**********************************
 MANAGERS = (    #bots will send error reports to the MANAGERS
-    ('name_manager', 'hjebbers@gmail.com'),
+    ('name_manager', 'adress@test.com'),
     )
-EMAIL_HOST = 'smtp.gmail.com'             #Default: 'localhost'
-EMAIL_PORT = '587'             #Default: 25
-EMAIL_USE_TLS = True       #Default: False
-EMAIL_HOST_USER = 'hjebbers@gmail.com'        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
-EMAIL_HOST_PASSWORD = 'ankieepankiee02'    #Default: ''. PASSWORD to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
+EMAIL_HOST = 'localhost'             #Default: 'localhost'
+EMAIL_PORT = '25'             #Default: 25
+EMAIL_USE_TLS = False       #Default: False
+EMAIL_HOST_USER = ''        #Default: ''. Username to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
+EMAIL_HOST_PASSWORD = ''    #Default: ''. PASSWORD to use for the SMTP server defined in EMAIL_HOST. If empty, Django won't attempt authentication.
 #~ SERVER_EMAIL = 'user@gmail.com'           #Sender of bots error reports. Default: 'root@localhost'
 #~ EMAIL_SUBJECT_PREFIX = ''   #This is prepended on email subject.
 
-#*********path settings*************************advised is not to change these values!!
-PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
-# Absolute path to the directory that holds media.
-# Example: '/home/media/media.lawrence.com/'
-MEDIA_ROOT = PROJECT_PATH + '/'
-#~ STATICFILES_DIRS = PROJECT_PATH + '/'
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash if there is a path component (optional in other cases).
-# Examples: 'http://media.lawrence.com', 'http://example.com/media/'
-MEDIA_URL = ''
-
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: 'http://foo.com/media/', '/media/'.
-ADMIN_MEDIA_PREFIX = '/media/'
-#~ STATIC_URL = '/media/'
-#~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
-ROOT_URLCONF = 'bots.urls'
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/home'
-LOGOUT_URL = '/logout/'
-#~ LOGOUT_REDIRECT_URL = #??not such parameter; is set in urls
-
-TEMPLATE_DIRS = (
-    os.path.join(PROJECT_PATH, 'templates'),
-    # Put strings here, like '/home/html/django_templates' or 'C:/www/django/templates'.
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    )
-
 #*********database settings*************************
-#django-admin syncdb --pythonpath='/home/hje/botsup' --settings='bots.config.settings'
-#SQLITE django >= 1.4:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb'),
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
+        'OPTIONS': {},
+        }
+    }
+#MySQL:
 #~ DATABASES = {
     #~ 'default': {
-        #~ 'ENGINE': 'django.db.backends.sqlite3',
-        #~ 'NAME': os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
+        #~ 'ENGINE': 'django.db.backends.mysql',
+        #~ 'NAME': 'botsdb',
+        #~ 'USER': 'bots',
+        #~ 'PASSWORD': 'botsbots',
+        #~ 'HOST': '192.168.0.7',
+        #~ 'PORT': '3306',
+        #~ 'OPTIONS': {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'},
+        #~ }
     #~ }
-#~ }
-#~ #SQLITE django <1.4: 
-DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb')       #path to database; if relative path: interpreted relative to bots root directory
-DATABASE_USER = ''
-DATABASE_PASSWORD = ''
-DATABASE_HOST = ''
-DATABASE_PORT = ''
-DATABASE_OPTIONS = {}
-#~ #MySQL django <1.4::
-#~ DATABASE_ENGINE = 'mysql'
-#~ DATABASE_NAME = 'botsdb'
-#~ DATABASE_USER = 'bots'
-#~ DATABASE_PASSWORD = 'botsbots'
-#~ DATABASE_HOST = '192.168.0.7'
-#~ DATABASE_PORT = '3306'
-#~ DATABASE_OPTIONS = {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'}
-#PostgreSQL django <1.4::
-#~ DATABASE_ENGINE = 'postgresql_psycopg2'
-#~ DATABASE_NAME = 'botsdb'
-#~ DATABASE_USER = 'bots'
-#~ DATABASE_PASSWORD = 'botsbots'
-#~ DATABASE_HOST = '192.168.0.7'
-#~ DATABASE_PORT = '5432'
-#~ DATABASE_OPTIONS = {}
-
-#*********sessions, cookies, log out time*************************
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed
-SESSION_COOKIE_AGE = 3600                   #seconds a user needs to login when no activity
-SESSION_SAVE_EVERY_REQUEST = True           #if True: SESSION_COOKIE_AGE is interpreted as: since last activity
+#~ #PostgreSQL:
+#~ DATABASES = {
+    #~ 'default': {
+        #~ 'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        #~ 'NAME': 'botsdb',
+        #~ 'USER': 'bots',
+        #~ 'PASSWORD': 'botsbots',
+        #~ 'HOST': '192.168.0.7',
+        #~ 'PORT': '5432',
+        #~ 'OPTIONS': {},
+        #~ }
+    #~ }
 
 #*********localization*************************
 # Local time zone for this installation. Choices can be found here:
@@ -96,14 +66,44 @@ TIME_FORMAT  = 'G:i'
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
-#~ LANGUAGE_CODE = 'en'
 #~ LANGUAGE_CODE = 'nl'
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
 USE_I18N = True
+
 
 #*************************************************************************
 #*********other django setting. please consult django docs.***************
+#*************************************************************************
+#*************************************************************************
+
+#*********path settings*************************
+if django.VERSION[1] < 4:
+    # Absolute path to the directory that holds media.
+    # Example: '/home/media/media.lawrence.com/'
+    MEDIA_ROOT = PROJECT_PATH + '/'
+    # URL that handles the media served from MEDIA_ROOT. Make sure to use a
+    # trailing slash if there is a path component (optional in other cases).
+    # Examples: 'http://media.lawrence.com', 'http://example.com/media/'
+    MEDIA_URL = ''
+    # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
+    # trailing slash.
+    # Examples: 'http://foo.com/media/', '/media/'.
+    ADMIN_MEDIA_PREFIX = '/media/'
+else:
+    STATIC_URL = '/media/'
+    STATIC_ROOT = PROJECT_PATH + '/'
+#~ STATICFILES_DIRS = PROJECT_PATH + '/'
+#~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
+ROOT_URLCONF = 'bots.urls'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/home'
+LOGOUT_URL = '/logout/'
+#~ LOGOUT_REDIRECT_URL = #not such parameter; is set in urls.py
+
+#*********sessions, cookies, log out time*************************
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed
+SESSION_COOKIE_AGE = 3600                   #seconds a user needs to login when no activity
+SESSION_SAVE_EVERY_REQUEST = True           #if True: SESSION_COOKIE_AGE is interpreted as: since last activity
+
 #set in bots.ini
 #~ DEBUG = True
 #~ TEMPLATE_DEBUG = DEBUG
@@ -111,25 +111,30 @@ SITE_ID = 1
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'm@-u37qiujmeqfbu$daaaaz)sp^7an4u@h=wfx9dd$$$zl2i*x9#awojdc'
 
-ADMINS = (
-    ('bots', 'your_email@domain.com'),
+#*******template handling and finding*************************************************************************
+# List of callables that know how to import templates from various sources.
+#disable because these used values are the default values 
+#~ TEMPLATE_LOADERS = (
+    #~ 'django.template.loaders.filesystem.Loader',
+    #~ 'django.template.loaders.app_directories.Loader',
+    #~ )
+
+TEMPLATE_DIRS = (
+    os.path.join(PROJECT_PATH, 'templates'),
+    # Put strings here, like '/home/html/django_templates' or 'C:/www/django/templates'.
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
     )
-
-
+#*******includes for django*************************************************************************
 #save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
 FILE_UPLOAD_HANDLERS = (
     'django.core.files.uploadhandler.TemporaryFileUploadHandler',
-    )
-# List of callables that know how to import templates from various sources.
-#disable TEMPLATE_LOADERS for #for django >=1.4 
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
-    'django.template.loaders.app_directories.load_template_source',
     )
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
     'bots.persistfilters.FilterPersistMiddleware',
     )
 INSTALLED_APPS = (
@@ -137,16 +142,17 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.admin',
-    #~ 'django.contrib.staticfiles',  #for django >=1.4 
+    'django.contrib.messages',
+    #~ 'django.contrib.staticfiles',
     'bots',
     )
 TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.auth',  #for django < 1.4
-    #~ 'django.contrib.auth.context_processors.auth',  #for django >=1.4 
+    'django.contrib.auth.context_processors.auth', 
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'django.core.context_processors.request',
-    #~ 'django.core.context_processors.static',  #for django >=1.4 
+    'django.contrib.messages.context_processors.messages',
+    'django.core.context_processors.static',
     'bots.bots_context.set_context',
     )

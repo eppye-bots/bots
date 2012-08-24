@@ -1,16 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+{% load i18n %}
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>{{ bots_http_path }}</title>
-    <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% load adminmedia %}{% admin_media_prefix %}css/base.css{% endblock %}" />
+    <link rel="stylesheet" type="text/css" href="{% block stylesheet %}/media/css/base.css{% endblock %}" />
     {% block extrastyle %}{% endblock %}
-    <!--[if lte IE 7]><link rel="stylesheet" type="text/css" href="{% block stylesheet_ie %}{% load adminmedia %}{% admin_media_prefix %}css/ie.css{% endblock %}" /><![endif]-->
+    <!--[if lte IE 7]><link rel="stylesheet" type="text/css" href="{% block stylesheet_ie %}/media/css/ie.css{% endblock %}" /><![endif]-->
     {% block extrahead %}{% endblock %}
     <link rel="icon" type="image/png" href="/media/images/favicon.ico"/>
     <link rel="stylesheet" type="text/css" href="/media/css/bots.css" />
 </head>
-{% load i18n %}
-
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
 {% if not is_popup %}
     {% include botslogo %}
@@ -22,11 +21,11 @@
 
 <div id="container">
     {% if messages %}
-        <ul class="messagelist">
+    <ul class="messages">
         {% for message in messages %}
-            <li>{{ message }}</li>
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
         {% endfor %}
-        </ul>
+    </ul>
     {% endif %}
     <div id="content" class="{% block coltype %}colM{% endblock %}">
         {% block pretitle %}{% endblock %}

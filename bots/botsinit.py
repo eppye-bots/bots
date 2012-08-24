@@ -106,22 +106,11 @@ def generalinit(configdir):
     #set paths in settings.py:
     #~ settings.FILE_UPLOAD_TEMP_DIR = os.path.join(settings.PROJECT_PATH, 'botssys/pluginsuploaded')
 
-    #start initializing bots charsets
+    #initialise bots charsets
     initbotscharsets()
     #set environment for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
-    #~ initbotscharsets()
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #
-
-    #convert django 1.4 database settings to django 1.3 format; code cna be changed when django 1.2 not supported anymore
-    if hasattr(botsglobal.settings,'DATABASES'):     #assume django.VERSION[1] >= 4:
-        botsglobal.settings.DATABASE_ENGINE = botsglobal.settings.DATABASES['default'].get('ENGINE','')
-        botsglobal.settings.DATABASE_NAME   = botsglobal.settings.DATABASES['default'].get('NAME','')
-        botsglobal.settings.DATABASE_USER   = botsglobal.settings.DATABASES['default'].get('USER','')
-        botsglobal.settings.DATABASE_HOST   = botsglobal.settings.DATABASES['default'].get('HOST','')
-        botsglobal.settings.DATABASE_PORT   = botsglobal.settings.DATABASES['default'].get('PORT','')
-        botsglobal.settings.DATABASE_OPTIONS = botsglobal.settings.DATABASES['default'].get('OPTIONS','')
-
 
 def initbotscharsets():
     '''set up right charset handling for specific charsets (UNOA, UNOB, UNOC, etc).'''
@@ -176,29 +165,31 @@ def initenginelogging():
 
 def connect():
     #different connect code per type of database
-    if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
+    if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
         #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
-        if not os.path.isfile(botsglobal.settings.DATABASE_NAME):
+        if not os.path.isfile(botsglobal.settings.DATABASES['default']['NAME']):
             raise botslib.PanicError(u'Could not find database file for SQLite')
         import botssqlite
-        botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASE_NAME)
-    elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
+        botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASES['default']['NAME'])
+    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'mysql':
         import MySQLdb
         from MySQLdb import cursors
-        botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASE_HOST,
-                                        port=int(botsglobal.settings.DATABASE_PORT),
-                                        db=botsglobal.settings.DATABASE_NAME,
-                                        user=botsglobal.settings.DATABASE_USER,
-                                        passwd=botsglobal.settings.DATABASE_PASSWORD,
+        botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASES['default']['HOST'],
+                                        port=int(botsglobal.settings.DATABASES['default']['PORT']),
+                                        db=botsglobal.settings.DATABASES['default']['NAME'],
+                                        user=botsglobal.settings.DATABASES['default']['USER'],
+                                        passwd=botsglobal.settings.DATABASES['default']['PASSWORD'],
                                         cursorclass=cursors.DictCursor,
-                                        **botsglobal.settings.DATABASE_OPTIONS)
-    elif botsglobal.settings.DATABASE_ENGINE == 'postgresql_psycopg2':
+                                        **botsglobal.settings.DATABASES['default']['OPTIONS'])
+    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'postgresql_psycopg2':
         import psycopg2
         import psycopg2.extensions
         import psycopg2.extras
         psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-        botsglobal.db = psycopg2.connect( 'host=%s dbname=%s user=%s password=%s'%( botsglobal.settings.DATABASE_HOST,
-                                                                                    botsglobal.settings.DATABASE_NAME,
-                                                                                    botsglobal.settings.DATABASE_USER,
-                                                                                    botsglobal.settings.DATABASE_PASSWORD),connection_factory=psycopg2.extras.DictConnection)
+        botsglobal.db = psycopg2.connect( 'host=%s dbname=%s user=%s password=%s'%( botsglobal.settings.DATABASES['default']['HOST'],
+                                                                                    botsglobal.settings.DATABASES['default']['NAME'],
+                                                                                    botsglobal.settings.DATABASES['default']['USER'],
+                                                                                    botsglobal.settings.DATABASES['default']['PASSWORD']),connection_factory=psycopg2.extras.DictConnection)
         botsglobal.db.set_client_encoding('UNICODE')
+    else:
+        raise botslib.PanicError(u'Unknown database engine "%s".'%(botsglobal.settings.DATABASES['default']['ENGINE']))

@@ -28,14 +28,13 @@ def botsinfo():
             (_(u'config path'),botsglobal.ini.get('directories','config')),
             (_(u'botssys path'),botsglobal.ini.get('directories','botssys')),
             (_(u'usersys path'),botsglobal.ini.get('directories','usersysabs')),
-            (u'DATABASE_ENGINE',botsglobal.settings.DATABASE_ENGINE),
-            (u'DATABASE_NAME',botsglobal.settings.DATABASE_NAME),
-            (u'DATABASE_USER',botsglobal.settings.DATABASE_USER),
-            (u'DATABASE_HOST',botsglobal.settings.DATABASE_HOST),
-            (u'DATABASE_PORT',botsglobal.settings.DATABASE_PORT),
-            (u'DATABASE_OPTIONS',botsglobal.settings.DATABASE_OPTIONS),
+            (u'DATABASE_ENGINE',botsglobal.settings.DATABASES['default']['ENGINE']),
+            (u'DATABASE_NAME',botsglobal.settings.DATABASES['default']['NAME']),
+            (u'DATABASE_USER',botsglobal.settings.DATABASES['default']['USER']),
+            (u'DATABASE_HOST',botsglobal.settings.DATABASES['default']['HOST']),
+            (u'DATABASE_PORT',botsglobal.settings.DATABASES['default']['PORT']),
+            (u'DATABASE_OPTIONS',botsglobal.settings.DATABASES['default']['OPTIONS']),
             ]
-
 #**********************************************************/**
 #**************getters/setters for some globals***********************/**
 #**********************************************************/**
