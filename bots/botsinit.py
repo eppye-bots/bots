@@ -186,10 +186,12 @@ def connect():
         import psycopg2.extensions
         import psycopg2.extras
         psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-        botsglobal.db = psycopg2.connect( 'host=%s dbname=%s user=%s password=%s'%( botsglobal.settings.DATABASES['default']['HOST'],
-                                                                                    botsglobal.settings.DATABASES['default']['NAME'],
-                                                                                    botsglobal.settings.DATABASES['default']['USER'],
-                                                                                    botsglobal.settings.DATABASES['default']['PASSWORD']),connection_factory=psycopg2.extras.DictConnection)
+        botsglobal.db = psycopg2.connect(host=botsglobal.settings.DATABASES['default']['HOST'],
+                                        port=botsglobal.settings.DATABASES['default']['PORT'],
+                                        database=botsglobal.settings.DATABASES['default']['NAME'],
+                                        user=botsglobal.settings.DATABASES['default']['USER'],
+                                        password=botsglobal.settings.DATABASES['default']['PASSWORD'],
+                                        connection_factory=psycopg2.extras.DictConnection)
         botsglobal.db.set_client_encoding('UNICODE')
     else:
         raise botslib.PanicError(u'Unknown database engine "%s".'%(botsglobal.settings.DATABASES['default']['ENGINE']))
