@@ -315,7 +315,7 @@ class Inmessage(message.Message):
             is used in splitting edi-messages.'''
         classtocall = globals()[self.__class__.__name__]
         messagefromenvelope = classtocall(ta_info)
-        messagefromenvelope.root = node_instance
+        messagefromenvelope.root = inode
         return messagefromenvelope
 
 
