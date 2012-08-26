@@ -50,12 +50,12 @@ def run(idchannel,command,idroute=''):
 
         try:
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
-        except ImportError:       #script is not there; other errors like syntax errors are not catched
+        except ImportError:       #communicationscript is not there; other errors like syntax errors are not catched
             userscript = scriptname = None
         #get the communication class to use:
-        if userscript and hasattr(userscript,channeldict['type']):          #check communication class in user script (sub classing)
+        if userscript and hasattr(userscript,channeldict['type']):          #check communication class in userscript (sub classing)
             classtocall = getattr(userscript,channeldict['type'])
-        elif userscript and hasattr(userscript,'UserCommunicationClass'):   #check for communication class called 'UserCommunicationClass' in user script. 20110920: Obsolete, depreciated. Keep this for now.
+        elif userscript and hasattr(userscript,'UserCommunicationClass'):   #check for communication class called 'UserCommunicationClass' in userscript. 20110920: Obsolete, depreciated. Keep this for now.
             classtocall = getattr(userscript,'UserCommunicationClass')
         else:
             classtocall = globals()[channeldict['type']]                    #get the communication class from this module
@@ -202,7 +202,7 @@ class _comsession(object):
                     #set Message-ID
                     reference = email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
                     message.add_header('Message-ID',reference)
-                    ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use correct & updated ta_to in user script)
+                    ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use correct & updated ta_to in userscript)
 
                     #set date-time stamp
                     message.add_header("Date",email.Utils.formatdate(localtime=True))
@@ -1337,11 +1337,10 @@ class xmlrpc(_comsession):
         '''
         for row in botslib.query('''SELECT idta,filename,charset,rsrv4
                                     FROM ta
-                                    WHERE tochannel=%(tochannel)s
-                                      AND status=%(status)s
-                                      AND statust=%(statust)s
-                                      AND idta>%(rootidta)s
-                                        ''',
+                                    WHERE idta>%(rootidta)s
+                                    AND status=%(status)s
+                                    AND statust=%(statust)s
+                                    AND tochannel=%(tochannel)s ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
                                     'status':FILEOUT,'statust':OK}):
             try:
@@ -1395,39 +1394,39 @@ class xmlrpc(_comsession):
 
 class db(_comsession):
     ''' communicate with a database; directly read or write from a database.
-        the user HAS to provide a script file in usersys/communicationscripts that does the actual import/export using **some** python database library.
-        the user script file should contain:
+        the user HAS to provide a userscript file in usersys/communicationscripts that does the actual import/export using **some** python database library.
+        the userscript file should contain:
         - connect
         - (for incoming) incommunicate
         - (for outgoing) outcommunicate
         - disconnect
         Other parameters are passed, use them for your own convenience.
-        Bots 'pickles' the results returned from the user scripts (and unpickles for the translation).
+        Bots 'pickles' the results returned from the userscript (and unpickles for the translation).
     '''
     def connect(self):
         if self.userscript is None:
             raise ImportError(_(u'Channel "%s" is type "db", but no communicationscript exists.'%self.channeldict['idchannel']))
-        #check functions bots assumes to be present in user script:
+        #check functions bots assumes to be present in userscript:
         if not hasattr(self.userscript,'connect'):
-            raise botslib.ScriptImportError(_(u'No function "connect" in imported script "$script".'),script=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "connect" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
         if self.channeldict['inorout'] == 'in' and not hasattr(self.userscript,'incommunicate'):
-            raise botslib.ScriptImportError(_(u'No function "incommunicate" in imported script "$script".'),script=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "incommunicate" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
         if self.channeldict['inorout'] == 'out' and not hasattr(self.userscript,'outcommunicate'):
-            raise botslib.ScriptImportError(_(u'No function "outcommunicate" in imported script "$script".'),script=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "outcommunicate" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
         if not hasattr(self.userscript,'disconnect'):
-            raise botslib.ScriptImportError(_(u'No function "disconnect" in imported script "$script".'),script=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "disconnect" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
 
         self.dbconnection = botslib.runscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict)
 
     @botslib.log_session
     def incommunicate(self):
         ''' read data from database.
-            user script should return a 'db_objects'.
+            userscript should return a 'db_objects'.
             This can be one edi-message or several edi-messages.
             if a list or tuple is passed: each element of list/tuple is treated as seperate edi-message.
             if this is None, do nothing
             if this is a list/tuple, each member of the list is send as a separate 'message'
-            if you want all information from user script to be passed as one edi message: pass as dict, eg {'data': <list of queries>}
+            if you want all information from userscript to be passed as one edi message: pass as dict, eg {'data': <list of queries>}
         '''
         db_objects = botslib.runscript(self.userscript,self.scriptname,'incommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection)
         if not db_objects:      #there should be a useful db_objects; if not just return (do nothing)
@@ -1466,10 +1465,8 @@ class db(_comsession):
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
                                     AND statust=%(statust)s
-                                    AND tochannel=%(tochannel)s
-                                        ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
-                                    'status':FILEOUT,'statust':OK}):
+                                    AND tochannel=%(tochannel)s ''',
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
@@ -1492,21 +1489,21 @@ class db(_comsession):
 
 class communicationscript(_comsession):
     """
-    For running an (user maintained) communication script.
+    For running an userscript for communication.
     Examples of use:
     - call external communication program
     - call external program that extract messages from ERP-database
     - call external program that imports messages in ERP system
     - communication method not available in Bots ***or use sub-classing for this***
     - specialised I/O wishes; eg specific naming of output files. (eg including partner name) ***beter: use sub-classing or have more user exits***
-    place of communication scripts: bots/usersys/communicationscripts
-    name of communication script: same name as channel (the channelID)
-    in this communication script some functions will be called:
+    place of communicationscript: bots/usersys/communicationscripts
+    name of communicationscript: same name as channel (the channelID)
+    in this communicationscript some functions will be called:
     -   connect (required)
     -   main (optional, 'main' should handle files one by one)
     -   disconnect  (required)
     arguments: dict 'channel' which has all channel attributes
-    more parameters/data for communication script:   hard code this in communication script; or use bots.ini
+    more parameters/data for communicationscript:   hard code this in communicationscript; or use bots.ini
     Different ways of working:
     1. for incoming files (bots receives the files):
         1.1 connect puts all files in a directory, there is no 'main' function. bots can remove the files (if you use the 'remove' switch of the channel).
@@ -1523,7 +1520,7 @@ class communicationscript(_comsession):
     @botslib.log_session
     def incommunicate(self):
         startdatetime = datetime.datetime.now()
-        if hasattr(self.userscript,'main'): #process files one by one; script has to be a generator
+        if hasattr(self.userscript,'main'): #process files one by one; communicationscript has to be a generator
             for fromfilename in botslib.runscriptyield(self.userscript,self.scriptname,'main',channeldict=self.channeldict):
                 try:
                     ta_from = botslib.NewTransaction(filename = fromfilename,
@@ -1552,7 +1549,7 @@ class communicationscript(_comsession):
                 finally:
                     if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                         break
-        else:   #all files have been set ready by external script using 'connect'.
+        else:   #all files have been set ready by external communicationscript using 'connect'.
             frompath = botslib.join(self.channeldict['path'], self.channeldict['filename'])
             for fromfilename in [c for c in glob.glob(frompath) if os.path.isfile(c)]:
                 try:

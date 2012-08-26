@@ -63,7 +63,7 @@ class Outmessage(message.Message):
                 If part not as a node:
                     append new node to tree;
                     recursively append next parts to tree
-        After the mapping-script is finished, the resulting tree is converted to records (self.records).
+        After the mappingscript is finished, the resulting tree is converted to records (self.records).
         These records are written to file.
         Structure of self.records:
             list of record;
@@ -79,7 +79,7 @@ class Outmessage(message.Message):
     '''
     def __init__(self,ta_info):
         self.ta_info = ta_info
-        self.root = node.Node({})         #message tree; build via put()-interface in mapping-script. Initialise with empty dict
+        self.root = node.Node({})         #message tree; build via put()-interface in mappingscript. Initialise with empty dict
         super(Outmessage,self).__init__()
 
     def outmessagegrammarread(self,editype,messagetype):
@@ -90,7 +90,7 @@ class Outmessage(message.Message):
         #~ self.defmessage.display(self.defmessage.structure)
         #~ print 'self.ta_info',self.ta_info
         #~ print 'self.defmessage.syntax',self.defmessage.syntax
-        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by mapping script
+        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by mappingscript
         if self.ta_info['topartner']:   #read syntax-file for partner dependent syntax
             try:
                 partnersyntax = grammar.syntaxread('partners',editype,self.ta_info['topartner'])
@@ -742,7 +742,7 @@ class template(Outmessage):
     class TemplateData(object):
         pass
     def __init__(self,ta_info):
-        self.data = template.TemplateData() #self.data is used by mapping script as container for content
+        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
         super(template,self).__init__(ta_info)
 
     def writeall(self):
@@ -784,7 +784,7 @@ class templatehtml(Outmessage):
     class TemplateData(object):
         pass
     def __init__(self,ta_info):
-        self.data = template.TemplateData() #self.data is used by mapping script as container for content
+        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
         super(templatehtml,self).__init__(ta_info)
 
     def writeall(self):

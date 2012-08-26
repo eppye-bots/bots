@@ -38,7 +38,6 @@ def startmulti(grammardir,editype):
         try:
             grammar.grammarread(editype,filename_noextension)
         except:
-            #~ print 'Found error in grammar:',filename
             print botslib.txtexc()
             print '\n'
         else:
@@ -80,8 +79,7 @@ def start():
         botsinit.initenginelogging()
         grammar.grammarread(editype,messagetype)
     except:
-        print 'Found error in grammar:'
-        print botslib.txtexc()
+        print 'Found error in grammar: ',botslib.txtexc()
     else:
         print 'OK - no error found in grammar'
 

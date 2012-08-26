@@ -29,7 +29,7 @@ class Node(object):
 
     def display(self,level=0):
         '''for debugging
-            usage eg in mapping script:     inn.root.display()
+            usage eg in mappingscript:     inn.root.display()
         '''
         if level == 0:
             print 'displaying all nodes in node tree:'
@@ -70,7 +70,7 @@ class Node(object):
 
     def displayqueries(self,level=0):
         '''for debugging
-            usage: in mapping script:     inn.root.displayqueries()
+            usage: in mappingscript:     inn.root.displayqueries()
         '''
         if level == 0:
             print 'displaying queries for nodes in tree'
@@ -498,7 +498,7 @@ class Node(object):
         return node2compare.get(*self.comparekey)
 
     def sort(self,*mpaths):
-        ''' sort nodes. eg in mapping script:     inn.sort({'BOTSID':'UNH'},{'BOTSID':'LIN','C212.7140':None})
+        ''' sort nodes. eg in mappingscript:     inn.sort({'BOTSID':'UNH'},{'BOTSID':'LIN','C212.7140':None})
             This will sort the LIN segments by article number.
         '''
         self.comparekey = mpaths[1:]
@@ -506,7 +506,7 @@ class Node(object):
 
     def stripnode(self):
         ''' removes spaces from all fields in tree.
-            used in alt translations where a dict is returned by mapping-script indicating the out-tree should be used as inn.
+            used in alt translations where a dict is returned by mappingscript indicating the out-tree should be used as inn.
             the out-tree has been formatted already, this is not OK for fixed formats (idoc!)
         '''
         if self.record is not None:

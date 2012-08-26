@@ -242,7 +242,7 @@ class translate(models.Model):
     alt = StripCharField(max_length=35,null=False,blank=True,verbose_name=_(u'Alternative translation'),help_text=_(u'Do this translation only for this alternative translation.'))
     frompartner = models.ForeignKey(partner,related_name='tfrompartner',null=True,blank=True,on_delete=models.PROTECT,help_text=_(u'Do this translation only for this frompartner.'))
     topartner = models.ForeignKey(partner,related_name='ttopartner',null=True,blank=True,on_delete=models.PROTECT,help_text=_(u'Do this translation only for this topartner.'))
-    tscript = StripCharField(max_length=35,help_text=_(u'User mapping script to use for translation.'))
+    tscript = StripCharField(max_length=35,help_text=_(u'User mappingscript to use for translation.'))
     toeditype = StripCharField(max_length=35,choices=EDITYPES,help_text=_(u'Editype to translate to.'))
     tomessagetype = StripCharField(max_length=35,help_text=_(u'Messagetype to translate to.'))
     desc = models.TextField(max_length=256,null=True,blank=True)
@@ -265,9 +265,9 @@ class routes(models.Model):
     tochannel = models.ForeignKey(channel,related_name='rtochannel',null=True,on_delete=models.SET_NULL,blank=True,verbose_name=_(u'outgoing channel'),limit_choices_to = {'inorout': 'out'})
     toeditype = StripCharField(max_length=35,choices=EDITYPES,blank=True,help_text=_(u'Only edi files with this editype to this outgoing channel.'))
     tomessagetype = StripCharField(max_length=35,blank=True,help_text=_(u'Only edi files of this messagetype to this outgoing channel.'))
-    alt = StripCharField(max_length=35,default=u'',blank=True,verbose_name='Alternative translation',help_text=_(u'Only use if there is more than one "translation" for the same editype and messagetype. Advanced use, seldom needed.'))
-    frompartner = models.ForeignKey(partner,related_name='rfrompartner',null=True,on_delete=models.SET_NULL,blank=True,help_text=_(u'The frompartner of the incoming edi files. Seldom needed.'))
-    topartner = models.ForeignKey(partner,related_name='rtopartner',null=True,on_delete=models.SET_NULL,blank=True,help_text=_(u'The topartner of the incoming edi files. Seldom needed.'))
+    alt = StripCharField(max_length=35,default=u'',blank=True,verbose_name='Alternative translation',help_text=_(u'Only use if there is more than one "translation" for the same editype and messagetype.'))
+    frompartner = models.ForeignKey(partner,related_name='rfrompartner',null=True,on_delete=models.SET_NULL,blank=True,help_text=_(u'The frompartner of the incoming edi files.'))
+    topartner = models.ForeignKey(partner,related_name='rtopartner',null=True,on_delete=models.SET_NULL,blank=True,help_text=_(u'The topartner of the incoming edi files.'))
     frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Only edi files from this partner/partnergroup for this outgoing channel'))
     topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Only edi files to this partner/partnergroup to this channel'))
     testindicator = StripCharField(max_length=1,blank=True,help_text=_(u'Only edi files with this testindicator to this outgoing channel.'))
@@ -386,7 +386,7 @@ class ta(models.Model):
     frommail = StripCharField(max_length=256)
     tomail = StripCharField(max_length=256)
     charset = StripCharField(max_length=35)
-    statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module
+    statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module #20120826: use for rootidta
     retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
     errortext = models.TextField()

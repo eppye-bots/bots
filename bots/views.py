@@ -523,10 +523,9 @@ def runengine(request,*kw,**kwargs):
             botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
             terug = subprocess.Popen(lijst).pid
             messages.add_message(request, messages.INFO, _(u'Bots-engine is started.'))
-        except:
-            txt =  botslib.txtexc()
-            messages.add_message(request, messages.INFO, _(u'Errors while trying to run bots-engine.'))
-            botsglobal.logger.info(_(u'Errors while trying to run bots-engine:\n%s.'),txt)
+        except Exception,msg:
+            messages.add_message(request, messages.INFO, _(u'Errors while trying to run bots-engine: "%s".')%msg)
+            botsglobal.logger.info(_(u'Errors while trying to run bots-engine:\n%s.'),msg)
     return django.shortcuts.redirect('/home')
 
 def sendtestmailmanagers(request,*kw,**kwargs):

@@ -27,13 +27,13 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
         get edifiles to be translated, than:
         -   read, lex, parse, make tree of nodes.
         -   split up files into messages (using 'nextmessage' of grammar); if no splitting: edifile is one message.
-        -   get translation script, start translation script.
+        -   get mappingscript, start mappingscript.
         -   write the results of translation (no enveloping yet)
         status: FILEIN--PARSED-<SPLITUP--TRANSLATED
     '''
-    try:
+    try:    #see if there is a userscript that can determine the translation
         userscript,scriptname = botslib.botsimport('mappings','translation')
-    except ImportError:       #script is not there; other errors like syntax errors are not catched
+    except ImportError:       #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
     #select edifiles to translate; fill ta-object
     for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,rsrv2
@@ -63,9 +63,9 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                 try:
                     #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
-                    inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in user script; used to give idta of 'confirming message'
+                    inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
                     while 1:    #continue as long as there are (alt-)translations
-                        #***lookup the translation: t(ranslation)script, tomessagetype, toeditype**********************
+                        #***lookup the translation: mappingscript, tomessagetype, toeditype**********************
                         for tscript,tomessagetype,toeditype in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
                                                     FROM    translate
                                                     WHERE   frommessagetype = %(frommessagetype)s
@@ -105,14 +105,14 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message
                         filename_translated = str(ta_translated.idta)
                         out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
-                        botsglobal.logger.debug(u'script "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn_splitup.ta_info['messagetype'],out_translated.ta_info['messagetype'])
-                        translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mapping-script
+                        botsglobal.logger.debug(u'Mappingscript "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn_splitup.ta_info['messagetype'],out_translated.ta_info['messagetype'])
+                        translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mappingscript
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
-                        botsglobal.logger.debug(u'script "%s" finished.',tscript)
+                        botsglobal.logger.debug(u'Mappingscript "%s" finished.',tscript)
                         if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
                             out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
-                        if out_translated.ta_info['statust'] == DONE:    #if indicated in user script the message should be discarded
-                            botsglobal.logger.debug(u'No output file because mapping script explicitly indicated this.')
+                        if out_translated.ta_info['statust'] == DONE:    #if indicated in mappingscript the message should be discarded
+                            botsglobal.logger.debug(u'No output file because mappingscript explicitly indicated this.')
                             out_translated.ta_info['filename'] = ''
                             out_translated.ta_info['status'] = DISCARD
                         else:
@@ -129,28 +129,28 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         elif isinstance(doalttranslation,dict):
                             #some extended cases; a dict is returned that contains 'instructions'
                             if 'type' not in doalttranslation:
-                                raise botslib.BotsError("Mapping script returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                                raise botslib.BotsError("Mappingscript returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
                             if doalttranslation['type'] == u'out_as_inn':
                                 if 'alt' not in doalttranslation:
-                                    raise botslib.BotsError("Mapping script returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                                    raise botslib.BotsError("Mappingscript returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
                                 inn_splitup = out_translated
                                 if isinstance(inn_splitup,outmessage.fixed):
                                     inn_splitup.root.stripnode()
-                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chainded translation
+                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
                                 inn_splitup.ta_info.pop('statust')
                         else:
                             del out_translated
-                            inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chainded translation
+                            inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chained translation
                     #end of while-loop (trans**********************************************************************************
                     #~ del inn_splitup
-                #exceptions file_out-level: exception in mapping script or writing of out-file
+                #exceptions file_out-level: exception in mappingscript or writing of out-file
                 except:
-                    #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mapping script/outfile only affect that branche 
+                    #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mappingscript/outfile only affect that branche 
                     txt = botslib.txtexc()
-                    ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by script. Is this useful?
+                    ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
                     ta_splitup.deletechildren()
                 else:
-                    ta_splitup.update(statust=DONE,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by script. Is this useful?
+                    ta_splitup.update(statust=DONE,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
                     
 
         #exceptions file_in-level

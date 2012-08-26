@@ -3,7 +3,6 @@ import sys
 import os
 import codecs
 import traceback
-import subprocess
 import socket   #to set a time-out for connections
 import string
 import urlparse
@@ -373,8 +372,6 @@ def checkunique(domein, receivednumber):
         cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
         expectednumber = 1
     if expectednumber == receivednumber:
-        #~ if expectednumber > sys.maxint-2:
-            #~ nummer = 1
         cursor.execute(u'''UPDATE uniek SET nummer=nummer+1 WHERE domein=%(domein)s''',{'domein':domein})
         terug = True
     else:
@@ -391,8 +388,8 @@ def sendbotserrorreport(subject,reporttext):
         from django.core.mail import mail_managers
         try:
             mail_managers(subject, reporttext)
-        except:
-            botsglobal.logger.debug(u'Error in sending error report: %s',txtexc())
+        except Exception,msg:
+            botsglobal.logger.debug(u'Error in sending error report: %s',msg)
 
 def log_session(func):
     ''' used as decorator.
@@ -489,7 +486,7 @@ def botsimport(soort,modulename):
             raise ScriptImportError(_(u'import error in "$module", error:\n$txt'),module=modulefile,txt=txt)
     except:             #other errors
         txt = txtexc()
-        raise ScriptImportError(_(u'import error in "$module", error:\n$txt'),module=modulefile,txt=txt)
+        raise ScriptImportError(_(u'Error in "$module", error:\n$txt'),module=modulefile,txt=txt)
     else:
         botsglobal.logger.debug(u'import "%s".',modulefile)
         return module,modulefile
@@ -546,16 +543,16 @@ def readdata(filename,charset=None,errors='strict'):
 #*************************calling modules, programs***********************/**
 #**********************************************************/**
 def runscript(module,modulefile,functioninscript,**argv):
-    ''' Execute user script. Functioninscript is supposed to be there; if not AttributeError is raised.
+    ''' Execute userscript. Functioninscript is supposed to be there; if not AttributeError is raised.
         Often is checked in advance if Functioninscript does exist.
     '''
-    botsglobal.logger.debug(u'run user script "%s" in "%s".',functioninscript,modulefile)
+    botsglobal.logger.debug(u'run userscript "%s" in "%s".',functioninscript,modulefile)
     functiontorun = getattr(module, functioninscript)
     try:
         return functiontorun(**argv)
     except:
         txt = txtexc()
-        raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
+        raise ScriptError(_(u'Userscript "$filename": "$txt".'),filename=modulefile,txt=txt)
 
 def tryrunscript(module,modulefile,functioninscript,**argv):
     if module and hasattr(module,functioninscript):
@@ -564,7 +561,7 @@ def tryrunscript(module,modulefile,functioninscript,**argv):
     return False
 
 def runscriptyield(module,modulefile,functioninscript,**argv):
-    botsglobal.logger.debug(u'run user (yield) script "%s" in "%s".',functioninscript,modulefile)
+    botsglobal.logger.debug(u'run userscript "%s" in "%s".',functioninscript,modulefile)
     functiontorun = getattr(module, functioninscript)
     try:
         for result in functiontorun(**argv):
@@ -572,15 +569,6 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
     except:
         txt = txtexc()
         raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
-
-def runexternprogram(*args):
-    botsglobal.logger.debug(u'run external program "%s".',args)
-    path = os.path.dirname(args[0])
-    try:
-        subprocess.call(list(args),cwd=path)
-    except:
-        txt = txtexc()
-        raise OSError(_(u'error running extern program "%(program)s", error:\n%(error)s'%{'program':args,'error':txt}))
 
 #**********************************************************/**
 #***************###############  codecs   #############
@@ -713,7 +701,7 @@ class MessageError(BotsError):
     pass
 class MappingRootError(BotsError):
     pass
-class MappingFormatError(BotsError):   #mpath is not valid; mapth will mostly come from mapping-script
+class MappingFormatError(BotsError):   #mpath is not valid; mapth will mostly come from mappingscript
     pass
 class OutMessageError(BotsError):
     pass
@@ -723,9 +711,9 @@ class PersistError(BotsError):
     pass
 class PluginError(BotsError):
     pass
-class ScriptImportError(BotsError):    #can not find script; not for errors in a script
+class ScriptImportError(BotsError):    #can not find userscript; not for errors in a userscript
     pass
-class ScriptError(BotsError):          #runtime errors in a script
+class ScriptError(BotsError):          #runtime errors in a userscript
     pass
 class TraceError(BotsError):
     pass

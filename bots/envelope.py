@@ -116,7 +116,7 @@ def envelope(ta_info,ta_list):
         3. if editype is a class in this module, use it
         4. if user defined enveloping in usersys/envelope/<editype>/<envelope>.<envelope>, use it (user defined scripting overrides)
 
-        Always check if user envelope script. user exits extends/replaces default enveloping.
+        Always check if user envelopescript. user exits extends/replaces default enveloping.
     '''
     #determine which class to use for enveloping
     userscript = scriptname = None
@@ -125,7 +125,7 @@ def envelope(ta_info,ta_list):
     else:
         try:    #see if the is user scripted enveloping
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'] + '.' + ta_info['envelope'])
-        except ImportError:     #script is not there; other errors like syntax errors are not catched
+        except ImportError:     #envelopescript is not there; other errors like syntax errors are not catched
             pass
         #first: check if there is a class with name ta_info['envelope'] in the user scripting
         #this allows complete enveloping in user scripting

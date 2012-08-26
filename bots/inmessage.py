@@ -283,7 +283,7 @@ class Inmessage(message.Message):
                 elif kriterium != oldkriterium:
                     ta_info = self.ta_info.copy()
                     ta_info.update(oldline.queries)        #update ta_info with information (from previous line) 20100905
-                    #~ ta_info['botsroot']=self.root   #give mapping script access to all information in edi file: all records
+                    #~ ta_info['botsroot']=self.root   #give mappingscript access to all information in edi file: all records
                     yield self._getmessagefromenvelope(newroot,ta_info)
                     newroot = node.Node()  #make new empty root node.
                     oldkriterium = kriterium
@@ -307,7 +307,7 @@ class Inmessage(message.Message):
                 for child in self.root.children:
                     ta_info = self.ta_info.copy()
                     ta_info.update(child.queries)
-                    #~ ta_info['botsroot']=self.root   #give mapping script access to all information in edi file: all roots
+                    #~ ta_info['botsroot']=self.root   #give mappingscript access to all information in edi file: all roots
                     yield self._getmessagefromenvelope(child,ta_info)
                     
     def _getmessagefromenvelope(self,inode,ta_info):
@@ -605,7 +605,7 @@ class edifact(var):
         except LookupError:
             raise botslib.InMessageError(_(u'Incoming edifact file has unknown charset "$charset".'),charset=self.ta_info['charset'])
         except UnicodeDecodeError, msg:
-            raise botslib.InMessageError(_(u'Not allowed chars in incoming edi file (for translation) at/after filepos: $content'),content=msg[2])
+            raise botslib.InMessageError(_(u'Not allowed chars in incoming edi file at/after filepos: $content'),content=msg[2])
 
     def checkenvelope(self):
         self.confirmationlist = []              #information about the edifact file for confirmation/CONTRL; for edifact this is done per interchange (UNB-UNZ)
@@ -1085,7 +1085,7 @@ class database(jsonnocheck):
 
 class db(Inmessage):
     ''' For database connector.
-        the database-object is unpickled, and passed to the mapping script.
+        the database-object is unpickled, and passed to the mappingscript.
     '''
     def initfromfile(self):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
@@ -1098,7 +1098,7 @@ class db(Inmessage):
 
 
 class raw(Inmessage):
-    ''' the file object is just read and passed to the mapping script.
+    ''' the file object is just read and passed to the mappingscript.
     '''
     def initfromfile(self):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])

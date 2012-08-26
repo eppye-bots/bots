@@ -74,23 +74,23 @@ class new(object):
     @botslib.log_session
     def router(self,routedict):
         ''' communication.run one route. variants:
-            -   a route can be just script;
+            -   a route can be a userscript;
             -   a route can do only incoming
             -   a route can do only outgoing
             -   a route can do both incoming and outgoing
-            -   at several points functions from a route script are called - if function is in route script
+            -   at several points functions from a routescript are called - if function is in routescript
         '''
-        #is there a user route script?
+        #is there a user routescript?
         try:
             userscript,scriptname = botslib.botsimport('routescripts',routedict['idroute'])
-        except ImportError:      #script is not there; other errors like syntax errors are not catched
+        except ImportError:      #routescript is not there; other errors like syntax errors are not catched
             userscript = scriptname = None
 
-        #if user route script has function 'main': communication.run 'main' (and do nothing else)
+        #if routescript has function 'main': communication.run 'main' (and do nothing else)
         if botslib.tryrunscript(userscript,scriptname,'main',routedict=routedict):
             return  #so: if function ' main' : communication.run only the routescript, nothing else.
         if not (userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']):
-            raise botslib.ScriptError(_(u'Route "$route" is empty: no script, not enough parameters.'),route=routedict['idroute'])
+            raise botslib.ScriptError(_(u'Route "$route" is empty: no routescript, not enough parameters.'),route=routedict['idroute'])
 
         botslib.tryrunscript(userscript,scriptname,'start',routedict=routedict)
 

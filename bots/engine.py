@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-''' This script starts bots-engine.'''
+''' Starts bots-engine.'''
 import sys
 import os
 import atexit
@@ -7,7 +7,7 @@ import traceback
 import datetime
 import logging
 logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line.
-                                #it is better to have a missing log line than an error in a translation....
+                                #it is better to have a missing log line than an error.
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
@@ -25,7 +25,7 @@ def showusage():
     Usage:
         %(name)s  [run-options] [config-option] [routes]
 
-    Run-options (can be combined, except for crashrecovery):
+    Run-options (can be combined):
         --new                receive new edi files (default: if no run-option given: run as new).
         --resend             resend as indicated by user.
         --rereceive          rereceive as indicated by user.
@@ -85,21 +85,22 @@ def start():
     else:
         atexit.register(logging.shutdown)
 
-    for key,value in botslib.botsinfo():    #log start info
+    for key,value in botslib.botsinfo():    #log info about environement, versions, etc
         botsglobal.logger.info(u'%s: "%s".',key,value)
+        
     #**************connect to database**********************************
     try:
         botsinit.connect()
-    except:
-        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py.'))
+    except Exception,msg:
+        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%s".'),msg)
         sys.exit(1)
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
-    #initialise user exits for the whole bots-engine (this script file)
+    #initialise user exits for the whole bots-engine
     try:
         userscript,scriptname = botslib.botsimport('routescripts','botsengine')
-    except ImportError:      #script is not there; other errors like syntax errors are not catched
+    except ImportError:      #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
 
     #**************handle database lock****************************************
@@ -182,7 +183,8 @@ def start():
             botsglobal.logger.info('database is not locked, engine is run with "crashrecovery"; as this is not usefull no crashrecovery is done.')
             commandstorun.remove('crashrecovery')
             botslib.remove_database_lock()
-            sys.exit(0)
+            if not commandstorun:
+                sys.exit(0)
     
     #**************run the routes**********************************************
     #commandstorun determines the type(s) of run. eg: ['--automaticretrycommunication','--new']
@@ -220,8 +222,8 @@ def start():
             if userscript and hasattr(userscript,'post' + command):
                 botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
         if cleanupcommand or botsglobal.ini.get('settings','whencleanup','always')=='always':
-            botsglobal.logger.debug(u'Do cleanup.')
             cleanup.cleanup()
+            botsglobal.logger.info(u'Done cleanup.')
         botslib.remove_database_lock()
     except Exception,msg:
         botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(msg))    #of course this 'should' not happen.
