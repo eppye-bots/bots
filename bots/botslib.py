@@ -184,7 +184,7 @@ class NewProcess(NewTransaction):
         Each process is placed on stack processlist
     '''
     def __init__(self,functionname=''):
-        super(NewProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid())
+        super(NewProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid(),statuse=get_minta4query())
         _Transaction.processlist.append(self.idta)
 
     def update(self,**ta_info):

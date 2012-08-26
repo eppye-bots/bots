@@ -18,8 +18,8 @@ def cleanup():
         _cleandatafile()
         _cleanarchive()
         _cleanpersist()
-        _cleantransactions()
         _cleanprocessnothingreceived()
+        _cleantransactions()
     except:
         botsglobal.logger.exception(u'Cleanup error.')
 
@@ -98,20 +98,7 @@ def _cleantransactions():
 
 def _cleanprocessnothingreceived():
     ''' delete all --new runs that received no files; including all process under the run
-        processes are organised as trees, so recursive.
     '''
-    def core(idta):
-        #select db-ta's referring to this db-ta
-        for row in botslib.query('''SELECT idta
-                                    FROM  ta
-                                    WHERE idta > %(idta)s
-                                    AND script=%(idta)s''',
-                                    {'idta':idta}):
-            core(row['idta'])
-        ta_object = botslib.OldTransaction(idta)
-        ta_object.delete()
-        return
-    #select root-processes older than hoursnotrefferedarekept
     vanaf = datetime.datetime.today() - datetime.timedelta(hours=botsglobal.ini.getint('settings','hoursrunwithoutresultiskept',1))
     for row in botslib.query('''SELECT idta
                                 FROM report
@@ -119,6 +106,5 @@ def _cleanprocessnothingreceived():
                                 AND lastreceived=0
                                 AND ts < %(vanaf)s''',
                                {'vanaf':vanaf}):
-        core(row['idta'])
-        #delete report
         botslib.change('''DELETE FROM report WHERE idta=%(idta)s ''',{'idta':row['idta']})
+        botslib.change('''DELETE FROM ta WHERE idta>%(idta)s AND statuse=%(idta)s''',{'idta':row['idta']})
