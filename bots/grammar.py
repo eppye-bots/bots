@@ -419,6 +419,8 @@ class csv(Grammar):
         'triad':'',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         }
+class excel(csv):
+    pass
 class fixed(Grammar):
     formatconvert = {
         'A':'A',        #alfanumerical

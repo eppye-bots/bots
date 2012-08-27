@@ -53,7 +53,7 @@ class Inmessage(message.Message):
         ''' initialisation from a edi file '''
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])  #read grammar, after sniffing. Information from sniffing can be used (eg name editype for edifact, using version info from UNB)
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set
-        self.ta_info['charset'] =self.defmessage.syntax['charset']      #always use charset of edi file.
+        self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
         self._readcontent_edifile()
         self._sniff()           #some hard-coded parsing of edi file; eg ta_info can be overruled by syntax-parameters in edi-file
         #start lexing and parsing
@@ -535,6 +535,90 @@ class csv(var):
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
             for record in self.records:
                 record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: False}]
+
+class excel(csv):
+    def initfromfile(self):
+        ''' initialisation from an excel file.
+            file is first converted to csv using python module xlrd
+        '''
+        try:
+            self.xlrd = __import__('xlrd')
+        except ImportError:
+            raise ImportError(_(u'Dependency failure: editype "excel" requires python library "xlrd".'))
+        import csv
+        import StringIO
+        
+        self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])  #read grammar, after sniffing. Information from sniffing can be used (eg name editype for edifact, using version info from UNB)
+        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set
+        self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
+        if self.ta_info['escape']:
+            doublequote = False
+        else:
+            doublequote = True
+        
+        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        #xlrd reads excel file; python's csv modules write this to file-like StringIO (as utf-8); read StringIO as self.rawinput; decode this (utf-8->unicode)
+        infilename = botslib.abspathdata(self.ta_info['filename'])
+        try:
+            xlsdata = self.read_xls(infilename)
+        except:
+            txt = botslib.txtexc()
+            botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error:\n%s'),txt)
+            raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error:\n$error'),error=txt)
+        rawinputfile = StringIO.StringIO()
+        csvout = csv.writer(rawinputfile, quotechar=self.ta_info['quote_char'], delimiter=self.ta_info['field_sep'], doublequote=doublequote, escapechar=self.ta_info['escape'])
+        csvout.writerows( map(self.utf8ize, xlsdata) )
+        rawinputfile.seek(0)
+        self.rawinput = rawinputfile.read()
+        rawinputfile.close()
+        self.rawinput = self.rawinput.decode('utf-8')
+        #start lexing and parsing as csv
+        self._lex()
+        if hasattr(self,'rawinput'):
+            del self.rawinput
+        self.root = node.Node()  #make root Node None.
+        self.iternextrecord = iter(self.records)
+        result = self._parse(structure_level=self.defmessage.structure,inode=self.root)
+        if result:
+            raise botslib.InMessageError(_(u'Unknown data beyond end of message; mostly problem with separators or message structure: "$content"'),content=result)
+        del self.records
+        self.checkmessage(self.root,self.defmessage)
+
+    def read_xls(self,infilename):
+        # Read excel first sheet into a 2-d array
+        book       = self.xlrd.open_workbook(infilename)
+        sheet      = book.sheet_by_index(0)
+        formatter  = lambda(t,v): self.format_excelval(book,t,v,False)
+        xlsdata = []
+        for row in range(sheet.nrows):
+            (types, values) = (sheet.row_types(row), sheet.row_values(row))
+            xlsdata.append(map(formatter, zip(types, values)))
+        return xlsdata
+    #-------------------------------------------------------------------------------
+    def format_excelval(self,book,datatype,value,wanttupledate):
+        #  Convert excel data for some data types
+        if datatype == 2:
+            if value == int(value):
+                value = int(value)
+        elif datatype == 3:
+            datetuple = self.xlrd.xldate_as_tuple(value, book.datemode)
+            value = datetuple if wanttupledate else self.tupledate_to_isodate(datetuple)
+        elif datatype == 5:
+            value = self.xlrd.error_text_from_code[value]
+        return value
+    #-------------------------------------------------------------------------------
+    def tupledate_to_isodate(self,tupledate):
+        # Turns a gregorian (year, month, day, hour, minute, nearest_second) into a
+        # standard YYYY-MM-DDTHH:MM:SS ISO date.
+        (y,m,d, hh,mm,ss) = tupledate
+        nonzero = lambda n: n != 0
+        date = "%04d-%02d-%02d"  % (y,m,d)    if filter(nonzero, (y,m,d))                else ''
+        time = "T%02d:%02d:%02d" % (hh,mm,ss) if filter(nonzero, (hh,mm,ss)) or not date else ''
+        return date+time
+    #-------------------------------------------------------------------------------
+    def utf8ize(self,l):
+        # Make string-like things into utf-8, leave other things alone
+        return [unicode(s).encode('utf-8') if hasattr(s,'encode') else s for s in l]
 
 
 class edifact(var):

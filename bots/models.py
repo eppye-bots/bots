@@ -31,6 +31,7 @@ EDITYPES = [
     ('db', _(u'db')),
     ('edifact', _(u'edifact')),
     ('email-confirmation',_(u'email-confirmation')),
+    ('excel',_(u'excel (only incoming)')),
     ('fixed', _(u'fixed')),
     ('idoc', _(u'idoc')),
     ('json', _(u'json')),

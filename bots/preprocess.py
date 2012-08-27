@@ -21,7 +21,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
     '''
     nr_files = 0
     #process all files in (status) FILEIN with statust OK
-    for row in botslib.query(u'''SELECT idta,filename,charset
+    for row in botslib.query(u'''SELECT idta,filename
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
                                 AND     status=%(status)s
@@ -259,78 +259,4 @@ def extractpdf(ta_from,endstatus,**argv):
         botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error:\n%s'),txt)
         raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error:\n$error'),error=txt)
 
-
-def extractexcel(ta_from,endstatus,**argv):
-    ''' extract excel file.
-        editype & messagetype are unchanged.
-    '''
-    #***functions used by extractexcel
-    #-------------------------------------------------------------------------------
-    def read_xls(infilename):
-        # Read excel first sheet into a 2-d array
-        book       = xlrd.open_workbook(infilename)
-        sheet      = book.sheet_by_index(0)
-        formatter  = lambda(t,v): format_excelval(book,t,v,False)
-        xlsdata = []
-        for row in range(sheet.nrows):
-            (types, values) = (sheet.row_types(row), sheet.row_values(row))
-            xlsdata.append(map(formatter, zip(types, values)))
-        return xlsdata
-    #-------------------------------------------------------------------------------
-    def dump_csv(xlsdata, tofilename):
-        stream = botslib.opendata(tofilename, 'wb')
-        csvout = csv.writer(stream, quotechar=quotechar, delimiter=field_sep, doublequote=doublequote, escapechar=escape)
-        csvout.writerows( map(utf8ize, xlsdata) )
-        stream.close()
-    #-------------------------------------------------------------------------------
-    def format_excelval(book, type, value, wanttupledate):
-        #  Clean up the incoming excel data for some data types
-        returnrow = []
-        if   type == 2:
-            if value == int(value):
-                value = int(value)
-        elif type == 3:
-            datetuple = xlrd.xldate_as_tuple(value, book.datemode)
-            value = datetuple if wanttupledate else tupledate_to_isodate(datetuple)
-        elif type == 5:
-            value = xlrd.error_text_from_code[value]
-        return value
-    #-------------------------------------------------------------------------------
-    def tupledate_to_isodate(tupledate):
-        # Turns a gregorian (year, month, day, hour, minute, nearest_second) into a
-        # standard YYYY-MM-DDTHH:MM:SS ISO date.
-        (y,m,d, hh,mm,ss) = tupledate
-        nonzero = lambda n: n != 0
-        date = "%04d-%02d-%02d"  % (y,m,d)    if filter(nonzero, (y,m,d))                else ''
-        time = "T%02d:%02d:%02d" % (hh,mm,ss) if filter(nonzero, (hh,mm,ss)) or not date else ''
-        return date+time
-    #-------------------------------------------------------------------------------
-    def utf8ize(l):
-        # Make string-like things into utf-8, leave other things alone
-        return [unicode(s).encode(charset) if hasattr(s,'encode') else s for s in l]
-    #***end functions used by extractexcel
-    import xlrd
-    import csv
-    #get parameters for csv-format; defaults are as the csv defaults (in grammar.py)
-    charset = argv.get('charset',"utf-8")
-    quotechar = argv.get('quotechar',"'")
-    field_sep = argv.get('field_sep',':')
-    escape = argv.get('escape','')
-    if escape:
-        doublequote = False
-    else:
-        doublequote = True
-    try:
-        infilename = botslib.abspathdata(ta_from.filename)
-        xlsdata = read_xls(infilename)
-        ta_to = ta_from.copyta(status=endstatus)
-        tofilename = str(ta_to.idta)
-        dump_csv(xlsdata,tofilename)
-        filesize = os.path.getsize(botslib.abspathdata(tofilename))
-        ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize) #update outmessage transaction with ta_info;
-        botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
-    except:
-        txt = botslib.txtexc()
-        botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error:\n%s'),txt)
-        raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error:\n$error'),error=txt)
 
