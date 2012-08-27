@@ -105,7 +105,7 @@ class new(object):
 
             #all received files have status FILEIN
             botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
-            if routedict['fromeditype'] == 'mailbag':               #mailbag for the route.
+            if routedict['fromeditype'] in ['mailbag','edifact','x12','tradacoms']:               #mailbag for the route.
                 preprocess.preprocess(routedict,preprocess.mailbag)
 
         #communication.run translation
@@ -173,21 +173,14 @@ class crashrecovery(new):
     def set_minta4query(self):
         ''' for crashrecovery: minta4query is the rootidta of the crashed run
         '''
-        #select the idta from the last report; this is the run just before the crashed one.
-        for row in botslib.query('''SELECT MAX(idta) as from_idta FROM report'''):
-            from_idta = row['from_idta']
-            if from_idta is None:
-                from_idta = 0
         for row in botslib.query('''SELECT MAX(idta) as crashed_idta
                                     FROM  ta
-                                    WHERE idta>%(from_idta)s
-                                    AND idta<%(max_idta)s
+                                    WHERE idta<%(max_idta)s
                                     AND script= 0 ''',
-                                    {'from_idta':from_idta,'max_idta':self.rootidta_of_current_run}):
-            crashed_idta = row['crashed_idta']
-            if crashed_idta:
+                                    {'max_idta':self.rootidta_of_current_run}):
+            if row['crashed_idta']:
                 self.crashrecoverypossible = True
-                botsglobal.minta4query = crashed_idta
+                botsglobal.minta4query = row['crashed_idta']
             else:
                 self.crashrecoverypossible = False
                 botsglobal.minta4query = 0
@@ -197,13 +190,9 @@ class crashrecovery(new):
         #check conditions from self.set_minta4query():
         if not self.crashrecoverypossible:
             return False
-        #check if the crashed run was indeed terminated not OK
         rootofcrashedrun = botslib.OldTransaction(botslib.get_minta4query())
-        rootofcrashedrun.syn('statust')
-        if rootofcrashedrun.statust == DONE:
-            return False
         rootofcrashedrun.update(statust=DONE)
-        #clean up things from crah **********************************
+        #clean up things from crash **********************************
         #delete run report
         botslib.change('''DELETE FROM report WHERE idta = %(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
         #delete file reports

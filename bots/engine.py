@@ -121,7 +121,6 @@ def start():
             #       if maxruntimeforcerecovery is not passed: do nothing
             #       if maxruntimeforcerecovery is passed: when last action is > than maxruntime: do nothing
             #       if maxruntimeforcerecovery is passed: when last action is < than maxruntime: do automatic recovery
-            #when scheduling bots it is possible that the last run is still running. Check if maxruntime has passed:
             maxruntime_is_passed = False
             maxruntime = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntime',60))
             for row in botslib.query('''SELECT ts,mutexer FROM mutex WHERE ts < %(maxruntime)s ''',{'maxruntime':maxruntime}):
@@ -130,47 +129,46 @@ def start():
                 time_of_crashed_run = row['ts']
                 is_error_email_send = row['mutexer']
                 #check when last action was performed
-                for row2 in botslib.query('''SELECT MAX(idta) as maxidta FROM ta WHERE idta IS NOT NULL'''):
+                for row2 in botslib.query('''SELECT MAX(idta) as maxidta FROM ta'''):
                     lastta = botslib.OldTransaction(row2['maxidta'])
                     lastta.syn('ts')    #get the timestamp of this run
                     time_of_last_action = lastta.ts
                     break
                 else:
                     time_of_last_action = ''
-                warn =   _(u'Bots database is locked!\n'
-                            'Possible causes:\n'
-                            '- An instance of bots-engine is still running.\n'
-                            '- The previous run of bots-engine has ended abnormally. Most likely causes: bots-engine terminated by user, system crash, power-down, etc.\n'
-                            'Advised is to check first if bots-engine is still running.\n'
-                            'If bots-engine is not running, do (via menu:Systasks) a "Run crash recovery".\n'
-                            'Time the previous run started: "%s"\n'
-                            'Time of last action in the previous run: "%s"'%(time_of_crashed_run,time_of_last_action))
-                botsglobal.logger.critical(warn)
-                #send ONE warning email.
-                if is_error_email_send != 1:
-                    botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),warn)
-                    #set indication that email to report crashed run is set
+                
+                if is_error_email_send != 1:        #send ONE warning email.
+                    mess =   _(u'Bots database is locked!\n'
+                                'Possible causes:\n'
+                                '- An instance of bots-engine is still running.\n'
+                                '- The previous run of bots-engine has ended abnormally. Most likely causes: bots-engine terminated by user, system crash, power-down, etc.\n'
+                                'Advised is to check first if bots-engine is still running.\n'
+                                'If bots-engine is not running, do (via menu:Systasks) a "Run crash recovery".\n'
+                                'Time the previous run started: "%s"\n'
+                                'Time of last action in the previous run: "%s"'%(time_of_crashed_run,time_of_last_action))
+                    botsglobal.logger.critical(mess)
+                    botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),mess)
+                    #set indication that email to report crashed run has been send
                     botslib.change('''UPDATE mutex
                                         SET mutexer=1
                                         WHERE mutexk=1 ''')
-                if botsglobal.ini.get('settings','automaticcrashrecovery','False'):
-                    do_automaticcrashrecovery = False
+                elif botsglobal.ini.get('settings','automaticcrashrecovery','False'):
+                    maxruntimeforcerecovery_is_passed = False
                     maxruntimeforcerecovery = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntimeforcerecovery',90))
                     for row3 in botslib.query('''SELECT ts,mutexer FROM mutex WHERE ts < %(maxruntimeforcerecovery)s ''',{'maxruntimeforcerecovery':maxruntimeforcerecovery}):
-                        botsglobal.logger.info('"maxruntimeforcerecovery" is passed, bots will do an automatic crash recovery.')
-                        do_automaticcrashrecovery = True
+                        maxruntimeforcerecovery_is_passed = True
                         #maxruntimeforcerecovery has passed: bots will do a forced recovery, but only
                         #if time_of_last_action is after maxruntime (when bots-engine did an action after maxruntime)
                         if time_of_last_action > maxruntime:
-                            warn =   _(u'"maxruntimeforcerecovery" is passed, but engine is still active as engine has done an action after "maxruntime".\n'
+                            mess =   _(u'"maxruntimeforcerecovery" is passed, but engine is still active as engine has done an action after "maxruntime".\n'
                                         'So nothing is done now')
-                            botsglobal.logger.critical(warn)
-                            botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),warn)
+                            botsglobal.logger.critical(mess)
+                            botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked, still action'),mess)
                             sys.exit(3)
                         else:
-                            botsglobal.logger.critical('Do a automatic crash recovery.')
+                            botsglobal.logger.critical('"maxruntimeforcerecovery" is passed, bots will do an automatic crash recovery..')
                             commandstorun.insert(0,'crashrecovery')
-                    if not do_automaticcrashrecovery:
+                    if not maxruntimeforcerecovery_is_passed:
                         botsglobal.logger.info(_(u'Database is locked; "maxruntime" is exceeded but "maxruntimeforcerecovery" is not exceeded.'))
                         sys.exit(3)
                 else:
