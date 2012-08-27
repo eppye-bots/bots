@@ -67,11 +67,11 @@ def mailbag(ta_from,endstatus,**argv):
     while (1):
         found = HEADER.search(edifile[startpos:])
         if found is None:
-            if startpos:    #ISA/UNB have been found in file; no new ISA/UNB is found. So all processing is done.
+            if startpos:    #all ISA/UNB have been found in file; no new ISA/UNB is found. So all processing is done.
                 break
             #guess if this is an xml file.....
             sniffxml = edifile[:25]
-            sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first ' real' data; some char are because of BOM, UTF-16 etc
+            sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first 'real' data; some char are because of BOM, UTF-16 etc
             if sniffxml and sniffxml[0] == '<':
                 ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag')  #make transaction for translated message; gets ta_info of ta_frommes
                 #~ ta_tomes.update(status=STATUSTMP,statust=OK,filename=ta_set_for_processing.filename,editype='xml') #update outmessage transaction with ta_info;
