@@ -207,7 +207,7 @@ class crashrecovery(new):
         #delete run report
         botslib.change('''DELETE FROM report WHERE idta = %(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
         #delete file reports
-        botslib.change('''DELETE FROM filereport WHERE reportidta = %(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
+        botslib.change('''DELETE FROM filereport WHERE idta>%(rootofcrashedrun)s AND reportidta=%(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
         #delete ta's after ERROR and OK for crashed merges
         mergedidtatodelete = set()
         for row in botslib.query('''SELECT child  FROM ta 
