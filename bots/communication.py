@@ -264,7 +264,7 @@ class _comsession(object):
                 ta_from.update(statust=DONE)
         return
 
-    def mime2file(self,fromstatus,tostatus):
+    def mime2file(self):
         ''' convert emails (mime-documents) to 'plain' files.
             from status FILEIN to FILEIN
             process emails:

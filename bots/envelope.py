@@ -174,7 +174,7 @@ class noenvelope(Envelope):
     ''' Only copies the input files to one output file.'''
     def run(self):
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
-        if len(self.ta_list) <= 1:
+        if len(self.ta_list) > 1:
             tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
             self.writefilelist(tofile)
             tofile.close()
