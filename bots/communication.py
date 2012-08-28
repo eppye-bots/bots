@@ -25,6 +25,7 @@ import email.Message
 import email.encoders
 import smtplib
 import ftplib
+import socket
 from django.utils.translation import ugettext as _
 #Bots modules
 import botslib
@@ -884,6 +885,8 @@ class smtp(_comsession):
     def disconnect(self):
         try:    #Google gives/gave error closing connection. Not a real problem.
             self.session.quit()
+        except socket.sslerror:     #for a starttls connection
+            self.session.close()
         except:
             pass
 
