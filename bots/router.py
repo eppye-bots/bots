@@ -48,7 +48,9 @@ class new(object):
                                                      topartner_tochannel_id,
                                                      testindicator,
                                                      translateind,
-                                                     defer
+                                                     defer,
+                                                     rsrv1,
+                                                     rsrv2
                                             FROM routes
                                             WHERE idroute=%(idroute)s
                                             AND   active=%(active)s
@@ -102,11 +104,15 @@ class new(object):
             where = {'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
             botslib.updateinfo(change=change,where=where)
-
             #all received files have status FILEIN
             botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
+            #some preprocessing if needed
+            if routedict['rsrv1'] == 'in_always':               #unzip incoming (non-zipped gives error).
+                preprocess.preprocess(routedict=routedict,function=preprocess.botsunzip,pass_non_zip=False)
+            elif routedict['rsrv1'] == 'in_test':               #unzip incoming if zipped.
+                preprocess.preprocess(routedict=routedict,function=preprocess.botsunzip,pass_non_zip=True)
             if routedict['fromeditype'] in ['mailbag','edifact','x12','tradacoms']:               #mailbag for the route.
-                preprocess.preprocess(routedict,preprocess.mailbag)
+                preprocess.preprocess(routedict=routedict,function=preprocess.mailbag)
 
         #communication.run translation
         if routedict['translateind']:
@@ -149,6 +155,8 @@ class new(object):
 
             if not routedict['defer']:   #do outgoing part of route
                 botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
+                if routedict['rsrv2'] == 1:               #zip outgoing.
+                    preprocess.postprocess(routedict=routedict,function=preprocess.botszip)
                 communication.run(idchannel=routedict['tochannel'],command=self.command,idroute=routedict['idroute'])
                 #in communication several things can go wrong.
                 #but: ALL file ready for communication should have same status etc; this way all recomnnunication cna be handled same way.

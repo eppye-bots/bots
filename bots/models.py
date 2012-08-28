@@ -38,7 +38,7 @@ EDITYPES = [
     ('jsonnocheck', _(u'jsonnocheck')),
     ('mailbag', _(u'mailbag')),
     ('raw', _(u'raw')),
-    ('template', _(u'template')),
+    ('template', _(u'template (old)')),
     ('templatehtml', _(u'template-html')),
     ('tradacoms', _(u'tradacoms')),
     ('xml', _(u'xml')),
@@ -68,7 +68,6 @@ CHANNELTYPE = (
     ('communicationscript', _(u'communicationscript')),
     ('db', _(u'db')),
     ('database', _(u'database (old)')),
-    ('intercommit', _(u'intercommit')),
     )
 CONFIRMTYPE = [
     ('ask-email-MDN',_(u'ask an email confirmation (MDN) when sending')),
@@ -90,6 +89,13 @@ ENCODE_MIME = (
     ('always',_(u'base64')),
     ('never',_(u'never')),
     ('ascii',_(u'base64 if not ascii')),
+    )
+ENCODE_ZIP_IN = (
+    ('in_always',_(u'unzip always')),
+    ('in_test',_(u'unzip if zip')),
+    )
+ENCODE_ZIP_OUT = (
+    (1,_(u'zip always')),
     )
 
 
@@ -171,7 +177,7 @@ class ccode(models.Model):
         db_table = 'ccode'
         verbose_name = _(u'user code')
         unique_together = (('ccodeid','leftcode','rightcode'),)
-        ordering = ['ccodeid']
+        ordering = ['ccodeid','leftcode']
 class channel(models.Model):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
@@ -193,7 +199,7 @@ class channel(models.Model):
     ftpactive = models.BooleanField(default=False)
     ftpbinary = models.BooleanField(default=False)
     askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'),help_text=_(u'Should edi-files be base64-encoded in email. Using base64 for edi (default) is often a good choice.'))     #not used anymore 20091019: 20100703: used to indicate mime-encoding
-    sendmdn = StripCharField(max_length=17,blank=True)    #not used anymore 20091019
+    sendmdn = StripCharField(max_length=17,blank=True)    #not used anymore 20091019.
     mdnchannel = StripCharField(max_length=35,blank=True)             #not used anymore 20091019
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True)
@@ -275,8 +281,8 @@ class routes(models.Model):
     translateind = models.BooleanField(default=True,blank=True,verbose_name='translate',help_text=_(u'Do a translation in this route.'))
     notindefaultrun = models.BooleanField(default=False,blank=True,help_text=_(u'Do not use this route in a normal run. Advanced, related to scheduling specific routes or not.'))
     desc = models.TextField(max_length=256,null=True,blank=True)
-    rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
-    rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    rsrv1 = StripCharField(max_length=35,blank=True,null=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Indicate files are received as zip-files.'))  #added 20100501 #20120828: use for zip-options
+    rsrv2 = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Indicate files are send as zip-files.'))                        #added 20100501
     defer = models.BooleanField(default=False,blank=True,help_text=_(u'Set ready for communication, but defer actual communication (this is done in another route)'))                        #added 20100601
     class Meta:
         db_table = 'routes'

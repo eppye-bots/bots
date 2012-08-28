@@ -9,18 +9,15 @@ from botsconfig import *
 
 @botslib.log_session
 def preprocess(routedict,function, status=FILEIN,**argv):
-    ''' for pre- and postprocessing of files.
+    ''' for preprocessing of files.
         these are NOT translations; translation involve grammars, mapping scripts etc. think of eg:
         - unzipping zipped files.
         - password protected files.
-        Select files from INFILE -> SET_FOR_PROCESSING using criteria
         Than the actual processing function is called.
-        The processing function does: SET_FOR_PROCESSING -> PROCESSING -> FILEIN
         If errors occur during processing, no ta are left with status FILEIN !
         preprocess is called right after the in-communicatiation
     '''
     nr_files = 0
-    #process all files in (status) FILEIN with statust OK
     for row in botslib.query(u'''SELECT idta,filename
                                 FROM  ta
                                 WHERE   idta>%(rootidta)s
@@ -44,8 +41,41 @@ def preprocess(routedict,function, status=FILEIN,**argv):
             ta_from.update(statust=DONE)
             nr_files += 1
     return nr_files
+    
+@botslib.log_session
+def postprocess(routedict,function, status=FILEOUT,**argv):
+    ''' for postprocessing of files.
+        these are NOT translations; translation involve grammars, mapping scripts etc. think of eg:
+        - zip files.
+        If errors occur during processing, no ta are left with status FILEOUT !
+        postprocess is called right before the out-communicatiation
+    '''
+    nr_files = 0
+    for row in botslib.query(u'''SELECT idta,filename
+                                FROM  ta
+                                WHERE   idta>%(rootidta)s
+                                AND     status=%(status)s
+                                AND     statust=%(statust)s
+                                AND     idroute=%(idroute)s
+                                AND     tochannel=%(tochannel)s
+                                ''',
+                                {'status':status,'statust':OK,'idroute':routedict['idroute'],'tochannel':routedict['tochannel'],'rootidta':botslib.get_minta4query()}):
+        try:
+            botsglobal.logmap.debug(u'Start postprocessing "%s" for file "%s".',function.__name__,row['filename'])
+            ta_from = botslib.OldTransaction(row['idta'])
+            ta_from.filename = row['filename']
+            function(ta_from=ta_from,endstatus=status,routedict=routedict,**argv)
+        except:
+            txt = botslib.txtexc()
+            ta_from.update(statust=ERROR,errortext=txt)
+            ta_from.deletechildren()
+        else:
+            botsglobal.logmap.debug(u'OK postprocessing  "%s" for file "%s".',function.__name__,row['filename'])
+            ta_from.update(statust=DONE)
+            nr_files += 1
+    return nr_files
 
-
+#regular expression for mailbag.
 HEADER = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))|(\s*(STX=))',re.DOTALL)
 #           group:    1   2       3  4            5        6         7                8   9
 
@@ -147,7 +177,7 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
             continue
         ta_to = ta_from.copyta(status=endstatus)
         tofilename = str(ta_to.idta)
-        content = myzipfile.read(info_file_in_zip.filename)    #read fiel in zipfile
+        content = myzipfile.read(info_file_in_zip.filename)    #read file in zipfile
         filesize = len(content)
         tofile = botslib.opendata(tofilename,'wb')
         tofile.write(content)
@@ -155,6 +185,18 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     myzipfile.close()
+
+def botszip(ta_from,endstatus,**argv):
+    ''' zip file;
+        editype & messagetype are unchanged.
+    '''
+    ta_to = ta_from.copyta(status=endstatus)
+    tofilename = str(ta_to.idta)
+    pluginzipfilehandler = zipfile.ZipFile(botslib.abspathdata(filename=tofilename), 'w', zipfile.ZIP_DEFLATED)
+    pluginzipfilehandler.write(botslib.abspathdata(filename=ta_from.filename),ta_from.filename)
+    pluginzipfilehandler.close()
+    ta_to.update(statust=OK,filename=tofilename) #update outmessage transaction with ta_info;
+
 
 def extractpdf(ta_from,endstatus,**argv):
     ''' Try to extract text content of a PDF file to a csv.
