@@ -41,11 +41,10 @@ if os.name == 'nt':
                                     win32con.FILE_FLAG_BACKUP_SEMANTICS,    # file attributes: FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED
                                     None,
                                     )
-        ''' detecting right events is not easy in windows :-(
-            want to detect: new file,  move, drop, rename, write/append to file
-            only FILE_NOTIFY_CHANGE_LAST_WRITE: copy yes, no move
-            for rec=True: event that subdirectory itself is updated (for file deletes in dir)
-        '''
+        # detecting right events is not easy in windows :-(
+        # want to detect: new file,  move, drop, rename, write/append to file
+        # only FILE_NOTIFY_CHANGE_LAST_WRITE: copy yes, no move
+        # for rec=True: event that subdirectory itself is updated (for file deletes in dir)
         while True:
             results = win32file.ReadDirectoryChangesW(  hDir,
                                                         8192,                   #buffer size was 1024, do not want to miss anything
@@ -122,7 +121,7 @@ else:
         watch_manager = pyinotify.WatchManager()
         mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO | pyinotify.IN_MODIFY | pyinotify.IN_CREATE
         for dir_watch in dir_watch_data:
-                wd = watch_manager.add_watch(path=dir_watch['path'],mask=mask,rec=dir_watch['rec'],auto_add=True,do_glob=True)
+            watch_manager.add_watch(path=dir_watch['path'],mask=mask,rec=dir_watch['rec'],auto_add=True,do_glob=True)
         handler = LinuxEventHandler(logger=logger,dir_watch_data=dir_watch_data,cond=cond,tasks=tasks)
         notifier = pyinotify.Notifier(watch_manager, handler)
         notifier.loop()
@@ -170,7 +169,7 @@ def start():
     logger.log(25,u'Bots %s configdir: "%s".',PROCESS_NAME,botsglobal.ini.get('directories','config'))
     
     cond = threading.Condition()
-    tasks= set()    
+    tasks = set()    
     dir_watch_data = []
     for section in botsglobal.ini.sections():
         if section.startswith('dirmonitor') and section[len('dirmonitor'):]:
@@ -198,23 +197,23 @@ def start():
     # this main thread get the results from the watch-thread(s).
     logger.info(u'Directory monitor server started.')
     active_receiving = False
-    TIMEOUT = 2.0
+    timeout = 2.0
     cond.acquire()
     while True:
         #this functions as a buffer: all events go into set tasks.
         #the tasks are fired to jobqueue after TIMOUT sec.
         #this is to avoid firing to many tasks to jobqueue; events typically come in bursts.
-        #is value of TIMEOUT is larger, reaction times are slower...but less tasks are fired to jobqueue.
+        #is value of timeout is larger, reaction times are slower...but less tasks are fired to jobqueue.
         #in itself this is not a problem, as jobqueue will alos discard duplicate jobs.
         #2 sec seems to e a good value: reasonable quick, not to nervous. 
-        cond.wait(timeout=TIMEOUT)    #get back when results, or after TIMEOUT sec
+        cond.wait(timeout=timeout)    #get back when results, or after timeout sec
         if tasks:
             if not active_receiving:    #first request (after tasks have been  fired, or startup of dirmonitor)
                 active_receiving = True
                 last_time = time.time()
             else:     #active receiving events
                 current_time = time.time()
-                if current_time - last_time >= TIMEOUT:  #cond.wait returned probably because of a timeout
+                if current_time - last_time >= timeout:  #cond.wait returned probably because of a timeout
                     try:
                         for task in tasks:
                             logger.info(u'Send to queue "%s %s".',botsenginepath,task)

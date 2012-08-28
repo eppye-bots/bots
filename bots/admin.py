@@ -1,3 +1,4 @@
+''' Bots configuration for django's admin site.'''
 import django
 from django.utils.translation import ugettext as _
 from django.contrib import admin
@@ -9,6 +10,8 @@ import botsglobal
 
 
 class BotsAdmin(admin.ModelAdmin):
+    ''' all classes in this module arre sub-classed from BotsAdmin.
+    '''
     list_per_page = botsglobal.ini.getint('settings','adminlimit',botsglobal.ini.getint('settings','limit',30))
     save_as = True
     def activate(self, request, queryset):

@@ -3,7 +3,6 @@ from django.db import models
 from django.utils.translation import ugettext as _
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django import forms
 #django is not excellent in generating db. But they have provided a way to customize the generated database using SQL. see bots/sql/*.
 
 STATUST = [
@@ -118,7 +117,7 @@ def multiple_email_validator(value):
     for email in emails:
         try:
             validate_email(email.strip())
-        except ValidationError as e:
+        except ValidationError:
             raise ValidationError(_(u'Enter valid e-mail address(es) separated by commas.'), code='invalid')
 
 class MultipleEmailField(models.CharField):

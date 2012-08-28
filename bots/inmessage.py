@@ -617,9 +617,9 @@ class excel(csv):
         # standard YYYY-MM-DDTHH:MM:SS ISO date.
         (y,m,d, hh,mm,ss) = tupledate
         nonzero = lambda n: n != 0
-        date = "%04d-%02d-%02d"  % (y,m,d)    if filter(nonzero, (y,m,d))                else ''
-        time = "T%02d:%02d:%02d" % (hh,mm,ss) if filter(nonzero, (hh,mm,ss)) or not date else ''
-        return date+time
+        datestring = "%04d-%02d-%02d"  % (y,m,d)    if filter(nonzero,(y,m,d)) else ''
+        timestring = "T%02d:%02d:%02d" % (hh,mm,ss) if filter(nonzero,(hh,mm,ss)) or not datestring else ''
+        return datestring+timestring
     #-------------------------------------------------------------------------------
     def utf8ize(self,l):
         # Make string-like things into utf-8, leave other things alone

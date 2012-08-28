@@ -314,7 +314,7 @@ def changestatustinfo(change,where):
 def set_database_lock():
     try:
         change(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
-    except Exception,msg:
+    except:
         return False
     return True
 
@@ -350,7 +350,7 @@ def unique(domein):
         cursor.execute(u'''UPDATE uniek SET nummer=nummer+1 WHERE domein=%(domein)s''',{'domein':domein})
         cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
         nummer = cursor.fetchone()['nummer']
-    except: # ???.DatabaseError; domein does not exist
+    except: #DatabaseError: domein does not exist
         cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
         nummer = 1
     if nummer > sys.maxint-2:

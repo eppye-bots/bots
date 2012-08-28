@@ -25,7 +25,7 @@ def evaluate(command,rootidtaofrun):
         totalfilesize += traceofinfile.rsrv2
         traceofinfile.make_file_report()
     make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize)
-    return make_and_email_readable_run_report(rootidtaofrun)    #return report status: 0 (no error) or 1 (error)
+    return email_error_report(rootidtaofrun)    #return report status: 0 (no error) or 1 (error)
 
 def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
     #count nr files send
@@ -59,7 +59,7 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
                             'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':lastreceived,'status':status,'type':command,'totalfilesize':totalfilesize})
 
 
-def make_and_email_readable_run_report(rootidtaofrun):
+def email_error_report(rootidtaofrun):
     for results in botslib.query('''SELECT idta,lastopen,lasterror,lastok,lastdone,
                                             send,processerrors,ts,lastreceived,type,status
                                     FROM report

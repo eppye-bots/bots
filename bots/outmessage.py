@@ -170,7 +170,7 @@ class Outmessage(message.Message):
                     if self.ta_info['stripfield_sep']:
                         fieldbuffer += [{VALUE:'',SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]          #append new empty to fieldbuffer;
                     else:
-                        value = self._initfield(grammarfield,structure_record)                         #initialise empty field. For eg fixed and csv: all fields have to be present
+                        value = self._initfield(grammarfield)                         #initialise empty field. For eg fixed and csv: all fields have to be present
                         buildrecord += [{VALUE:value,SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]  #append new field
             else:  #if composite
                 donefirst = False       #used because first subfield in composite is marked as a field (not a subfield).
@@ -188,7 +188,7 @@ class Outmessage(message.Message):
                         if self.ta_info['stripfield_sep']:
                             subbuffer += [{VALUE:'',SFIELD:donefirst}]                      #append new empty to buffer;
                         else:
-                            value = self._initfield(grammarsubfield,structure_record)  #initialise empty field. For eg fixed and csv: all fields have to be present
+                            value = self._initfield(grammarsubfield)  #initialise empty field. For eg fixed and csv: all fields have to be present
                             subbuffer += [{VALUE:value,SFIELD:donefirst}]                   #generate & append new field
                     donefirst = True
                 if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
@@ -309,7 +309,7 @@ class Outmessage(message.Message):
         return value
 
 
-    def _initfield(self,grammarfield,structure_record):
+    def _initfield(self,grammarfield):
         ''' basically csv only.
         '''
         if grammarfield[BFORMAT] == 'A':
@@ -419,7 +419,7 @@ class Outmessage(message.Message):
         return ''
 
 class fixed(Outmessage):
-    def _initfield(self,grammarfield,structure_record):
+    def _initfield(self,grammarfield):
         if grammarfield[BFORMAT] == 'A':
             if grammarfield[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
                 value = ''.rjust(grammarfield[MINLENGTH])

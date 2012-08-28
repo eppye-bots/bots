@@ -1,4 +1,3 @@
-import sys
 from django.utils.translation import ugettext as _
 #bots-modules
 import communication

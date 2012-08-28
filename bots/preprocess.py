@@ -226,7 +226,7 @@ def extractpdf(ta_from,endstatus,**argv):
                     for child in item:
                         render(child)
                 elif isinstance(item, LTText):
-                    (_,_,x,y) = item.bbox
+                    (unused1,unused2,x,y) = item.bbox
 
                     # group the y values (rows) within group tolerance
                     for v in yv:

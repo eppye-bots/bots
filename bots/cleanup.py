@@ -8,7 +8,7 @@ from django.utils.translation import ugettext as _
 #bots modules
 import botslib
 import botsglobal
-from botsconfig import *
+#~ from botsconfig import *
 
 
 def cleanup():
@@ -97,7 +97,7 @@ def _cleantransactions():
 
 
 def _cleanprocessnothingreceived():
-    ''' delete all --new runs that received no files; including all process under the run
+    ''' delete all new runs that received no files; including all ta-processes in the run
     '''
     vanaf = datetime.datetime.today() - datetime.timedelta(hours=botsglobal.ini.getint('settings','hoursrunwithoutresultiskept',1))
     for row in botslib.query('''SELECT idta

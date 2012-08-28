@@ -38,7 +38,7 @@ def initlogging(logname):
 PRIORITY = 0
 JOBNUMBER = 1
 TASK = 2
-class jobqueue(object):
+class Jobqueue(object):
     ''' handles the jobqueue.
         methodes can be called over xmlrpc (except the methods starting with '_')
     '''
@@ -154,11 +154,11 @@ def start():
     lauchfrequency = botsglobal.ini.getint('jobqueue','lauchfrequency',5)
     maxruntime = botsglobal.ini.getint('settings','maxruntime',60)
     
-    PROCESS_NAME = 'jobqueue'
-    logger = initlogging(PROCESS_NAME)
-    logger.log(25,u'Bots %s started.',PROCESS_NAME)
-    logger.log(25,u'Bots %s configdir: "%s".',PROCESS_NAME,botsglobal.ini.get('directories','config'))
-    logger.log(25,u'Bots %s listens for xmlrpc at port: "%s".',PROCESS_NAME,port)
+    process_name = 'jobqueue'
+    logger = initlogging(process_name)
+    logger.log(25,u'Bots %s started.',process_name)
+    logger.log(25,u'Bots %s configdir: "%s".',process_name,botsglobal.ini.get('directories','config'))
+    logger.log(25,u'Bots %s listens for xmlrpc at port: "%s".',process_name,port)
 
     launcher_thread = threading.Thread(name='launcher', target=launcher, args=(logger,port,lauchfrequency,maxruntime))
     launcher_thread.daemon = True
@@ -168,7 +168,7 @@ def start():
     # this main thread is the jobqserver (the xmlrpc server for handling jobqueue)
     logger.info(u'Jobqueue server started.')
     server = SimpleXMLRPCServer(('localhost', port),logRequests=False)        
-    server.register_instance(jobqueue(logger))
+    server.register_instance(Jobqueue(logger))
     server.serve_forever()
     
     sys.exit(0)

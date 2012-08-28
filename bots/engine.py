@@ -15,7 +15,7 @@ import botsinit
 import botsglobal
 import router
 import cleanup
-from botsconfig import *
+#~ from botsconfig import *
 
 
 def showusage():
@@ -40,11 +40,12 @@ def showusage():
     print usage
 
 def start():
-    #exit codes:
-    # 0: OK, no errors
-    # 1: (system) errors
-    # 2: bots ran OK, but there are errors/process errors  in the run
-    # 3: Database is locked, but "maxruntime" has not been exceeded.
+    ''' sysexit codes:
+        0: OK, no errors
+        1: (system) errors
+        2: bots ran OK, but there are errors/process errors  in the run
+        3: Database is locked, but "maxruntime" has not been exceeded.
+    '''
     #********command line arguments**************************
     commandspossible = ['--crashrecovery','--automaticretrycommunication','--resend','--rereceive','--new']
     commandstorun = []
@@ -79,7 +80,7 @@ def start():
     try:
         botsinit.initenginelogging()
     except:
-        print _('Error in initialising logging system.')
+        print _('Error in initialising logging system')
         traceback.print_exc()
         sys.exit(1)
     else:
@@ -153,10 +154,10 @@ def start():
                                         SET mutexer=1
                                         WHERE mutexk=1 ''')
                 elif botsglobal.ini.get('settings','automaticcrashrecovery','False'):
-                    maxruntimeforcerecovery_is_passed = False
+                    maxruntimeforrecovery_passed = False
                     maxruntimeforcerecovery = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntimeforcerecovery',90))
-                    for row3 in botslib.query('''SELECT ts,mutexer FROM mutex WHERE ts < %(maxruntimeforcerecovery)s ''',{'maxruntimeforcerecovery':maxruntimeforcerecovery}):
-                        maxruntimeforcerecovery_is_passed = True
+                    for row3 in botslib.query('''SELECT ts FROM mutex WHERE ts < %(maxruntimeforcerecovery)s ''',{'maxruntimeforcerecovery':maxruntimeforcerecovery}):
+                        maxruntimeforrecovery_passed = True
                         #maxruntimeforcerecovery has passed: bots will do a forced recovery, but only
                         #if time_of_last_action is after maxruntime (when bots-engine did an action after maxruntime)
                         if time_of_last_action > maxruntime:
@@ -168,7 +169,7 @@ def start():
                         else:
                             botsglobal.logger.critical('"maxruntimeforcerecovery" is passed, bots will do an automatic crash recovery..')
                             commandstorun.insert(0,'crashrecovery')
-                    if not maxruntimeforcerecovery_is_passed:
+                    if not maxruntimeforrecovery_passed:
                         botsglobal.logger.info(_(u'Database is locked; "maxruntime" is exceeded but "maxruntimeforcerecovery" is not exceeded.'))
                         sys.exit(3)
                 else:
@@ -186,8 +187,8 @@ def start():
     
     #**************run the routes**********************************************
     #commandstorun determines the type(s) of run. eg: ['--automaticretrycommunication','--new']
-    #for each command
-    #   do a run all routes
+    #for each command: run all routes
+    #    for each route: run all seq
     try:
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
         for command in commandstorun:

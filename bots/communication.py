@@ -26,6 +26,7 @@ import email.encoders
 import smtplib
 import ftplib
 import socket
+import ssl
 from django.utils.translation import ugettext as _
 #Bots modules
 import botslib
@@ -337,7 +338,7 @@ class _comsession(object):
                                AND   confirmasked=%(confirmasked)s
                                AND   confirmtype=%(confirmtype)s
                                ''',
-                                {'status':OUTFILE,'reference':originalmessageid,'confirmed':True,'confirmtype':'ask-email-MDN','confirmidta':ta_mail.idta,'confirmasked':True})
+                                {'status':FILEOUT,'reference':originalmessageid,'confirmed':True,'confirmtype':'ask-email-MDN','confirmidta':ta_from.idta,'confirmasked':True})
             #for now no checking if processing was OK.....
             #performance: not good. Index should be on the reference.
         @botslib.log_session
@@ -1092,8 +1093,6 @@ if hasattr(ftplib,'FTP_TLS'):
             '''
         def connect(self, host='', port=0, timeout=-999):
             #added hje 20110713: directly use SSL in FTPIS
-            import socket
-            import ssl
             #end added
             if host != '':
                 self.host = host
