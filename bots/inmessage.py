@@ -46,7 +46,6 @@ class Inmessage(message.Message):
     def __init__(self,ta_info):
         super(Inmessage,self).__init__()
         self.records = []        #init list of records
-        self.confirminfo = {}
         self.ta_info = ta_info  #here ta_info is only filled with parameters from db-ta
 
     def initfromfile(self):
@@ -68,10 +67,16 @@ class Inmessage(message.Message):
             raise botslib.InMessageError(_(u'Unknown data beyond end of message; mostly problem with separators or message structure: "$content"'),content=result)
         del self.records
         #end parsing; self.root is root of a tree (of nodes).
+        
         self.checkenvelope()
         self.checkmessage(self.root,self.defmessage)
-        #~ self.root.display() #show tree of nodes (for protocol debugging)
-        #~ self.root.displayqueries() #show queries in tree of nodes (for protocol debugging)
+        #get queries-dict for parsed message; this is used to update in database
+        if self.root.record:
+            self.ta_info.update(self.root.queries)
+        else:
+            for childnode in self.root.children:
+                self.ta_info.update(childnode.queries)
+                break
 
     def handleconfirm(self,ta_fromfile,error):
         ''' end of edi file handling.
@@ -792,7 +797,7 @@ class edifact(var):
             out.writeall()   #write tomessage (result of translation)
             botsglobal.logger.debug(u'Send edifact confirmation (CONTRL) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
                 self.ta_info['idroute'],self.ta_info['fromchannel'],confirmation['receiver'],confirmation['sender'])
-            self.confirminfo = dict(confirmtype='send-edifact-CONTRL',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
+            self.ta_info.update(confirmtype='send-edifact-CONTRL',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
             ta_confirmation.update(statust=OK,**out.ta_info)    #update ta for confirmation
 
 
@@ -924,7 +929,7 @@ class x12(var):
             out.writeall()   #write tomessage (result of translation)
             botsglobal.logger.debug(u'Send x12 confirmation (997) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
                 self.ta_info['idroute'],self.ta_info['fromchannel'],confirmation['receiver'],confirmation['sender'])
-            self.confirminfo = dict(confirmtype='send-x12-997',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
+            self.ta_info.update(confirmtype='send-x12-997',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
             ta_confirmation.update(statust=OK,**out.ta_info)    #update ta for confirmation
 
 

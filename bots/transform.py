@@ -26,7 +26,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
     ''' main translation loop.
         get edifiles to be translated, than:
         -   read, lex, parse, make tree of nodes.
-        -   split up files into messages (using 'nextmessage' of grammar); if no splitting: edifile is one message.
+        -   split up files into messages (using 'nextmessage' of grammar)
         -   get mappingscript, start mappingscript.
         -   write the results of translation (no enveloping yet)
         status: FILEIN--PARSED-<SPLITUP--TRANSLATED
@@ -35,7 +35,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
         userscript,scriptname = botslib.botsimport('mappings','translation')
     except ImportError:       #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
-    #select edifiles to translate; fill ta-object
+    #select edifiles to translate
     for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,rsrv2
                                 FROM  ta
                                 WHERE idta>%(rootidta)s
@@ -44,25 +44,26 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 AND   idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
-            ta_fromfile = botslib.OldTransaction(row['idta'])  #TRANSLATE ta
-            ta_parsed = ta_fromfile.copyta(status=PARSED)  #copy TRANSLATE to PARSED ta
+            ta_fromfile = botslib.OldTransaction(row['idta'])
+            ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
             botsglobal.logger.debug(u'start translating file "%s" editype "%s" messagetype "%s".',row['filename'],row['editype'],row['messagetype'])
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
-                                            topartner=row['topartner'],
-                                            filename=row['filename'],
-                                            messagetype=row['messagetype'],
-                                            testindicator=row['testindicator'],
-                                            editype=row['editype'],
-                                            charset=row['charset'],
-                                            alt=row['alt'],
-                                            fromchannel=row['fromchannel'],
-                                            idroute=idroute)
+                                                topartner=row['topartner'],
+                                                filename=row['filename'],
+                                                messagetype=row['messagetype'],
+                                                testindicator=row['testindicator'],
+                                                editype=row['editype'],
+                                                charset=row['charset'],
+                                                alt=row['alt'],
+                                                fromchannel=row['fromchannel'],
+                                                idroute=idroute)
             #if no exception: infile has been lexed and parsed OK.
-            for inn_splitup in edifile.nextmessage():   #for each message in the edifile:
+            #edifile.ta_info contains info: QUERIES, charset etc
+            for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile
                 try:
-                    #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
+                    #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
                     while 1:    #continue as long as there are (alt-)translations
                         #***lookup the translation: mappingscript, tomessagetype, toeditype**********************
@@ -88,7 +89,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                                      'topartner':inn_splitup.ta_info['topartner'],
                                                     'booll':True}):
                             break   #translation is found; break because only the first one is used - this is what the ORDER BY in the query takes care of
-                        else:       #no translation found in translate table
+                        else:       #no translation found in translate table; check if can find translation via user script
                             raiseTranslationNotFoundError = True
                             #check if user scripting can determine translation
                             if userscript and hasattr(userscript,'gettranslation'):      
@@ -117,7 +118,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                             out_translated.ta_info['status'] = DISCARD
                         else:
                             botsglobal.logger.debug(u'Start writing output file editype "%s" messagetype "%s".',out_translated.ta_info['editype'],out_translated.ta_info['messagetype'])
-                            out_translated.writeall()   #write out_translated (result of translation).
+                            out_translated.writeall()   #write result of translation.
                             out_translated.ta_info['rsrv2'] = os.path.getsize(botslib.abspathdata(out_translated.ta_info['filename']))  #get filesize
                         #problem is that not all values ta_translated are know to to_message....
                         #~ print 'out_translated.ta_info',out_translated.ta_info
@@ -142,7 +143,6 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                             del out_translated
                             inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chained translation
                     #end of while-loop (trans**********************************************************************************
-                    #~ del inn_splitup
                 #exceptions file_out-level: exception in mappingscript or writing of out-file
                 except:
                     #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mappingscript/outfile only affect that branche 
@@ -150,10 +150,10 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                     ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
                     ta_splitup.deletechildren()
                 else:
-                    ta_splitup.update(statust=DONE,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
+                    ta_splitup.update(statust=DONE, **inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
                     
 
-        #exceptions file_in-level
+        #exceptions file_in-level (file not OK according to grammar)
         except:
             txt = botslib.txtexc()
             ta_parsed.update(statust=ERROR,rsrv2=row['rsrv2'],errortext=txt)
@@ -161,7 +161,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
-            ta_parsed.update(statust=DONE,rsrv2=row['rsrv2'],**edifile.confirminfo)
+            ta_parsed.update(statust=DONE,rsrv2=row['rsrv2'],**edifile.ta_info)
             botsglobal.logger.debug(u'translated input file "%s".',row['filename'])
         finally:
             ta_fromfile.update(statust=DONE)

@@ -54,7 +54,7 @@ class Node(object):
             if self._queries is None:
                 self._queries = updatequeries.copy()
             else:
-                self._queries.update(updatequeries)
+                botslib.updateunlessset(self._queries,updatequeries)
 
     queries = property(_getquerie,_updatequerie)
 
