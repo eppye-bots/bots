@@ -19,68 +19,68 @@ class TestInmessage(unittest.TestCase):
 
     def testxml(self):
         #~ #empty file
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110401.xml')
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xml',messagetype='testxml', filename='botssys/infile/unitinmessagexml/xml/110401.xml')
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110401.xml')
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xml',messagetype='testxmlflatten', filename='botssys/infile/unitinmessagexml/xml/110401.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110401.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xml',messagetype='testxml', filename='botssys/infile/unitinmessagexml/xml/110401.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110401.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xml',messagetype='testxmlflatten', filename='botssys/infile/unitinmessagexml/xml/110401.xml')
         #only root record in 110402.xml
-        self.failUnless(inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110402.xml'), 'only a root tag; should be OK')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110402.xml')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110402.xml')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110402.xml')
+        self.failUnless(inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110402.xml'), 'only a root tag; should be OK')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110402.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110402.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110402.xml')
             
         #root tag different from grammar
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110406.xml')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
+        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
+        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110406.xml')
+        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
         #root tag is double
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110407.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110407.xml')
         #invalid: no closing tag
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110408.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110408.xml')
         #invalid: extra closing tag
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110409.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110409.xml')
         #invalid: mandatory xml-element missing
-        self.failUnless(inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110410.xml'), '')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110410.xml')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110410.xml')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110410.xml')
+        self.failUnless(inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110410.xml'), '')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110410.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110410.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110410.xml')
             
         #invalid: to many occurences
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110411.xml')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110411.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110411.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110411.xml')
             
         #invalid: missing mandatory xml attribute
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110412.xml')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110412.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110412.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110412.xml')
        
         #unknown xml element
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110413.xml')
-        self.assertRaises(botslib.InMessageError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110414.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110413.xml')
+        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110414.xml')
             
         #2x the same xml attribute
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110415.xml')
-        self.assertRaises(SyntaxError,inmessage.edifromfile, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110415.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110415.xml')
+        self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110415.xml')
         
         #messages with all max occurences, use attributes, etc
-        in1 = inmessage.edifromfile(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110416.xml') #all elements, attributes
+        in1 = inmessage.parse_edi_file(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110416.xml') #all elements, attributes
         
         #other order of xml elements; should esult in the same node tree
-        in1 = inmessage.edifromfile(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110417.xml') #as 18., other order of elements
-        in2 = inmessage.edifromfile(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110418.xml') 
+        in1 = inmessage.parse_edi_file(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110417.xml') #as 18., other order of elements
+        in2 = inmessage.parse_edi_file(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110418.xml') 
         self.failUnless(utilsunit.comparenode(in2.root,in1.root),'compare')
 
         #??what is tested here??
-        inn7= inmessage.edifromfile(editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #with <?xml version="1.0" encoding="utf-8"?>
-        inn8= inmessage.edifromfile(editype='xml',messagetype='testxmlflatten',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #with <?xml version="1.0" encoding="utf-8"?>
+        inn7= inmessage.parse_edi_file(editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #with <?xml version="1.0" encoding="utf-8"?>
+        inn8= inmessage.parse_edi_file(editype='xml',messagetype='testxmlflatten',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #with <?xml version="1.0" encoding="utf-8"?>
         self.failUnless(utilsunit.comparenode(inn7.root,inn8.root),'compare')
         
         #~ #test different file which should give equal results
-        in1= inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110403.xml')    #no grammar used
-        in5= inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110404.xml')    #no grammar used
-        in6= inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110405.xml')    #no grammar used
-        in2= inmessage.edifromfile(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110403.xml')  #with <?xml version="1.0" encoding="utf-8"?>
-        in3= inmessage.edifromfile(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110404.xml')  #without <?xml version="1.0" encoding="utf-8"?>
-        in4= inmessage.edifromfile(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #use cr/lf and whitespace for 'nice' xml
+        in1= inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110403.xml')    #no grammar used
+        in5= inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110404.xml')    #no grammar used
+        in6= inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110405.xml')    #no grammar used
+        in2= inmessage.parse_edi_file(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110403.xml')  #with <?xml version="1.0" encoding="utf-8"?>
+        in3= inmessage.parse_edi_file(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110404.xml')  #without <?xml version="1.0" encoding="utf-8"?>
+        in4= inmessage.parse_edi_file(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #use cr/lf and whitespace for 'nice' xml
         self.failUnless(utilsunit.comparenode(in2.root,in1.root),'compare')
         self.failUnless(utilsunit.comparenode(in2.root,in3.root),'compare')
         self.failUnless(utilsunit.comparenode(in2.root,in4.root),'compare')
@@ -88,12 +88,12 @@ class TestInmessage(unittest.TestCase):
         self.failUnless(utilsunit.comparenode(in2.root,in6.root),'compare')
 
         #~ #test different file which should give equal results; flattenxml=True,
-        in1= inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110403.xml')    #no grammar used
-        in5= inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110404.xml')    #no grammar used
-        in6= inmessage.edifromfile(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110405.xml')    #no grammar used
-        in4= inmessage.edifromfile(editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #use cr/lf and whitespace for 'nice' xml
-        in2= inmessage.edifromfile(editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110403.xml')  #with <?xml version="1.0" encoding="utf-8"?>
-        in3= inmessage.edifromfile(editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110404.xml')  #without <?xml version="1.0" encoding="utf-8"?>
+        in1= inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110403.xml')    #no grammar used
+        in5= inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110404.xml')    #no grammar used
+        in6= inmessage.parse_edi_file(editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110405.xml')    #no grammar used
+        in4= inmessage.parse_edi_file(editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #use cr/lf and whitespace for 'nice' xml
+        in2= inmessage.parse_edi_file(editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110403.xml')  #with <?xml version="1.0" encoding="utf-8"?>
+        in3= inmessage.parse_edi_file(editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110404.xml')  #without <?xml version="1.0" encoding="utf-8"?>
         self.failUnless(utilsunit.comparenode(in2.root,in1.root),'compare')
         self.failUnless(utilsunit.comparenode(in2.root,in3.root),'compare')
         self.failUnless(utilsunit.comparenode(in2.root,in4.root),'compare')

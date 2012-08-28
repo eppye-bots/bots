@@ -29,7 +29,7 @@ class Testnode(unittest.TestCase):
     ''' test node.py and message.py.
     '''
     def testedifact01(self):
-        inn = inmessage.edifromfile(editype='edifact',messagetype='invoicwithenvelope',filename='botssys/infile/unitnode/nodetest01.edi')
+        inn = inmessage.parse_edi_file(editype='edifact',messagetype='invoicwithenvelope',filename='botssys/infile/unitnode/nodetest01.edi')
         out = outmessage.outmessage_init(editype='edifact',messagetype='invoicwithenvelope',filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    #make outmessage object
         out.root = inn.root
         
@@ -133,14 +133,14 @@ class Testnode(unittest.TestCase):
 
     #~ def testedifact02(self):
         #display query correct? incluuding propagating 'down the tree'?
-        #~ inn = inmessage.edifromfile(editype='edifact',messagetype='invoicwithenvelopetestquery',filename='botssys/infile/unitnode/nodetest01.edi')
+        #~ inn = inmessage.parse_edi_file(editype='edifact',messagetype='invoicwithenvelopetestquery',filename='botssys/infile/unitnode/nodetest01.edi')
         #~ inn.root.processqueries({},2)
         #~ inn.root.displayqueries()
 
     def testedifact03(self):
         #~ #display query correct? incluuding propagating 'down the tree'?
         node.Node.fetchqueries = fetchqueries
-        inn = inmessage.edifromfile(editype='edifact',messagetype='edifact',filename='botssys/infile/unitnode/0T0000000015.edi')
+        inn = inmessage.parse_edi_file(editype='edifact',messagetype='edifact',filename='botssys/infile/unitnode/0T0000000015.edi')
         inn.root.processqueries({},2)
         inn.root.fetchqueries()
         #~ print collectqueries

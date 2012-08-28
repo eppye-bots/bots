@@ -15,7 +15,7 @@ class TestTranslate(unittest.TestCase):
         pass
 
     def testpersist(self):
-        #~ inn = inmessage.edifromfile(editype='edifact',messagetype='orderswithenvelope',filename='botssys/infile/tests/inisout02.edi')
+        #~ inn = inmessage.parse_edi_file(editype='edifact',messagetype='orderswithenvelope',filename='botssys/infile/tests/inisout02.edi')
         domein=u'test'
         botskey=u'test'
         value= u'xxxxxxxxxxxxxxxxx'

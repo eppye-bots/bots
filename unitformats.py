@@ -796,7 +796,7 @@ class TestFormatFieldInmessage(unittest.TestCase):
     #both var and fixed fields are tested. Is not much difference (white-box testing)
     def setUp(self):
         #need to have a inmessage-object for tests. Read is a edifile and a grammar.
-        self.edi = inmessage.edifromfile(frompartner='',
+        self.edi = inmessage.parse_edi_file(frompartner='',
                                         topartner='',
                                         filename='botssys/infile/unitformats/formats01.edi',
                                         messagetype='edifact',
@@ -1003,39 +1003,39 @@ class TestFormatFieldInmessage(unittest.TestCase):
 
     def testEdifact0402(self):
         # old format test are run
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040201F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040202F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040203F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040204F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040205F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040206F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040207F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040208F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040209F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040210F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040211F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040212F.edi')
-        self.failUnless(inmessage.edifromfile(editype='edifact',
+        self.failUnless(inmessage.parse_edi_file(editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040214T.edi'), 'standaard test')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040215F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040217F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040218F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.edifromfile,editype='edifact',
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
             messagetype='edifact',filename='botssys/infile/unitformats/040219F.edi')
             #~ 
 

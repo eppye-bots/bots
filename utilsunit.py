@@ -61,7 +61,7 @@ def readfile(bestand):
     return terug
 
 def readwrite(filenamein='',filenameout='',**args):
-    inn = inmessage.edifromfile(filename=filenamein,**args)
+    inn = inmessage.parse_edi_file(filename=filenamein,**args)
     out = outmessage.outmessage_init(filename=filenameout,divtext='',topartner='',**args)    #make outmessage object
     out.root = inn.root
     out.writeall()

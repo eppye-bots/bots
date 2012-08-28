@@ -18,7 +18,7 @@ class Testinisoutedifact(unittest.TestCase):
     def testedifact02(self):
         infile ='botssys/infile/unitinisout/org/inisout02.edi'
         outfile='botssys/infile/unitinisout/output/inisout02.edi'
-        inn = inmessage.edifromfile(editype='edifact',messagetype='orderswithenvelope',filename=infile)
+        inn = inmessage.parse_edi_file(editype='edifact',messagetype='orderswithenvelope',filename=infile)
         out = outmessage.outmessage_init(editype='edifact',messagetype='orderswithenvelope',filename=outfile,divtext='',topartner='')    #make outmessage object
         out.root =  inn.root
         out.writeall()
@@ -28,7 +28,7 @@ class Testinisoutedifact(unittest.TestCase):
         #~ #takes quite long
         infile ='botssys/infile/unitinisout/org/inisout03.edi'
         outfile='botssys/infile/unitinisout/output/inisout03.edi'
-        inn = inmessage.edifromfile(editype='edifact',messagetype='invoicwithenvelope',filename=infile)
+        inn = inmessage.parse_edi_file(editype='edifact',messagetype='invoicwithenvelope',filename=infile)
         out = outmessage.outmessage_init(editype='edifact',messagetype='invoicwithenvelope',filename=outfile,divtext='',topartner='')    #make outmessage object
         out.root =  inn.root
         out.writeall()
@@ -79,7 +79,7 @@ class Testinisoutinh(unittest.TestCase):
     def testinh01(self):
         filenamein='botssys/infile/unitinisout/org/inisout01.inh'
         filenameout='botssys/infile/unitinisout/output/inisout01.inh'
-        inn = inmessage.edifromfile(editype='fixed',messagetype='invoicfixed',filename=filenamein)
+        inn = inmessage.parse_edi_file(editype='fixed',messagetype='invoicfixed',filename=filenamein)
         out = outmessage.outmessage_init(editype='fixed',messagetype='invoicfixed',filename=filenameout,divtext='',topartner='')    #make outmessage object
         out.root = inn.root
         out.writeall()
@@ -88,7 +88,7 @@ class Testinisoutinh(unittest.TestCase):
     def testidoc01(self):
         filenamein='botssys/infile/unitinisout/org/inisout01.idoc'
         filenameout='botssys/infile/unitinisout/output/inisout01.idoc'
-        inn = inmessage.edifromfile(editype='idoc',messagetype='WP_PLU02',filename=filenamein)
+        inn = inmessage.parse_edi_file(editype='idoc',messagetype='WP_PLU02',filename=filenamein)
         out = outmessage.outmessage_init(editype='idoc',messagetype='WP_PLU02',filename=filenameout,divtext='',topartner='')    #make outmessage object
         out.root = inn.root
         out.writeall()
@@ -98,7 +98,7 @@ class Testinisoutx12(unittest.TestCase):
     def testx12_01(self):
         filenamein='botssys/infile/unitinisout/org/inisout01.x12'
         filenameout='botssys/infile/unitinisout/output/inisout01.x12'
-        inn = inmessage.edifromfile(editype='x12',messagetype='850withenvelope',filename=filenamein)
+        inn = inmessage.parse_edi_file(editype='x12',messagetype='850withenvelope',filename=filenamein)
         out = outmessage.outmessage_init(editype='x12',messagetype='850withenvelope',filename=filenameout,divtext='',topartner='')    #make outmessage object
         out.root = inn.root
         out.writeall()
@@ -111,7 +111,7 @@ class Testinisoutx12(unittest.TestCase):
     def testx12_02(self):
         filenamein='botssys/infile/unitinisout/org/inisout02.x12'
         filenameout='botssys/infile/unitinisout/output/inisout02.x12'
-        inn = inmessage.edifromfile(editype='x12',messagetype='850withenvelope',filename=filenamein)
+        inn = inmessage.parse_edi_file(editype='x12',messagetype='850withenvelope',filename=filenamein)
         out = outmessage.outmessage_init(add_crlfafterrecord_sep='',editype='x12',messagetype='850withenvelope',filename=filenameout,divtext='',topartner='')    #make outmessage object
         out.root = inn.root
         out.writeall()
