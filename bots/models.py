@@ -298,7 +298,7 @@ class routes(models.Model):
 class filereport(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     idta = models.IntegerField(db_index=True)
-    reportidta = models.IntegerField(db_index=True)
+    reportidta = models.IntegerField()
     statust = models.IntegerField(choices=STATUST)
     retransmit = models.IntegerField()
     idroute = StripCharField(max_length=35)
@@ -326,7 +326,6 @@ class filereport(models.Model):
     rsrv2 = models.IntegerField(null=True)                        #added 20100501 #20120821: filesize of messages translated.
     class Meta:
         db_table = 'filereport'
-        unique_together = (("idta","reportidta"),)
 class mutex(models.Model):
     #specific SQL is used (database defaults are used)
     mutexk = models.IntegerField(primary_key=True)  #always value '1'
@@ -375,7 +374,7 @@ class ta(models.Model):
     status = models.IntegerField(choices=STATUS)
     parent = models.IntegerField(db_index=True)
     child = models.IntegerField()
-    script = models.IntegerField(db_index=True)
+    script = models.IntegerField()
     idroute = StripCharField(max_length=35)
     filename = StripCharField(max_length=256)
     frompartner = StripCharField(max_length=35)
@@ -389,7 +388,7 @@ class ta(models.Model):
     merge = models.BooleanField()
     nrmessages = models.IntegerField()
     testindicator = StripCharField(max_length=10)     #0:production; 1:test. Length to 1?
-    reference = StripCharField(max_length=70)
+    reference = StripCharField(max_length=70,db_index=True)
     frommail = StripCharField(max_length=256)
     tomail = StripCharField(max_length=256)
     charset = StripCharField(max_length=35)

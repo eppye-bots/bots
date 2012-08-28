@@ -171,7 +171,7 @@ def connect():
             raise botslib.PanicError(u'Could not find database file for SQLite')
         import botssqlite
         botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASES['default']['NAME'])
-    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'mysql':
+    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
         import MySQLdb
         from MySQLdb import cursors
         botsglobal.db = MySQLdb.connect(host=botsglobal.settings.DATABASES['default']['HOST'],
@@ -181,7 +181,7 @@ def connect():
                                         passwd=botsglobal.settings.DATABASES['default']['PASSWORD'],
                                         cursorclass=cursors.DictCursor,
                                         **botsglobal.settings.DATABASES['default']['OPTIONS'])
-    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'postgresql_psycopg2':
+    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql_psycopg2':
         import psycopg2
         import psycopg2.extensions
         import psycopg2.extras
