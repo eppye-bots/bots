@@ -334,7 +334,7 @@ def filer(request,*kw,**kwargs):
                     dispositiontype = 'attachment'
                 response['Content-Disposition'] = dispositiontype + '; filename=' + currentta.filename + '.txt'
                 #~ response['Content-Length'] = os.path.getsize(absfilename)
-                response.write(botslib.readdata(currentta.filename,charset=currentta.charset,errors='ignore'))
+                response.write(botslib.readdata(currentta.filename))
                 return response
             elif request.GET['action'] == 'previous':
                 if currentta.parent:    #has a explicit parent
@@ -355,17 +355,12 @@ def filer(request,*kw,**kwargs):
                     talijst = list(models.ta.objects.filter(parent=currentta.idta))
             for ta_object in talijst:
                 #determine if can display file
-                ta_object.has_file = False
                 if ta_object.filename and ta_object.filename.isdigit():
-                    try:
-                        if ta_object.charset:  #guess charset if not available; uft-8 is reasonable
-                            ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
-                        else:
-                            ta_object.content = botslib.readdata(ta_object.filename,charset='utf-8',errors='ignore')
-                        ta_object.has_file = True
-                    except:
-                        pass
-                if not ta_object.has_file:
+                    if ta_object.charset:  
+                        ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
+                    else:   #guess charset if not available; uft-8 is reasonable
+                        ta_object.content = botslib.readdata(ta_object.filename,charset='us-ascii',errors='ignore')
+                else:
                     ta_object.content = _(u'No file available for display.')
                 #determine has previous:
                 if ta_object.parent or ta_object.status == MERGED:

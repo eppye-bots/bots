@@ -39,12 +39,12 @@ class CcodetriggerAdmin(BotsAdmin):
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
-    list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename', 'remove', 'charset', 'archivepath','rsrv2','ftpactive', 'ftpbinary','askmdn', 'syslock', 'starttls','apop')
+    list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename', 'remove', 'archivepath','rsrv2','ftpactive', 'ftpbinary','askmdn', 'syslock', 'starttls','apop')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
-    search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath', 'charset')
+    search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath')
     fieldsets = (
-        (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'charset','desc')
+        (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'desc')
                         }),
         (_(u'FTP specific data'),{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
                          'classes': ('collapse',)

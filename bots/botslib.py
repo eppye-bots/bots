@@ -571,31 +571,6 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
         raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
 
 #**********************************************************/**
-#***************###############  codecs   #############
-#**********************************************************/**
-def getcodeccanonicalname(codecname):
-    codeccanonicalname = codecs.lookup(codecname)
-    return codeccanonicalname.name
-
-def checkcodeciscompatible(charset1,charset2):
-    ''' check if charset of edifile) is 'compatible' with charset of channel: OK; else: raise exception
-    '''
-    #some codecs are upward compatible (subsets); charsetcompatible is used to check if charsets are upward compatibel with each other.
-    #some charset are 1 byte (ascii, ISO-8859-*). others are more bytes (UTF-16, utf-32. UTF-8 is more bytes, but is ascii compatible.
-    charsetcompatible = {
-        'unoa':['unob','ascii','utf-8','iso8859-1','cp1252','iso8859-15'],
-        'unob':['ascii','utf-8','iso8859-1','cp1252','iso8859-15'],
-        'ascii':['utf-8','iso8859-1','cp1252','iso8859-15'],
-        }
-    charset_edifile = getcodeccanonicalname(charset1)
-    charset_channel = getcodeccanonicalname(charset2)
-    if charset_channel == charset_edifile:
-        return True
-    if charset_edifile in charsetcompatible and charset_channel in charsetcompatible[charset_edifile]:
-        return True
-    raise CommunicationOutError(_(u'Charset "$charset2" for channel not matching with charset "$charset1" for edi-file.'),charset1=charset1,charset2=charset2)
-
-#**********************************************************/**
 #***************###############  misc.   #############
 #**********************************************************/**
 def checkconfirmrules(confirmtype,**kwargs):

@@ -1,17 +1,8 @@
 import os
 import sys
 import posixpath
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 import time
 import datetime
-import email
-import email.Utils
-import email.Generator
-import email.Message
-import email.encoders
 import glob
 import shutil
 import fnmatch
@@ -20,9 +11,18 @@ if os.name == 'nt':
 elif os.name == 'posix':
     import fcntl
 try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+try:
     import json as simplejson
 except ImportError:
     import simplejson
+import email
+import email.Utils
+import email.Generator
+import email.Message
+import email.encoders
 import smtplib
 import ftplib
 from django.utils.translation import ugettext as _
@@ -298,7 +298,7 @@ class _comsession(object):
                 content = msg.get_payload(decode=True)
                 if not content or content.isspace():
                     return 0
-                charset = msg.get_content_charset(self.channeldict['charset'])
+                charset = msg.get_content_charset('ascii')
                 if self.userscript and hasattr(self.userscript,'accept_incoming_attachment'):
                     accept_attachment = botslib.runscript(self.userscript,self.scriptname,'accept_incoming_attachment',channeldict=self.channeldict,ta=ta_from,charset=charset,content=content,contenttype=contenttype)
                     if not accept_attachment:
@@ -550,7 +550,7 @@ class file(_comsession):
                 ta_from = botslib.NewTransaction(filename=fromfilename,
                                                 status=EXTERNIN,
                                                 fromchannel=self.channeldict['idchannel'],
-                                                charset=self.channeldict['charset'],idroute=self.idroute)
+                                                idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 #open fromfile, syslock if indicated
                 fromfile = open(fromfilename,'rb')
@@ -600,7 +600,7 @@ class file(_comsession):
         else:
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel
-        for row in botslib.query(u'''SELECT idta,filename,charset,rsrv4
+        for row in botslib.query(u'''SELECT idta,filename,rsrv4
                                        FROM ta
                                       WHERE idta>%(rootidta)s
                                         AND status=%(status)s
@@ -612,7 +612,6 @@ class file(_comsession):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 #open tofile, incl syslock if indicated
                 unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
                 if self.channeldict['filename']:
@@ -968,7 +967,7 @@ class ftp(_comsession):
                 ta_from = botslib.NewTransaction(filename='ftp:/'+posixpath.join(self.dirpath,fromfilename),
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
-                                                    charset=self.channeldict['charset'],idroute=self.idroute)
+                                                    idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
@@ -1015,7 +1014,7 @@ class ftp(_comsession):
             mode = 'APPE '  #fixed filename; not unique: append to file
         else:
             mode = 'STOR '  #unique filenames; (over)write
-        for row in botslib.query('''SELECT idta,filename,charset,rsrv4
+        for row in botslib.query('''SELECT idta,filename,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                       AND status=%(status)s
@@ -1035,11 +1034,9 @@ class ftp(_comsession):
                 if self.userscript and hasattr(self.userscript,'filename'):
                     tofilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta_from)
                 if self.channeldict['ftpbinary']:
-                    botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                     fromfile = botslib.opendata(row['filename'], 'rb')
                     self.session.storbinary(mode + tofilename, fromfile)
                 else:
-                    botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                     fromfile = botslib.opendata(row['filename'], 'r')
                     self.session.storlines(mode + tofilename, fromfile)
                 fromfile.close()
@@ -1251,7 +1248,7 @@ class sftp(_comsession):
                 ta_from = botslib.NewTransaction(filename='sftp:/'+posixpath.join(self.dirpath,fromfilename),
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
-                                                    charset=self.channeldict['charset'],idroute=self.idroute)
+                                                    idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
                 fromfile = self.session.open(fromfilename, 'r')    # SSH treats all files as binary
@@ -1286,7 +1283,7 @@ class sftp(_comsession):
             mode = 'a'  #fixed filename; not unique: append to file
         else:
             mode = 'w'  #unique filenames; (over)write
-        for row in botslib.query('''SELECT idta,filename,charset,rsrv4
+        for row in botslib.query('''SELECT idta,filename,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                       AND status=%(status)s
@@ -1306,7 +1303,6 @@ class sftp(_comsession):
                 if self.userscript and hasattr(self.userscript,'filename'):
                     tofilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta_from)
 
-                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 fromfile = botslib.opendata(row['filename'], 'rb')
                 tofile = self.session.open(tofilename, mode)    # SSH treats all files as binary
                 tofile.write(fromfile.read())
@@ -1346,7 +1342,6 @@ class xmlrpc(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 fromfile = botslib.opendata(row['fromfilename'], 'rb',row['charset'])
                 content = fromfile.read()
                 fromfile.close()
@@ -1373,7 +1368,7 @@ class xmlrpc(_comsession):
                 ta_from = botslib.NewTransaction(filename=self.uri.update(path=self.channeldict['path'],filename=self.channeldict['filename']),
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
-                                                    charset=self.channeldict['charset'],idroute=self.idroute)
+                                                    idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
@@ -1439,7 +1434,6 @@ class db(_comsession):
                 ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],
-                                                    charset=self.channeldict['charset'],
                                                     idroute=self.idroute)
                 ta_to = ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
@@ -1526,7 +1520,7 @@ class communicationscript(_comsession):
                     ta_from = botslib.NewTransaction(filename = fromfilename,
                                                     status = EXTERNIN,
                                                     fromchannel = self.channeldict['idchannel'],
-                                                    charset = self.channeldict['charset'], idroute = self.idroute)
+                                                    idroute = self.idroute)
                     ta_to = ta_from.copyta(status = FILEIN)
                     fromfile = open(fromfilename, 'rb')
                     tofilename = str(ta_to.idta)
@@ -1556,7 +1550,7 @@ class communicationscript(_comsession):
                     ta_from = botslib.NewTransaction(filename = fromfilename,
                                                     status = EXTERNIN,
                                                     fromchannel = self.channeldict['idchannel'],
-                                                    charset = self.channeldict['charset'], idroute = self.idroute)
+                                                    idroute = self.idroute)
                     ta_to = ta_from.copyta(status = FILEIN)
                     fromfile = open(fromfilename, 'rb')
                     tofilename = str(ta_to.idta)
@@ -1592,7 +1586,7 @@ class communicationscript(_comsession):
         else:
             mode = 'wb'  #unique filenames; (over)write
         #select the db-ta's for this channel
-        for row in botslib.query(u'''SELECT idta,filename,charset,rsrv4
+        for row in botslib.query(u'''SELECT idta,filename,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -1603,7 +1597,6 @@ class communicationscript(_comsession):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                botslib.checkcodeciscompatible(row['charset'],self.channeldict['charset'])
                 #open tofile, incl syslock if indicated
                 unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
                 if self.channeldict['filename']:
