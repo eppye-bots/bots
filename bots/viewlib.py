@@ -185,7 +185,10 @@ def trace2detail(ta_object):
             elif ta_object.status == MERGED and ta_object.nrmessages > 1:
                 ta_object.ind = levelindicator
             elif ta_object.status == EXTERNOUT:
-                ta_object.ind = levelindicator[:-2] + 'o=='
+                if levelindicator:
+                    ta_object.ind = levelindicator[:-2] + 'o=='
+                else:
+                    ta_object.ind = levelindicator[:-2]
             else:
                 ta_object.ind = levelindicator
             #~ ta_object.action = models.ta.objects.only('filename').get(idta=ta_object.script)
