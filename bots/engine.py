@@ -212,9 +212,7 @@ def start():
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
                                             FROM routes
-                                            WHERE active=%(active)s
-                                            ORDER BY idroute ''',
-                                            {'active':True}):
+                                            ORDER BY idroute '''):
                     use_routestorun.append(row['idroute'])
                 botsglobal.logger.info(_(u'Run all active routes from database: "%s".'),str(use_routestorun))
             errorinrun += router.rundispatcher(command,use_routestorun)
