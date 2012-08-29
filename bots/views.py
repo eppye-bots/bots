@@ -360,7 +360,9 @@ def filer(request,*kw,**kwargs):
                         ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
                     else:   #guess charset if not available; uft-8 is reasonable
                         ta_object.content = botslib.readdata(ta_object.filename,charset='us-ascii',errors='ignore')
+                    ta_object.has_file = True
                 else:
+                    ta_object.has_file = False
                     ta_object.content = _(u'No file available for display.')
                 #determine has previous:
                 if ta_object.parent or ta_object.status == MERGED:
