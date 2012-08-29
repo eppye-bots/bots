@@ -28,7 +28,7 @@ CREATE TABLE ta (
     retransmit BOOLEAN DEFAULT 0,
     contenttype varchar(35) DEFAULT 'text/plain',
     errortext varchar(2048) DEFAULT '',
-    ts timestamp DEFAULT CURRENT_TIMESTAMP,
+    ts timestamp DEFAULT (datetime('now','localtime')),
     confirmasked BOOLEAN DEFAULT 0,
     confirmed BOOLEAN DEFAULT 0,
     confirmtype varchar(35) DEFAULT '',

@@ -27,7 +27,7 @@ CREATE TABLE ta (
     statuse integer DEFAULT 0,
     retransmit BOOLEAN DEFAULT 0,
     contenttype varchar(35) DEFAULT 'text/plain',
-    errortext TEXT DEFAULT '',
+    errortext TEXT,
     ts timestamp DEFAULT CURRENT_TIMESTAMP,
     confirmasked BOOLEAN DEFAULT 0,
     confirmed BOOLEAN DEFAULT 0,

@@ -296,7 +296,7 @@ class routes(models.Model):
 #***********************************************************************************
 class filereport(models.Model):
     #~ id = models.IntegerField(primary_key=True)
-    idta = models.IntegerField(db_index=True)
+    idta = models.IntegerField(primary_key=True)
     reportidta = models.IntegerField()
     statust = models.IntegerField(choices=STATUST)
     retransmit = models.IntegerField()
