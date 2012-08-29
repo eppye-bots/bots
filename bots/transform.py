@@ -67,7 +67,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                     inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
                     while 1:    #continue as long as there are (alt-)translations
                         #***lookup the translation: mappingscript, tomessagetype, toeditype**********************
-                        for tscript,tomessagetype,toeditype in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
+                        for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
                                                     FROM    translate
                                                     WHERE   frommessagetype = %(frommessagetype)s
                                                     AND     fromeditype = %(fromeditype)s
@@ -88,6 +88,9 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                                      'frompartner':inn_splitup.ta_info['frompartner'],
                                                      'topartner':inn_splitup.ta_info['topartner'],
                                                     'booll':True}):
+                            tscript = row2['tscript']
+                            tomessagetype = row2['tomessagetype']
+                            toeditype = row2['toeditype']
                             break   #translation is found; break because only the first one is used - this is what the ORDER BY in the query takes care of
                         else:       #no translation found in translate table; check if can find translation via user script
                             raiseTranslationNotFoundError = True
@@ -266,13 +269,16 @@ def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):
 safercodetconversion = safe_reverse_ccode
 
 def getcodeset(ccodeid,leftcode,field='rightcode'):
-    ''' Get a code set
+    ''' Returns a list of all 'field' values in ccode with right ccodeid and leftcode.
     '''
-    return list(botslib.query(u'''SELECT ''' +field+ '''
+    terug = []
+    for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM    ccode
                                 WHERE   ccodeid_id = %(ccodeid)s
                                 AND     leftcode = %(leftcode)s''',
-                                {'ccodeid':ccodeid,'leftcode':leftcode}))
+                                {'ccodeid':ccodeid,'leftcode':leftcode}):
+        terug.append(row[field])
+    return  terug
 
 #***code conversion via file. 20111116: depreciated
 def safecodeconversion(modulename,value):
