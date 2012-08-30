@@ -52,7 +52,7 @@ class new(object):
                                                      rsrv2
                                             FROM routes
                                             WHERE idroute=%(idroute)s
-                                            AND   active=%(active)s
+                                            AND active=%(active)s
                                             ORDER BY seq''',
                                             {'idroute':route,'active':True}):
                 botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),{'idroute':routedict['idroute'],'seq':routedict['seq']})
@@ -116,7 +116,6 @@ class new(object):
         #communication.run translation
         if routedict['translateind']:
             botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
-            #~ botslib.addinfo(change={'status':TRANSLATE},where={'status':FILEIN,'idroute':routedict['idroute']})
             transform.translate(idroute=routedict['idroute'])
             botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
         #~ import os
@@ -181,10 +180,10 @@ class crashrecovery(new):
         ''' for crashrecovery: minta4query is the rootidta of the crashed run
         '''
         for row in botslib.query('''SELECT MAX(idta) as crashed_idta
-                                    FROM  ta
-                                    WHERE idta<%(max_idta)s
+                                    FROM ta
+                                    WHERE idta<%(rootidta_of_current_run)s
                                     AND script= 0 ''',
-                                    {'max_idta':self.rootidta_of_current_run}):
+                                    {'rootidta_of_current_run':self.rootidta_of_current_run}):
             if row['crashed_idta']:
                 self.crashrecoverypossible = True
                 botsglobal.minta4query = row['crashed_idta']
@@ -201,13 +200,13 @@ class crashrecovery(new):
         rootofcrashedrun.update(statust=DONE)
         #clean up things from crash **********************************
         #delete run report
-        botslib.change('''DELETE FROM report WHERE idta = %(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
+        botslib.changeq('''DELETE FROM report WHERE idta = %(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
         #delete file reports
-        botslib.change('''DELETE FROM filereport WHERE idta>%(rootofcrashedrun)s AND reportidta=%(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
+        botslib.changeq('''DELETE FROM filereport WHERE idta>%(rootofcrashedrun)s''',{'rootofcrashedrun':rootofcrashedrun.idta})
         #delete ta's after ERROR and OK for crashed merges
         mergedidtatodelete = set()
         for row in botslib.query('''SELECT child  FROM ta 
-                                    WHERE  idta>%(rootofcrashedrun)s
+                                    WHERE idta>%(rootofcrashedrun)s
                                     AND statust=%(statust)s
                                     AND status!=%(status)s
                                     AND child != 0 ''',
@@ -218,7 +217,7 @@ class crashrecovery(new):
             ta_object.delete()
         #delete ta's after ERROR and OK for other
         for row in botslib.query('''SELECT idta  FROM ta 
-                                    WHERE  idta>%(rootofcrashedrun)s
+                                    WHERE idta>%(rootofcrashedrun)s
                                     AND ( statust=%(statust1)s OR statust=%(statust2)s )
                                     AND status!=%(status)s
                                     AND child == 0 ''',
@@ -239,6 +238,7 @@ class automaticretrycommunication(new):
             cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
             oldlastta = cursor.fetchone()['nummer']
         except:     #DatabaseError; domein does not exist so set it
+            botsglobal.db.rollback()    #rollback is needed for postgreSQL
             cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
             oldlastta = 1
         cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':self.rootidta_of_current_run})
@@ -249,7 +249,7 @@ class automaticretrycommunication(new):
     @staticmethod
     def get_idta_last_error(idta_lastretry):
         for row in botslib.query('''SELECT MIN(idta) as min_idta
-                                    FROM  filereport
+                                    FROM filereport
                                     WHERE idta>%(idta_lastretry)s
                                     AND statust == %(statust)s''',
                                     {'statust':ERROR,'idta_lastretry':idta_lastretry}):
@@ -265,10 +265,10 @@ class automaticretrycommunication(new):
         if not startidta:
             return False
         for row in botslib.query('''SELECT idta,rsrv4
-                                    FROM  ta
+                                    FROM ta
                                     WHERE idta>%(startidta)s
-                                    AND   status=%(status)s
-                                    AND   statust=%(statust)s ''',
+                                    AND status=%(status)s
+                                    AND statust=%(statust)s ''',
                                     {'statust':ERROR,'status':EXTERNOUT,'startidta':startidta}):
             do_retransmit = True
             ta_resend = botslib.OldTransaction(row['idta'])
@@ -285,9 +285,9 @@ class resend(new):
         do_retransmit = False
         #for resend; this one is slow. Can be improved by having a separate list of idta to resend
         for row in botslib.query('''SELECT idta,parent,rsrv4
-                                    FROM  ta
+                                    FROM ta
                                     WHERE retransmit=%(retransmit)s
-                                    AND   status=%(status)s''',
+                                    AND status=%(status)s''',
                                     {'retransmit':True,'status':EXTERNOUT}):
             do_retransmit = True
             ta_outgoing = botslib.OldTransaction(row['idta'])
@@ -304,16 +304,16 @@ class rereceive(new):
         ''' prepare the files indicated by user to be rereceived. Return: indication if files should be rereceived.'''
         do_retransmit = False
         for row in botslib.query('''SELECT idta
-                                    FROM  filereport
+                                    FROM filereport
                                     WHERE retransmit=%(retransmit)s ''',
                                     {'retransmit':True}):
             do_retransmit = True
-            botslib.change('''UPDATE filereport
+            botslib.changeq('''UPDATE filereport
                               SET retransmit=%(retransmit)s
                               WHERE idta=%(idta)s ''',
                               {'idta':row['idta'],'retransmit':False})
             for row2 in botslib.query('''SELECT idta
-                                        FROM  ta
+                                        FROM ta
                                         WHERE parent=%(parent)s ''',
                                         {'parent':row['idta']}):
                 ta_rereceive = botslib.OldTransaction(row2['idta'])

@@ -27,13 +27,13 @@ def cleanup():
 def _cleanupsession():
     ''' delete all expired sessions. Bots-engine starts up much more often than web-server.'''
     vanaf = datetime.datetime.today()
-    botslib.change('''DELETE FROM django_session WHERE expire_date < %(vanaf)s''', {'vanaf':vanaf})
+    botslib.changeq('''DELETE FROM django_session WHERE expire_date < %(vanaf)s''', {'vanaf':vanaf})
 
 
 def _cleanarchive():
     ''' delete all archive directories older than maxdaysarchive days.'''
     vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
-    for row in botslib.query('''SELECT archivepath  FROM  channel '''):
+    for row in botslib.query('''SELECT archivepath FROM channel '''):
         if row['archivepath']:
             vanafdir = botslib.join(row['archivepath'],vanaf)
             for directory in glob.glob(botslib.join(row['archivepath'],'*')):
@@ -76,7 +76,7 @@ def _cleandatafile():
 def _cleanpersist():
     '''delete all persist older than xx days.'''
     vanaf = datetime.datetime.today() - datetime.timedelta(days=botsglobal.ini.getint('settings','maxdayspersist',30))
-    botslib.change('''DELETE FROM persist WHERE ts < %(vanaf)s''',{'vanaf':vanaf})
+    botslib.changeq('''DELETE FROM persist WHERE ts < %(vanaf)s''',{'vanaf':vanaf})
 
 
 def _cleantransactions():
@@ -88,9 +88,9 @@ def _cleantransactions():
         maxidta = row['max_idta']
     if maxidta is None:   #if there is no maxidta to delete, do nothing
         return
-    botslib.change('''DELETE FROM report WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
-    botslib.change('''DELETE FROM filereport WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
-    botslib.change('''DELETE FROM ta WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
+    botslib.changeq('''DELETE FROM report WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
+    botslib.changeq('''DELETE FROM filereport WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
+    botslib.changeq('''DELETE FROM ta WHERE idta < %(maxidta)s''',{'maxidta':maxidta})
     #the most recent run that is older than maxdays is kept (using < instead of <=).
     #Reason: when deleting in ta this would leave the ta-records of the most recent run older than maxdays (except the first ta-record).
     #this will not lead to problems.
@@ -102,9 +102,9 @@ def _cleanprocessnothingreceived():
     vanaf = datetime.datetime.today() - datetime.timedelta(hours=botsglobal.ini.getint('settings','hoursrunwithoutresultiskept',1))
     for row in botslib.query('''SELECT idta
                                 FROM report
-                                WHERE type = 'new'
-                                AND lastreceived=0
-                                AND ts < %(vanaf)s''',
+                                WHERE ts < %(vanaf)s
+                                AND type = 'new'
+                                AND lastreceived=0 ''',
                                {'vanaf':vanaf}):
-        botslib.change('''DELETE FROM report WHERE idta=%(idta)s ''',{'idta':row['idta']})
-        botslib.change('''DELETE FROM ta WHERE idta>%(idta)s AND statuse=%(idta)s''',{'idta':row['idta']})
+        botslib.changeq('''DELETE FROM report WHERE idta=%(idta)s ''',{'idta':row['idta']})
+        botslib.changeq('''DELETE FROM ta WHERE idta>%(idta)s AND statuse=%(idta)s''',{'idta':row['idta']})

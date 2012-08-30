@@ -20,12 +20,12 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
     outerqueryparameters = {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query(),'merge':False}
     #**********for messages only to envelope (no merging)
     for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,tochannel,envelope,nrmessages,idta,filename,idroute,merge
-                                FROM  ta
-                                WHERE   idta>%(rootidta)s
-                                AND     status=%(status)s
-                                AND     statust=%(statust)s
-                                AND     idroute=%(idroute)s
-                                AND     merge=%(merge)s
+                                FROM ta
+                                WHERE idta>%(rootidta)s
+                                AND status=%(status)s
+                                AND statust=%(statust)s
+                                AND idroute=%(idroute)s
+                                AND merge=%(merge)s
                                 ''',
                                 outerqueryparameters):
         try:
@@ -49,12 +49,12 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
     #as files get merged: can not copy idta; must extract relevant attributes.
     outerqueryparameters['merge'] = True
     for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,tochannel,testindicator,charset,contenttype,envelope,sum(nrmessages) as nrmessages
-                                FROM  ta
-                                WHERE   idta>%(rootidta)s
-                                AND     status=%(status)s
-                                AND     statust=%(statust)s
-                                AND     idroute=%(idroute)s
-                                AND     merge=%(merge)s
+                                FROM ta
+                                WHERE idta>%(rootidta)s
+                                AND status=%(status)s
+                                AND statust=%(statust)s
+                                AND idroute=%(idroute)s
+                                AND merge=%(merge)s
                                 GROUP BY editype,messagetype,frompartner,topartner,tochannel,testindicator,charset,contenttype,envelope
                                 ''',
                                 outerqueryparameters):

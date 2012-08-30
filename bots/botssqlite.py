@@ -5,12 +5,12 @@ except ImportError:
 
 #~ #bots engine uses:
 #~ ''' SELECT *
-    #~ FROM  ta
+    #~ FROM ta
     #~ WHERE idta=%(idta)s ''',
     #~ {'idta':12345})
 #~ #SQLite wants:
 #~ ''' SELECT *
-    #~ FROM  ta
+    #~ FROM ta
     #~ WHERE idta=:idta ''',
     #~ {'idta': 12345}
 

@@ -16,7 +16,7 @@ def evaluate(command,rootidtaofrun):
     totalfilesize = 0
     #evaluate every incoming file of this run; 
     for row in botslib.query('''SELECT ''' + TAVARS + '''
-                                FROM  ta
+                                FROM ta
                                 WHERE idta > %(rootidtaofrun)s
                                 AND status=%(status)s ''',
                                 {'status':EXTERNIN,'rootidtaofrun':rootidtaofrun}):
@@ -30,7 +30,7 @@ def evaluate(command,rootidtaofrun):
 def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
     #count nr files send
     for row in botslib.query('''SELECT COUNT(*) as count
-                                FROM  ta
+                                FROM ta
                                 WHERE idta > %(rootidtaofrun)s
                                 AND status=%(status)s
                                 AND statust=%(statust)s ''',
@@ -38,7 +38,7 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
         send = row['count']
     #count process errors
     for row in botslib.query('''SELECT COUNT(*) as count
-                                FROM  ta
+                                FROM ta
                                 WHERE idta >= %(rootidtaofrun)s
                                 AND status=%(status)s
                                 AND statust=%(statust)s''',
@@ -49,7 +49,7 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
     rootta.syn('ts')    #get the timestamp of this run
     lastreceived = resultsofrun[DONE]+resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]
     status = bool(resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]+processerrors)
-    botslib.change(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,
+    botslib.changeq(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,
                                             send,processerrors,ts,lastreceived,status,type,rsrv2)
                             VALUES  (%(rootidtaofrun)s,
                                     %(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,
@@ -124,14 +124,14 @@ class Trace(object):
         '''
         if tacurrent['child']:     #find successor by using child relation ship (when merging)
             for row in botslib.query('''SELECT ''' + TAVARS + '''
-                                         FROM  ta
+                                         FROM ta
                                          WHERE idta=%(child)s''',
                                         {'child':tacurrent['child']}):
                 tacurrent['talijst'] = [dict(row)]    #add next one (a child has only one parent)
         else:   #find successor by using parent-relationship; for one-one-one relation an splitting
             talijst = []
             for row in botslib.query('''SELECT ''' + TAVARS + '''
-                                        FROM  ta
+                                        FROM ta
                                         WHERE idta > %(currentidta)s
                                         AND parent=%(currentidta)s ''',      #adding the idta > %(parent)s to selection speeds up a lot.
                                         {'currentidta':tacurrent['idta']}):
@@ -300,7 +300,7 @@ class Trace(object):
         core(self.rootofinfile)
 
     def make_file_report(self):
-        botslib.change(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
+        botslib.changeq(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
                                                     infilename,tochannel,frompartner,topartner,frommail,
                                                     tomail,ineditype,inmessagetype,outeditype,outmessagetype,
                                                     incontenttype,outcontenttype,nrmessages,outfilename,errortext,

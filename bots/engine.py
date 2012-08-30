@@ -150,7 +150,7 @@ def start():
                     botsglobal.logger.critical(mess)
                     botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),mess)
                     #set indication that email to report crashed run has been send
-                    botslib.change('''UPDATE mutex
+                    botslib.changeq('''UPDATE mutex
                                         SET mutexer=1
                                         WHERE mutexk=1 ''')
                 elif botsglobal.ini.get('settings','automaticcrashrecovery','False'):

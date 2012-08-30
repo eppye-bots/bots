@@ -19,12 +19,12 @@ def preprocess(routedict,function, status=FILEIN,**argv):
     '''
     nr_files = 0
     for row in botslib.query(u'''SELECT idta,filename
-                                FROM  ta
-                                WHERE   idta>%(rootidta)s
-                                AND     status=%(status)s
-                                AND     statust=%(statust)s
-                                AND     idroute=%(idroute)s
-                                AND     fromchannel=%(fromchannel)s
+                                FROM ta
+                                WHERE idta>%(rootidta)s
+                                AND status=%(status)s
+                                AND statust=%(statust)s
+                                AND idroute=%(idroute)s
+                                AND fromchannel=%(fromchannel)s
                                 ''',
                                 {'status':status,'statust':OK,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel'],'rootidta':botslib.get_minta4query()}):
         try:
@@ -52,12 +52,12 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
     '''
     nr_files = 0
     for row in botslib.query(u'''SELECT idta,filename
-                                FROM  ta
-                                WHERE   idta>%(rootidta)s
-                                AND     status=%(status)s
-                                AND     statust=%(statust)s
-                                AND     idroute=%(idroute)s
-                                AND     tochannel=%(tochannel)s
+                                FROM ta
+                                WHERE idta>%(rootidta)s
+                                AND status=%(status)s
+                                AND statust=%(statust)s
+                                AND idroute=%(idroute)s
+                                AND tochannel=%(tochannel)s
                                 ''',
                                 {'status':status,'statust':OK,'idroute':routedict['idroute'],'tochannel':routedict['tochannel'],'rootidta':botslib.get_minta4query()}):
         try:
