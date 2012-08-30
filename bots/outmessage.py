@@ -832,7 +832,7 @@ class db(Outmessage):
             raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
         botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
         self._outstream = botslib.opendata(self.ta_info['filename'],'wb')
-        pickle.dump(self.root,self._outstream,2)
+        pickle.dump(self.root,self._outstream)
         self._outstream.close()
         botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
         self.ta_info['envelope'] = 'db'

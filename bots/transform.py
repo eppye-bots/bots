@@ -37,11 +37,11 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
         userscript = scriptname = None
     #select edifiles to translate
     for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,rsrv2
-                                FROM  ta
+                                FROM ta
                                 WHERE idta>%(rootidta)s
-                                AND   status=%(status)s
-                                AND   statust=%(statust)s
-                                AND   idroute=%(idroute)s ''',
+                                AND status=%(status)s
+                                AND statust=%(statust)s
+                                AND idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
             ta_fromfile = botslib.OldTransaction(row['idta'])
@@ -68,15 +68,15 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                     while 1:    #continue as long as there are (alt-)translations
                         #***lookup the translation: mappingscript, tomessagetype, toeditype**********************
                         for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
-                                                    FROM    translate
-                                                    WHERE   frommessagetype = %(frommessagetype)s
-                                                    AND     fromeditype = %(fromeditype)s
-                                                    AND     active=%(booll)s
-                                                    AND     alt=%(alt)s
-                                                    AND     (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
+                                                    FROM translate
+                                                    WHERE frommessagetype = %(frommessagetype)s
+                                                    AND fromeditype = %(fromeditype)s
+                                                    AND active=%(booll)s
+                                                    AND alt=%(alt)s
+                                                    AND (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
                                                                                                                                             FROM partnergroup
                                                                                                                                             WHERE from_partner_id=%(frompartner)s ))
-                                                    AND     (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
+                                                    AND (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
                                                                                                                                     FROM partnergroup
                                                                                                                                     WHERE from_partner_id=%(topartner)s ))
                                                     ORDER BY alt DESC,
@@ -176,9 +176,9 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
 def persist_add(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value,2)
+    content = pickle.dumps(value)
     try:
-        botslib.change(u''' INSERT INTO persist (domein,botskey,content)
+        botslib.changeq(u''' INSERT INTO persist (domein,botskey,content)
                             VALUES   (%(domein)s,%(botskey)s,%(content)s)''',
                             {'domein':domein,'botskey':botskey,'content':content})
     except:
@@ -187,8 +187,8 @@ def persist_add(domein,botskey,value):
 def persist_update(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value,2)
-    botslib.change(u''' UPDATE persist
+    content = pickle.dumps(value)
+    botslib.changeq(u''' UPDATE persist
                         SET content=%(content)s
                         WHERE domein=%(domein)s
                         AND botskey=%(botskey)s''',
@@ -204,7 +204,7 @@ def persist_add_update(domein,botskey,value):
 def persist_delete(domein,botskey):
     ''' store persistent values in db.
     '''
-    botslib.change(u''' DELETE FROM persist
+    botslib.changeq(u''' DELETE FROM persist
                         WHERE domein=%(domein)s
                         AND botskey=%(botskey)s''',
                         {'domein':domein,'botskey':botskey})
@@ -231,9 +231,9 @@ def ccode(ccodeid,leftcode,field='rightcode'):
         converted value is returned, exception if not there.
     '''
     for row in botslib.query(u'''SELECT ''' +field+ '''
-                                FROM    ccode
-                                WHERE   ccodeid_id = %(ccodeid)s
-                                AND     leftcode = %(leftcode)s''',
+                                FROM ccode
+                                WHERE ccodeid_id = %(ccodeid)s
+                                AND leftcode = %(leftcode)s''',
                                 {'ccodeid':ccodeid,'leftcode':leftcode}):
         return row[field]
     raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
@@ -252,9 +252,9 @@ safecodetconversion = safe_ccode
 def reverse_ccode(ccodeid,rightcode,field='leftcode'):
     ''' as ccode but reversed lookup.'''
     for row in botslib.query(u'''SELECT ''' +field+ '''
-                                FROM    ccode
-                                WHERE   ccodeid_id = %(ccodeid)s
-                                AND     rightcode = %(rightcode)s''',
+                                FROM ccode
+                                WHERE ccodeid_id = %(ccodeid)s
+                                AND rightcode = %(rightcode)s''',
                                 {'ccodeid':ccodeid,'rightcode':rightcode}):
         return row[field]
     raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=rightcode,table=ccodeid)
@@ -273,9 +273,9 @@ def getcodeset(ccodeid,leftcode,field='rightcode'):
     '''
     terug = []
     for row in botslib.query(u'''SELECT ''' +field+ '''
-                                FROM    ccode
-                                WHERE   ccodeid_id = %(ccodeid)s
-                                AND     leftcode = %(leftcode)s''',
+                                FROM ccode
+                                WHERE ccodeid_id = %(ccodeid)s
+                                AND leftcode = %(leftcode)s''',
                                 {'ccodeid':ccodeid,'leftcode':leftcode}):
         terug.append(row[field])
     return  terug
