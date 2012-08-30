@@ -352,7 +352,7 @@ class report(models.Model):
     lasterror = models.IntegerField()
     send = models.IntegerField()
     processerrors = models.IntegerField()
-    ts = models.DateTimeField()                     #copied from (runroot)ta
+    ts = models.DateTimeField(db_index=True)                     #copied from (runroot)ta
     type = StripCharField(max_length=35)
     status = models.BooleanField()
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
