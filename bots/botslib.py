@@ -57,100 +57,70 @@ class _Transaction(object):
         This class is used for communication with db-ta.
     '''
     #filtering values for db handling to avoid unknown fields in db.
-    filterlist = ['statust','status','divtext','parent','child','script','frompartner','topartner','fromchannel','tochannel','editype','messagetype','merge',
+    filterlist = ('statust','status','divtext','parent','child','script','frompartner','topartner','fromchannel','tochannel','editype','messagetype','merge',
                 'testindicator','reference','frommail','tomail','contenttype','errortext','filename','charset','alt','idroute','nrmessages','retransmit',
-                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc','rsrv1','rsrv2','rsrv4']
+                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc','rsrv1','rsrv2','rsrv4')
     processlist = [0]  #stack for bots-processes. last one is the current process; starts with 1 element in list: root
 
     def update(self,**ta_info):
         ''' Updates db-ta with named-parameters/dict.
             Use a filter to update only valid fields in db-ta
         '''
-        setstring = ','.join([key+'=%('+key+')s' for key in ta_info if key in _Transaction.filterlist])
+        setstring = ','.join([key+'=%('+key+')s' for key in ta_info if key in self.filterlist])
         if not setstring:   #nothing to update
             return
         ta_info['selfid'] = self.idta
-        cursor = botsglobal.db.cursor()
-        cursor.execute(u'''UPDATE ta
-                            SET '''+setstring+ '''
-                            WHERE idta=%(selfid)s''',
-                            ta_info)
-        botsglobal.db.commit()
-        cursor.close()
+        changeq(u'''UPDATE ta
+                    SET '''+setstring+ '''
+                    WHERE idta=%(selfid)s''',
+                    ta_info)
 
     def delete(self):
         '''Deletes current transaction '''
-        cursor = botsglobal.db.cursor()
-        cursor.execute(u'''DELETE FROM ta
-                            WHERE idta=%(idta)s''',
-                            {'idta':self.idta})
-        botsglobal.db.commit()
-        cursor.close()
+        changeq(u'''DELETE FROM ta
+                    WHERE idta=%(idta)s''',
+                    {'idta':self.idta})
 
     def deletechildren(self):
-        cursor = botsglobal.db.cursor()
-        self.deleteonlychildren_core(cursor,self.idta)
-        botsglobal.db.commit()
-        cursor.close()
+        self.deleteonlychildren_core(self.idta)
         
-    def deleteonlychildren_core(self,cursor,idta):
-        cursor.execute(u'''SELECT idta FROM ta
-                           WHERE idta>%(rootidta)s
-                           AND parent=%(idta)s''',
-                            {'idta':idta,'rootidta':get_minta4query()})
-        tmp_idtastodelete = [row['idta' ] for row  in cursor.fetchall()]
-        for child in tmp_idtastodelete:
-            self.deleteonlychildren_core(cursor,child)
-            cursor.execute(u'''DELETE FROM ta
-                                WHERE idta=%(idta)s''',
-                                {'idta':child})
+    def deleteonlychildren_core(self,idta):
+        for row in query(u'''SELECT idta 
+                            FROM ta
+                            WHERE idta>%(rootidta)s
+                            AND parent=%(idta)s''',
+                            {'idta':idta,'rootidta':get_minta4query()}):
+            self.deleteonlychildren_core(row['idta'])
+            changeq(u'''DELETE FROM ta
+                        WHERE idta=%(idta)s''',
+                        {'idta':row['idta' ]})
         
     def syn(self,*ta_vars):
         '''access of attributes of transaction as ta.fromid, ta.filename etc'''
-        cursor = botsglobal.db.cursor()
         varsstring = ','.join(ta_vars)
-        cursor.execute(u'''SELECT ''' + varsstring + '''
-                            FROM ta
-                            WHERE idta=%(idta)s''',
-                            {'idta':self.idta})
-        result = cursor.fetchone()
-        for key in result.keys():
-            setattr(self,key,result[key])
-        cursor.close()
+        for row in query(u'''SELECT ''' + varsstring + '''
+                              FROM ta
+                              WHERE idta=%(idta)s''',
+                              {'idta':self.idta}):
+            self.__dict__.update(dict(row))
 
     def synall(self):
         '''access of attributes of transaction as ta.fromid, ta.filename etc'''
-        cursor = botsglobal.db.cursor()
-        varsstring = ','.join(self.filterlist)
-        cursor.execute(u'''SELECT ''' + varsstring + '''
-                            FROM ta
-                            WHERE idta=%(idta)s''',
-                            {'idta':self.idta})
-        result = cursor.fetchone()
-        for key in result.keys():
-            setattr(self,key,result[key])
-        cursor.close()
+        self.syn(*self.filterlist)
 
     def copyta(self,status,**ta_info):
         ''' copy old transaction, return new transaction.
             parameters for new transaction are in ta_info (new transaction is updated with these values).
         '''
         script = _Transaction.processlist[-1]
-        cursor = botsglobal.db.cursor()
-        cursor.execute(u'''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey)
-                                SELECT   %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey
-                                FROM  ta
+        newidta = insertta(u'''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey)
+                                SELECT %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey
+                                FROM ta
                                 WHERE idta=%(idta)s''',
                                 {'idta':self.idta,'script':script,'newstatus':status})
-        newidta = cursor.lastrowid
-        if not newidta:   #if botsglobal.settings.DATABASE_ENGINE ==
-            cursor.execute('''SELECT lastval() as idta''')
-            newidta = cursor.fetchone()['idta']
-        botsglobal.db.commit()
-        cursor.close()
-        newdbta = OldTransaction(newidta)
-        newdbta.update(**ta_info)
-        return newdbta
+        newta = OldTransaction(newidta)
+        newta.update(**ta_info)
+        return newta
 
 
 class OldTransaction(_Transaction):
@@ -162,20 +132,13 @@ class OldTransaction(_Transaction):
 class NewTransaction(_Transaction):
     ''' Generate new transaction. '''
     def __init__(self,**ta_info):
-        updatedict = dict([(key,value) for key,value in ta_info.items() if key in _Transaction.filterlist])     #filter ta_info
-        updatedict['script'] = _Transaction.processlist[-1]
+        updatedict = dict([(key,value) for key,value in ta_info.items() if key in self.filterlist])     #filter ta_info
+        updatedict['script'] = self.processlist[-1]
         namesstring = ','.join([key for key in updatedict])
         varsstring = ','.join(['%('+key+')s' for key in updatedict])
-        cursor = botsglobal.db.cursor()
-        cursor.execute(u'''INSERT INTO ta (''' + namesstring + ''')
+        self.idta = insertta(u'''INSERT INTO ta (''' + namesstring + ''')
                                  VALUES   (''' + varsstring + ''')''',
                                 updatedict)
-        self.idta = cursor.lastrowid
-        if not self.idta:
-            cursor.execute('''SELECT lastval() as idta''')
-            self.idta = cursor.fetchone()['idta']
-        botsglobal.db.commit()
-        cursor.close()
 
 
 class NewProcess(NewTransaction):
@@ -185,12 +148,12 @@ class NewProcess(NewTransaction):
     '''
     def __init__(self,functionname=''):
         super(NewProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid(),statuse=get_minta4query())
-        _Transaction.processlist.append(self.idta)
+        self.processlist.append(self.idta)
 
     def update(self,**ta_info):
         ''' update process, delete from process-stack. '''
         super(NewProcess,self).update(**ta_info)
-        _Transaction.processlist.pop()
+        self.processlist.pop()
 
 
 def trace_origin(ta,where=None):
@@ -222,7 +185,7 @@ def trace_origin(ta,where=None):
                 yield ta.parent
         else:           #no parent via parent-link, so look via child-link
             for row in query('''SELECT idta
-                                 FROM  ta
+                                 FROM ta
                                  WHERE idta>%(rootidta)s
                                  AND child=%(idta)s''',
                                 {'idta':ta.idta,'rootidta':get_minta4query()}):
@@ -258,68 +221,45 @@ def addinfocore(change,where,wherestring):
         ta_from.update(statust=DONE)    #update 'old' ta
     return counter
 
-
 def addinfo(change,where):
-    ''' add/changes information in db-ta's by coping the ta's; the status is updated.
-        using only change and where dict.'''
+    ''' changes ta's; ta's are copyed to new ta; the status is updated.
+        change-dict: values to change; where-dict: selection.'''
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
     return addinfocore(change=change,where=where,wherestring=wherestring)
 
 def updateinfo(change,where):
-    ''' update info in ta if not set; no status change.
-        where-dict selects db-ta's, change-dict sets values;
-        returns the number of db-ta that have been changed.
+    ''' update info in ta's; not to be used for status change (use addinfo)
+        where-dict selects ta's, change-dict sets values;
     '''
     if 'statust' not in where:
         where['statust'] = OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
-    if 'rootidta' not in where:
-        where['rootidta'] = get_minta4query()
-        wherestring = ' idta > %(rootidta)s AND ' + wherestring
-    counter = 0 #count the number of dbta changed
-    for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
-        counter += 1
-        ta_from = OldTransaction(row['idta'])
-        ta_from.synall()
-        defchange = {}
-        for key,value in change.items():
-            if value and not getattr(ta_from,key,None): #if there is a value and the key is not set in ta_from:
-                defchange[key] = value
-        ta_from.update(**defchange)
-    return counter
+    where['rootidta'] = get_minta4query()
+    wherestring = ' idta > %(rootidta)s AND ' + wherestring
+    #change-dict: discard empty values. Change keys: this is needed because same keys can be in where-dict
+    change = [(key,value) for key,value in change.items() if value]
+    changestring = ','.join([key+'=%(change_'+key+')s' for key,value in change])
+    where.update([('change_'+key,value) for key,value in change])
+    changeq(u'''UPDATE ta SET '''+changestring+ ''' WHERE '''+wherestring+ ''' ''',where)
 
 def changestatustinfo(change,where):
-    ''' update info in ta if not set; no status change.
+    ''' update statust in ta.
         where-dict selects db-ta's, change is the new statust;
-        returns the number of db-ta that have been changed.
     '''
-    if not isinstance(change,int):
-        raise BotsError(_(u'change not valid: expect status to be an integer. Programming error.'))
-    if 'statust' not in where:
-        where['statust'] = OK
-    wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
-    if 'rootidta' not in where:
-        where['rootidta'] = get_minta4query()
-        wherestring = ' idta > %(rootidta)s AND ' + wherestring
-    counter = 0 #count the number of dbta changed
-    for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
-        counter += 1
-        ta_from = OldTransaction(row['idta'])
-        ta_from.update(statust = change)
-    return counter
+    updateinfo({'statust':change},where)
 
 #**********************************************************/**
 #*************************Database***********************/**
 #**********************************************************/**
 def set_database_lock():
     try:
-        change(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
+        changeq(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
     except:
         return False
     return True
 
 def remove_database_lock():
-    change('''DELETE FROM mutex WHERE mutexk=1''')
+    changeq('''DELETE FROM mutex WHERE mutexk=1''')
 
 def query(querystring,*args):
     ''' general query. yields rows from query '''
@@ -330,15 +270,30 @@ def query(querystring,*args):
     for result in results:
         yield result
 
-def change(querystring,*args):
+def changeq(querystring,*args):
     '''general inset/update. no return'''
     cursor = botsglobal.db.cursor()
     try:
         cursor.execute(querystring,*args)
     except:
+        botsglobal.db.rollback()    #rollback is needed for postgreSQL as this is also used by user scripts (eg via persist)
         raise
     botsglobal.db.commit()
     cursor.close()
+
+def insertta(querystring,*args):
+    ''' insert ta
+        from insert get back the idta; this is different with postgrSQL.
+    '''
+    cursor = botsglobal.db.cursor()
+    cursor.execute(querystring,*args)
+    newidta = cursor.lastrowid
+    if not newidta:   #if botsglobal.settings.DATABASE_ENGINE ==
+        cursor.execute('''SELECT lastval() as idta''')
+        newidta = cursor.fetchone()['idta']
+    botsglobal.db.commit()
+    cursor.close()
+    return newidta
 
 def unique(domein):
     ''' generate unique number within range domain.
@@ -351,6 +306,7 @@ def unique(domein):
         cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
         nummer = cursor.fetchone()['nummer']
     except: #DatabaseError: domein does not exist
+        botsglobal.db.rollback()    #rollback is needed for postgreSQL
         cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
         nummer = 1
     if nummer > sys.maxint-2:
@@ -369,6 +325,7 @@ def checkunique(domein, receivednumber):
         cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
         expectednumber = cursor.fetchone()['nummer'] + 1
     except: # ???.DatabaseError; domein does not exist
+        botsglobal.db.rollback()    #rollback is needed for postgreSQL
         cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
         expectednumber = 1
     if expectednumber == receivednumber:
@@ -426,8 +383,7 @@ def txtexc():
     return terug.decode('utf-8','ignore')
 
 class ErrorProcess(NewTransaction):
-    ''' Used in logging of errors in processes.
-        20110828: used in communication.py to indicate errors in receiving files (files have not been received)
+    ''' Used in logging of errors in processes: communication.py to indicate errors in receiving files (files have not been received)
     '''
     def __init__(self,functionname='',errortext='',channeldict=None):
         fromchannel = tochannel = ''
@@ -576,9 +532,9 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
 def checkconfirmrules(confirmtype,**kwargs):
     terug = False       #boolean to return: ask a confirm of not?
     for confirmdict in query(u'''SELECT ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,editype,messagetype,negativerule
-                        FROM    confirmrule
-                        WHERE   active=%(active)s
-                        AND     confirmtype=%(confirmtype)s
+                        FROM confirmrule
+                        WHERE active=%(active)s
+                        AND confirmtype=%(confirmtype)s
                         ORDER BY negativerule ASC
                         ''',
                         {'active':True,'confirmtype':confirmtype}):
