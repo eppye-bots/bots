@@ -57,6 +57,11 @@ class TestGrammar(unittest.TestCase):
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
+        field =       ['S001.0001','M', 18.9,'N']
+        fieldresult = ['S001.0001','M', 18,'N',True,9,0,'R']
+        gramfield(field,'')
+        self.assertEqual(field,fieldresult)
+        
         field =       ['S001.0001','M', (4,4.3),'N']
         fieldresult = ['S001.0001','M', 4,'N',True,3,4,'R']
         gramfield(field,'')

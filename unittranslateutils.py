@@ -32,15 +32,18 @@ class TestTranslate(unittest.TestCase):
         transform.persist_delete(domein,botskey)
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #test-tet is not there. gives no error...
-
+    '''
     def testpersistunicode(self):
         domein=u'test'
         botskey=u'1235:\ufb52\ufb66\ufedb'
+        botskey3=u'135:\ufb52\ufb66\ufedb'
         value= u'xxxxxxxxxxxxxxxxx'
         value2= u'IEFJUKAHE*FMhr\u0302\u0267t4hr f.wch shjeriw'
-        value3= u'1'*1024
+        value3= u'1/2/d'*3024
         transform.persist_delete(domein,botskey)
-        #~ self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value3)   #content is too long
+        transform.persist_delete(domein,botskey3)
+        transform.persist_add(domein,botskey3,value3)
+        self.assertEqual(value3,transform.persist_lookup(domein,botskey3),'basis')
         transform.persist_add(domein,botskey,value)
         self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value)   #is already present
         self.assertEqual(value,transform.persist_lookup(domein,botskey),'basis')
@@ -52,16 +55,6 @@ class TestTranslate(unittest.TestCase):
         transform.persist_update(domein,botskey,value)   #is not there. gives no error...
 
     def testcodeconversion(self):
-        #codeconversion via file (20111116: depreciated): 
-        self.assertEqual('TESTOUT',transform.codeconversion('aperakrff2qualifer','TESTIN'),'basis')
-        self.assertEqual('TESTOUT',transform.safecodeconversion('aperakrff2qualifer','TESTIN'),'basis')
-        self.assertEqual('TESTINNOT',transform.safecodeconversion('aperakrff2qualifer','TESTINNOT'),'basis')
-        self.assertRaises(botslib.CodeConversionError,transform.codeconversion,'aperakrff2qualifer','TESTINNOT') 
-        self.assertEqual('TESTIN',transform.rcodeconversion('aperakrff2qualifer','TESTOUT'),'basis')
-        self.assertEqual('TESTIN',transform.safercodeconversion('aperakrff2qualifer','TESTOUT'),'basis')
-        self.assertEqual('TESTINNOT',transform.safercodeconversion('aperakrff2qualifer','TESTINNOT'),'basis')
-        self.assertRaises(botslib.CodeConversionError,transform.rcodeconversion,'aperakrff2qualifer','TESTINNOT') 
-        
         #codeconversion via tabel ccode OLD functionnames: 
         self.assertEqual('TESTOUT',transform.codetconversion('artikel','TESTIN'),'basis')
         self.assertEqual('TESTOUT',transform.safecodetconversion('artikel','TESTIN'),'basis')
@@ -88,6 +81,39 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual('TESTATTR1',transform.ccode('artikel','TESTIN','attr1'),'basis')
         self.assertEqual('TESTATTR1',transform.safe_ccode('artikel','TESTIN','attr1'),'basis')
 
+    def testgetcodeset(self):
+        self.assertEqual([u'TESTOUT'],transform.getcodeset('artikel','TESTIN'),'test getcodeset')
+        self.assertEqual([u'1', u'2', u'4', u'5'],transform.getcodeset('list','list'),'test getcodeset')
+        
+    def testdatemask(self):
+        self.assertEqual(u'20121231',transform.datemask('12/31/2012','MM/DD/YYYY','YYYYMMDD'),'test datemask')
+        self.assertEqual(u'201231',transform.datemask('12/31/2012','MM/DD/YYYY','YYMMDD'),'test datemask')
+        
+    def testuseoneof(self):
+        self.assertEqual(u'test',transform.useoneof(None,'test'),'test useoneof')
+        self.assertEqual(u'test',transform.useoneof('test','test1','test2'),'test useoneof')
+        self.assertEqual(None,transform.useoneof(),'test useoneof')
+        self.assertEqual(None,transform.useoneof(()),'test useoneof')
+        self.assertEqual(None,transform.useoneof(''),'test useoneof')
+        self.assertEqual(None,transform.useoneof(None,None,None,None),'test useoneof')
+        
+    def testdateformat(self):
+        self.assertEqual(None,transform.dateformat(''),'test dateformat')
+        self.assertEqual(None,transform.dateformat(None),'test dateformat')
+        self.assertEqual(u'102',transform.dateformat('12345678'),'test dateformat')
+        self.assertEqual(None,transform.dateformat('123456789'),'test dateformat')
+        self.assertEqual(None,transform.dateformat('1234567'),'test dateformat')
+        self.assertEqual(u'203',transform.dateformat('123456789012'),'test dateformat')
+        self.assertEqual(u'718',transform.dateformat('1234567890123456'),'test dateformat')
+        
+    def testtruncate(self):
+        self.assertEqual(None,transform.truncate(5,None),'test truncate')
+        self.assertEqual(u'artik',transform.truncate(5,'artikel'),'test truncate')
+        self.assertEqual(u'artikel',transform.truncate(10,'artikel'),'test truncate')
+        self.assertEqual(u'a',transform.truncate(1,'artikel'),'test truncate')
+        self.assertEqual(u'',transform.truncate(0,'artikel'),'test truncate')
+        
+        
     def testunique(self):
         newdomain = 'test' + transform.unique('test')
         self.assertEqual('1',transform.unique(newdomain),'init new domain')
@@ -136,6 +162,7 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(True,transform.checkean('123456789012345675'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345670'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345677'),'UPC')
+    '''
 
 if __name__ == '__main__':
     botsinit.generalinit('config')

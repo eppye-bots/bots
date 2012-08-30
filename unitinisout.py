@@ -75,12 +75,13 @@ class Testinisoutedifact(unittest.TestCase):
         self.failUnless(filecmp.cmp('bots/botssys/infile/unitinisout/output/040601.edi','bots/botssys/infile/unitinisout/output/040607.edi'))
         self.failUnless(filecmp.cmp('bots/botssys/infile/unitinisout/output/040601.edi','bots/botssys/infile/unitinisout/output/040608.edi'))
 
+
 class Testinisoutinh(unittest.TestCase):
     def testinh01(self):
         filenamein='botssys/infile/unitinisout/org/inisout01.inh'
         filenameout='botssys/infile/unitinisout/output/inisout01.inh'
         inn = inmessage.parse_edi_file(editype='fixed',messagetype='invoicfixed',filename=filenamein)
-        out = outmessage.outmessage_init(editype='fixed',messagetype='invoicfixed',filename=filenameout,divtext='',topartner='')    #make outmessage object
+        out = outmessage.outmessage_init(editype='fixed',messagetype='invoicfixed',filename=filenameout,divtext='',topartner='KCS0004')    #make outmessage object
         out.root = inn.root
         out.writeall()
         self.failUnless(filecmp.cmp('bots/' + filenameout,'bots/' + filenamein))
@@ -99,6 +100,8 @@ class Testinisoutx12(unittest.TestCase):
         filenamein='botssys/infile/unitinisout/org/inisout01.x12'
         filenameout='botssys/infile/unitinisout/output/inisout01.x12'
         inn = inmessage.parse_edi_file(editype='x12',messagetype='850withenvelope',filename=filenamein)
+        self.assertEqual(inn.ta_info['frompartner'],'11111111111','ISA partner without spaces')
+        self.assertEqual(inn.ta_info['topartner'],'22222222222','ISA partner without spaces')
         out = outmessage.outmessage_init(editype='x12',messagetype='850withenvelope',filename=filenameout,divtext='',topartner='')    #make outmessage object
         out.root = inn.root
         out.writeall()
