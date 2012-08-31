@@ -228,24 +228,6 @@ class crashrecovery(new):
         
 
 class automaticretrycommunication(new):
-    def keeptrackoflastretry(self):
-        ''' keep track of last automaticretrycommunication/retry
-            if domain not used before, initialize it . '1' is the first value expected.
-        '''
-        domein = 'bots__automaticretrycommunication'
-        cursor = botsglobal.db.cursor()
-        try:
-            cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
-            oldlastta = cursor.fetchone()['nummer']
-        except:     #DatabaseError; domein does not exist so set it
-            botsglobal.db.rollback()    #rollback is needed for postgreSQL
-            cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
-            oldlastta = 1
-        cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':self.rootidta_of_current_run})
-        botsglobal.db.commit()
-        cursor.close()
-        return oldlastta
-
     @staticmethod
     def get_idta_last_error(idta_lastretry):
         for row in botslib.query('''SELECT MIN(idta) as min_idta
@@ -260,7 +242,8 @@ class automaticretrycommunication(new):
         ''' reinjects all files for which communication failed.
         '''
         do_retransmit = False
-        idta_lastretry = self.keeptrackoflastretry()    #bots keeps track of last time automaticretrycommunication was done; reason is mainly performance
+        #bots keeps track of last time automaticretrycommunication was done; reason is mainly performance
+        idta_lastretry = botslib.uniquecore('bots__automaticretrycommunication',updatewith=self.rootidta_of_current_run)
         startidta = self.get_idta_last_error(idta_lastretry)
         if not startidta:
             return False

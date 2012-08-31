@@ -57,6 +57,10 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
                             {'rootidtaofrun':rootidtaofrun,
                             'lastopen':resultsofrun[OPEN],'lasterror':resultsofrun[ERROR],'lastok':resultsofrun[OK],'lastdone':resultsofrun[DONE],
                             'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':lastreceived,'status':status,'type':command,'totalfilesize':totalfilesize})
+    #20120830: if new run with nothing received and no process errors: delete ta's.
+    if command == 'new' and not lastreceived and not processerrors:
+        botslib.changeq('''DELETE FROM ta WHERE idta>=%(rootidtaofrun)s''',{'rootidtaofrun':rootidtaofrun})
+
 
 
 def email_error_report(rootidtaofrun):

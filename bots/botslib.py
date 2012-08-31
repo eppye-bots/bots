@@ -147,7 +147,7 @@ class NewProcess(NewTransaction):
         Each process is placed on stack processlist
     '''
     def __init__(self,functionname=''):
-        super(NewProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid(),statuse=get_minta4query())
+        super(NewProcess,self).__init__(filename=functionname,status=PROCESS,idroute=getrouteid())
         self.processlist.append(self.idta)
 
     def update(self,**ta_info):
@@ -300,42 +300,39 @@ def unique(domein):
         uses db to keep track of last generated number
         if domain not used before, initialize with 1.
     '''
-    cursor = botsglobal.db.cursor()
-    try:
-        cursor.execute(u'''UPDATE uniek SET nummer=nummer+1 WHERE domein=%(domein)s''',{'domein':domein})
-        cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
-        nummer = cursor.fetchone()['nummer']
-    except: #DatabaseError: domein does not exist
-        botsglobal.db.rollback()    #rollback is needed for postgreSQL
-        cursor.execute(u'''INSERT INTO uniek (domein) VALUES (%(domein)s)''',{'domein': domein})
-        nummer = 1
+    nummer = uniquecore(domein)
     if nummer > sys.maxint-2:
         nummer = 1
-        cursor.execute(u'''UPDATE uniek SET nummer=1 WHERE domein=%(domein)s''',{'domein':domein})
+        changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':nummer})
+    return nummer
+
+def uniquecore(domein,updatewith=None):
+    cursor = botsglobal.db.cursor()
+    try:
+        cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
+        nummer = cursor.fetchone()['nummer']
+    except TypeError: #if domein does not exist, fetchone returns None, so TypeError
+        cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
+        nummer = 0
+    if updatewith is None:
+        nummer += 1
+        updatewith = nummer
+    cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':updatewith})
     botsglobal.db.commit()
     cursor.close()
     return nummer
-
+    
 def checkunique(domein, receivednumber):
     ''' to check if received number is sequential: value is compare with earlier received value.
         if domain not used before, initialize it . '1' is the first value expected.
     '''
-    cursor = botsglobal.db.cursor()
-    try:
-        cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
-        expectednumber = cursor.fetchone()['nummer'] + 1
-    except: # ???.DatabaseError; domein does not exist
-        botsglobal.db.rollback()    #rollback is needed for postgreSQL
-        cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
-        expectednumber = 1
-    if expectednumber == receivednumber:
-        cursor.execute(u'''UPDATE uniek SET nummer=nummer+1 WHERE domein=%(domein)s''',{'domein':domein})
+    earlierreceivednumber = uniquecore(domein,updatewith=receivednumber)
+    if earlierreceivednumber+1  == receivednumber:
         terug = True
     else:
+        #set back number
+        changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':earlierreceivednumber})
         terug = False
-    botsglobal.db.commit()
-    cursor.close()
-    return terug
 
 #**********************************************************/**
 #*************************Logging, Error handling********************/**

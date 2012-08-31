@@ -12,14 +12,18 @@ import botsglobal
 
 
 def cleanup():
-    ''' public function, does all cleanup of the database and file system.'''
+    ''' public function, does all cleanup of the database and file system.
+        most cleanup functions are done only once a day.
+    '''
     try:
-        _cleanupsession()
-        _cleandatafile()
-        _cleanarchive()
-        _cleanpersist()
-        _cleanprocessnothingreceived()
-        _cleantransactions()
+        cur_day = int(time.strftime('%Y%m%d'))    #get current date, convert to int
+        if cur_day != botslib.uniquecore('bots_cleanup_day',updatewith=cur_day):    
+            _cleanupsession()
+            _cleandatafile()
+            _cleanarchive()
+            _cleanpersist()
+            _cleantransactions()
+        _cleanrunsnothingreceived()          #do this for every runs
     except:
         botsglobal.logger.exception(u'Cleanup error.')
 
@@ -96,15 +100,16 @@ def _cleantransactions():
     #this will not lead to problems.
 
 
-def _cleanprocessnothingreceived():
-    ''' delete all new runs that received no files; including all ta-processes in the run
+def _cleanrunsnothingreceived():
+    ''' delete all report off new runs that received no files and no process errors.
+        #20120830: if new run with nothing received and no process errors: ta's are already deleted in automaticmaintenance.
     '''
     vanaf = datetime.datetime.today() - datetime.timedelta(hours=botsglobal.ini.getint('settings','hoursrunwithoutresultiskept',1))
-    for row in botslib.query('''SELECT idta
-                                FROM report
-                                WHERE ts < %(vanaf)s
-                                AND type = 'new'
-                                AND lastreceived=0 ''',
-                               {'vanaf':vanaf}):
-        botslib.changeq('''DELETE FROM report WHERE idta=%(idta)s ''',{'idta':row['idta']})
-        botslib.changeq('''DELETE FROM ta WHERE idta>%(idta)s AND statuse=%(idta)s''',{'idta':row['idta']})
+    onlycheckrunsofoneday = datetime.datetime.today() - datetime.timedelta(hours=25)
+    botslib.changeq('''DELETE FROM report
+                        WHERE ts < %(vanaf)s
+                        AND ts >= %(onlycheckrunsofoneday)s
+                        AND type = 'new'
+                        AND lastreceived=0 
+                        AND processerrors=0 ''',
+                       {'vanaf':vanaf,'onlycheckrunsofoneday':onlycheckrunsofoneday})
