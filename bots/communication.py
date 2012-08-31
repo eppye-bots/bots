@@ -31,8 +31,6 @@ from django.utils.translation import ugettext as _
 #Bots modules
 import botslib
 import botsglobal
-import inmessage
-import outmessage
 from botsconfig import *
 
 @botslib.log_session
