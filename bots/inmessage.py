@@ -264,7 +264,7 @@ class Inmessage(message.Message):
                     first = False
                 ta_info = self.ta_info.copy()
                 ta_info.update(eachmessage.queries)
-                #~ ta_info['botsroot']=self.root
+                ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
                 yield self._getmessagefromenvelope(eachmessage,ta_info)
             if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
                 first = True
@@ -274,7 +274,7 @@ class Inmessage(message.Message):
                         first = False
                     ta_info = self.ta_info.copy()
                     ta_info.update(eachmessage.queries)
-                    #~ ta_info['botsroot']=self.root
+                    ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
                     yield self._getmessagefromenvelope(eachmessage,ta_info)
         elif self.defmessage.nextmessageblock is not None:          #for csv/fixed: nextmessageblock indicates which field determines a message (as long as the field is the same, it is one message)
             #there is only one recordtype (this is checked in grammar.py).
@@ -288,7 +288,7 @@ class Inmessage(message.Message):
                 elif kriterium != oldkriterium:
                     ta_info = self.ta_info.copy()
                     ta_info.update(oldline.queries)        #update ta_info with information (from previous line) 20100905
-                    #~ ta_info['botsroot']=self.root   #give mappingscript access to all information in edi file: all records
+                    ta_info['bots_accessenvelope']=self.root      #give mappingscript access to envelope
                     yield self._getmessagefromenvelope(newroot,ta_info)
                     newroot = node.Node()  #make new empty root node.
                     oldkriterium = kriterium
@@ -300,19 +300,19 @@ class Inmessage(message.Message):
                 if not first:
                     ta_info = self.ta_info.copy()
                     ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
-                    #~ ta_info['botsroot']=self.root
+                    ta_info['bots_accessenvelope']=self.root       #give mappingscript access to envelope
                     yield self._getmessagefromenvelope(newroot,ta_info)
         else:   #no split up indicated in grammar;
             if self.root.record or self.ta_info['pass_all']:    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
-                #~ ta_info['botsroot']=None        #??is the same as self.root, so I use None??.
+                ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelop
                 yield self._getmessagefromenvelope(self.root,ta_info)
             else:   #pass nodes under root one by one
                 for child in self.root.children:
                     ta_info = self.ta_info.copy()
                     ta_info.update(child.queries)
-                    #~ ta_info['botsroot']=self.root   #give mappingscript access to all information in edi file: all roots
+                    ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
                     yield self._getmessagefromenvelope(child,ta_info)
                     
     def _getmessagefromenvelope(self,inode,ta_info):
