@@ -23,7 +23,7 @@ def cleanup():
             _cleanarchive()
             _cleanpersist()
             _cleantransactions()
-        _cleanrunsnothingreceived()          #do this for every runs
+        _cleanrunsnothingreceived()          #do this for every run
     except:
         botsglobal.logger.exception(u'Cleanup error.')
 

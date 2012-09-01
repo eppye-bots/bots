@@ -5,34 +5,12 @@ import xmlrpclib
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 import time
 import datetime
-import logging
-from logging.handlers import TimedRotatingFileHandler
-logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line.
-                                #it is better to have a missing log line than an error in queueserver....
 import subprocess
 import threading
 import botsinit
 import botslib
 import botsglobal
 
-def initlogging(logname):
-    # initialise file logging
-    convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
-    logging.addLevelName(25, 'STARTINFO')
-    logger = logging.getLogger(logname)
-    logger.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_file_level','INFO')])
-    handler = TimedRotatingFileHandler(os.path.join(botsglobal.ini.get('directories','logging'),logname+'.log'),when='midnight',backupCount=10)
-    fileformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
-    handler.setFormatter(fileformat)
-    logger.addHandler(handler)
-    # initialise console/screen logging
-    if botsglobal.ini.getboolean(logname,'log_console',True):      #handling for logging to screen
-        console = logging.StreamHandler()
-        console.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_console_level','STARTINFO')])
-        consoleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
-        console.setFormatter(consoleformat) # add formatter to console
-        logger.addHandler(console)  # add console to logger
-    return logger
 
 #-------------------------------------------------------------------------------
 PRIORITY = 0
@@ -155,7 +133,7 @@ def start():
     maxruntime = botsglobal.ini.getint('settings','maxruntime',60)
     
     process_name = 'jobqueue'
-    logger = initlogging(process_name)
+    logger = botsinit.initserverlogging(process_name)
     logger.log(25,u'Bots %s started.',process_name)
     logger.log(25,u'Bots %s configdir: "%s".',process_name,botsglobal.ini.get('directories','config'))
     logger.log(25,u'Bots %s listens for xmlrpc at port: "%s".',process_name,port)

@@ -10,9 +10,6 @@ import os
 import fnmatch
 import threading
 import time
-import logging
-from logging.handlers import TimedRotatingFileHandler
-logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line.
 #bots imports
 import botsinit
 import botsglobal
@@ -127,25 +124,6 @@ else:
         notifier.loop()
     #end of linux-specific ##################################################################################
 
-def initlogging(logname):
-    # initialise file logging
-    convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
-    logging.addLevelName(25, 'STARTINFO')
-    logger = logging.getLogger(logname)
-    logger.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_file_level','INFO')])
-    handler = TimedRotatingFileHandler(os.path.join(botsglobal.ini.get('directories','logging'),logname+'.log'),when='midnight',backupCount=10)
-    fileformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
-    handler.setFormatter(fileformat)
-    logger.addHandler(handler)
-    # initialise console/screen logging
-    if botsglobal.ini.getboolean(logname,'log_console',True):      #handling for logging to screen
-        console = logging.StreamHandler()
-        console.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_console_level','STARTINFO')])
-        consoleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
-        console.setFormatter(consoleformat) # add formatter to console
-        logger.addHandler(console)  # add console to logger
-    return logger
-
 
 def start():
     #***command line arguments**************************
@@ -163,10 +141,10 @@ def start():
     botsinit.generalinit(configdir)         #needed to read config
     botsenginepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py')        #get path to bots-engine
 
-    PROCESS_NAME = 'dirmonitor'
-    logger = initlogging(PROCESS_NAME)
-    logger.log(25,u'Bots %s started.',PROCESS_NAME)
-    logger.log(25,u'Bots %s configdir: "%s".',PROCESS_NAME,botsglobal.ini.get('directories','config'))
+    process_name = 'dirmonitor'
+    logger = botsinit.initserverlogging(process_name)
+    logger.log(25,u'Bots %s started.',process_name)
+    logger.log(25,u'Bots %s configdir: "%s".',process_name,botsglobal.ini.get('directories','config'))
     
     cond = threading.Condition()
     tasks = set()    
@@ -195,7 +173,7 @@ def start():
         dir_watch_thread.start()
 
     # this main thread get the results from the watch-thread(s).
-    logger.info(u'Directory monitor server started.')
+    logger.info(_(u'Bots %s started.'),process_name)
     active_receiving = False
     timeout = 2.0
     cond.acquire()

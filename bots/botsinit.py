@@ -135,36 +135,8 @@ def botscharsetreplace(info):
     '''replaces an char outside a charset by a user defined char. Useful eg for fixed records: recordlength does not change. Do not know if this works for eg UTF-8...'''
     return (botsglobal.botsreplacechar, info.start+1)
 
-def initenginelogging():
-    convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL}
-    # create main logger 'bots'
-    botsglobal.logger = logging.getLogger('bots')
-    botsglobal.logger.setLevel(logging.DEBUG)
-    # create rotating file handler
-    log_file = botslib.join(botsglobal.ini.get('directories','logging'),'engine.log')
-    rotatingfile = logging.handlers.RotatingFileHandler(log_file,backupCount=botsglobal.ini.getint('settings','log_file_number',10))
-    rotatingfile.setLevel(convertini2logger[botsglobal.ini.get('settings','log_file_level','ERROR')])
-    fileformat = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s : %(message)s",'%Y%m%d %H:%M:%S')
-    rotatingfile.setFormatter(fileformat)
-    rotatingfile.doRollover()   #each run a new log file is used; old one is rotated
-    # add rotating file handler to main logger
-    botsglobal.logger.addHandler(rotatingfile)
-    #logger for trace of mapping; tried to use filters but got this not to work.....
-    botsglobal.logmap = logging.getLogger('bots.map')
-    if  not botsglobal.ini.getboolean('settings','mappingdebug',False):
-        botsglobal.logmap.setLevel(logging.CRITICAL)
-    #logger for reading edifile. is now used only very limited (1 place); is done with 'if'
-    #~ botsglobal.ini.getboolean('settings','readrecorddebug',False)
-    # create console handler
-    if botsglobal.ini.getboolean('settings','log_console',True):
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
-        consuleformat = logging.Formatter("%(levelname)-8s %(message)s")
-        console.setFormatter(consuleformat) # add formatter to console
-        botsglobal.logger.addHandler(console)  # add console to logger
-
 def connect():
-    #different connect code per type of database
+    ''' connect to database for non-django modules eg engine '''
     if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
         #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
         if not os.path.isfile(botsglobal.settings.DATABASES['default']['NAME']):
@@ -195,3 +167,52 @@ def connect():
         botsglobal.db.set_client_encoding('UNICODE')
     else:
         raise botslib.PanicError(u'Unknown database engine "%s".'%(botsglobal.settings.DATABASES['default']['ENGINE']))
+
+#*******************************************************************
+#*** init logging **************************************************
+#*******************************************************************
+logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error. (leads to a missing log line, better than error;-).
+logging.addLevelName(25, 'STARTINFO')
+convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
+
+def initenginelogging(logname):
+    #initialise file logging: create main logger 'bots'
+    logger = logging.getLogger(logname)
+    logger.setLevel(convertini2logger[botsglobal.ini.get('settings','log_file_level','INFO')])
+    handler = logging.handlers.RotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),logname+'.log'),backupCount=botsglobal.ini.getint('settings','log_file_number',10))
+    fileformat = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s : %(message)s",'%Y%m%d %H:%M:%S')
+    handler.setFormatter(fileformat)
+    handler.doRollover()   #each run a new log file is used; old one is rotated
+    logger.addHandler(handler)
+    #initialise file logging: logger for trace of mapping; tried to use filters but got this not to work.....
+    botsglobal.logmap = logging.getLogger('bots.map')
+    if not botsglobal.ini.getboolean('settings','mappingdebug',False):
+        botsglobal.logmap.setLevel(logging.CRITICAL)
+    #logger for reading edifile. is now used only very limited (1 place); is done with 'if'
+    #~ botsglobal.ini.getboolean('settings','readrecorddebug',False)
+    # initialise console/screen logging
+    if botsglobal.ini.getboolean('settings','log_console',True):
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        consuleformat = logging.Formatter("%(levelname)-8s %(message)s")
+        console.setFormatter(consuleformat) # add formatter to console
+        logger.addHandler(console)  # add console to logger
+    return logger
+
+def initserverlogging(logname):
+    # initialise file logging
+    logger = logging.getLogger(logname)
+    logger.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_file_level','INFO')])
+    handler = logging.handlers.TimedRotatingFileHandler(os.path.join(botsglobal.ini.get('directories','logging'),logname+'.log'),when='midnight',backupCount=10)
+    fileformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
+    handler.setFormatter(fileformat)
+    logger.addHandler(handler)
+    # initialise console/screen logging
+    if botsglobal.ini.getboolean(logname,'log_console',True):
+        console = logging.StreamHandler()
+        console.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_console_level','STARTINFO')])
+        consoleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
+        console.setFormatter(consoleformat) # add formatter to console
+        logger.addHandler(console)  # add console to logger
+    return logger
+

@@ -6,8 +6,6 @@ import atexit
 import traceback
 import datetime
 import logging
-logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error; this will lead to a missing log line.
-                                #it is better to have a missing log line than an error.
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
@@ -77,8 +75,9 @@ def start():
     #set current working directory to botspath
     #~ os.chdir(botsglobal.ini.get('directories','botspath'))
     #**************initialise logging******************************
+    process_name = 'engine'
     try:
-        botsinit.initenginelogging()
+        botsglobal.logger = botsinit.initenginelogging(process_name)
     except:
         print _('Error in initialising logging system')
         traceback.print_exc()
