@@ -11,19 +11,14 @@ except ImportError:
 NODECIMAL = decimal.Decimal(1)
 try:
     import cElementTree as ET
-    #~ print 'imported cElementTree'
 except ImportError:
     try:
         import elementtree.ElementTree as ET
-        #~ print 'imported elementtree.ElementTree'
     except ImportError:
         try:
             from xml.etree import cElementTree as ET
-            #~ print 'imported xml.etree.cElementTree'
         except ImportError:
             from xml.etree import ElementTree as ET
-            #~ print 'imported xml.etree.ElementTree'
-#~ print ET.VERSION
 try:
     import elementtree.ElementInclude as ETI
 except ImportError:
@@ -466,12 +461,9 @@ class idoc(fixed):
 class var(Outmessage):
     pass
 
-
 class csv(var):
     def _getescapechars(self):
         return self.ta_info['escape']
-
-
 
 class edifact(var):
     def _getescapechars(self):
