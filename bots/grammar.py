@@ -1,72 +1,55 @@
 import copy
 from django.utils.translation import ugettext as _
 import botslib
-#~ import botsglobal
 from botsconfig import *
 
-def grammarread(editype,grammarname):
-    ''' dispatch function for class Grammar or subclass
-        read whole grammar
+def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
+    ''' dispatch function for class Grammar and subclasses.
+        read whole grammar or only syntax (via parameter 'typeofgrammarfile'.
     '''
     try:
         classtocall = globals()[editype]
     except KeyError:
         raise botslib.GrammarError(_(u'Read grammar for editype "$editype" messagetype "$messagetype", but editype is unknown.'), editype=editype, messagetype=grammarname)
-    terug = classtocall('grammars',editype,grammarname)
-    terug.initsyntax(includedefault=True)
-    terug.initrestofgrammar()
-    return terug
-
-def syntaxread(soortpythonfile,editype,grammarname):
-    ''' dispatch function for class Grammar or subclass
-        read only syntax of grammar
-    '''
-    try:
-        classtocall = globals()[editype]
-    except KeyError:
-        raise botslib.GrammarError(_(u'Read grammar for type "$soort" editype "$editype" messagetype "$messagetype", but editype is unknown.'), soort=soortpythonfile,editype=editype, messagetype=grammarname)
-    terug = classtocall(soortpythonfile,editype,grammarname)
-    terug.initsyntax(includedefault=False)
+    terug = classtocall(typeofgrammarfile,editype,grammarname)
     return terug
 
 
 class Grammar(object):
-    ''' Class for translation grammar. The grammar is used in reading or writing an edi file.
+    ''' Class for translation grammar. A grammar contains the description of an edi-file; this is used in reading or writing an edi file.
         Description of the grammar file: see user manual.
-        The grammar is read from the grammar file.
-        Grammar file has several grammar parts , eg 'structure'and 'recorddefs'.
-        every grammar part is in a module is either the grammar part itself or a import from another module.
-        every module is read once, (default python import-machinery).
-        The information in a grammar is checked and manipulated.
+        The grammar is read from a grammar file.
+        A grammar file has several grammar parts , eg 'structure' and 'recorddefs'.
+        Grammar parts is either in the grammar part itself or a imported from another grammar-file (eg the edifact segments .
 
-        structure of self.grammar:
-            is a list of dict
-            attributes of dict: see header.py
+        in a grammar 'structure' is a list of dicts describing the sequence and relationships between the record(group)s:
+            attributes of each record(group) in structure:
             -   ID       record id
             -   MIN      min #occurences record or group
             -   MAX      max #occurences record of group
-            -   COUNT    added after read
-            -   MPATH    mpath of record (only record-ids). added after read
-            -   FIELDS   tuple of the fields in record. Added ather read from separate record.py-file
             -   LEVEL    child-records
-        structure of fields:
-            fields is tuple of (field or subfield)
+            added after reading the grammar (so: not in grammar-file):
+            -   MPATH    mpath of record 
+            -   FIELDS   (added from recordsdefs via lookup)
+        in a grammar 'recorddefs' describes the (sub) fields for the records:
+        -   'recorddefs' is a dict where key is the recordID, value is list of (sub) fields
+            each (sub)field is a tuple of (field or subfield)
             field is tuple of (ID, MANDATORY, LENGTH, FORMAT)
             subfield is tuple of (ID, MANDATORY, tuple of fields)
 
-        if a structure or recorddef has been read, Bots remembers this and skip most of the checks.
+        every grammar-file is read once (default python import-machinery).
+        The information in a grammar is checked and manipulated by bots.
+        if a structure or recorddef has already been read, Bots skips most of the checks.
     '''
     _checkstructurerequired = True
 
-    def __init__(self,soortpythonfile,editype,grammarname):
-        self.module,self.grammarname = botslib.botsimport(soortpythonfile,editype + '.' + grammarname)
-
-    def initsyntax(self,includedefault):
-        ''' Update default syntax from class with syntax read from grammar. '''
-        if includedefault:
-            self.syntax = copy.deepcopy(self.__class__.defaultsyntax)  #copy syntax from class data
+    def __init__(self,typeofgrammarfile,editype,grammarname):
+        self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype + '.' + grammarname)
+        if typeofgrammarfile == 'grammars':
+            self.syntax = copy.deepcopy(self.__class__.defaultsyntax)  #init syntax with default syntax from class (deepcopy because some values can be dict or list)
         else:
-            self.syntax = {}
+            self.syntax = {}        #init with empty syntax
+        #get syntax from grammar file
         try:
             syntaxfromgrammar = getattr(self.module, 'syntax')
         except AttributeError:
@@ -74,9 +57,12 @@ class Grammar(object):
         else:
             if not isinstance(syntaxfromgrammar,dict):
                 raise botslib.GrammarError(_(u'Grammar "$grammar": syntax is not a dict{}.'),grammar=self.grammarname)
+            #Update syntax with syntax read from grammar.
             self.syntax.update(syntaxfromgrammar)
-
-    def initrestofgrammar(self):
+        
+        if typeofgrammarfile != 'grammars':
+            return
+        #init rest of grammar
         try:
             self.nextmessage = getattr(self.module, 'nextmessage')
         except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere

@@ -88,7 +88,7 @@ class Outmessage(message.Message):
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by mappingscript
         if self.ta_info['topartner']:   #read syntax-file for partner dependent syntax
             try:
-                partnersyntax = grammar.syntaxread('partners',editype,self.ta_info['topartner'])
+                partnersyntax = grammar.grammarread(editype,self.ta_info['topartner'],typeofgrammarfile='partners')
                 self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
             except ImportError:
                 pass        #No partner specific syntax found (is not an error).
