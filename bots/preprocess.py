@@ -28,7 +28,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
                                 ''',
                                 {'status':status,'statust':OK,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel'],'rootidta':botslib.get_minta4query()}):
         try:
-            botsglobal.logmap.debug(u'Start preprocessing "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'Start preprocessing "%s" for file "%s".',function.__name__,row['filename'])
             ta_from = botslib.OldTransaction(row['idta'])
             ta_from.filename = row['filename']
             function(ta_from=ta_from,endstatus=status,routedict=routedict,**argv)
@@ -37,7 +37,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
             ta_from.update(statust=ERROR,errortext=txt)
             ta_from.deletechildren()
         else:
-            botsglobal.logmap.debug(u'OK preprocessing  "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'OK preprocessing  "%s" for file "%s".',function.__name__,row['filename'])
             ta_from.update(statust=DONE)
             nr_files += 1
     return nr_files
@@ -61,7 +61,7 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
                                 ''',
                                 {'status':status,'statust':OK,'idroute':routedict['idroute'],'tochannel':routedict['tochannel'],'rootidta':botslib.get_minta4query()}):
         try:
-            botsglobal.logmap.debug(u'Start postprocessing "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'Start postprocessing "%s" for file "%s".',function.__name__,row['filename'])
             ta_from = botslib.OldTransaction(row['idta'])
             ta_from.filename = row['filename']
             function(ta_from=ta_from,endstatus=status,routedict=routedict,**argv)
@@ -70,7 +70,7 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
             ta_from.update(statust=ERROR,errortext=txt)
             ta_from.deletechildren()
         else:
-            botsglobal.logmap.debug(u'OK postprocessing  "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'OK postprocessing  "%s" for file "%s".',function.__name__,row['filename'])
             ta_from.update(statust=DONE)
             nr_files += 1
     return nr_files
