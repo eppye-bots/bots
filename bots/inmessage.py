@@ -219,13 +219,20 @@ class Inmessage(message.Message):
                 messagetype = newnode.enhancedget(structure_level[structure_index][SUBTRANSLATION])
                 if not messagetype:
                     raise botslib.InMessageError(_(u'Could not find SUBTRANSLATION "$sub" in (sub)message.'),sub=structure_level[structure_index][SUBTRANSLATION])
-                if hasattr(self,'_getmessagetype'):     #x12 also needs field from GS record
-                    messagetype = self._getmessagetype(messagetype,inode)
-                messagetype = messagetype.replace('.','_')      #hack: older edifact messages have eg 90.1 as version...does not match with python imports...so convert this
+                messagetype = self._manipulatemessagetype(messagetype,inode)
                 try:
                     defmessage = grammar.grammarread(self.__class__.__name__,messagetype)
                 except ImportError:
-                    raise botslib.InMessageError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)
+                    raisenovalidmapping_error = True
+                    if hasattr(self.defmessage.module,'getmessagetype'):
+                        messagetype2 = botslib.runscript(self.defmessage.module,self.defmessage.grammarname,'getmessagetype',self.__class__.__name__,messagetype)
+                        try:
+                            defmessage = grammar.grammarread(self.__class__.__name__,messagetype2)
+                            raisenovalidmapping_error = False
+                        except ImportError:
+                            pass
+                    if raisenovalidmapping_error:
+                        raise botslib.InMessageError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)
                 current_edi_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
                 newnode.queries = {'messagetype':messagetype}       #copy messagetype into 1st segment of subtranslation (eg UNH, ST)
                 self.checkmessage(newnode,defmessage,subtranslation=True)      #check the results of the subtranslation
@@ -236,6 +243,12 @@ class Inmessage(message.Message):
                 # get_next_edi_record is still False; the current_edi_record that was not matched in lower segmentgroups is still being parsed.
             else:
                 get_next_edi_record = True
+
+    @staticmethod
+    def _manipulatemessagetype(messagetype,inode):
+        ''' default: just return messagetype. ''' 
+        return messagetype
+
 
     def _readcontent_edifile(self):
         ''' read content of edi file to memory.
@@ -628,6 +641,11 @@ class excel(csv):
 
 class edifact(var):
     ''' class for edifact inmessage objects.'''
+    @staticmethod
+    def _manipulatemessagetype(messagetype,inode):
+        ''' default: just return messgetype. ''' 
+        return messagetype.replace('.','_')      #older edifact messages have eg 90.1 as version...does not match with python imports...so convert this
+
     def _readcontent_edifile(self):
         ''' read content of edi file in memory.
             For edifact: not unicode. after sniffing unicode is used to check charset (UNOA etc)
@@ -804,8 +822,9 @@ class edifact(var):
 class x12(var):
     ''' class for edifact inmessage objects.'''
     @staticmethod
-    def _getmessagetype(messagetypefromsubtranslation,inode):
-        return messagetypefromsubtranslation +  inode.record['GS08']
+    def _manipulatemessagetype(messagetype,inode):
+        ''' x12 also needs field from GS record to identify correct messagetype '''
+        return messagetype +  inode.record['GS08']
 
     def _sniff(self):
         ''' examine a file for syntax parameters and correctness of protocol
