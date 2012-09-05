@@ -186,10 +186,14 @@ class Trace(object):
         '''
         def core(ta_object):
             if ta_object['status'] == FILEIN:   #data for incoming email #only used last FILEIN, or has extra status??
-                self.frommail = ta_object['frommail']
-                self.tomail = ta_object['tomail']
-                self.incontenttype = ta_object['contenttype']
-                self.rsrv1 = ta_object['rsrv1']         #email subject
+                if ta_object['frommail']:
+                    self.frommail = ta_object['frommail']
+                if ta_object['tomail']:
+                    self.tomail = ta_object['tomail']
+                if ta_object['contenttype']:
+                    self.incontenttype = ta_object['contenttype']
+                if ta_object['rsrv1']:
+                    self.rsrv1 = ta_object['rsrv1']         #email subject
             elif ta_object['status'] == FILEOUT:    #only for last idta...
                 if self.outidta:
                     if self.outidta != ta_object['idta'] and asterisk:
