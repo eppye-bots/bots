@@ -11,8 +11,7 @@ def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
         classtocall = globals()[editype]
     except KeyError:
         raise botslib.GrammarError(_(u'Read grammar for editype "$editype" messagetype "$messagetype", but editype is unknown.'), editype=editype, messagetype=grammarname)
-    terug = classtocall(typeofgrammarfile,editype,grammarname)
-    return terug
+    return classtocall(typeofgrammarfile,editype,grammarname)
 
 
 class Grammar(object):
