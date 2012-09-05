@@ -370,14 +370,12 @@ def log_session(func):
 def txtexc():
     ''' Process last exception to get (safe) errortext.
     '''
-    terug = u''
-    exc_type, exc_value, exc_traceback = sys.exc_info()
     if botsglobal.ini and botsglobal.ini.getboolean('settings','debug',False):
-        tracebacklist = traceback.extract_tb(exc_traceback,limit=None)
-        terug += ''.join(traceback.format_list(tracebacklist))
-    terug += str(exc_value)
-    #problems with char set for some input data that are reported in traces....so always decode this:
-    return terug.decode('utf-8','ignore')
+        limit = None
+    else:
+        limit = 0
+    terug = traceback.format_exc(limit).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this.
+    return terug.replace(u'Traceback (most recent call last):\n',u'')
 
 class ErrorProcess(NewTransaction):
     ''' Used in logging of errors in processes: communication.py to indicate errors in receiving files (files have not been received)
