@@ -225,12 +225,13 @@ class Inmessage(message.Message):
                 except ImportError:
                     raisenovalidmapping_error = True
                     if hasattr(self.defmessage.module,'getmessagetype'):
-                        messagetype2 = botslib.runscript(self.defmessage.module,self.defmessage.grammarname,'getmessagetype',self.__class__.__name__,messagetype)
-                        try:
-                            defmessage = grammar.grammarread(self.__class__.__name__,messagetype2)
-                            raisenovalidmapping_error = False
-                        except ImportError:
-                            pass
+                        messagetype2 = botslib.runscript(self.defmessage.module,self.defmessage.grammarname,'getmessagetype',editype=self.__class__.__name__,messagetype=messagetype)
+                        if messagetype2:
+                            try:
+                                defmessage = grammar.grammarread(self.__class__.__name__,messagetype2)
+                                raisenovalidmapping_error = False
+                            except ImportError:
+                                pass
                     if raisenovalidmapping_error:
                         raise botslib.InMessageError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)
                 current_edi_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
