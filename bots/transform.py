@@ -89,14 +89,14 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                                      'topartner':inn_splitup.ta_info['topartner'],
                                                     'booll':True}):
                             tscript = row2['tscript']
-                            tomessagetype = row2['tomessagetype']
                             toeditype = row2['toeditype']
+                            tomessagetype = row2['tomessagetype']
                             break   #translation is found; break because only the first one is used - this is what the ORDER BY in the query takes care of
                         else:       #no translation found in translate table; check if can find translation via user script
                             raiseTranslationNotFoundError = True
                             #check if user scripting can determine translation
                             if userscript and hasattr(userscript,'gettranslation'):      
-                                tscript,tomessagetype,toeditype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=idroute,message=inn_splitup)
+                                tscript,toeditype,tomessagetype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=idroute,message=inn_splitup)
                                 if tscript is not None:
                                     raiseTranslationNotFoundError = False
                             if raiseTranslationNotFoundError:
