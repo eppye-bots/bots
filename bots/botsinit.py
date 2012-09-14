@@ -9,25 +9,25 @@ import logging, logging.handlers
 import botsglobal
 import botslib
 
-class BotsConfig(ConfigParser.SafeConfigParser):
-    ''' See SafeConfigParser.
+class BotsConfig(ConfigParser.RawConfigParser):
+    ''' As ConfigParser, but with defaults.
     '''
     def get(self,section, option, default=''):
-        try:
-            return ConfigParser.SafeConfigParser.get(self,section,option)
-        except: #if there is no such section,option
-            if default == '':
-                raise botslib.BotsError(u'No entry "%s" in section "%s" in "bots.ini".'%(option,section))
+        if super(BotsConfig,self).has_option(section, option):
+            return super(BotsConfig,self).get(section, option)
+        elif default == '':
+            raise botslib.BotsError(u'No entry "%s" in section "%s" in "bots.ini".'%(option,section))
+        else:
             return default
     def getint(self,section, option, default):
-        try:
-            return ConfigParser.SafeConfigParser.getint(self,section,option)
-        except:
+        if super(BotsConfig,self).has_option(section, option):
+            return super(BotsConfig,self).getint(section, option)
+        else:
             return default
     def getboolean(self,section, option, default):
-        try:
-            return ConfigParser.SafeConfigParser.getboolean(self,section,option)
-        except:
+        if super(BotsConfig,self).has_option(section, option):
+            return super(BotsConfig,self).getboolean(section, option)
+        else:
             return default
 
 def generalinit(configdir):
@@ -56,9 +56,7 @@ def generalinit(configdir):
 
     #Read configuration-file bots.ini.
     botsglobal.ini = BotsConfig()
-    cfgfile = open(os.path.join(configdirectory,'bots.ini'), 'r')
-    botsglobal.ini.readfp(cfgfile)
-    cfgfile.close()
+    botsglobal.ini.read(os.path.join(configdirectory,'bots.ini'))
 
     #Set usersys.
     #usersys MUST be importable. So usersys is relative to PYTHONPATH. Try several options for this import.

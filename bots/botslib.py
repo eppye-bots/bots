@@ -371,11 +371,10 @@ def txtexc():
     ''' Process last exception to get (safe) errortext.
     '''
     if botsglobal.ini and botsglobal.ini.getboolean('settings','debug',False):
-        limit = None
+        return traceback.format_exc(limit=None).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this.
     else:
-        limit = 0
-    terug = traceback.format_exc(limit).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this.
-    return terug.replace(u'Traceback (most recent call last):\n',u'')
+        terug = traceback.format_exc(limit=0).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this.
+        return terug.replace(u'Traceback (most recent call last):\n',u'')
 
 class ErrorProcess(NewTransaction):
     ''' Used in logging of errors in processes: communication.py to indicate errors in receiving files (files have not been received)
