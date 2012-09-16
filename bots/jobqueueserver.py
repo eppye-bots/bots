@@ -92,52 +92,46 @@ def launcher(logger,port,lauchfrequency,maxruntime):
                                             u'Error starting job %s:\n %s\n\n %s' % (jobnumber,task_to_run,msg))
             timer_thread.cancel()
 
-#-------------------------------------------------------------------------------
-def showusage():
+
+def start():
+    #NOTE: bots directory should always be on PYTHONPATH - otherwise it will not start.
+    #***command line arguments**************************
     usage = '''
-    This is "%(name)s", a part of Bots open source edi translator - http://bots.sourceforge.net.
+    This is "%(name)s" version %(version)s, part of Bots open source edi translator (http://bots.sourceforge.net).
+    Server program that ensures only a single bots-engine runs at any time, and no engine run requests are 
+    lost/discarded. Each request goes to a queue and is run in sequence when the previous run completes. 
+    Use of the job queue is optional and must be configured in bots.ini (jobqueue section, enabled = True).
     Usage:
-        %(name)s  [-c<directory>]
+        %(name)s  -c<directory>
     Options:
         -c<directory>   directory for configuration files (default: config).
-
-    %(name)s is a server program that ensures only a single bots-engine 
-    runs at any time, and no engine run requests are lost/discarded.
-    Each request goes to a queue and is run in sequence when the
-    previous run completes. Use of the job queue is optional and must
-    be configured in bots.ini (jobqueue section, enabled = True).
-    '''%{'name':os.path.basename(sys.argv[0])}
-    print usage
-
-#-------------------------------------------------------------------------------
-def start():
-    #***command line arguments**************************
+        
+    '''%{'name':os.path.basename(sys.argv[0]),'version':botsglobal.version}
     configdir = 'config'
     for arg in sys.argv[1:]:
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Configuration directory indicated, but no directory name.'
+                print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
         else:
-            showusage()
+            print usage
             sys.exit(0)
-
-    botsinit.generalinit(configdir)         #needed to read config
+    #***end handling command line arguments**************************
+    botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
     if not botsglobal.ini.getboolean('jobqueue','enabled',False):
-        print 'Bots jobqueue cannot start; not enabled in %s/bots.ini' % configdir
+        print 'Error: bots jobqueue cannot start; not enabled in %s/bots.ini' % configdir
         sys.exit(1)
-
-    port = botsglobal.ini.getint('jobqueue','port',6000)
-    lauchfrequency = botsglobal.ini.getint('jobqueue','lauchfrequency',5)
-    maxruntime = botsglobal.ini.getint('settings','maxruntime',60)
-    
     process_name = 'jobqueue'
     logger = botsinit.initserverlogging(process_name)
     logger.log(25,u'Bots %s started.',process_name)
     logger.log(25,u'Bots %s configdir: "%s".',process_name,botsglobal.ini.get('directories','config'))
+    port = botsglobal.ini.getint('jobqueue','port',6000)
     logger.log(25,u'Bots %s listens for xmlrpc at port: "%s".',process_name,port)
 
+    #start launcher thread
+    lauchfrequency = botsglobal.ini.getint('jobqueue','lauchfrequency',5)
+    maxruntime = botsglobal.ini.getint('settings','maxruntime',60)
     launcher_thread = threading.Thread(name='launcher', target=launcher, args=(logger,port,lauchfrequency,maxruntime))
     launcher_thread.daemon = True
     launcher_thread.start()

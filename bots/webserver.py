@@ -9,41 +9,34 @@ import botslib
 import botsglobal
 import botsinit
 
-def showusage():
+
+def start():
+    #NOTE: bots directory should always be on PYTHONPATH - otherwise it will not start.
+    #***command line arguments**************************
     usage = '''
-    This is "%(name)s", a part of Bots open source edi translator - http://bots.sourceforge.net.
-    The %(name)s is the web server for bots; the interface (bots-monitor) can be accessed in a browser, eg 'http://localhost:8080'.
+    This is "%(name)s" version %(version)s, part of Bots open source edi translator (http://bots.sourceforge.net).
+    The %(name)s is the web server for bots; the interface (bots-monitor) can be accessed in a 
+    browser, eg 'http://localhost:8080'.
     Usage:
         %(name)s  -c<directory>
     Options:
         -c<directory>   directory for configuration files (default: config).
-    '''%{'name':os.path.basename(sys.argv[0])}
-    print usage
-    sys.exit(0)
-
-def start():
-    #NOTE bots is always on PYTHONPATH!!! - otherwise it will not start.
-    #***command line arguments**************************
+    
+    '''%{'name':os.path.basename(sys.argv[0]),'version':botsglobal.version}
     configdir = 'config'
     for arg in sys.argv[1:]:
-        if not arg:
-            continue
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Configuration directory indicated, but no directory name.'
+                print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
-        elif arg in ["?", "/?"] or arg.startswith('-'):
-            showusage()
         else:
-            showusage()
-
-    #***init general: find locating of bots, configfiles, init paths etc.***********************
-    botsinit.generalinit(configdir)
-
-    #***initialise file-logging for web-server. This logging only contains the logging from bots-webserver, not from cherrypy.
+            print usage
+            sys.exit(0)
+    #***end handling command line arguments**************************
+    botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
     process_name = 'webserver'
-    botsglobal.logger = botsinit.initserverlogging(process_name)
+    botsglobal.logger = botsinit.initserverlogging(process_name)    #initialise file-logging for web-server. This logging only contains the logging from bots-webserver, not from cherrypy.
 
     #***init cherrypy as webserver*********************************************
     #global configuration for cherrypy

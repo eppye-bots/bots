@@ -13,16 +13,23 @@ import botsinit
 import botsglobal
 import router
 import cleanup
-#~ from botsconfig import *
 
 
-def showusage():
+def start():
+    ''' sysexit codes:
+        0: OK, no errors
+        1: (system) errors
+        2: bots ran OK, but there are errors/process errors  in the run
+        3: Database is locked, but "maxruntime" has not been exceeded.
+    '''
+    #NOTE: bots directory should always be on PYTHONPATH - otherwise it will not start.
+    #********command line arguments**************************
     usage = '''
-    This is "%(name)s", a part of Bots open source edi translator - http://bots.sourceforge.net.
-    The %(name)s does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
+    This is "%(name)s" version %(version)s, part of Bots open source edi translator (http://bots.sourceforge.net).
+    Does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
+    
     Usage:
         %(name)s  [run-options] [config-option] [routes]
-
     Run-options (can be combined):
         --new                receive new edi files (default: if no run-option given: run as new).
         --resend             resend as indicated by user.
@@ -34,46 +41,32 @@ def showusage():
         -c<directory>        directory for configuration files (default: config).
     Routes: list of routes to run. Default: all active routes (in the database)
 
-    '''%{'name':os.path.basename(sys.argv[0])}
-    print usage
-
-def start():
-    ''' sysexit codes:
-        0: OK, no errors
-        1: (system) errors
-        2: bots ran OK, but there are errors/process errors  in the run
-        3: Database is locked, but "maxruntime" has not been exceeded.
-    '''
-    #********command line arguments**************************
+    '''%{'name':os.path.basename(sys.argv[0]),'version':botsglobal.version}
+    configdir = 'config'
     commandspossible = ['--crashrecovery','--automaticretrycommunication','--resend','--rereceive','--new']
     commandstorun = []
     routestorun = []    #list with routes to run
-    configdir = 'config'
     cleanupcommand = False
     for arg in sys.argv[1:]:
-        if not arg:
-            continue
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Configuration directory indicated, but no directory name.'
+                print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
         elif arg in commandspossible:
             commandstorun.append(arg)
         elif arg == '--cleanup':
             cleanupcommand = True
-        elif arg in ["?", "/?"] or arg.startswith('-'):
-            showusage()
+        elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
+            print usage
             sys.exit(0)
         else:   #pick up names of routes to run
             routestorun.append(arg)
     if not commandstorun:   #if no command on command line, use new (default)
         commandstorun = ['--new']
     commandstorun = [command[2:] for command in commandspossible if command in commandstorun]   #sort commands
-    #**************init general: find locating of bots, configfiles, init paths etc.****************
-    botsinit.generalinit(configdir)
-    #set current working directory to botspath
-    #~ os.chdir(botsglobal.ini.get('directories','botspath'))
+    #***end handling command line arguments**************************
+    botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
     #**************initialise logging******************************
     process_name = 'engine'
     try:

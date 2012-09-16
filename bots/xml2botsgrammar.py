@@ -96,52 +96,47 @@ def structure2listcore(structure):
         structurelist.extend(structure2listcore(i[LEVEL]))
     return structurelist
 
-def showusage():
-    print
-    print 'Usage:'
-    print '    %s   -c<directory>  <xml_file>  <xml_grammar_file>'%os.path.basename(sys.argv[0])
-    print
-    print '    Creates a grammar from an xml file.'
-    print '    Options:'
-    print "        -c<directory>      directory for configuration files (default: config)."
-    print '        <xml_file>         name of the xml file to read'
-    print '        <xml_grammar_file> name of the grammar file to write'
-    print
-    sys.exit(0)
 
 def start():
     #********command line arguments**************************
+    usage = '''
+    This is "%(name)s" version %(version)s, part of Bots open source edi translator (http://bots.sourceforge.net).
+    Creates a grammar from an xml file.'
+    Usage:'
+        %(name)s  -c<directory>  <xml_file>  <xml_grammar_file>
+    Options:
+        -c<directory>      directory for configuration files (default: config).
+        <xml_file>         name of the xml file to read
+        <xml_grammar_file> name of the grammar file to write
+    
+    '''%{'name':os.path.basename(sys.argv[0]),'version':botsglobal.version}
+    configdir = 'config'
     edifile =''
     grammarfile = ''
-    configdir = 'config'
     for arg in sys.argv[1:]:
-        if not arg:
-            continue
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print '    !!Indicated Bots should use specific .ini file but no file name was given.'
-                showusage()
-        elif arg in ["?", "/?"] or arg.startswith('-'):
-            showusage()
+                print 'Error: configuration directory indicated, but no directory name.'
+                sys.exit(1)
+        elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
+            print usage
+            sys.exit(0)
         else:
             if not edifile:
                 edifile = arg
             else:
                 grammarfile = arg
-    if not (edifile and grammarfile):
-        print '    !!Both edifile and grammarfile are required.'
-        showusage()
-
-    #********end handling command line arguments**************************
+    if not edifile or not grammarfile:
+        print 'Error: both edifile and grammarfile are required.'
+        sys.exit(0)
+    #***end handling command line arguments**************************
+    botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
+    botsinit.initenginelogging()
+    
     editype = 'xmlnocheck'
     messagetype = 'xmlnocheckxxxtemporaryforxml2grammar'
     mpath = []
-
-    botsinit.generalinit(configdir)
-    os.chdir(botsglobal.ini.get('directories','botspath'))
-    botsinit.initenginelogging()
-
     #the xml file is parsed as an xmlnocheck message....so a (temp) xmlnocheck grammar is needed....without content... this file is not removed....
     tmpgrammarfile = botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars',editype,messagetype+'.py')
     filehandler = open(tmpgrammarfile,'w')
