@@ -1,13 +1,13 @@
 from django.utils.translation import ugettext as _
 #bots-modules
-import communication
-import envelope
-import transform
+from botsconfig import *
+import automaticmaintenance
 import botslib
 import botsglobal
+import communication
+import envelope
 import preprocess
-import automaticmaintenance
-from botsconfig import *
+import transform
 
 @botslib.log_session
 def rundispatcher(command,routestorun):
