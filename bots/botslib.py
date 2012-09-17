@@ -16,7 +16,6 @@ import botsglobal           #globals
 
 def botsinfo():
     return [
-            (_(u'server name'),botsglobal.ini.get('webserver','name','bots-webserver')),
             (_(u'served at port'),botsglobal.ini.getint('webserver','port',8080)),
             (_(u'platform'),platform.platform()),
             (_(u'machine'),platform.machine()),
@@ -641,8 +640,6 @@ class ScriptImportError(BotsError):    #can not find userscript; not for errors 
 class ScriptError(BotsError):          #runtime errors in a userscript
     pass
 class TraceError(BotsError):
-    pass
-class TraceNotPickedUpError(BotsError):
     pass
 class TranslationNotFoundError(BotsError):
     pass
