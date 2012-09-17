@@ -17,7 +17,7 @@ import cleanup
 def start():
     ''' sysexit codes:
         0: OK, no errors
-        1: (system) errors
+        1: (system) errors incl parsing of command line arguments
         2: bots ran OK, but there are errors/process errors  in the run
         3: Database is locked, but "maxruntime" has not been exceeded.
     '''
@@ -102,6 +102,24 @@ def start():
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
     if not botslib.set_database_lock():
+        #for SQLite: do a integrity check on the database
+        if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+            cursor = botsglobal.db.execute('''PRAGMA integrity_check''')
+            result = cursor.fetchone()
+            if result[0] != u'ok':
+                warn =  _(u'!Bots database is locked!\n'\
+                            'Bots did an integrity check on the database, but database was not OK.\n'\
+                            'Manual action is needed!\n'\
+                            'Bots has stopped processing EDI files.')
+                botsglobal.logger.critical(warn)
+                botslib.sendbotserrorreport(_(u'[Bots severe error]Database is damaged'),warn)
+                sys.exit(1)
+        warn =  _(u'!Bots database is locked!\n'\
+                    'Bots-engine has ended in an unexpected way during the last run.\n'\
+                    'Most likely causes: sudden power-down, system crash, problems with disk I/O, bots-engine terminated by user, etc.\n'
+                    'Bots will do an automatic crash recovery now.')
+        botsglobal.logger.critical(warn)
+        botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),warn)
         commandstorun.insert(0,'crashrecovery')         #there is a database lock. Add a crashrecovery as first command to run.
     atexit.register(botslib.remove_database_lock)
     #**************run the routes**********************************************
