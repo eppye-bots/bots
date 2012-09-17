@@ -44,9 +44,11 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 AND idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
+            if row['rsrv2'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
+                raise botslib.InMessageError(_(u'File size of "%s"; "maxfilesizeincoming" is set to "%s" (in bots.ini).'),row['rsrv2'],botsglobal.ini.getint('settings','maxfilesizeincoming',5000000))
             ta_fromfile = botslib.OldTransaction(row['idta'])
             ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
-            botsglobal.logger.debug(u'start translating file "%s" editype "%s" messagetype "%s".',row['filename'],row['editype'],row['messagetype'])
+            botsglobal.logger.debug(_(u'start translating file "%s" editype "%s" messagetype "%s".'),row['filename'],row['editype'],row['messagetype'])
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
                                                 topartner=row['topartner'],
@@ -109,18 +111,18 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message
                         filename_translated = str(ta_translated.idta)
                         out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
-                        botsglobal.logger.debug(u'Mappingscript "%s" translates messagetype "%s" to messagetype "%s".',tscript,inn_splitup.ta_info['messagetype'],out_translated.ta_info['messagetype'])
+                        botsglobal.logger.debug(_(u'Mappingscript "%s" translates messagetype "%s" to messagetype "%s".'),tscript,inn_splitup.ta_info['messagetype'],out_translated.ta_info['messagetype'])
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mappingscript
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
-                        botsglobal.logger.debug(u'Mappingscript "%s" finished.',tscript)
+                        botsglobal.logger.debug(_(u'Mappingscript "%s" finished.'),tscript)
                         if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
                             out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
                         if out_translated.ta_info['statust'] == DONE:    #if indicated in mappingscript the message should be discarded
-                            botsglobal.logger.debug(u'No output file because mappingscript explicitly indicated this.')
+                            botsglobal.logger.debug(_(u'No output file because mappingscript explicitly indicated this.'))
                             out_translated.ta_info['filename'] = ''
                             out_translated.ta_info['status'] = DISCARD
                         else:
-                            botsglobal.logger.debug(u'Start writing output file editype "%s" messagetype "%s".',out_translated.ta_info['editype'],out_translated.ta_info['messagetype'])
+                            botsglobal.logger.debug(_(u'Start writing output file editype "%s" messagetype "%s".'),out_translated.ta_info['editype'],out_translated.ta_info['messagetype'])
                             out_translated.writeall()   #write result of translation.
                             out_translated.ta_info['rsrv2'] = os.path.getsize(botslib.abspathdata(out_translated.ta_info['filename']))  #get filesize
                         #problem is that not all values ta_translated are know to to_message....
@@ -133,10 +135,10 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         elif isinstance(doalttranslation,dict):
                             #some extended cases; a dict is returned that contains 'instructions'
                             if 'type' not in doalttranslation:
-                                raise botslib.BotsError("Mappingscript returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                                raise botslib.BotsError(_(u"Mappingscript returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}."))
                             if doalttranslation['type'] == u'out_as_inn':
                                 if 'alt' not in doalttranslation:
-                                    raise botslib.BotsError("Mappingscript returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}.")
+                                    raise botslib.BotsError(_("Mappingscript returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}."))
                                 inn_splitup = out_translated
                                 if isinstance(inn_splitup,outmessage.fixed):
                                     inn_splitup.root.stripnode()
@@ -159,13 +161,13 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
         #exceptions file_in-level (file not OK according to grammar)
         except:
             txt = botslib.txtexc()
-            ta_parsed.update(statust=ERROR,rsrv2=row['rsrv2'],errortext=txt)
+            ta_parsed.update(statust=ERROR,errortext=txt)
             ta_parsed.deletechildren()
             botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
             ta_parsed.update(statust=DONE,rsrv2=row['rsrv2'],**edifile.ta_info)
-            botsglobal.logger.debug(u'translated input file "%s".',row['filename'])
+            botsglobal.logger.debug(_(u'translated input file "%s".'),row['filename'])
         finally:
             ta_fromfile.update(statust=DONE)
 
