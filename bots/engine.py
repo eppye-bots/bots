@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-''' Starts bots-engine.'''
+''' Start bots-engine.'''
 import sys
 import os
 import atexit
-import traceback
-import datetime
 import logging
+import socket
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
@@ -27,14 +26,13 @@ def start():
     usage = '''
     This is "%(name)s" version %(version)s, part of Bots open source edi translator (http://bots.sourceforge.net).
     Does the actual translations and communications; it's the workhorse. It does not have a fancy interface.
-    
+
     Usage:
         %(name)s  [run-options] [config-option] [routes]
     Run-options (can be combined):
         --new                receive new edi files (default: if no run-option given: run as new).
         --resend             resend as indicated by user.
         --rereceive          rereceive as indicated by user.
-        --crashrecovery      reruns the run where the crash occurred. (when database is locked).
         --automaticretrycommunication - automatically retry outgoing communication.
         --cleanup            remove older data from database.
     Config-option:
@@ -43,7 +41,7 @@ def start():
 
     '''%{'name':os.path.basename(sys.argv[0]),'version':botsglobal.version}
     configdir = 'config'
-    commandspossible = ['--crashrecovery','--automaticretrycommunication','--resend','--rereceive','--new']
+    commandspossible = ['--automaticretrycommunication','--resend','--rereceive','--new']
     commandstorun = []
     routestorun = []    #list with routes to run
     cleanupcommand = False
@@ -67,20 +65,25 @@ def start():
     commandstorun = [command[2:] for command in commandspossible if command in commandstorun]   #sort commands
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
+
+    #**************check if another instance of bots-engine is running/if port is free******************************
+    try:
+        my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        port = botsglobal.ini.getint('settings','port',35636)
+        my_socket.bind(('127.0.0.1', port))
+    except socket.error:
+        my_socket.close()
+        sys.exit(3)
+    else:
+        atexit.register(my_socket.close)
+
     #**************initialise logging******************************
     process_name = 'engine'
-    try:
-        botsglobal.logger = botsinit.initenginelogging(process_name)
-    except:
-        print _('Error in initialising logging system')
-        traceback.print_exc()
-        sys.exit(1)
-    else:
-        atexit.register(logging.shutdown)
-
+    botsglobal.logger = botsinit.initenginelogging(process_name)
+    atexit.register(logging.shutdown)
     for key,value in botslib.botsinfo():    #log info about environement, versions, etc
         botsglobal.logger.info(u'%s: "%s".',key,value)
-        
+
     #**************connect to database**********************************
     try:
         botsinit.connect()
@@ -97,88 +100,12 @@ def start():
         userscript = scriptname = None
 
     #**************handle database lock****************************************
-    #try to set a lock on the database; if this is not possible, the database is already locked. Either:
-    #1 another instance bots bots-engine is (still) running
-    #2 or bots-engine was terminated unexpected.
+    #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
     if not botslib.set_database_lock():
-        #there is a database lock!
-        if 'crashrecovery' in commandstorun:
-            pass    #ok, user wants a crashrecovery
-        else:
-            #following settings in bots.ini are important for this:
-            #- maxruntime: max time  engine is allowed/expected to run. 
-            #       if maxtime is not passed: do nothing.
-            #       if maxtime is passed: generate ONE warning email. examine when last action was done.
-            #- automaticcrashrecovery: if True bots does automaticcrashrecovery.
-            #- maxruntimeforcerecovery (only if automaticcrashrecovery):
-            #       if maxruntimeforcerecovery is not passed: do nothing
-            #       if maxruntimeforcerecovery is passed: when last action is > than maxruntime: do nothing
-            #       if maxruntimeforcerecovery is passed: when last action is < than maxruntime: do automatic recovery
-            maxruntime_is_passed = False
-            maxruntime = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntime',60))
-            for row in botslib.query('''SELECT ts,mutexer FROM mutex WHERE ts < %(maxruntime)s ''',{'maxruntime':maxruntime}):
-                #maxruntime has passed!
-                maxruntime_is_passed = True
-                time_of_crashed_run = row['ts']
-                is_error_email_send = row['mutexer']
-                #check when last action was performed
-                for row2 in botslib.query('''SELECT MAX(idta) as maxidta FROM ta'''):
-                    lastta = botslib.OldTransaction(row2['maxidta'])
-                    lastta.syn('ts')    #get the timestamp of this run
-                    time_of_last_action = lastta.ts
-                    break
-                else:
-                    time_of_last_action = ''
-                
-                if is_error_email_send != 1:        #send ONE warning email.
-                    mess =   _(u'Bots database is locked!\n'
-                                'Possible causes:\n'
-                                '- An instance of bots-engine is still running.\n'
-                                '- The previous run of bots-engine has ended abnormally. Most likely causes: bots-engine terminated by user, system crash, power-down, etc.\n'
-                                'Advised is to check first if bots-engine is still running.\n'
-                                'If bots-engine is not running, do (via menu:Systasks) a "Run crash recovery".\n'
-                                'Time the previous run started: "%s"\n'
-                                'Time of last action in the previous run: "%s"'%(time_of_crashed_run,time_of_last_action))
-                    botsglobal.logger.critical(mess)
-                    botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),mess)
-                    #set indication that email to report crashed run has been send
-                    botslib.changeq('''UPDATE mutex
-                                        SET mutexer=1
-                                        WHERE mutexk=1 ''')
-                elif botsglobal.ini.get('settings','automaticcrashrecovery','False'):
-                    maxruntimeforrecovery_passed = False
-                    maxruntimeforcerecovery = datetime.datetime.today() - datetime.timedelta(minutes=botsglobal.ini.getint('settings','maxruntimeforcerecovery',90))
-                    for row3 in botslib.query('''SELECT ts FROM mutex WHERE ts < %(maxruntimeforcerecovery)s ''',{'maxruntimeforcerecovery':maxruntimeforcerecovery}):
-                        maxruntimeforrecovery_passed = True
-                        #maxruntimeforcerecovery has passed: bots will do a forced recovery, but only
-                        #if time_of_last_action is after maxruntime (when bots-engine did an action after maxruntime)
-                        if time_of_last_action > maxruntime:
-                            mess =   _(u'"maxruntimeforcerecovery" is passed, but engine is still active as engine has done an action after "maxruntime".\n'
-                                        'So nothing is done now')
-                            botsglobal.logger.critical(mess)
-                            botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked, still action'),mess)
-                            sys.exit(3)
-                        else:
-                            botsglobal.logger.critical('"maxruntimeforcerecovery" is passed, bots will do an automatic crash recovery..')
-                            commandstorun.insert(0,'crashrecovery')
-                    if not maxruntimeforrecovery_passed:
-                        botsglobal.logger.info(_(u'Database is locked; "maxruntime" is exceeded but "maxruntimeforcerecovery" is not exceeded.'))
-                        sys.exit(3)
-                else:
-                    sys.exit(3)
-            if not maxruntime_is_passed:   #maxruntime has not passed. Exit silently, nothing reported
-                botsglobal.logger.info(_(u'Database is locked but "maxruntime" has not been exceeded.'))
-                sys.exit(3)
-    else:       #normal operation, there was no database lock
-        if 'crashrecovery' in commandstorun:    #user starts recovery operation but there is no databaselock.
-            botsglobal.logger.info('database is not locked, engine is run with "crashrecovery"; as this is not usefull no crashrecovery is done.')
-            commandstorun.remove('crashrecovery')
-            botslib.remove_database_lock()
-            if not commandstorun:
-                sys.exit(0)
-    
+        commandstorun.insert(0,'crashrecovery')         #there is a database lock. Add a crashrecovery as first command to run.
+    atexit.register(botslib.remove_database_lock)
     #**************run the routes**********************************************
-    #commandstorun determines the type(s) of run. eg: ['--automaticretrycommunication','--new']
+    #commandstorun determines the type(s) of run. eg: ['automaticretrycommunication','new']
     #for each command: run all routes
     #    for each route: run all seq
     try:
@@ -213,7 +140,6 @@ def start():
         if cleanupcommand or botsglobal.ini.get('settings','whencleanup','always')=='always':
             cleanup.cleanup()
             botsglobal.logger.info(u'Done cleanup.')
-        botslib.remove_database_lock()
     except Exception,msg:
         botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(msg))    #of course this 'should' not happen.
         sys.exit(1)
