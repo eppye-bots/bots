@@ -5,7 +5,6 @@ import codecs
 import ConfigParser
 import logging, logging.handlers
 #Bots-modules
-#~ from botsconfig import *
 import botsglobal
 import botslib
 
