@@ -18,14 +18,21 @@ def cleanup():
     try:
         cur_day = int(time.strftime('%Y%m%d'))    #get current date, convert to int
         if cur_day != botslib.uniquecore('bots_cleanup_day',updatewith=cur_day):    
-            _cleanupsession()
             _cleandatafile()
             _cleanarchive()
+            _cleanupsession()
             _cleanpersist()
             _cleantransactions()
+            _vacuum()
         _cleanrunsnothingreceived()          #do this for every run
     except:
         botsglobal.logger.exception(u'Cleanup error.')
+
+
+def _vacuum():
+    ''' Do VACUUM on sqlite database.'''
+    if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+        botsglobal.db.execute('''VACUUM''')
 
 
 def _cleanupsession():
