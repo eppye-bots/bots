@@ -238,6 +238,8 @@ def updateinfo(change,where):
     #change-dict: discard empty values. Change keys: this is needed because same keys can be in where-dict
     change = [(key,value) for key,value in change.items() if value]
     changestring = ','.join([key+'=%(change_'+key+')s' for key,value in change])
+    if not changestring:
+        return
     where.update([('change_'+key,value) for key,value in change])
     changeq(u'''UPDATE ta SET '''+changestring+ ''' WHERE '''+wherestring+ ''' ''',where)
 
@@ -327,11 +329,11 @@ def checkunique(domein, receivednumber):
     '''
     earlierreceivednumber = uniquecore(domein,updatewith=receivednumber)
     if earlierreceivednumber+1  == receivednumber:
-        terug = True
+        return True
     else:
         #set back number
         changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':earlierreceivednumber})
-        terug = False
+        return False
 
 #**********************************************************/**
 #*************************Logging, Error handling********************/**
