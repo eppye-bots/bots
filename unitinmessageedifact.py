@@ -2,6 +2,7 @@ import unittest
 import bots.inmessage as inmessage
 import bots.botslib as botslib
 import bots.botsinit as botsinit
+import bots.botsglobal as botsglobal
 import utilsunit
 
 '''plugin unitinmessageedifact.zip
@@ -86,5 +87,5 @@ class TestInmessage(unittest.TestCase):
 
 if __name__ == '__main__':
     botsinit.generalinit('config')
-    botsinit.initenginelogging()
+    botsglobal.logger = botsinit.initenginelogging('engine')
     unittest.main()

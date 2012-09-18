@@ -32,9 +32,10 @@ class TestMain(unittest.TestCase):
                                 AND     idroute=%(idroute)s
                                 AND     confirmtype=%(confirmtype)s
                                 AND     confirmasked=%(confirmasked)s
+                                AND     frommail != ''
                                 ORDER BY idta DESC
                                 ''',
-                                {'status':210,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
+                                {'status':220,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
             nr_rows += 1
             self.failUnless(row[1])
             self.failUnless(row[2]!=0)
@@ -49,9 +50,10 @@ class TestMain(unittest.TestCase):
                                 AND     idroute=%(idroute)s
                                 AND     confirmtype=%(confirmtype)s
                                 AND     confirmasked=%(confirmasked)s
+                                AND     frommail != ''
                                 ORDER BY idta DESC
                                 ''',
-                                {'status':510,'statust':DONE,'idroute':'testmdn','confirmtype':'ask-email-MDN','confirmasked':True}):
+                                {'status':500,'statust':DONE,'idroute':'testmdn','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
             self.failUnless(row[1])
             self.failUnless(row[2]!=0)
@@ -70,9 +72,10 @@ class TestMain(unittest.TestCase):
                                 AND     idroute=%(idroute)s
                                 AND     confirmtype=%(confirmtype)s
                                 AND     confirmasked=%(confirmasked)s
+                                AND     frommail != ''
                                 ORDER BY idta DESC
                                 ''',
-                                {'status':510,'statust':DONE,'idroute':'testmdn2','confirmtype':'ask-email-MDN','confirmasked':True}):
+                                {'status':500,'statust':DONE,'idroute':'testmdn2','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
             self.failUnless(not row[1])
             self.failUnless(row[2]==0)
@@ -204,7 +207,7 @@ if __name__ == '__main__':
     shutil.rmtree(os.path.join(botssys, 'outfile'),ignore_errors=True)    #remove whole output directory
     subprocess.call(newcommand)
     botsinit.generalinit('config')
-    botsinit.initenginelogging()
+    botsinit.initenginelogging('engine')
     botsinit.connect() 
     print '''expect:
     21 files received/processed in run.

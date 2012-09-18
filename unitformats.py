@@ -3,6 +3,7 @@ import bots.botslib as botslib
 import bots.botsinit as botsinit
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage 
+import bots.botsglobal as botsglobal 
 from bots.botsconfig import *
 import utilsunit
 
@@ -20,7 +21,7 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.edi.ta_info['decimaal']='.'
         tfield1 = ['TEST1','M',3,'R',True,0,       0,       'R']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '0','empty string')
+        self.assertEqual(self.edi._initfield(tfield1), '0','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '1', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '1', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '1', 'basic')
@@ -86,7 +87,7 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.edi.ta_info['lengthnumericbare']=True
         tfield1 = ['TEST1','M',5,'N',True,2,       0,       'N']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '0.00','empty string')     #empty strings are not passed anymore to _formatfield 20120325
+        self.assertEqual(self.edi._initfield(tfield1), '0.00','empty string')     #empty strings are not passed anymore to _formatfield 20120325
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '1.00', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '1.00', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '1.00', 'basic')
@@ -145,7 +146,7 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.edi.ta_info['decimaal']='.'
         tfield1 = ['TEST1','M',5,'I',True,2,       0,       'I']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '0','empty string')
+        self.assertEqual(self.edi._initfield(tfield1), '0','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '100', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '100', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '100', 'basic')
@@ -264,7 +265,7 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['decimaal']='.'
         tfield1 = ['TEST1','M',3,'R',True,0,       3,       'R']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '000','empty string')
+        self.assertEqual(self.edi._initfield(tfield1), '000','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '001', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '001', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '001', 'basic')
@@ -333,7 +334,7 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['decimaal']='.'
         tfield1 = ['TEST1','M',3,'RL',True,0,       3,       'R']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '0  ','empty string')
+        self.assertEqual(self.edi._initfield(tfield1), '0  ','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '1  ', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '1  ', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '1  ', 'basic')
@@ -402,7 +403,7 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['decimaal']='.'
         tfield1 = ['TEST1','M',3,'RR',True,0,       3,       'R']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy),   '  0','empty string')
+        self.assertEqual(self.edi._initfield(tfield1),   '  0','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy),  '  1', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '  1', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '  1', 'basic')
@@ -471,7 +472,7 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['lengthnumericbare']=False
         tfield1 = ['TEST1','M',5,'N',True,2,       5,       'N']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '00.00','empty string')
+        self.assertEqual(self.edi._initfield(tfield1), '00.00','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '01.00', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '01.00', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '01.00', 'basic')
@@ -533,7 +534,7 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['lengthnumericbare']=False
         tfield1 = ['TEST1','M',5,'NL',True,2,       5,       'N']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '0.00 ','empty string')
+        self.assertEqual(self.edi._initfield(tfield1), '0.00 ','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '1.00 ', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '1.00 ', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '1.00 ', 'basic')
@@ -595,7 +596,7 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['lengthnumericbare']=False
         tfield1 = ['TEST1','M',5,'NR',True,2,       5,       'N']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), ' 0.00','empty string')
+        self.assertEqual(self.edi._initfield(tfield1), ' 0.00','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), ' 1.00', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), ' 1.00', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), ' 1.00', 'basic')
@@ -657,7 +658,7 @@ class TestFormatFieldFixedOutmessage(unittest.TestCase):
         self.edi.ta_info['decimaal']='.'
         tfield1 = ['TEST1','M',5,'I',True,2,       5,       'I']
         #                    length    decimals minlength  format
-        self.assertEqual(self.edi._initfield(tfield1,testdummy), '00000','empty string is initialised as 00000')
+        self.assertEqual(self.edi._initfield(tfield1), '00000','empty string is initialised as 00000')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy), '00100', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy), '00100', 'basic')
         self.assertEqual(self.edi._formatfield('1 ',tfield1,testdummy), '00100', 'basic')
@@ -1043,5 +1044,5 @@ class TestFormatFieldInmessage(unittest.TestCase):
 if __name__ == '__main__':
     botsinit.generalinit('config')
     #~ botslib.initbotscharsets()
-    botsinit.initenginelogging()
+    botsglobal.logger = botsinit.initenginelogging('engine')
     unittest.main()

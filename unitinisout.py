@@ -10,6 +10,7 @@ except ImportError:
     import simplejson
 import bots.botslib as botslib
 import bots.botsinit as botsinit
+import bots.botsglobal as botsglobal
 import utilsunit
 
 ''' pluging unitinisout.zip'''
@@ -147,7 +148,7 @@ class Testinisoutcsv(unittest.TestCase):
 if __name__ == '__main__':
     botsinit.generalinit('config')
     #~ botslib.initbotscharsets()
-    botsinit.initenginelogging()
+    botsglobal.logger = botsinit.initenginelogging('engine')
     shutil.rmtree('bots/botssys/infile/unitinisout/output',ignore_errors=True)    #remove whole output directory
     os.mkdir('bots/botssys/infile/unitinisout/output')
     unittest.main()

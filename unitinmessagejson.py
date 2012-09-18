@@ -10,6 +10,7 @@ except ImportError:
     import simplejson
 import bots.botslib as botslib
 import bots.botsinit as botsinit
+import bots.botsglobal as botsglobal
 import utilsunit
 try:
     import cElementTree as ET
@@ -244,7 +245,7 @@ class InmessageJson(unittest.TestCase):
 
 if __name__ == '__main__':
     botsinit.generalinit('config')
-    botsinit.initenginelogging()
+    botsglobal.logger = botsinit.initenginelogging('engine')
     shutil.rmtree('bots/botssys/infile/unitinmessagejson/output/',ignore_errors=True)    #remove whole output directory
     os.mkdir('bots/botssys/infile/unitinmessagejson/output')
     unittest.main()

@@ -5,6 +5,7 @@ import bots.botslib as botslib
 import bots.transform as transform
 import pickle
 import bots.botsinit as botsinit
+import bots.botsglobal as botsglobal
 import utilsunit
 
 '''plugin unittranslateutils.zip '''
@@ -32,7 +33,7 @@ class TestTranslate(unittest.TestCase):
         transform.persist_delete(domein,botskey)
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #test-tet is not there. gives no error...
-    '''
+
     def testpersistunicode(self):
         domein=u'test'
         botskey=u'1235:\ufb52\ufb66\ufedb'
@@ -119,7 +120,6 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual('1',transform.unique(newdomain),'init new domain')
         self.assertEqual('2',transform.unique(newdomain),'next one')
         
-    def testunique(self):
         newdomain = 'test' + transform.unique('test')
         self.assertEqual(True,transform.checkunique(newdomain,1),'init new domain')
         self.assertEqual(False,transform.checkunique(newdomain,1),'seq should be 2')
@@ -162,11 +162,11 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(True,transform.checkean('123456789012345675'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345670'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345677'),'UPC')
-    '''
+
 
 if __name__ == '__main__':
     botsinit.generalinit('config')
-    botsinit.initenginelogging()
+    botsglobal.logger = botsinit.initenginelogging('engine')
     botsinit.connect() 
     try:
         unittest.main()

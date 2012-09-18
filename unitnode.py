@@ -7,6 +7,7 @@ import bots.outmessage as outmessage
 import bots.botslib as botslib
 import bots.node as node
 import bots.botsinit as botsinit
+import bots.botsglobal as botsglobal
 
 '''plugin unitnode.zip'''
 
@@ -144,7 +145,7 @@ class Testnode(unittest.TestCase):
         inn.root.processqueries({},2)
         inn.root.fetchqueries()
         #~ print collectqueries
-        comparequeries = {u'UNH': {'reference': u'UNBREF', 'messagetype': u'ORDERSD96AUNEAN008', 'reference2': u'UNBREF', 'topartner': u'PARTNER2', 'alt': u'50EAB', 'alt2': u'50E9', 'frompartner': u'PARTNER1'}, u'UNB': {'topartner': u'PARTNER2', 'reference2': u'UNBREF', 'reference': u'UNBREF', 'frompartner': u'PARTNER1'}, u'UNZ': {'reference': u'UNBREF', 'reference2': u'UNBREF', 'topartner': u'PARTNER2', 'frompartner': u'PARTNER1'}}
+        comparequeries = {u'UNH': {'reference': u'UNHREF', 'messagetype': u'ORDERSD96AUNEAN008', 'reference2': u'UNBREF', 'topartner': u'PARTNER2', 'alt': u'50EAB', 'alt2': u'50E9', 'frompartner': u'PARTNER1'}, u'UNB': {'topartner': u'PARTNER2', 'reference2': u'UNBREF', 'reference': u'UNBREF', 'frompartner': u'PARTNER1'}, u'UNZ': {'reference': u'UNBREF', 'reference2': u'UNBREF', 'topartner': u'PARTNER2', 'frompartner': u'PARTNER1'}}
         self.assertEqual(comparequeries,collectqueries)
         #~ inn.root.displayqueries()
 
@@ -152,7 +153,7 @@ class Testnode(unittest.TestCase):
 if __name__ == '__main__':
     import datetime
     botsinit.generalinit('config')
-    botsinit.initenginelogging()
+    botsglobal.logger = botsinit.initenginelogging('engine')
     shutil.rmtree('bots/botssys/infile/unitnode/output',ignore_errors=True)    #remove whole output directory
     os.mkdir('bots/botssys/infile/unitnode/output')
     unittest.main()

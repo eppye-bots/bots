@@ -6,6 +6,7 @@ import bots.outmessage as outmessage
 import filecmp 
 import bots.botslib as botslib
 import bots.botsinit as botsinit
+import bots.botsglobal as botsglobal
 import utilsunit
 
 ''' pluging unitinmessagexml.zip'''
@@ -268,7 +269,7 @@ class Testinisoutxml(unittest.TestCase):
 if __name__ == '__main__':
     botsinit.generalinit('config')
     #~ botslib.initbotscharsets()
-    botsinit.initenginelogging()
+    botsglobal.logger = botsinit.initenginelogging('engine')
     shutil.rmtree('bots/botssys/infile/unitinmessagexml/output',ignore_errors=True)    #remove whole output directory
     os.mkdir('bots/botssys/infile/unitinmessagexml/output')
     unittest.main()
