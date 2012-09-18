@@ -151,6 +151,8 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                 #exceptions file_out-level: exception in mappingscript or writing of out-file
                 except:
                     #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mappingscript/outfile only affect that branche 
+                    if botsglobal.ini.getboolean('settings','oldmessageerrors',False):
+                        raise
                     txt = botslib.txtexc()
                     ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
                     ta_splitup.deletechildren()
