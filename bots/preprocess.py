@@ -76,8 +76,35 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
     return nr_files
 
 #regular expression for mailbag.
-HEADER = re.compile('(\s*(ISA))|(\s*(UNA.{6})?\s*(U\s*N\s*B)s*.{1}(.{4}).{1}(.{1}))|(\s*(STX=))',re.DOTALL)
-#           group:    1   2       3  4            5        6         7                8   9
+HEADER = re.compile('''
+    (?P<edifact>
+        (?P<UNA>
+            U\s*N\s*A
+            .{6}
+        )?
+        \s*
+        (?P<UNB>
+            U\s*N\s*B
+            \s*
+            .{1}
+            (.{4})     #charset
+            .{1}
+            (.{1})     #version
+        )
+    )
+    |
+    (?P<tradacoms>
+        (?P<STX>
+            S\s*T\s*X
+            \s*
+            =
+        )
+    )
+    |
+    (?P<x12>
+        I\s*S\s*A
+    )
+    ''',re.DOTALL|re.VERBOSE)
 
 def mailbag(ta_from,endstatus,**argv):
     ''' 2 main functions:
@@ -92,14 +119,17 @@ def mailbag(ta_from,endstatus,**argv):
         - handle multiple UNA in one file, including different charsets.
         - handle multiple x12 seperators in one file.
     '''
-    edifile = botslib.readdata(filename=ta_from.filename)       #read as binary...
+    edifile = botslib.readdata(filename=ta_from.filename)
     startpos = 0
+    last_una = ''
     while (1):
         found = HEADER.search(edifile[startpos:])
         if found is None:
-            if startpos:    #all ISA/UNB have been found in file; no new ISA/UNB is found. So all processing is done.
+            if startpos:    #file does contain edifact/x12/tradacoms; no new interchange is found. So all processing is done.
+                if edifile[startpos:].strip():
+                    raise botslib.InMessageError(_(u'Found data at end of edi file, beyond the last valid envelope.'))                
                 break
-            #guess if this is an xml file.....
+            #no edifact/x12/tradacoms found in edi file. Try if this is an xml file:
             sniffxml = edifile[:25]
             sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first 'real' data; some char are because of BOM, UTF-16 etc
             if sniffxml and sniffxml[0] == '<':
@@ -107,12 +137,17 @@ def mailbag(ta_from,endstatus,**argv):
                 #~ ta_tomes.update(status=STATUSTMP,statust=OK,filename=ta_set_for_processing.filename,editype='xml') #update outmessage transaction with ta_info;
                 break
             else:
-                raise botslib.InMessageError(_(u'Found no content in mailbag.'))
-        elif found.group(1):
+                raise botslib.InMessageError(_(u'Found no valid content in edi file.'))
+        elif found.group('x12'):
             editype = 'x12'
-            headpos = startpos + found.start(2)
+            last_una = ''
+            #check for non-parsed content:
+            if edifile[startpos:found.start('x12')].strip():
+                raise botslib.InMessageError(_(u'Edi file contains no valid envelopes (ISA-IEA).'))                
+            headpos = startpos + found.start('x12')
+            #determine field_sep and record_sep
             count = 0
-            for char in edifile[headpos:headpos+120]:  #search first 120 characters to find separators
+            for char in edifile[headpos:headpos+120]:  #search first 120 characters to determine separators
                 if char in '\r\n' and count != 105:
                     continue
                 count += 1
@@ -121,35 +156,61 @@ def mailbag(ta_from,endstatus,**argv):
                 elif count == 106:
                     record_sep = char
                     break
-            #~ foundtrailer = re.search(re.escape(record_sep)+'\s*IEA'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
-            foundtrailer = re.search(re.escape(record_sep)+'\s*I\s*E\s*A\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
-        elif found.group(3):
+            foundtrailer = re.search(
+                                re.escape(record_sep) +
+                                '\s*I\s*E\s*A\s*' +
+                                re.escape(field_sep) +
+                                '.+?'   +
+                                re.escape(record_sep),
+                                edifile[headpos:],re.DOTALL|re.VERBOSE)
+        elif found.group('edifact'):
             editype = 'edifact'
-            if found.group(4):
-                field_sep = edifile[startpos + found.start(4) + 4]
-                record_sep = edifile[startpos + found.start(4) + 8]
-                headpos = startpos + found.start(4)
-            else:
+            #check for non-parsed content:
+            if edifile[startpos:found.start('edifact')].strip():
+                raise botslib.InMessageError(_(u'Edi file contains no valid envelopes (UNB-UNZ).'))                
+            #determine field_sep and record_sep
+            if found.group('UNA'):
+                last_una = found.group('UNA')
+                field_sep = found.group('UNA')[4]
+                record_sep = found.group('UNA')[8]
+                headpos = startpos + found.start('UNA')
+            elif found.group('UNB'):
                 field_sep = '+'
                 record_sep = "'"
-                headpos = startpos + found.start(5)
-            foundtrailer = re.search(re.escape(record_sep)+'\s*U\s*N\s*Z\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
-        elif found.group(8):
+                headpos = startpos + found.start('UNB')
+            foundtrailer = re.search(
+                                re.escape(record_sep) + 
+                                '\s*U\s*N\s*Z\s*' + 
+                                re.escape(field_sep) + 
+                                '.+?' +
+                                re.escape(record_sep),
+                                edifile[headpos:],re.DOTALL|re.VERBOSE)
+        elif found.group('tradacoms'):
             editype = 'tradacoms'
-            headpos = startpos + found.start(9)
+            last_una = ''
+            #check for non-parsed content:
+            if edifile[startpos:found.start('tradacoms')].strip():
+                raise botslib.InMessageError(_(u'Edi file contains no valid envelopes (STX-END).'))                
+            headpos = startpos + found.start('STX')
             field_sep = '='     #the tradacoms 'after-segment-tag-seperator'
             record_sep = "'"
-            foundtrailer = re.search(re.escape(record_sep)+'\s*E\s*N\s*D\s*'+re.escape(field_sep)+'.+?'+re.escape(record_sep),edifile[headpos:],re.DOTALL)
+            foundtrailer = re.search(
+                                re.escape(record_sep) +
+                                '\s*E\s*N\s*D\s*' +
+                                re.escape(field_sep) +
+                                '.+?' +
+                                re.escape(record_sep),
+                                edifile[headpos:],re.DOTALL|re.VERBOSE)
         if not foundtrailer:
-            raise botslib.InMessageError(_(u'Found no valid envelope trailer in mailbag.'))
+            raise botslib.InMessageError(_(u'Found no valid envelope trailer in edi file.'))
         endpos = headpos + foundtrailer.end()
         #so: interchange is from headerpos untill endpos
-        #~ if HEADER.search(edifile[headpos+25:endpos]):   #check if there is another header in the interchange
-            #~ raise botslib.InMessageError(u'Error in mailbag format: found no valid envelope trailer.')
         ta_to = ta_from.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
         tofilename = str(ta_to.idta)
         filesize = len(edifile[headpos:endpos])
         tofile = botslib.opendata(tofilename,'wb')
+        if editype == 'edifact' and last_una:
+            tofile.write(last_una)
         tofile.write(edifile[headpos:endpos])
         tofile.close()
         ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype,rsrv2=filesize) #update outmessage transaction with ta_info;
