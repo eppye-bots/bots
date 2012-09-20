@@ -419,3 +419,15 @@ def truncate(maxpos,value):
         return value[:maxpos]
     else:
         return value
+
+def unique_runcounter(domain):
+    ''' generate unique counter within range domain during one run of bots.
+        if domain not used before, initialize as 1; for each subsequent call this is incremented with 1
+        usage example:
+        unh_reference = unique_runcounter(<messagetype>_<topartner>)
+    '''
+    if hasattr(botsglobal,domain):
+        botsglobal.domain += 1
+    else:
+        botsglobal.domain = 1
+    return botsglobal.domain
