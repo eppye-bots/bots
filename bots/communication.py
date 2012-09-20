@@ -868,7 +868,7 @@ class smtp(_comsession):
                 ta_to = ta_from.copyta(status=EXTERNOUT)
                 addresslist = row['cc'].split(',')
                 addresslist.append(row['tomail'])
-                addresslist = [x.strip() for x in addresslist if x]
+                addresslist = [x.strip() for x in addresslist if x.strip()]
                 sendfile = botslib.opendata(row['filename'], 'rb')
                 msg = sendfile.read()
                 sendfile.close()
