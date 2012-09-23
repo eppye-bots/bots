@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import patterns,include
 from django.contrib import admin
-from django.views.generic.simple import redirect_to
+#~ from django.views.generic.simple import redirect_to
+from django.views.generic.base import RedirectView
 from django.contrib.auth.decorators import login_required,user_passes_test
 import views
 
@@ -25,7 +26,7 @@ urlpatterns = patterns('',
     #only staff
     (r'^admin/$', login_required(views.home)),  #do not show django admin root page
     (r'^admin/bots/$', login_required(views.home)),  #do not show django admin root page
-    (r'^admin/bots/uniek/.+$', redirect_to, {'url': '/admin/bots/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages.
+    (r'^admin/bots/uniek/.+$', RedirectView, {'url': '/admin/bots/uniek/'}),  #hack. uniek counters can be changed (on main page), but never added. This rule disables the edit/add uniek pages.
     (r'^admin/', include(admin.site.urls)),
     (r'^runengine.+', run_permission(views.runengine)),
     #only superuser
