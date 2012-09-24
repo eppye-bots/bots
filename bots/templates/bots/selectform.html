@@ -1,11 +1,13 @@
 {% extends "admin/base.html" %}
 {% load i18n %}
+{% load adminmedia %}
+
 <!-- 20/01/2012 MJG - add datetimepicker widget to the from/until dates
      http://trentrichardson.com/examples/timepicker/  -->
 {% block extrahead %}
 <link rel="stylesheet" type="text/css" href="/media/css/jquery-ui.css" />
 <link rel="stylesheet" type="text/css" href="/media/css/jquery-ui-timepicker-addon.css" />
-<script src="/media/js/jquery.min.js"></script>
+<script src="{% admin_media_prefix %}js/jquery.min.js"></script>
 <script src="/media/js/jquery-ui.min.js"></script>
 <script src="/media/js/jquery-ui-timepicker-addon.js"></script>
 <script type="text/javascript">

@@ -17,6 +17,7 @@ EMAIL_HOST_PASSWORD = ''    #Default: ''. PASSWORD to use for the SMTP server de
 #~ EMAIL_SUBJECT_PREFIX = ''   #This is prepended on email subject.
 
 #*********database settings*************************
+#SQLite database (default bots database)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -36,11 +37,12 @@ DATABASES = {
         #~ 'USER': 'bots',
         #~ 'PASSWORD': 'botsbots',
         #~ 'HOST': '192.168.0.7',
+        #~ 'HOST': 'localhost',
         #~ 'PORT': '3306',
         #~ 'OPTIONS': {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'},
         #~ }
     #~ }
-#~ #PostgreSQL:
+#PostgreSQL:
 #~ DATABASES = {
     #~ 'default': {
         #~ 'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -76,21 +78,9 @@ USE_I18N = True
 #*************************************************************************
 
 #*********path settings*************************
-if django.VERSION[1] < 4:
-    # Absolute path to the directory that holds media.
-    # Example: '/home/media/media.lawrence.com/'
-    MEDIA_ROOT = PROJECT_PATH + '/'
-    # URL that handles the media served from MEDIA_ROOT. Make sure to use a
-    # trailing slash if there is a path component (optional in other cases).
-    # Examples: 'http://media.lawrence.com', 'http://example.com/media/'
-    MEDIA_URL = ''
-    # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-    # trailing slash.
-    # Examples: 'http://foo.com/media/', '/media/'.
-    ADMIN_MEDIA_PREFIX = '/media/'
-else:
-    STATIC_URL = '/media/'
-    STATIC_ROOT = PROJECT_PATH + '/'
+STATIC_URL = '/media/'
+STATIC_ROOT = PROJECT_PATH + '/'
+ADMIN_MEDIA_PREFIX = '/media/admin/'
 #~ STATICFILES_DIRS = PROJECT_PATH + '/'
 #~ FILE_UPLOAD_TEMP_DIR = os.path.join(PROJECT_PATH, 'botssys/pluginsuploaded') #set in bots.ini
 ROOT_URLCONF = 'bots.urls'
@@ -126,6 +116,9 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
     )
 #*******includes for django*************************************************************************
+LOCALE_PATHS = (
+    os.path.join(PROJECT_PATH, 'locale'),
+    )
 #save uploaded file (=plugin) always to file. no path for temp storage is used, so system default is used.
 FILE_UPLOAD_HANDLERS = (
     'django.core.files.uploadhandler.TemporaryFileUploadHandler',

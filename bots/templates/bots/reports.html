@@ -1,5 +1,6 @@
 {% extends "admin/base.html" %}
 {% load i18n %}
+{% load adminmedia %}
 
 {% block content %}
 <form action="{{ form.action }}" method="post">{% csrf_token %}
@@ -38,12 +39,12 @@
                 </td>
                 <td>{% if row.status %}
                         {% if row.lasterror or row.lastok or row.lastopen %}
-                            <img src="/media/img/admin/icon_error.gif" style="width: 1em;"/>
+                            <img src="{% admin_media_prefix %}img/icon_error.gif" style="width: 1em;"/>
                     {% else %}
-                            <img src="/media/img/admin/icon_alert.gif" style="width: 1em;"/>
+                            <img src="{% admin_media_prefix %}img/icon_alert.gif" style="width: 1em;"/>
                         {% endif %}
                     {% else %}
-                        <img src="/media/img/admin/icon_success.gif" style="width: 1em;"/>
+                        <img src="{% admin_media_prefix %}img/icon_success.gif" style="width: 1em;"/>
                     {% endif %}
                 </td>
                 <td>{{row.type}}</td>
