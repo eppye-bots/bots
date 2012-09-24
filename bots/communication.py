@@ -233,7 +233,7 @@ class _comsession(object):
                         attachmentfilename = unique
                     if self.userscript and hasattr(self.userscript,'filename'): #user exit to determine attachmentname
                         attachmentfilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,ta=ta_to,filename=attachmentfilename)
-                    if attachmentfilename:  #Tric: if attachmentfilename is None or empty string: do not send as an attachment.
+                    if attachmentfilename or row['sendmdn']!= 'body':  #if not explicitly indicated 'as body' or (old)  if attachmentfilename is None or empty string: do not send as an attachment.
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
 
                     #set Content-Type and charset
