@@ -131,25 +131,26 @@ def start():
         for command in commandstorun:
             botsglobal.logger.info('Run %s.'%command)
             #get list of routes to run
-            if command == 'new':
-                if routestorun:
-                    use_routestorun = routestorun[:]
-                    botsglobal.logger.info(u'Run routes from command line: "%s".',str(use_routestorun))
-                else:   # no routes from command line parameters: fetch all active routes from database (unless 'not in default run')
-                    use_routestorun = []
-                    for row in botslib.query('''SELECT DISTINCT idroute
-                                                FROM routes
-                                                WHERE active=%(active)s
-                                                AND (notindefaultrun=%(notindefaultrun)s OR notindefaultrun IS NULL)
-                                                ORDER BY idroute ''',
-                                                {'active':True,'notindefaultrun':False}):
-                        use_routestorun.append(row['idroute'])
-                    botsglobal.logger.info(_(u'Run active routes from database that are in default run: "%s".'),str(use_routestorun))
+            if routestorun:
+                use_routestorun = routestorun[:]
+                botsglobal.logger.info(u'Run routes from command line: "%s".',str(use_routestorun))
+            elif command == 'new':  #fetch all active routes from database unless 'not in default run' or not active.
+                use_routestorun = []
+                for row in botslib.query('''SELECT DISTINCT idroute
+                                            FROM routes
+                                            WHERE active=%(active)s
+                                            AND (notindefaultrun=%(notindefaultrun)s OR notindefaultrun IS NULL)
+                                            ORDER BY idroute ''',
+                                            {'active':True,'notindefaultrun':False}):
+                    use_routestorun.append(row['idroute'])
+                botsglobal.logger.info(_(u'Run active routes from database that are in default run: "%s".'),str(use_routestorun))
             else:   #for command other than 'new': use all active routes.
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
                                             FROM routes
-                                            ORDER BY idroute '''):
+                                            WHERE active=%(active)s
+                                            ORDER BY idroute ''',
+                                            {'active':True}):
                     use_routestorun.append(row['idroute'])
                 botsglobal.logger.info(_(u'Run all active routes from database: "%s".'),str(use_routestorun))
             errorinrun += router.rundispatcher(command,use_routestorun)
