@@ -6,6 +6,12 @@ import socket
 import botsinit
 import botsglobal
 
+JOBQUEUEMESSAGE2TXT = {
+    0: u'OK, job is added to queue',
+    1: u'Error, job not to jobqueue. Can not contact jobqueue-server',
+    4: u'Duplicate job, not added.',
+    }
+
 
 def send_job_to_jobqueue(task_args,priority=5):
     ''' adds a new job to the bots-jobqueueserver.
@@ -16,7 +22,6 @@ def send_job_to_jobqueue(task_args,priority=5):
         4 = job is a duplicate of job already in the queue
     '''
     try:
-        #~ remote_server = xmlrpclib.ServerProxy('http://localhost:' + str(botsglobal.ini.getint('jobqueue','port',6000)))
         remote_server = xmlrpclib.ServerProxy('http://localhost:' + str(botsglobal.ini.getint('jobqueue','port',6000)))
         return remote_server.addjob(task_args,priority)
     except socket.error,msg:
@@ -35,7 +40,7 @@ def start():
         %(name)s  -c<directory> [-p<priority>] program [parameters]
     Options:
         -c<directory>   directory for configuration files (default: config).
-        -p<priority>    priority of job, 1-9 (default: 5).
+        -p<priority>    priority of job, 1-9 (default: 5, highest priority is 9).
     Example of usage:
         %(name)s -cconfig -p5 python2.7 /usr/local/bin/bots-engine.py
         
@@ -55,7 +60,7 @@ def start():
             except:
                 print 'Error: priority should be numeric (1=highest, 9=lowest).'
                 sys.exit(1)
-        elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
+        elif arg in ["?", "/?",'-h', '--help']:
             print usage
             sys.exit(0)
         else:
@@ -68,12 +73,7 @@ def start():
         sys.exit(1)
         
     terug = send_job_to_jobqueue(task_args,priority)
-    if terug == 0:
-        print 'OK, job is added to queue'
-    elif terug == 1:
-        print 'Error, job not to jobqueue.'
-    elif terug == 4:
-        print 'Duplicate job, not added.'
+    print JOBQUEUEMESSAGE2TXT[terug]
     sys.exit(terug)
 
 
