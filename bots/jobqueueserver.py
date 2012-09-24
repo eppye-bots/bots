@@ -58,6 +58,7 @@ class Jobqueue(object):
     def _sort(self):
         self.jobqueue.sort(reverse=True)
         self.logger.debug(u'Job queue changed. New queue:%s',''.join(['\n    ' + repr(job) for job in self.jobqueue]))
+        #~ print self.jobqueue
 
 #-------------------------------------------------------------------------------
 def maxruntimeerror(logger,maxruntime,jobnumber,task_to_run):
@@ -141,7 +142,10 @@ def start():
     logger.info(u'Jobqueue server started.')
     server = SimpleXMLRPCServer(('localhost', port),logRequests=False)        
     server.register_instance(Jobqueue(logger))
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
     
     sys.exit(0)
 
