@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import traceback
 import django
+import socket
 from django.utils.translation import ugettext as _
 from django.contrib import messages
 import forms
@@ -12,6 +13,7 @@ import models
 import viewlib
 import botslib
 import pluglib
+import job2queue
 import botsglobal
 from botsconfig import *
 
@@ -505,24 +507,34 @@ def delete(request,*kw,**kwargs):
 
 def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
-        #check if bots-engine is not already running (unless attempting crashrecovery)
-        if list(models.mutex.objects.filter(mutexk=1).all()) and request.GET['clparameter'] != '--crashrecovery':
-            messages.add_message(request, messages.INFO, _(u'Trying to run "bots-engine", but database is locked by another run in progress. Please try again later.'))
-            botsglobal.logger.info(_(u'Trying to run "bots-engine", but database is locked by another run in progress.'))
-            return django.shortcuts.redirect('/home')
         #find out the right arguments to use
         botsenginepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py')        #find the bots-engine
         lijst = [sys.executable,botsenginepath] + sys.argv[1:]
         if 'clparameter' in request.GET:
             lijst.append(request.GET['clparameter'])
-
-        try:
-            botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
-            terug = subprocess.Popen(lijst).pid
-            messages.add_message(request, messages.INFO, _(u'Bots-engine is started.'))
-        except Exception,msg:
-            messages.add_message(request, messages.INFO, _(u'Errors while trying to run bots-engine: "%s".')%msg)
-            botsglobal.logger.info(_(u'Errors while trying to run bots-engine:\n%s.'),msg)
+            
+        #either bots-engine is run directly or via jobqueue-server:
+        if botsglobal.ini.getboolean('jobqueue','enabled',False):
+            job2queue.send_job_to_jobqueue(lijst)
+        else:
+            #**************check if another instance of bots-engine is running/if port is free******************************
+            try:
+                engine_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                port = botsglobal.ini.getint('settings','port',35636)
+                engine_socket.bind(('127.0.0.1', port))
+            except socket.error:
+                messages.add_message(request, messages.INFO, _(u'Trying to run "bots-engine", but another instance of "bots-engine" is running. Please try again later.'))
+                botsglobal.logger.info(_(u'Trying to run "bots-engine", but another instance of "bots-engine" is running. Please try again later.'))
+            finally:
+                engine_socket.close()
+            #run engine directly
+            try:
+                botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
+                terug = subprocess.Popen(lijst).pid
+                messages.add_message(request, messages.INFO, _(u'Bots-engine is started.'))
+            except Exception,msg:
+                messages.add_message(request, messages.INFO, _(u'Errors while trying to run bots-engine: "%s".')%msg)
+                botsglobal.logger.info(_(u'Errors while trying to run bots-engine:\n%s.'),msg)
     return django.shortcuts.redirect('/home')
 
 def sendtestmailmanagers(request,*kw,**kwargs):
