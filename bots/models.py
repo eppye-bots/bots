@@ -89,6 +89,10 @@ ENCODE_MIME = (
     ('never',_(u'never')),
     ('ascii',_(u'base64 if not ascii')),
     )
+EDI_AS_ATTACHMENT = (
+    ('attachment',_(u'edi file as attachment')),
+    ('body',_(u'edi file in body of email')),
+    )
 ENCODE_ZIP_IN = (
     ('in_always',_(u'unzip always')),
     ('in_test',_(u'unzip if zip')),
@@ -180,30 +184,30 @@ class ccode(models.Model):
 class channel(models.Model):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
-    type = StripCharField(max_length=35,choices=CHANNELTYPE)    #protocol type
+    type = StripCharField(max_length=35,choices=CHANNELTYPE)        #protocol type
     charset = StripCharField(max_length=35,default=u'us-ascii')     #20120828: not used anymore
     host = StripCharField(max_length=256,blank=True)
     port = models.PositiveIntegerField(default=0,blank=True,null=True)
     username = StripCharField(max_length=35,blank=True)
     secret = StripCharField(max_length=35,blank=True,verbose_name=_(u'password'))
     starttls = models.BooleanField(default=False,verbose_name='No check from-address',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
-    apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #not used anymore (is in 'type' now) #20110104: used as 'no check on "to:" email address'
-    remove = models.BooleanField(default=False,help_text=_(u'For in-channels: remove the edi files after successful reading. Note: in production you do want to remove the edi files, else these are read over and over again!'))
+    apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #20110104: used as 'no check on "to:" email address'
+    remove = models.BooleanField(default=False,help_text=_(u"For in-channels: delete edi files after successful reading. Note: you'll want this in production, else edi files are read over and over again!"))
     path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both are used
-    filename = StripCharField(max_length=35,blank=True,help_text=_(u'For "type" ftp and file; read or write this filename. Wildcards allowed, eg "*.edi". Note for out-channels: if no wildcard is used, all edi message are written to one file.'))
-    lockname = StripCharField(max_length=35,blank=True,help_text=_(u'When reading or writing edi files in this directory use this file to indicate a directory lock.'))
+    filename = StripCharField(max_length=256,blank=True,help_text=_(u'For "type" ftp and file; read or write this filename. Wildcards allowed, eg "*.edi". Note for out-channels: if no wildcard is used, all edi message are written to one file.'))
+    lockname = StripCharField(max_length=35,blank=True,help_text=_(u'Use directory locking: when reading or writing edi files in this directory use this file to indicate directory lock.'))
     syslock = models.BooleanField(default=False,help_text=_(u'Use system file locking for reading & writing edi files on windows, *nix.'))
     parameters = StripCharField(max_length=70,blank=True)
     ftpaccount = StripCharField(max_length=35,blank=True)
     ftpactive = models.BooleanField(default=False)
     ftpbinary = models.BooleanField(default=False)
-    askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'),help_text=_(u'Should edi-files be base64-encoded in email. Using base64 for edi (default) is often a good choice.'))     #not used anymore 20091019: 20100703: used to indicate mime-encoding
-    sendmdn = StripCharField(max_length=17,blank=True)    #not used anymore 20091019.
-    mdnchannel = StripCharField(max_length=35,blank=True)             #not used anymore 20091019
+    askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'),help_text=_(u'Should edi-files be base64-encoded in email. Using base64 for edi (default) is often a good choice.'))     #20100703: used to indicate mime-encoding
+    sendmdn = StripCharField(max_length=17,blank=True,choices=EDI_AS_ATTACHMENT,verbose_name=_(u'Edi file in email as'),help_text=_(u'Should edi-files in emails be send as attchment or in body?'))      #20120922: for email/mime: edi file as attachment or in body 
+    mdnchannel = StripCharField(max_length=35,blank=True)           #not used anymore 20091019
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True)
-    rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
-    rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds used for the in-communication time for this channel.'))                        #added 20100501. 20110906: max communication time.
+    rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
+    rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds for in-communication channel. Purpose: limit incoming edi files; better read more often tan everything in one time.'))   #added 20100501. 20110906: max communication time.
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'
@@ -327,9 +331,9 @@ class filereport(models.Model):
         db_table = 'filereport'
 class mutex(models.Model):
     #specific SQL is used (database defaults are used)
-    mutexk = models.IntegerField(primary_key=True)  #always value '1'
-    mutexer = models.IntegerField()     #20120810: set to '1' to indicate error-email has been send for databaselock
-    ts = models.DateTimeField()         #timestamp when mutex is set
+    mutexk = models.IntegerField(primary_key=True)  #is always value '1'
+    mutexer = models.IntegerField() 
+    ts = models.DateTimeField()         #timestamp of mutex
     class Meta:
         db_table = 'mutex'
 class persist(models.Model):
@@ -383,7 +387,7 @@ class ta(models.Model):
     editype = StripCharField(max_length=35)
     messagetype = StripCharField(max_length=35)
     alt = StripCharField(max_length=35)
-    divtext = StripCharField(max_length=35)
+    divtext = StripCharField(max_length=35)             #name of translation script. is not very useful...
     merge = models.BooleanField()
     nrmessages = models.IntegerField()
     testindicator = StripCharField(max_length=10)     #0:production; 1:test. Length to 1?
@@ -394,7 +398,7 @@ class ta(models.Model):
     statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module
     retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
-    errortext = models.TextField()
+    errortext = models.TextField()                      #20120921: unlimited length
     ts = models.DateTimeField()
     confirmasked = models.BooleanField()                #added 20091019; confirmation asked or send
     confirmed = models.BooleanField()                   #added 20091019; is confirmation received (when asked)
