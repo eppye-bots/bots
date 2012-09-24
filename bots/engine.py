@@ -68,14 +68,14 @@ def start():
 
     #**************check if another instance of bots-engine is running/if port is free******************************
     try:
-        my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        engine_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         port = botsglobal.ini.getint('settings','port',35636)
-        my_socket.bind(('127.0.0.1', port))
+        engine_socket.bind(('127.0.0.1', port))
     except socket.error:
-        my_socket.close()
+        engine_socket.close()
         sys.exit(3)
     else:
-        atexit.register(my_socket.close)
+        atexit.register(engine_socket.close)
 
     #**************initialise logging******************************
     process_name = 'engine'
