@@ -42,17 +42,20 @@ class CcodetriggerAdmin(BotsAdmin):
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
-    list_display = ('idchannel', 'inorout', 'type','host', 'port', 'username', 'secret', 'path', 'filename', 'remove', 'archivepath','rsrv2','ftpactive', 'ftpbinary','askmdn', 'syslock', 'starttls','apop')
+    list_display = ('idchannel', 'inorout', 'type', 'remove', 'host', 'port', 'username', 'secret', 'path', 'filename','archivepath','rsrv2','syslock','parameters','starttls','apop','askmdn','sendmdn','ftpactive', 'ftpbinary')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
     search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath')
     fieldsets = (
-        (None,          {'fields': ('idchannel', ('inorout','type'), ('host','port'), ('username', 'secret'), ('path', 'filename'), 'remove', 'archivepath', 'desc')
+        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'remove', ('host','port'), ('username', 'secret'), ('path', 'filename'), 'archivepath', 'desc')
                         }),
-        (_(u'FTP specific data'),{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
+        (_(u'Email specific'),{'fields': ('starttls', 'apop', 'askmdn', 'sendmdn' ),
                          'classes': ('collapse',)
                         }),
-        (_(u'Advanced'),{'fields': (('lockname', 'syslock'), 'parameters', 'starttls','apop','askmdn','rsrv2'),
+        (_(u'FTP specific'),{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
+                         'classes': ('collapse',)
+                        }),
+        (_(u'Advanced'),{'fields': ('syslock', 'lockname', 'parameters', 'rsrv2'),
                          'classes': ('collapse',)
                         }),
     )
