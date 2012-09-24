@@ -515,7 +515,9 @@ def runengine(request,*kw,**kwargs):
             
         #either bots-engine is run directly or via jobqueue-server:
         if botsglobal.ini.getboolean('jobqueue','enabled',False):
-            job2queue.send_job_to_jobqueue(lijst)
+            terug = job2queue.send_job_to_jobqueue(lijst)
+            messages.add_message(request, messages.INFO, job2queue.JOBQUEUEMESSAGE2TXT[terug])
+            botsglobal.logger.info(job2queue.JOBQUEUEMESSAGE2TXT[terug])
         else:
             #**************check if another instance of bots-engine is running/if port is free******************************
             try:
