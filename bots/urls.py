@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns,include
 from django.contrib import admin
-#~ from django.views.generic.simple import redirect_to
 from django.views.generic.base import RedirectView
 from django.contrib.auth.decorators import login_required,user_passes_test
 import views

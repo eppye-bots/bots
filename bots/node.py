@@ -394,8 +394,8 @@ class Node(object):
         return
 
     def getnozero(self,*mpaths):
-        ''' like get, but either return a numerical valuue (as string) or None. If value to return is equal to zero, Noen is returned.
-            useful eg for fixed records, whre num fields are initialised with zeroes.
+        ''' like get, but either return a numerical value (as string) or None. If value to return is equal to zero, None is returned.
+            useful eg for fixed records, where num fields are initialised with zeroes.
         '''
         terug = self.get(*mpaths)
         try:
