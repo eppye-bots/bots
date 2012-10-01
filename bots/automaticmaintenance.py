@@ -4,7 +4,7 @@ import botsglobal
 from botsconfig import *
 from django.utils.translation import ugettext as _
 #ta-fields used in evaluation
-TAVARS = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script,rsrv1,rsrv2'
+TAVARS = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script,rsrv1,rsrv2,rsrv4'
 
 
 def evaluate(command,rootidtaofrun):
@@ -185,21 +185,19 @@ class Trace(object):
             If information is different in different ta's: place '(several values)' (but there is a setting in bots.ini to show only the first one)
         '''
         def core(ta_object):
-            if ta_object['status'] == FILEIN:   #data for incoming email #only used last FILEIN, or has extra status??
-                if ta_object['frommail']:
+            if ta_object['status'] == FILEIN:   #get data for incoming email, not attachments
+                if  not self.incontenttype:
                     self.frommail = ta_object['frommail']
-                if ta_object['tomail']:
                     self.tomail = ta_object['tomail']
-                if ta_object['contenttype']:
                     self.incontenttype = ta_object['contenttype']
-                if ta_object['rsrv1']:
                     self.rsrv1 = ta_object['rsrv1']         #email subject
             elif ta_object['status'] == FILEOUT:    #only for last idta...
-                if self.outidta:
-                    if self.outidta != ta_object['idta'] and asterisk:
-                        self.outidta = 0
-                else:
-                    self.outidta = ta_object['idta']
+                if ta_object['rsrv4']:
+                    if self.outidta:
+                        if self.outidta != ta_object['idta'] and asterisk:
+                            self.outidta = 0
+                    else:
+                        self.outidta = ta_object['idta']
             elif ta_object['status'] == PARSED:
                 self.rsrv2 += ta_object['rsrv2']
                 if self.ineditype:
