@@ -60,7 +60,8 @@ def run(idchannel,command,idroute=''):
         else:
             classtocall = globals()[channeldict['type']]                    #get the communication class from this module
 
-        classtocall(channeldict,idroute,userscript,scriptname,command) #call the class for this type of channel
+        comclass = classtocall(channeldict,idroute,userscript,scriptname,command) #call the class for this type of channel
+        comclass.run()
         botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
     else:
@@ -74,15 +75,17 @@ class _comsession(object):
         use self.idroute!!
     '''
     def __init__(self,channeldict,idroute,userscript,scriptname,command):
-        ''' All communication is performed in init.'''
         self.channeldict = channeldict
         self.idroute = idroute
         self.userscript = userscript
         self.scriptname = scriptname
+        self.command = command
+
+    def run(self):
         if self.channeldict['inorout'] == 'out':
             #routes can have the same outchannel.
             #the different outchannels can be 'direct' or deferred (in route)
-            if command not in ['--automaticretrycommunication','--resend']: #for out-communicate: only precommunicate/mime if not retry.
+            if self.command not in ['--automaticretrycommunication','--resend']: #for out-communicate: only precommunicate/mime if not retry.
                 self.precommunicate()
             if self.countoutfiles() > 0: #for out-comm: send if something to send
                 self.connect()
@@ -90,7 +93,7 @@ class _comsession(object):
                 self.disconnect()
                 self.archive()
         else:   #incommunication
-            if command == 'new': #only in-communicate for new run
+            if self.command == 'new': #only in-communicate for new run
                 #handle maxsecondsperchannel: use global value from bots.ini unless specified in channel. (In database this is field 'rsrv2'.)
                 if self.channeldict['rsrv2'] <= 0:
                     self.maxsecondsperchannel = botsglobal.ini.getint('settings','maxsecondsperchannel',sys.maxint)
@@ -105,40 +108,66 @@ class _comsession(object):
     def archive(self):
         '''archive received or send files; archive only if receive is correct.'''
         if not self.channeldict['archivepath']:
-            return
+            return  #do not archive if not indicated
+        archiveexternalname = botsglobal.ini.getboolean('settings','archiveexternalname',False) #use original incoming filename in archive 
         if self.channeldict['inorout'] == 'in':
-            status = FILEIN
-            statust = OK
+            if archiveexternalname:
+                status = EXTERNIN
+                statust = DONE
+            else:
+                status = FILEIN
+                statust = OK
             channel = 'fromchannel'
         else:
-            status = FILEOUT
+            if archiveexternalname:
+                status = EXTERNOUT
+            else:
+                status = FILEOUT
             statust = DONE
             channel = 'tochannel'
-
+        #user script can manipulate archivepath
         if self.userscript and hasattr(self.userscript,'archivepath'):
             archivepath = botslib.runscript(self.userscript,self.scriptname,'archivepath',channeldict=self.channeldict)
         else:
             archivepath = botslib.join(self.channeldict['archivepath'],time.strftime('%Y%m%d'))
+        archivezip = botsglobal.ini.getboolean('settings','archivezip',False)   #archive to zip or not
+        if archivezip:
+            archivepath += '.zip'
         checkedifarchivepathisthere = False  #for a outchannel that is less used, lots of empty dirs will be created. This var is used to check within loop if dir exist, but this is only checked one time.
         for row in botslib.query('''SELECT filename,idta
-                                    FROM ta
+                                    FROM  ta
                                     WHERE idta>%(rootidta)s
-                                    AND status=%(status)s
-                                    AND statust=%(statust)s
-                                    AND ''' + channel + '''=%(idchannel)s
-                                    AND idroute=%(idroute)s
+                                    AND   status=%(status)s
+                                    AND   statust=%(statust)s
+                                    AND   ''' + channel + '''=%(idchannel)s
+                                    AND   idroute=%(idroute)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':status,
                                     'statust':statust,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
             if not checkedifarchivepathisthere:
-                botslib.dirshouldbethere(archivepath)
+                if archivezip:
+                    botslib.dirshouldbethere(os.path.dirname(archivepath))
+                    archivezipfilehandler = zipfile.ZipFile(archivepath,'a',zipfile.ZIP_DEFLATED)
+                else:
+                    botslib.dirshouldbethere(archivepath)
                 checkedifarchivepathisthere = True
             absfilename = botslib.abspathdata(row['filename'])
             if self.userscript and hasattr(self.userscript,'archivename'):
                 archivename = botslib.runscript(self.userscript,self.scriptname,'archivename',channeldict=self.channeldict,idta=row['idta'],filename=absfilename)
-                shutil.copy(absfilename,botslib.join(archivepath,archivename))
             else:
-                shutil.copy(absfilename,archivepath)
+                archivename = os.path.basename(row['filename'])
+
+            if archivezip:
+                archivezipfilehandler.write(absfilename,archivename)
+            else:
+                # if a file of the same name already exists, add a timestamp
+                if os.path.isfile(botslib.join(archivepath,archivename)):
+                    archivename = os.path.splitext(archivename)[0] + time.strftime('_%H%M%S') + os.path.splitext(archivename)[1]
+                shutil.copy(absfilename,botslib.join(archivepath,archivename))
+
+        if archivezip and checkedifarchivepathisthere:
+            archivezipfilehandler.close()
+
 
     def countoutfiles(self):
         ''' counts the number of edifiles to be transmitted.'''
@@ -225,15 +254,8 @@ class _comsession(object):
                     message.add_header('MIME-Version','1.0')
 
                     #set attachment filename
-                    #create default attachment filename
-                    unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
-                    if self.channeldict['filename']:
-                        attachmentfilename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
-                    else:
-                        attachmentfilename = unique
-                    if self.userscript and hasattr(self.userscript,'filename'): #user exit to determine attachmentname
-                        attachmentfilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,ta=ta_to,filename=attachmentfilename)
-                    if attachmentfilename or row['sendmdn']!= 'body':  #if not explicitly indicated 'as body' or (old)  if attachmentfilename is None or empty string: do not send as an attachment.
+                    attachmentfilename = self.filename_formatter(filename_mask,ta_to)
+                    if attachmentfilename and row['sendmdn']!= 'body':  #if not explicitly indicated 'as body' or (old)  if attachmentfilename is None or empty string: do not send as an attachment.
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
 
                     #set Content-Type and charset
@@ -393,7 +415,7 @@ class _comsession(object):
                             charset='ascii')
             return ta_mdn.idta
         #*****************end of nested function dispositionnotification***************************
-        #select received mails for channel
+        #get received mails for channel
         for row in botslib.query('''SELECT idta,filename
                                     FROM ta
                                     WHERE idta>%(rootidta)s
@@ -442,7 +464,7 @@ class _comsession(object):
 
 
                 #update transaction of mail with information found in mail
-                ta_from.update(frommail=frommail,   #why now why not later: because ta_mime is copied to separate files later, so need the info now
+                ta_from.update(frommail=frommail,   #why now why not later: attachemnts are saved alter, their ta's need the info from get ier use ta_mime is copied to separate files later, so need the info now
                                 tomail=tomail,
                                 reference=reference,
                                 contenttype=contenttype,
@@ -530,14 +552,71 @@ class _comsession(object):
         return convertdict.get(codec_in,codec_in)
 
 
+    def filename_formatter(self,filename_mask,ta):
+        ''' Output filename generation from "template" filename configured in the channel
+            Basically python's string.Formatter is used; see http://docs.python.org/library/string.html
+            As in string.Formatter, substitution values are surrounded by braces; format specifiers cna be used.
+            Any ta value can be used
+              eg. {botskey}, {alt}, {editype}, {messagetype}, {topartner}
+            Next to the value in ta you can use:
+            -   * : an unique number (per outchannel) using an asterisk
+            -   {datetime}  use datetime with a valid strftime format: 
+                eg. {datetime:%Y%m%d}, {datetime:%H%M%S}
+            -   {infile} use the original incoming filename; use name and extension, or either part separately:
+                eg. {infile}, {infile:name}, {infile:ext}
+            -   {overwrite}  if file wit hfielname exists: overwrite it (instead of appending)
+            
+            Exampels of usage:
+                {botskey}_*.idoc        use incoming order number, add unique number, use extension '.idoc'
+                *_{infile}              passthrough incoming filename & extension, prepend with unique number
+                {infile:name}_*.txt     passthrough incoming filename, add unique number but change extension to .txt
+                {editype}-{messagetype}-{datetime:%Y%m%d}-*.{infile:ext}
+                                        use editype, messagetype, date and unique number with extension from the incoming file
+                {topartner}/{messagetype}/*.edi
+                                        Usage of subdirectories in the filename, they must already exist. In the example:
+                                        sort into folders by partner and messagetype.
+                        
+            Note1: {botskey} can only be used if merge is False for that messagetype
+        '''
+        class infilestr(str):
+            ''' class for the infile-string that handles the specific format-options'''
+            def __format__(self, format_spec):
+                if not format_spec:
+                    return str(self)
+                name,ext = os.path.splitext(str(self))
+                if format_spec == 'ext':
+                    if ext.startswith('.'):
+                        ext = ext[1:]
+                    return ext 
+                if format_spec == 'name':
+                    return name 
+                raise botslib.CommunicationOutError(_(u'Error in format of "{filename}": unknown format: "%s".'%(format_spec)))
+        unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
+        tofilename = filename_mask.replace('*',unique)           #filename_mask is filename in channel where '*' is replaced by idta
+        if '{' in tofilename and sys.version_info[1] != 5:    #only for python 2.6/7
+            ta.synall()
+            if '{infile' in tofilename:
+                ta_list = botslib.trace_origin(ta=ta,where={'status':EXTERNIN})
+                infilename = infilestr(os.path.basename(ta_list[0].filename))
+            else:
+                infilename = ''
+            try:
+                tofilename = tofilename.format(infile=infilename,datetime=datetime.datetime.now(),**ta.__dict__)
+            except:
+                txt = botslib.txtexc()
+                raise botslib.CommunicationOutError(_(u'Error in formatting outgoing filename "%s". Error: "%s".' % (tofilename,txt)))
+        if self.userscript and hasattr(self.userscript,'filename'):
+            return botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta)
+        else:
+            return tofilename
+
+
 class file(_comsession):
     def connect(self):
         if self.channeldict['lockname']:        #directory locking: create lock-file. If the lockfile is already present an exception is raised.
             self.lockname = botslib.join(self.channeldict['path'],self.channeldict['lockname'])
             lock = os.open(self.lockname,os.O_WRONLY | os.O_CREAT | os.O_EXCL)
             os.close(lock)
-        #~ if self.channeldict['inorout'] == 'out':
-            #~ raise Exception('test')
 
     @botslib.log_session
     def incommunicate(self):
@@ -594,11 +673,13 @@ class file(_comsession):
         #check if output dir exists, else create it.
         outputdir = botslib.join(self.channeldict['path'])
         botslib.dirshouldbethere(outputdir)
-        #output to one file or a queue of files (with unique names)
-        if not self.channeldict['filename'] or '*' not in self.channeldict['filename']:
-            mode = 'ab'  #fixed filename; not unique: append to file
+        #get right filename_mask & determine if fixed name (append) or files with unique names
+        filename_mask = self.channeldict['filename'] if self.channeldict['filename'] else '*'
+        if '{overwrite}' in filename_mask:
+            filename_mask = filename_mask.replace('{overwrite}','')
+            mode = 'wb'
         else:
-            mode = 'wb'  #unique filenames; (over)write
+            mode = 'ab'
         #select the db-ta's for this channel
         for row in botslib.query(u'''SELECT idta,filename,rsrv4
                                        FROM ta
@@ -613,14 +694,8 @@ class file(_comsession):
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
                 #open tofile, incl syslock if indicated
-                unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
-                if self.channeldict['filename']:
-                    filename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
-                else:
-                    filename = unique
-                if self.userscript and hasattr(self.userscript,'filename'):
-                    filename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=filename,ta=ta_from)
-                tofilename = botslib.join(outputdir,filename)
+                tofilename = self.filename_formatter(filename_mask,ta_from)
+                tofilename = botslib.join(outputdir,tofilename)
                 tofile = open(tofilename, mode)
                 if self.channeldict['syslock']:
                     if os.name == 'nt':
@@ -1011,11 +1086,13 @@ class ftp(_comsession):
             each send file is transaction.
             NB: ftp command APPE should be supported by server
         '''
-        #check if one file or queue of files with unique names
-        if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
-            mode = 'APPE '  #fixed filename; not unique: append to file
+        #get right filename_mask & determine if fixed name (append) or files with unique names
+        filename_mask = self.channeldict['filename'] if self.channeldict['filename'] else '*'
+        if '{overwrite}' in filename_mask:
+            filename_mask = filename_mask.replace('{overwrite}','')
+            mode = 'STOR '
         else:
-            mode = 'STOR '  #unique filenames; (over)write
+            mode = 'APPE '
         for row in botslib.query('''SELECT idta,filename,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
@@ -1028,13 +1105,7 @@ class ftp(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
-                unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
-                if self.channeldict['filename']:
-                    tofilename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
-                else:
-                    tofilename = unique
-                if self.userscript and hasattr(self.userscript,'filename'):
-                    tofilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta_from)
+                tofilename = self.filename_formatter(filename_mask,ta_from)
                 if self.channeldict['ftpbinary']:
                     fromfile = botslib.opendata(row['filename'], 'rb')
                     self.session.storbinary(mode + tofilename, fromfile)
@@ -1278,11 +1349,13 @@ class sftp(_comsession):
             each to be send file is transaction.
             each send file is transaction.
         '''
-        #check if one file or queue of files with unique names
-        if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
-            mode = 'a'  #fixed filename; not unique: append to file
+        #get right filename_mask & determine if fixed name (append) or files with unique names
+        filename_mask = self.channeldict['filename'] if self.channeldict['filename'] else '*'
+        if '{overwrite}' in filename_mask:
+            filename_mask = filename_mask.replace('{overwrite}','')
+            mode = 'w'
         else:
-            mode = 'w'  #unique filenames; (over)write
+            mode = 'a'
         for row in botslib.query('''SELECT idta,filename,rsrv4
                                     FROM ta
                                     WHERE idta>%(rootidta)s
@@ -1295,14 +1368,7 @@ class sftp(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
-                unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
-                if self.channeldict['filename']:
-                    tofilename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
-                else:
-                    tofilename = unique
-                if self.userscript and hasattr(self.userscript,'filename'):
-                    tofilename = botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta_from)
-
+                tofilename = self.filename_formatter(filename_mask,ta_from)
                 fromfile = botslib.opendata(row['filename'], 'rb')
                 tofile = self.session.open(tofilename, mode)    # SSH treats all files as binary
                 tofile.write(fromfile.read())
@@ -1580,11 +1646,13 @@ class communicationscript(_comsession):
         #check if output dir exists, else create it.
         outputdir = botslib.join(self.channeldict['path'])
         botslib.dirshouldbethere(outputdir)
-        #output to one file or a queue of files (with unique names)
-        if not self.channeldict['filename'] or '*'not in self.channeldict['filename']:
-            mode = 'ab'  #fixed filename; not unique: append to file
+        #get right filename_mask & determine if fixed name (append) or files with unique names
+        filename_mask = self.channeldict['filename'] if self.channeldict['filename'] else '*'
+        if '{overwrite}' in filename_mask:
+            filename_mask = filename_mask.replace('{overwrite}','')
+            mode = 'wb'
         else:
-            mode = 'wb'  #unique filenames; (over)write
+            mode = 'ab'
         #select the db-ta's for this channel
         for row in botslib.query(u'''SELECT idta,filename,rsrv4
                                     FROM ta
@@ -1597,13 +1665,8 @@ class communicationscript(_comsession):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                #open tofile, incl syslock if indicated
-                unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for filename
-                if self.channeldict['filename']:
-                    filename = self.channeldict['filename'].replace('*',unique) #filename is filename in channel where '*' is replaced by idta
-                else:
-                    filename = unique
-                tofilename = botslib.join(outputdir,filename)
+                tofilename = self.filename_formatter(filename_mask,ta_from)
+                tofilename = botslib.join(outputdir,tofilename)
                 tofile = open(tofilename, mode)
                 #open fromfile
                 fromfile = botslib.opendata(row['filename'], 'rb')

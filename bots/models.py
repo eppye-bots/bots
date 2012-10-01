@@ -194,7 +194,7 @@ class channel(models.Model):
     apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #20110104: used as 'no check on "to:" email address'
     remove = models.BooleanField(default=False,help_text=_(u"For in-channels: delete edi files after successful reading. Note: you'll want this in production, else edi files are read over and over again!"))
     path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both are used
-    filename = StripCharField(max_length=256,blank=True,help_text=_(u'For "type" ftp and file; read or write this filename. Wildcards allowed, eg "*.edi". Note for out-channels: if no wildcard is used, all edi message are written to one file.'))
+    filename = StripCharField(max_length=256,blank=True,help_text=_(u'Filename to read or write. Incoming: Wildcards allowed eg "*.edi". For outgoing it is advised to use "*" in filename (is replaced by unique counter per channel); eg "D_*.edi" gives D_1.edi, D_2.edi, etc. More info in <a target="_blank" href="http://code.google.com/p/bots/wiki/Filenames">wiki</a>.'))
     lockname = StripCharField(max_length=35,blank=True,help_text=_(u'Use directory locking: when reading or writing edi files in this directory use this file to indicate directory lock.'))
     syslock = models.BooleanField(default=False,help_text=_(u'Use system file locking for reading & writing edi files on windows, *nix.'))
     parameters = StripCharField(max_length=70,blank=True)
@@ -204,7 +204,7 @@ class channel(models.Model):
     askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'),help_text=_(u'Should edi-files be base64-encoded in email. Using base64 for edi (default) is often a good choice.'))     #20100703: used to indicate mime-encoding
     sendmdn = StripCharField(max_length=17,blank=True,choices=EDI_AS_ATTACHMENT,verbose_name=_(u'Edi file in email as'),help_text=_(u'Should edi-files in emails be send as attchment or in body?'))      #20120922: for email/mime: edi file as attachment or in body 
     mdnchannel = StripCharField(max_length=35,blank=True)           #not used anymore 20091019
-    archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path; relative path is relative to bots directory. Eg: "botssys/archive/mychannel".'))           #added 20091028
+    archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write incoming or outgoing edi files to an archive. Use absolute or relative path (relative to bots directory). Eg: "botssys/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
     rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds for in-communication channel. Purpose: limit incoming edi files; better read more often tan everything in one time.'))   #added 20100501. 20110906: max communication time.
