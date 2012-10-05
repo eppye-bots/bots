@@ -191,13 +191,6 @@ class Trace(object):
                     self.tomail = ta_object['tomail']
                     self.incontenttype = ta_object['contenttype']
                     self.rsrv1 = ta_object['rsrv1']         #email subject
-            elif ta_object['status'] == FILEOUT:    #only for last idta...
-                if ta_object['rsrv4']:
-                    if self.outidta:
-                        if self.outidta != ta_object['idta'] and asterisk:
-                            self.outidta = 0
-                    else:
-                        self.outidta = ta_object['idta']
             elif ta_object['status'] == PARSED:
                 self.rsrv2 += ta_object['rsrv2']
                 if self.ineditype:
@@ -219,6 +212,12 @@ class Trace(object):
                 else:
                     self.divtext = ta_object['divtext']
             elif ta_object['status'] == EXTERNOUT:
+                if ta_object['rsrv4']:
+                    if self.outidta:
+                        if self.outidta != ta_object['idta'] and asterisk:
+                            self.outidta = 0
+                    else:
+                        self.outidta = ta_object['idta']
                 if self.outeditype:
                     if self.outeditype != ta_object['editype'] and asterisk:
                         self.outeditype = '(several values)'
