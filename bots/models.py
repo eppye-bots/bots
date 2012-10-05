@@ -184,7 +184,7 @@ class ccode(models.Model):
 class channel(models.Model):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
-    type = StripCharField(max_length=35,choices=CHANNELTYPE)        #protocol type
+    type = StripCharField(max_length=35,choices=CHANNELTYPE)        #protocol type: edifact, x12, csv, etc
     charset = StripCharField(max_length=35,default=u'us-ascii')     #20120828: not used anymore
     host = StripCharField(max_length=256,blank=True)
     port = models.PositiveIntegerField(default=0,blank=True,null=True)
