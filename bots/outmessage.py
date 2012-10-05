@@ -114,6 +114,11 @@ class Outmessage(message.Message):
             for childnode in self.root.children:
                 self._write(childnode)
                 self.nrmessagewritten += 1
+            #'write back' the number of messages. Tricky thing here is that sometimes such a structure is indeed one message: eg csv without BOTS iD.
+            #in general: when only one type of record in recorddefs (mind: for xml this is not useful) no not writeback the count as nrofmessages
+            #for now: always write back unless csv of fixed.
+            if not isinstance(self,(csv,fixed)):
+                self.ta_info['nrmessages'] = self.nrmessagewritten
             self._closewrite()
 
     def _initwrite(self):
@@ -781,7 +786,7 @@ class templatehtml(Outmessage):
 
     def writeall(self):
         ''' Very different writeall:
-            there is no tree of nodes; there is no grammar.structure/recorddefs; kid opens file by itself.
+            there is no tree of nodes; there is no grammar.structure/recorddefs; Genshi opens file by itself.
         '''
         try:
             from genshi.template import TemplateLoader
