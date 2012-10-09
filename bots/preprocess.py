@@ -77,73 +77,62 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
 
 #regular expression for mailbag.
 HEADER = re.compile('''
-    (?P<edifact>
-        (?P<UNA>
-            U\s*N\s*A
-            .{6}
-        )?
-        \s*
-        (?P<UNB>
-            U\s*N\s*B
-            \s*
-            .{1}
-            (.{4})     #charset
-            .{1}
-            (.{1})     #version
+    \s*
+    (
+        (?P<edifact>
+            (?P<UNA>
+                U[\n\r]*N[\n\r]*A
+                (?P<UNAstring>.+?)
+            )?
+            (?P<UNB>
+                U[\n\r]*N[\n\r]*B
+            )
         )
-    )
-    |
-    (?P<tradacoms>
-        (?P<STX>
-            S\s*T\s*X
-            \s*
-            =
+        |
+        (?P<tradacoms>
+            (?P<STX>
+                S[\n\r]*T[\n\r]*X
+                [\n\r]*
+                =
+            )
         )
-    )
-    |
-    (?P<x12>
-        I\s*S\s*A
+        |
+        (?P<x12>
+            I[\n\r]*S[\n\r]*A
+        )
     )
     ''',re.DOTALL|re.VERBOSE)
 
 def mailbag(ta_from,endstatus,**argv):
     ''' 2 main functions:
-        -   recognizes and distuinguishes several edi types: x12 edifact tradacoms xml
-            ('mailbag' in, correct editype out)
+        -   recognizes and distuinguishes several edi types: x12 edifact tradacoms ('mailbag' in, correct editype out)
         -   split up interchanges (edifact, x12, tradacoms)
         details:
-        - edifact, x12 and tradacoms can be can be mixed,
-        - recognizes xml files; but messagetype 'xml' has a special handling when reading xml-files: xpath identifiers are used.
-          this is needed for using xml in mailbag!
-        - when more interchanges in one file: strongly recommended to mailbag/split these.
+        - edifact, x12 and tradacoms can be can be mixed
         - handle multiple UNA in one file, including different charsets.
-        - handle multiple x12 seperators in one file.
+        - handle multiple ISA's with different seperators in one file
+        in bots 2.3.0 all mailbag, edifact, x12 and tradacoms go via mailbag.
     '''
     edifile = botslib.readdata(filename=ta_from.filename)
     startpos = 0
     last_una = ''
+    nr_interchanges = 0
     while (1):
-        found = HEADER.search(edifile[startpos:])
+        found = HEADER.match(edifile[startpos:])
         if found is None:
-            if startpos:    #file does contain edifact/x12/tradacoms; no new interchange is found. So all processing is done.
-                if edifile[startpos:].strip():
-                    raise botslib.InMessageError(_(u'Found data at end of edi file, beyond the last valid envelope.'))                
-                break
-            #no edifact/x12/tradacoms found in edi file. Try if this is an xml file:
-            sniffxml = edifile[:25]
-            sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first 'real' data; some char are because of BOM, UTF-16 etc
-            if sniffxml and sniffxml[0] == '<':
-                ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag')  #make transaction for translated message; gets ta_info of ta_frommes
-                #~ ta_tomes.update(status=STATUSTMP,statust=OK,filename=ta_set_for_processing.filename,editype='xml') #update outmessage transaction with ta_info;
-                break
-            else:
-                raise botslib.InMessageError(_(u'Found no valid content in edi file.'))
+            if edifile[startpos:].strip():  #there is content...but not valid
+                if nr_interchanges:    #found interchanges, but remainder is not valid
+                    raise botslib.InMessageError(_(u'[A56] Edi file contains data not in a valid interchange at position $pos'),pos=startpos)                
+                else:   #no interchanges found, content is not a valid interchange 
+                    raise botslib.InMessageError(_(u'[A57] Edi file has no valid content (does not start with a valid interchange).'))
+            else:   #no parseble content
+                if nr_interchanges:    #OK: there are interchanges, but no new interchange is found.
+                    return
+                else:   #no edifact/x12/tradacoms envelope at all
+                    raise botslib.InMessageError(_(u'[A55] Edi file only contains whitespace.'))
         elif found.group('x12'):
             editype = 'x12'
             last_una = ''
-            #check for non-parsed content:
-            if edifile[startpos:found.start('x12')].strip():
-                raise botslib.InMessageError(_(u'Edi file contains no valid envelopes (ISA-IEA).'))                
             headpos = startpos + found.start('x12')
             #determine field_sep and record_sep
             count = 0
@@ -153,34 +142,42 @@ def mailbag(ta_from,endstatus,**argv):
                 count += 1
                 if count == 4:
                     field_sep = char
+                elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. 
+                    if char != field_sep:
+                        raise botslib.InMessageError(_(u'[A59] Non-valid ISA header at position $pos'),pos=headpos)
+                        
                 elif count == 106:
                     record_sep = char
                     break
             foundtrailer = re.search(
                                 re.escape(record_sep) +
-                                '\s*I\s*E\s*A\s*' +
+                                '[\n\r]*I[\n\r]*E[\n\r]*A[\n\r]*' +
                                 re.escape(field_sep) +
                                 '.+?'   +
                                 re.escape(record_sep),
                                 edifile[headpos:],re.DOTALL|re.VERBOSE)
         elif found.group('edifact'):
             editype = 'edifact'
-            #check for non-parsed content:
-            if edifile[startpos:found.start('edifact')].strip():
-                raise botslib.InMessageError(_(u'Edi file contains no valid envelopes (UNB-UNZ).'))                
             #determine field_sep and record_sep
             if found.group('UNA'):
-                last_una = found.group('UNA')
-                field_sep = found.group('UNA')[4]
-                record_sep = found.group('UNA')[8]
-                headpos = startpos + found.start('UNA')
-            elif found.group('UNB'):
+                last_una = found.group('UNAstring')[:]    #copy unastring; is needed for next interchane with same UNA
+            if last_una:
+                count = 0
+                for char in last_una:
+                    if char in '\r\n':
+                        continue
+                    count += 1
+                    if count == 2:
+                        field_sep = char
+                    elif count == 6:
+                        record_sep = char
+            else:
                 field_sep = '+'
                 record_sep = "'"
-                headpos = startpos + found.start('UNB')
+            headpos = startpos + found.start('UNB')
             foundtrailer = re.search(
                                 re.escape(record_sep) + 
-                                '\s*U\s*N\s*Z\s*' + 
+                                '[\n\r]*U[\n\r]*N[\n\r]*Z[\n\r]*' + 
                                 re.escape(field_sep) + 
                                 '.+?' +
                                 re.escape(record_sep),
@@ -188,33 +185,33 @@ def mailbag(ta_from,endstatus,**argv):
         elif found.group('tradacoms'):
             editype = 'tradacoms'
             last_una = ''
-            #check for non-parsed content:
-            if edifile[startpos:found.start('tradacoms')].strip():
-                raise botslib.InMessageError(_(u'Edi file contains no valid envelopes (STX-END).'))                
-            headpos = startpos + found.start('STX')
             field_sep = '='     #the tradacoms 'after-segment-tag-seperator'
             record_sep = "'"
+            headpos = startpos + found.start('STX')
             foundtrailer = re.search(
                                 re.escape(record_sep) +
-                                '\s*E\s*N\s*D\s*' +
+                                '[\n\r]*E[\n\r]*N[\n\r]*D[\n\r]*' +
                                 re.escape(field_sep) +
                                 '.+?' +
                                 re.escape(record_sep),
                                 edifile[headpos:],re.DOTALL|re.VERBOSE)
         if not foundtrailer:
-            raise botslib.InMessageError(_(u'Found no valid envelope trailer in edi file.'))
+            raise botslib.InMessageError(_(u'[A60] Found no valid envelope trailer in edi file for envelope header at position $pos'),pos=headpos)
+        #so: found an interchange (from headerpos until endpos)
         endpos = headpos + foundtrailer.end()
-        #so: interchange is from headerpos untill endpos
         ta_to = ta_from.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
         tofilename = str(ta_to.idta)
         filesize = len(edifile[headpos:endpos])
         tofile = botslib.opendata(tofilename,'wb')
         if editype == 'edifact' and last_una:
-            tofile.write(last_una)
+            unastring = 'UNA'+last_una
+            filesize += len(unastring)
+            tofile.write(unastring)
         tofile.write(edifile[headpos:endpos])
         tofile.close()
         ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype,rsrv2=filesize) #update outmessage transaction with ta_info;
         startpos = endpos
+        nr_interchanges += 1
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
 
 def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
