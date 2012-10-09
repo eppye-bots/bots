@@ -339,12 +339,30 @@ def checkunique(domein, receivednumber):
 #*************************Logging, Error handling********************/**
 #**********************************************************/**
 def sendbotserrorreport(subject,reporttext):
+    ''' Send an email in case of errors or problems with bots-engine.
+        Email is send to MANAGERS in config/settings.py.
+        Email parameters are in config/settings.py (EMAIL_HOST, etc).
+    '''
     if botsglobal.ini.getboolean('settings','sendreportiferror',False):
         from django.core.mail import mail_managers
         try:
             mail_managers(subject, reporttext)
         except Exception,msg:
             botsglobal.logger.debug(u'Error in sending error report: %s',msg)
+
+def sendbotsemail(partner,subject,reporttext):
+    ''' Send a simple email message to any bots partner.
+        Mail is sent to all To: and cc: addresses for the partner (but send_mail does not support cc).
+        Email parameters are in config/settings.py (EMAIL_HOST, etc).
+    '''
+    from django.core.mail import send_mail
+    for row in query('''SELECT mail,cc FROM partner WHERE idpartner=%(partner)s''',{'partner':partner}):
+        if row['mail']:
+            recipient_list = row['mail'].split(',') + row['cc'].split(',')
+            try:
+                send_mail(subject, reporttext, botsglobal.settings.SERVER_EMAIL, recipient_list)
+            except Exception,msg:
+                botsglobal.logger.warning(u'Error sending email: %s',msg)
 
 def log_session(func):
     ''' used as decorator.
