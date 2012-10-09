@@ -118,8 +118,6 @@ class new(object):
             botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
             transform.translate(idroute=routedict['idroute'])
             botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
-        #~ import os
-        #~ os._exit(1)
 
         #merge messages & communication.run outgoing channel
         if routedict['tochannel']:   #do outgoing part of route
@@ -157,7 +155,7 @@ class new(object):
                     preprocess.postprocess(routedict=routedict,function=preprocess.botszip)
                 communication.run(idchannel=routedict['tochannel'],command=self.command,idroute=routedict['idroute'])
                 #in communication several things can go wrong.
-                #but: ALL file ready for communication should have same status etc; this way all recomnnunication cna be handled same way.
+                #but: ALL file ready for communication should have same status etc; this way all recomnnunication can be handled same way:
                 # status EXTERNOUT statust DONE (if communication goes OK)
                 # status EXTERNOUT status ERROR (if file is not communicatied)
                 #in order to do that some manipulation is needed
