@@ -344,13 +344,13 @@ class Outmessage(message.Message):
                 try:
                     self._outstream.write(stringinizedrecords[i:i+wrap_length] + '\r\n')
                 except UnicodeEncodeError:
-                    raise botslib.OutMessageError(_(u'Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=stringinizedrecords[i:i+wrap_length])
+                    raise botslib.OutMessageError(_(u'[F50] Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=stringinizedrecords[i:i+wrap_length])
         else:
             for record in self.records:     #loop all records
                 try:
                     self._outstream.write(self.record2string(record))
                 except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
-                    raise botslib.OutMessageError(_(u'Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=str(record))
+                    raise botslib.OutMessageError(_(u'[F50] Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=str(record))
                     #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
 
     def record2string(self,record):
@@ -403,7 +403,7 @@ class Outmessage(message.Message):
                         if self.ta_info['replacechar']:
                             char = self.ta_info['replacechar']
                         else:
-                            raise botslib.OutMessageError(_(u'Character "$char" is in use as separator in this x12 file. Field: "$data".'),char=char,data=field[VALUE])
+                            raise botslib.OutMessageError(_(u'[F51] Character "$char" is in use as separator in this x12 file. Field: "$data".'),char=char,data=field[VALUE])
                     else:
                         value +=escape
                 elif mode_quote and char == quote_char:
@@ -635,7 +635,7 @@ class xmlnocheck(xml):
         ''' fields in a node are written to xml fields;
         '''
         if 'BOTSID' not in noderecord:
-            raise botslib.OutMessageError(_(u'No field "BOTSID" in xml-output in: "$record"'),record=noderecord)
+            raise botslib.OutMessageError(_(u'[X52] No field "BOTSID" in xml-output in: "$record"'),record=noderecord)
         #first generate the xml-'record'
         attributedict = {}
         recordtag = noderecord['BOTSID']

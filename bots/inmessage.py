@@ -64,7 +64,7 @@ class Inmessage(message.Message):
         self.iternextrecord = iter(self.records)
         result = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if result:
-            raise botslib.InMessageError(_(u'Unknown data beyond end of message; mostly problem with separators or message structure: "$content"'),content=result)
+            raise botslib.InMessageError(_(u'[A51] Unknown data beyond end of message; mostly problem with separators or message structure: "$content"'),content=result)
         del self.records
         #end parsing; self.root is root of a tree (of nodes).
         
@@ -202,9 +202,9 @@ class Inmessage(message.Message):
                 if structure_level[structure_index][MIN] and not countnrofoccurences:   #is record is required in structure_level, and countnrofoccurences==0: error;
                                                                                         #enough check here; message is validated more accurate later
                     try:
-                        raise botslib.InMessageError(_(u'Line:$line pos:$pos record:"$record": message has an error in its structure; this record is not allowed here. Scanned in message definition until mandatory record: "$looked".'),record=current_edi_record[ID][VALUE],line=current_edi_record[ID][LIN],pos=current_edi_record[ID][POS],looked=structure_level[structure_index][MPATH])
+                        raise botslib.InMessageError(_(u'[S50] Line:$line pos:$pos record:"$record": message has an error in its structure; this record is not allowed here. Scanned in message definition until mandatory record: "$looked".'),record=current_edi_record[ID][VALUE],line=current_edi_record[ID][LIN],pos=current_edi_record[ID][POS],looked=structure_level[structure_index][MPATH])
                     except TypeError:       #when no UNZ (edifact)
-                        raise botslib.InMessageError(_(u'Missing mandatory record "$record".'),record=structure_level[structure_index][MPATH])
+                        raise botslib.InMessageError(_(u'[S51] Missing mandatory record "$record".'),record=structure_level[structure_index][MPATH])
                 structure_index += 1
                 if structure_index == structure_end:  #current_edi_record is not in this level. Go level up
                     return current_edi_record    #return either None (no more data-records to parse) or the last record2parse (the last record2parse is not found in this level)
@@ -366,9 +366,9 @@ class fixed(Inmessage):
         lenfixed = len(fixedrecord)
         recordlength = sum([field[LENGTH] for field in recorddef])
         if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-            raise botslib.InMessageError(_(u'line $line record "$record" too short; is $pos pos, defined is $defpos pos: "$content".'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
+            raise botslib.InMessageError(_(u'[S52] Line $line record "$record" too short; is $pos pos, defined is $defpos pos: "$content".'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
         if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-            raise botslib.InMessageError(_(u'line $line record "$record" too long; is $pos pos, defined is $defpos pos: "$content".'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
+            raise botslib.InMessageError(_(u'[S53] Line $line record "$record" too long; is $pos pos, defined is $defpos pos: "$content".'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength,content=fixedrecord)
         pos = 0
         for field in recorddef:   #for fields in this record
             value = fixedrecord[pos:pos+field[LENGTH]].strip()
@@ -495,7 +495,7 @@ class var(Inmessage):
             record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
             self.records += [record]    #write record to recordlist
         elif value.strip('\x00\x1a'):
-            raise botslib.InMessageError(_(u'translation problem with lexing; probably a seperator-problem, or extra characters after interchange'))
+            raise botslib.InMessageError(_(u'[A53] Translation problem with lexing; probably a seperator-problem, or extra characters after interchange'))
 
     def _parsefields(self,record_in_edifile,structurerecord):
         ''' Identify fields in inmessage-record using grammar
@@ -599,7 +599,7 @@ class excel(csv):
         self.iternextrecord = iter(self.records)
         result = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if result:
-            raise botslib.InMessageError(_(u'Unknown data beyond end of message; mostly problem with separators or message structure: "$content"'),content=result)
+            raise botslib.InMessageError(_(u'[A52] Unknown data beyond end of message; mostly problem with separators or message structure: "$content"'),content=result)
         del self.records
         self.checkmessage(self.root,self.defmessage)
 
@@ -676,14 +676,14 @@ class edifact(var):
                             break
                         count += 1
                     else:
-                        raise botslib.InMessageError(_(u'No "UNB" at the start of edifact file.'))
+                        raise botslib.InMessageError(_(u'[E50] No "UNB" at the start of edifact file.'))
                 else:
                     unacharset = False
                 self.rawinput = self.rawinput[count:]  #self.rawinput[count] is a non-whitespace char, and it is not UNA. Look at p
                 break
             count += 1
         else:
-            raise botslib.InMessageError(_(u'Edifact file only contains whitespace.'))
+            raise botslib.InMessageError(_(u'[E51] Edifact file only contains whitespace.'))
         #**************expect UNB
         if self.rawinput[:3] == 'UNB':
             self.ta_info['charset'] = self.rawinput[4:8]
@@ -704,16 +704,16 @@ class edifact(var):
                     self.ta_info['reserve'] = ''    #for now: no support of repeating dataelements
                     self.ta_info['record_sep'] = '\x1C'
                 else:
-                    raise botslib.InMessageError(_(u'Incoming edi file uses non-standard separators - should use UNA.'))
+                    raise botslib.InMessageError(_(u'[A54] Incoming edi file uses non-standard separators - should use UNA.'))
         else:
-            raise botslib.InMessageError(_(u'No "UNB" at the start of edifact file.'))
+            raise botslib.InMessageError(_(u'[E52] No "UNB" at the start of edifact file.'))
         #*********** decode the file (to unicode)
         try:
             self.rawinput = self.rawinput.decode(self.ta_info['charset'],self.ta_info['checkcharsetin'])
         except LookupError:
-            raise botslib.InMessageError(_(u'Incoming edifact file has unknown charset "$charset".'),charset=self.ta_info['charset'])
+            raise botslib.InMessageError(_(u'[E53] Incoming edifact file has unknown charset "$charset".'),charset=self.ta_info['charset'])
         except UnicodeDecodeError, msg:
-            raise botslib.InMessageError(_(u'Not allowed chars in incoming edi file at/after filepos: $content'),content=msg[2])
+            raise botslib.InMessageError(_(u'[E54] Not allowed chars in incoming edi file at/after filepos: $content'),content=msg[2])
 
     def checkenvelope(self):
         self.confirmationlist = []              #information about the edifact file for confirmation/CONTRL; for edifact this is done per interchange (UNB-UNZ)
@@ -837,9 +837,9 @@ class x12(var):
                 self.rawinput = self.rawinput[count:]  #here the interchange should start
                 break
         else:
-            raise botslib.InMessageError(_(u'edifile only contains whitespace.'))
+            raise botslib.InMessageError(_(u'[A55] Edifile only contains whitespace.'))
         if self.rawinput[:3] != 'ISA':
-            raise botslib.InMessageError(_(u'expect "ISA", found "$content". Probably no x12?'),content=self.rawinput[:7])
+            raise botslib.InMessageError(_(u'[E55] Expect "ISA", found "$content". Probably no x12?'),content=self.rawinput[:7])
         count = 0
         for char in self.rawinput[:120]:
             if char in '\r\n' and count != 105:
@@ -1012,7 +1012,7 @@ class xml(var):
             etreeroot = etree.parse(filename, parser)
             for item in mailbagsearch:
                 if 'xpath' not in item or 'messagetype' not in item:
-                    raise botslib.InMessageError(_(u'invalid search parameters in xml mailbag.'))
+                    raise botslib.InMessageError(_(u'Invalid search parameters in xml mailbag.'))
                 #~ print 'search' ,item
                 found = etree.find(item['xpath'])
                 if found is not None:
@@ -1024,7 +1024,7 @@ class xml(var):
                     #~ continue
                     break
             else:
-                raise botslib.InMessageError(_(u'could not find right xml messagetype for mailbag.'))
+                raise botslib.InMessageError(_(u'Could not find right xml messagetype for mailbag.'))
 
             self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
             botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
@@ -1086,7 +1086,7 @@ class xml(var):
                     str_recordlist = str_record[4]
                     break
             else:
-                raise botslib.InMessageError(_(u'Unknown XML-tag in "$record".'),record=record)
+                raise botslib.InMessageError(_(u'[X51] Unknown XML-tag in "$record".'),record=record)
         for str_record in str_recordlist:   #see if xmlchildnode is in structure
             #~ print '    is xmlhildnode in this level comparing',xmlchildnode.tag,str_record[0]
             if xmlchildnode.tag == str_record[0]:
@@ -1120,7 +1120,7 @@ class json(var):
             self.root.children = self._dojsonlist(jsonobject,self._getrootid())   #fill root with children
             for child in self.root.children:
                 if not child.record:    #sanity test: the children must have content
-                    raise botslib.InMessageError(_(u'no usable content.'))
+                    raise botslib.InMessageError(_(u'[J51] no usable content.'))
                 self.checkmessage(child,self.defmessage)
         elif isinstance(jsonobject,dict):
             if len(jsonobject)==1 and isinstance(jsonobject.values()[0],dict):
@@ -1134,11 +1134,11 @@ class json(var):
                 #~ print self._getrootid()
                 self.root = self._dojsonobject(jsonobject,self._getrootid())
             if not self.root:
-                raise botslib.InMessageError(_(u'no usable content.'))
+                raise botslib.InMessageError(_(u'[J52] No usable content.'))
             self.checkmessage(self.root,self.defmessage)
         else:
             #root in JSON is neither dict or list.
-            raise botslib.InMessageError(_(u'Content must be a "list" or "object".'))
+            raise botslib.InMessageError(_(u'[J53] Content must be a "list" or "object".'))
 
     def _getrootid(self):
         return self.defmessage.structure[0][ID]
@@ -1151,7 +1151,7 @@ class json(var):
                 if newnode:
                     lijst.append(newnode)
             elif self.ta_info['checkunknownentities']:
-                raise botslib.InMessageError(_(u'List content in must be a "object".'))
+                raise botslib.InMessageError(_(u'[J54] List content in must be a "object".'))
         return lijst
 
     def _dojsonobject(self,jsonobject,name):
@@ -1171,7 +1171,7 @@ class json(var):
                 thisnode.record[key] = str(value)
             else:
                 if self.ta_info['checkunknownentities']:
-                    raise botslib.InMessageError(_(u'Key "$key" value "$value": is not string, list or dict.'),key=key,value=value)
+                    raise botslib.InMessageError(_(u'[J55] Key "$key" value "$value": is not string, list or dict.'),key=key,value=value)
                 thisnode.record[key] = str(value)
         if len(thisnode.record)==2 and not thisnode.children:
             return None #node is empty...

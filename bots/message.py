@@ -60,7 +60,7 @@ class Message(object):
     def _checkonemessage(self,node_instance,grammar,subtranslation):
         structure = grammar.structure
         if not node_instance.record['BOTSID'] == structure[0][ID]:
-            raise botslib.MessageError(_(u'Grammar "$grammar" has (root)record "$grammarroot"; found "$root".'),root=node_instance.record['BOTSID'],grammarroot=structure[0][ID],grammar=grammar.grammarname)
+            raise botslib.MessageError(_(u'[A58] Grammar "$grammar" has (root)record "$grammarroot"; found "$root".'),root=node_instance.record['BOTSID'],grammarroot=structure[0][ID],grammar=grammar.grammarname)
         self._checkifrecordsingrammar(node_instance,structure[0],grammar.grammarname)
         self._canonicaltree(node_instance,structure[0])
         if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the records read) be logged.
