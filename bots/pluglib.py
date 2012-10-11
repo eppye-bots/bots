@@ -253,9 +253,9 @@ def load(pathzipfile):
                     continue
                 if os.path.isfile(targetpath):  #check if file already exists
                     try:    #this ***sometimes*** fails. (python25, for static/help/home.html...only there...)
-                        os.rename(targetpath,targetpath+'.'+time.strftime('%Y%m%d%H%M%S'))
+                        #~ os.rename(targetpath,targetpath+'.'+time.strftime('%Y%m%d%H%M%S'))
                         warnrenamed = True
-                        botsglobal.logger.info(_(u'        Renamed existing file "%(from)s" to "%(to)s".'),{'from':targetpath,'to':targetpath+time.strftime('%Y%m%d%H%M%S')})
+                        #~ botsglobal.logger.info(_(u'        Renamed existing file "%(from)s" to "%(to)s".'),{'from':targetpath,'to':targetpath+time.strftime('%Y%m%d%H%M%S')})
                     except:
                         pass
                 source = myzip.read(zipfileobject.filename)
@@ -275,9 +275,27 @@ def load(pathzipfile):
 #*************************************************************
 # generate a plugin (plugout)
 #*************************************************************
+def plugoutasbackup(filename):
+    ''' write plugin with configuration.
+        this function is used before reading a plugin (so the old configuration is saved).
+    '''
+    dummy_for_cleaned_data = {'databaseconfiguration':True,
+                                'umlists':True,
+                                'fileconfiguration':True,
+                                'charset':True,
+                                'databasetransactions':False,
+                                'config':False,
+                                'data':False,
+                                'database':False,
+                                'infiles':False,
+                                'logfiles':False,
+                                }
+    plugoutcore(dummy_for_cleaned_data,filename)
+    
 def plugoutindex():
     ''' generate only the index file of the plugin.
         useful for eg version control systems.
+        is used via command-line utility bots-plugoutindex.py
     '''
     dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':True,'databasetransactions':False}
     return plugout_database(dummy_for_cleaned_data)
