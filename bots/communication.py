@@ -106,17 +106,20 @@ class _comsession(object):
             self.archive()
 
     def archive(self):
-        '''archive received or send files; archive only if receive is correct.'''
+        ''' after the communication channel has ran, archive received of send files.
+            archivepath is the root directory for the archive (for this channel).
+            within the archivepath files are stored by default as [archivepath]/[date]/[unique_filename]
+            
+        '''
         if not self.channeldict['archivepath']:
             return  #do not archive if not indicated
-        archiveexternalname = botsglobal.ini.getboolean('settings','archiveexternalname',False) #use original incoming filename in archive 
+        if self.channeldict['filename'] and self.channeldict['type'] in ('file','ftp','ftps','ftpis','sftp','mimefile','communicationscript'):
+            archiveexternalname = botsglobal.ini.getboolean('settings','archiveexternalname',False) #use external filename in archive 
+        else:
+            archiveexternalname = False
         if self.channeldict['inorout'] == 'in':
-            if archiveexternalname:
-                status = EXTERNIN
-                statust = DONE
-            else:
-                status = FILEIN
-                statust = OK
+            status = FILEIN
+            statust = OK
             channel = 'fromchannel'
         else:
             if archiveexternalname:
@@ -140,10 +143,9 @@ class _comsession(object):
                                     AND   status=%(status)s
                                     AND   statust=%(statust)s
                                     AND   ''' + channel + '''=%(idchannel)s
-                                    AND   idroute=%(idroute)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':status,
-                                    'statust':statust,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
+                                    'statust':statust,'rootidta':botslib.get_minta4query()}):
             if not checkedifarchivepathisthere:
                 if archivezip:
                     botslib.dirshouldbethere(os.path.dirname(archivepath))
@@ -151,11 +153,28 @@ class _comsession(object):
                 else:
                     botslib.dirshouldbethere(archivepath)
                 checkedifarchivepathisthere = True
-            absfilename = botslib.abspathdata(row['filename'])
+
+            if archiveexternalname:
+                if self.channeldict['inorout'] == 'in':
+                    # we have internal filename, get external
+                    absfilename = botslib.abspathdata(row['filename'])
+                    taparent = botslib.OldTransaction(idta=row['idta'])
+                    ta_list = botslib.trace_origin(ta=taparent,where={'status':EXTERNIN})
+                    archivename = os.path.basename(ta_list[0].filename)
+                else:
+                    # we have external filename, get internal
+                    archivename = os.path.basename(row['filename'])
+                    taparent = botslib.OldTransaction(idta=row['idta'])
+                    ta_list = botslib.trace_origin(ta=taparent,where={'status':FILEOUT})
+                    absfilename = botslib.abspathdata(ta_list[0].filename)
+            else:
+                # use internal name in archive
+                absfilename = botslib.abspathdata(row['filename'])
+                archivename = os.path.basename(row['filename'])
+
             if self.userscript and hasattr(self.userscript,'archivename'):
                 archivename = botslib.runscript(self.userscript,self.scriptname,'archivename',channeldict=self.channeldict,idta=row['idta'],filename=absfilename)
-            else:
-                archivename = os.path.basename(row['filename'])
+            #~print 'archive',os.path.basename(absfilename),'as',archivename
 
             if archivezip:
                 archivezipfilehandler.write(absfilename,archivename)

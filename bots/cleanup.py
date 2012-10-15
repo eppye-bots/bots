@@ -44,12 +44,14 @@ def _cleanupsession():
 def _cleanarchive():
     ''' delete all archive directories older than maxdaysarchive days.'''
     vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
-    for row in botslib.query('''SELECT archivepath FROM channel '''):
-        if row['archivepath']:
-            vanafdir = botslib.join(row['archivepath'],vanaf)
-            for directory in glob.glob(botslib.join(row['archivepath'],'*')):
-                if directory < vanafdir:
-                    shutil.rmtree(directory,ignore_errors=True)
+    for row in botslib.query('''SELECT archivepath FROM channel WHERE archivepath != "" '''):
+        vanafdir = botslib.join(row['archivepath'],vanaf)
+        for entry in glob.glob(botslib.join(row['archivepath'],'*')):
+            if entry < vanafdir:
+                if entry.endswith('.zip'):
+                    os.remove(entry)
+                else:
+                    shutil.rmtree(entry,ignore_errors=True)
 
 
 def _cleandatafile():
