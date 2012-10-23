@@ -117,6 +117,10 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         botsglobal.logger.debug(_(u'Mappingscript "%s" finished.'),tscript)
                         if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
                             out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
+                        if 'botskey' in inn_splitup.ta_info:
+                            inn_splitup.ta_info['reference'] = inn_splitup.ta_info['botskey']
+                        if 'botskey' in out_translated.ta_info:    #out_translated does not contain values from ta......
+                            out_translated.ta_info['reference'] = out_translated.ta_info['botskey']
                         if out_translated.ta_info['statust'] == DONE:    #if indicated in mappingscript the message should be discarded
                             botsglobal.logger.debug(_(u'No output file because mappingscript explicitly indicated this.'))
                             out_translated.ta_info['filename'] = ''
