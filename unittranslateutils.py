@@ -114,6 +114,12 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(u'a',transform.truncate(1,'artikel'),'test truncate')
         self.assertEqual(u'',transform.truncate(0,'artikel'),'test truncate')
         
+    def testconcat(self):
+        self.assertEqual(None,transform.concat(None,None),'test concatenate')
+        self.assertEqual(u'artikel',transform.concat('artikel',None),'test concatenate')
+        self.assertEqual(u'artikel',transform.concat(None,'artikel'),'test concatenate')
+        self.assertEqual(u'artikel',transform.concat('','artikel'),'test concatenate')
+        self.assertEqual(u'artikel1 artikel2',transform.concat('artikel1','artikel2'),'test concatenate')
         
     def testunique(self):
         newdomain = 'test' + transform.unique('test')
@@ -163,13 +169,22 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(False,transform.checkean('123456789012345670'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345677'),'UPC')
 
+def testunique_runcounter(self):
+    if 1 != transform.unique_runcounter('test'):
+        raise Exception('test')
+    if 1 != transform.unique_runcounter('test2'):
+        raise Exception('test')
+    if 2 != transform.unique_runcounter('test'):
+        raise Exception('test')
+    if 3 != transform.unique_runcounter('test'):
+        raise Exception('test')
+    if 2 != transform.unique_runcounter('test2'):
+        raise Exception('test')
 
 if __name__ == '__main__':
     botsinit.generalinit('config')
     botsglobal.logger = botsinit.initenginelogging('engine')
     botsinit.connect() 
-    try:
-        unittest.main()
-    except:
-        pass
+    unittest.main()
+    testunique_runcounter()
     botsglobal.db.close()
