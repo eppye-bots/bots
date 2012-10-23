@@ -430,6 +430,7 @@ def unique_runcounter(domain):
         usage example:
         unh_reference = unique_runcounter(<messagetype>_<topartner>)
     '''
+    domain += 'bots_1_8_4_9_6'  #avoid using/mixing other values in botsglobal
     if hasattr(botsglobal,domain):
         botsglobal.domain += 1
     else:
