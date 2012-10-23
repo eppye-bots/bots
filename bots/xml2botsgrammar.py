@@ -48,6 +48,27 @@ def tree2grammar(node_instance,structure,recorddefs):
         tree2grammar(childnode,structure[-1][LEVEL],recorddefs)
 
 def recorddefs2string(recorddefs,sortedstructurelist):
+    listoftags = recorddefs.keys()
+    listoftags.sort()
+    recorddefsstring = "{\n"
+    for i in listoftags:
+    #~ for key, value in recorddefs.items():
+        recorddefsstring += "    '%s':\n        [\n"%i
+        for field in recorddefs[i]:
+            if field[0] == 'BOTSID':
+                field[1] = 'M'
+                recorddefsstring += "        %s,\n"%field
+                break
+        for field in recorddefs[i]:
+            if '__' in field[0]:
+                recorddefsstring += "        %s,\n"%field
+        for field in recorddefs[i]:
+            if field[0] not in ['BOTSID','BOTSIDnr'] and '__' not in field[0]:
+                recorddefsstring += "        %s,\n"%field
+        recorddefsstring += "        ],\n"
+    recorddefsstring += "    }\n"
+    return recorddefsstring
+    '''
     recorddefsstring = "{\n"
     for i in sortedstructurelist:
     #~ for key, value in recorddefs.items():
@@ -66,6 +87,7 @@ def recorddefs2string(recorddefs,sortedstructurelist):
         recorddefsstring += "        ],\n"
     recorddefsstring += "    }\n"
     return recorddefsstring
+    '''
 
 def structure2string(structure,level=0):
     structurestring = ""
@@ -132,7 +154,8 @@ def start():
         sys.exit(0)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
-    botsinit.initenginelogging()
+    process_name = 'xml2botsgrammar'
+    botsglobal.logger = botsinit.initenginelogging(process_name)
     
     editype = 'xmlnocheck'
     messagetype = 'xmlnocheckxxxtemporaryforxml2grammar'
