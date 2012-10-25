@@ -15,7 +15,7 @@ JOBQUEUEMESSAGE2TXT = {
 
 def send_job_to_jobqueue(task_args,priority=5):
     ''' adds a new job to the bots-jobqueueserver.
-        is a xmlrpc client.
+        is an xmlrpc client.
         Import this function in eg views.py.
         Received return codes  from jobqueueserver:
         0 = OK, job added to job queue.
@@ -34,35 +34,39 @@ def start():
     #***command line arguments**************************
     usage = '''
     This is "%(name)s" version %(version)s, part of Bots open source edi translator (http://bots.sourceforge.net).
-    Places a job in the bots jobqueue. Bots jobqueue takes care of correct processing of jobs.
-    
+    Places a job in the bots jobqueue. Bots jobqueue takes care of correct processing of jobs.    
     Usage:
-        %(name)s  -c<directory> [-p<priority>] program [parameters]
+        %(name)s  [-c<directory>] [-p<priority>] job [job-parameters]
     Options:
         -c<directory>   directory for configuration files (default: config).
-        -p<priority>    priority of job, 1-9 (default: 5, highest priority is 9).
+        -p<priority>    priority of job, 1-9 (default: 5, highest priority is 1).
     Example of usage:
-        %(name)s -cconfig -p5 python2.7 /usr/local/bin/bots-engine.py
+        %(name)s bots-engine.py
+        %(name)s -p5 python2.7 /usr/local/bin/bots-engine.py
+        %(name)s -cconfig2 python2.7 /usr/local/bin/bots-engine.py -cconfig2 myroute
         
     '''%{'name':os.path.basename(sys.argv[0]),'version':botsglobal.version}
     configdir = 'config'    #default value
     priority = 5            #default value
     task_args = []
     for arg in sys.argv[1:]:
-        if arg.startswith('-c'):
-            configdir = arg[2:]
-            if not configdir:
-                print 'Error: configuration directory indicated, but no directory name.'
-                sys.exit(1)
-        elif arg.startswith('-p'):
-            try:
-                priority =  int(arg[2:])
-            except:
-                print 'Error: priority should be numeric (1=highest, 9=lowest).'
-                sys.exit(1)
-        elif arg in ["?", "/?",'-h', '--help']:
-            print usage
-            sys.exit(0)
+        if not task_args:
+            if arg.startswith('-c'):
+                configdir = arg[2:]
+                if not configdir:
+                    print 'Error: configuration directory indicated, but no directory name.'
+                    sys.exit(1)
+            elif arg.startswith('-p'):
+                try:
+                    priority =  int(arg[2:])
+                except:
+                    print 'Error: priority should be numeric (1=highest, 9=lowest).'
+                    sys.exit(1)
+            elif arg in ["?", "/?",'-h', '--help']:
+                print usage
+                sys.exit(0)
+            else:
+                task_args.append(arg)
         else:
             task_args.append(arg)
     task_args.append(configdir)
