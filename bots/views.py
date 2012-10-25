@@ -106,11 +106,6 @@ def incoming(request,*kw,**kwargs):
             elif '2select' in request.POST:         #go to select form using same criteria
                 formout = forms.SelectIncoming(formin.cleaned_data)
                 return viewlib.render(request,formout)
-            elif 'retransmit' in request.POST:        #coming from ViewIncoming
-                idta = request.POST[u'retransmit']
-                filereport = models.filereport.objects.get(idta=int(idta))
-                filereport.retransmit = not filereport.retransmit
-                filereport.save()
             elif 'delete' in request.POST:        #coming from ViewIncoming
                 idta = int(request.POST[u'delete'])
                 #~ query = models.filereport.objects.filter(idta=int(idta)).all().delete()
@@ -118,6 +113,19 @@ def incoming(request,*kw,**kwargs):
                 ta_object = models.ta.objects.get(idta=idta)
                 viewlib.gettrace(ta_object)
                 viewlib.trace2delete(ta_object)
+            elif 'retransmit' in request.POST:        #coming from ViewIncoming
+                idta = request.POST[u'retransmit']
+                filereport = models.filereport.objects.get(idta=int(idta))
+                filereport.retransmit = not filereport.retransmit
+                filereport.save()
+            elif 'rereceiveall' in request.POST:
+                #select all objects with parameters and set retransmit
+                query = models.filereport.objects.filter().all()
+                incomingfiles = viewlib.filterquery2(query,formin.cleaned_data)
+                for incomingfile in incomingfiles:
+                    if incomingfile.statust != RESEND:
+                        incomingfile.retransmit = not incomingfile.retransmit
+                        incomingfile.save()
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
