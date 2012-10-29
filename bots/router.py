@@ -114,10 +114,13 @@ class new(object):
                 preprocess.preprocess(routedict=routedict,function=preprocess.mailbag)
 
         #communication.run translation
-        if routedict['translateind']:
+        if int(routedict['translateind']) == 1:
             botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
             transform.translate(idroute=routedict['idroute'])
             botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
+        elif routedict['translateind'] == 2:        #pass-through: pickup the incoming files and mark these as MERGED (==translation is finished)
+            botslib.addinfo(change={'status':MERGED},where={'status':FILEIN,'idroute':routedict['idroute']})
+        #NOTE: routedict['translateind'] == 0 than nothing will happen with the files in this route. 
 
         #merge messages & communication.run outgoing channel
         if routedict['tochannel']:   #do outgoing part of route

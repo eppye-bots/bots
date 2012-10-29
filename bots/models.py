@@ -100,6 +100,11 @@ ENCODE_ZIP_IN = (
 ENCODE_ZIP_OUT = (
     (1,_(u'zip always')),
     )
+TRANSLATETYPES = (
+    (0,_(u'Nothing')),
+    (1,_(u'Translate')),
+    (2,_(u'Pass-through')),
+    )
 
 
 class StripCharField(models.CharField):
@@ -281,7 +286,7 @@ class routes(models.Model):
     frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Only edi files from this partner/partnergroup for this outgoing channel'))
     topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Only edi files to this partner/partnergroup to this channel'))
     testindicator = StripCharField(max_length=1,blank=True,help_text=_(u'Only edi files with this testindicator to this outgoing channel.'))
-    translateind = models.BooleanField(default=True,blank=True,verbose_name='translate',help_text=_(u'Do a translation in this route.'))
+    translateind = models.IntegerField(default=1,choices=TRANSLATETYPES,verbose_name='translate',help_text=_(u'Indicates what to do with incoming files for this route(part).'))
     notindefaultrun = models.BooleanField(default=False,blank=True,help_text=_(u'Do not use this route in a normal run. Advanced, related to scheduling specific routes or not.'))
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Indicate files are received as zip-files.'))  #added 20100501 #20120828: use for zip-options
