@@ -94,8 +94,8 @@ EDI_AS_ATTACHMENT = (
     ('body',_(u'edi file in body of email')),
     )
 ENCODE_ZIP_IN = (
-    ('in_always',_(u'unzip always')),
-    ('in_test',_(u'unzip if zip')),
+    ('zip_in_always',_(u'unzip always')),
+    ('zip_in_test',_(u'unzip if zip')),
     )
 ENCODE_ZIP_OUT = (
     (1,_(u'zip always')),
