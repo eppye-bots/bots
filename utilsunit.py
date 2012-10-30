@@ -1,6 +1,10 @@
 import copy
+import sys
 import os
 import glob
+import logging
+import bots.botslib as botslib
+import bots.botsglobal as botsglobal
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage
 
@@ -77,5 +81,37 @@ def getdirbysize(path):
 def getdir(path):
     ''' read files in directory path, return incl length.'''
     return [s for s in glob.glob(path) if os.path.isfile(s)]
+
+def dummylogger():
+    botsglobal.logger = logging.getLogger('dummy')
+    botsglobal.logger.setLevel(logging.ERROR)
+    botsglobal.logger.addHandler(logging.StreamHandler(sys.stdout))
+
+def getreportlastrun():
+    for row in botslib.query(u'''SELECT *
+                            FROM    report
+                            ORDER BY idta DESC
+                            '''):
+        #~ print row
+        return row
+    raise Exception('no report')
+
+def geterrorlastrun():
+    for row in botslib.query(u'''SELECT *
+                            FROM    filereport
+                            ORDER BY idta DESC
+                            '''):
+        #~ print row
+        return row['errortext']
+    raise Exception('no filereport')
+
+def comparedicts(dict1,dict2):
+    for key,value in dict1.items():
+        if value != dict2[key]:
+            raise Exception('error comparing "%s": should be %s but is %s (in db),'%(key,value,dict2[key]))
+
+def removeWS(str):
+    return ' '.join(str.split())
+
 
 

@@ -169,7 +169,7 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(False,transform.checkean('123456789012345670'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345677'),'UPC')
 
-def testunique_runcounter(self):
+def testunique_runcounter():
     if 1 != transform.unique_runcounter('test'):
         raise Exception('test')
     if 1 != transform.unique_runcounter('test2'):
