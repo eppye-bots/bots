@@ -103,14 +103,19 @@ class new(object):
             where = {'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
             botslib.updateinfo(change=change,where=where)
-            #all received files have status FILEIN
+            
             botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
-            #some preprocessing if needed
+            #unzip incoming files (if indicated)
             if routedict['rsrv1'] == 'zip_in_always':               #unzip incoming (non-zipped gives error).
                 preprocess.preprocess(routedict=routedict,function=preprocess.botsunzip,pass_non_zip=False)
             elif routedict['rsrv1'] == 'zip_in_test':               #unzip incoming if zipped.
                 preprocess.preprocess(routedict=routedict,function=preprocess.botsunzip,pass_non_zip=True)
-            if routedict['fromeditype'] in ['mailbag','edifact','x12','tradacoms']:               #mailbag for the route.
+            #run mailbag-module.
+            if botsglobal.ini.getboolean('settings','compatibility_mailbag',False):
+                editypes_via_mailbag = ['mailbag']
+            else:
+                editypes_via_mailbag = ['mailbag','edifact','x12','tradacoms']
+            if routedict['fromeditype'] in editypes_via_mailbag:               #mailbag for the route.
                 preprocess.preprocess(routedict=routedict,function=preprocess.mailbag)
 
         #communication.run translation
