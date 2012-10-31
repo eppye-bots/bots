@@ -39,6 +39,9 @@ CREATE TABLE ta (
     rsrv1 varchar(35) DEFAULT '',
     rsrv2 integer DEFAULT 0,
     rsrv3 varchar(35) DEFAULT '',
-    rsrv4 integer DEFAULT 0
+    rsrv4 integer DEFAULT 0,
+    filesize integer DEFAULT 0,
+    numberofresends integer DEFAULT 0,
+    rsrv5 varchar(35) DEFAULT ''
 ) ;
 

@@ -20,7 +20,7 @@
                 <th></th>
                 <th><button class="botsheader" type="submit" name="order" value="statust" >{% trans 'status' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="retransmit" title="Resend">{% trans 'Re*' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="rsrv4" >{% trans '#sends' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="numberofresends" >{% trans '#sends' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="ts" >{% trans 'Date/time' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="idroute" >{% trans 'Route' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="nrmessages" >{% trans '#messages' %}</button></th>
@@ -51,7 +51,7 @@
                 </td>
                 <td>{{ row.get_statust_display}}</td>
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
-                <td class="nowrap">{{row.rsrv4}}</td>
+                <td class="nowrap">{{row.numberofresends}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
                 <td class="nowrap">{{row.idroute}}</td>
                 <td>{{row.nrmessages}}</td>

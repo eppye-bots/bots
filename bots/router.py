@@ -48,8 +48,8 @@ class new(object):
                                                      testindicator,
                                                      translateind,
                                                      defer,
-                                                     rsrv1,
-                                                     rsrv2
+                                                     zip_incoming,
+                                                     zip_outgoing
                                             FROM routes
                                             WHERE idroute=%(idroute)s
                                             AND active=%(active)s
@@ -106,9 +106,9 @@ class new(object):
             
             botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
             #unzip incoming files (if indicated)
-            if routedict['rsrv1'] == 'zip_in_always':               #unzip incoming (non-zipped gives error).
+            if routedict['zip_incoming'] == 1:               #unzip incoming (non-zipped gives error).
                 preprocess.preprocess(routedict=routedict,function=preprocess.botsunzip,pass_non_zip=False)
-            elif routedict['rsrv1'] == 'zip_in_test':               #unzip incoming if zipped.
+            elif routedict['zip_incoming'] == 2:               #unzip incoming if zipped.
                 preprocess.preprocess(routedict=routedict,function=preprocess.botsunzip,pass_non_zip=True)
             #run mailbag-module.
             if botsglobal.ini.getboolean('settings','compatibility_mailbag',False):
@@ -159,7 +159,7 @@ class new(object):
 
             if not routedict['defer']:   #do outgoing part of route
                 botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
-                if routedict['rsrv2'] == 1:               #zip outgoing.
+                if routedict['zip_outgoing'] == 1:               #zip outgoing.
                     preprocess.postprocess(routedict=routedict,function=preprocess.botszip)
                 communication.run(idchannel=routedict['tochannel'],command=self.command,idroute=routedict['idroute'])
                 #in communication several things can go wrong.
@@ -253,7 +253,7 @@ class automaticretrycommunication(new):
         startidta = self.get_idta_last_error(idta_lastretry)
         if not startidta:
             return False
-        for row in botslib.query('''SELECT idta,rsrv4
+        for row in botslib.query('''SELECT idta,numberofresends
                                     FROM ta
                                     WHERE idta>%(startidta)s
                                     AND status=%(status)s
@@ -263,7 +263,7 @@ class automaticretrycommunication(new):
             ta_resend = botslib.OldTransaction(row['idta'])
             ta_resend.update(statust=RESEND)
             ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE) #inject; status is DONE so this ta is not used further
-            ta_externin.copyta(status=FILEOUT,statust=OK,rsrv4=row['rsrv4'])  #reinjected file is ready as new input
+            ta_externin.copyta(status=FILEOUT,statust=OK,numberofresends=row['numberofresends'])  #reinjected file is ready as new input
         return do_retransmit
 
         
@@ -273,7 +273,7 @@ class resend(new):
         ''' prepare the files indicated by user to be resend. Return: indication if files should be resend.'''
         do_retransmit = False
         #for resend; this one is slow. Can be improved by having a separate list of idta to resend
-        for row in botslib.query('''SELECT idta,parent,rsrv4
+        for row in botslib.query('''SELECT idta,parent,numberofresends
                                     FROM ta
                                     WHERE retransmit=%(retransmit)s
                                     AND status=%(status)s''',
@@ -283,7 +283,7 @@ class resend(new):
             ta_outgoing.update(retransmit=False,statust=RESEND)     #set retransmit back to False
             ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
             ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE) #inject; status is DONE so this ta is not used further
-            ta_externin.copyta(status=FILEOUT,statust=OK,rsrv4=row['rsrv4'])  #reinjected file is ready as new input
+            ta_externin.copyta(status=FILEOUT,statust=OK,numberofresends=row['numberofresends'])  #reinjected file is ready as new input
         return do_retransmit
 
 

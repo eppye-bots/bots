@@ -36,7 +36,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
     except ImportError:       #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
     #select edifiles to translate
-    for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,rsrv2
+    for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,filesize
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
@@ -44,8 +44,8 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 AND idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
-            if row['rsrv2'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
-                raise botslib.InMessageError(_(u'File size of "%s"; "maxfilesizeincoming" is set to "%s" (in bots.ini).'),row['rsrv2'],botsglobal.ini.getint('settings','maxfilesizeincoming',5000000))
+            if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
+                raise botslib.InMessageError(_(u'File size of "%s"; "maxfilesizeincoming" is set to "%s" (in bots.ini).'),row['filesize'],botsglobal.ini.getint('settings','maxfilesizeincoming',5000000))
             ta_fromfile = botslib.OldTransaction(row['idta'])
             ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
             botsglobal.logger.debug(_(u'start translating file "%s" editype "%s" messagetype "%s".'),row['filename'],row['editype'],row['messagetype'])
@@ -128,7 +128,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         else:
                             botsglobal.logger.debug(_(u'Start writing output file editype "%s" messagetype "%s".'),out_translated.ta_info['editype'],out_translated.ta_info['messagetype'])
                             out_translated.writeall()   #write result of translation.
-                            out_translated.ta_info['rsrv2'] = os.path.getsize(botslib.abspathdata(out_translated.ta_info['filename']))  #get filesize
+                            out_translated.ta_info['filesize'] = os.path.getsize(botslib.abspathdata(out_translated.ta_info['filename']))  #get filesize
                         #problem is that not all values ta_translated are know to to_message....
                         #~ print 'out_translated.ta_info',out_translated.ta_info
                         ta_translated.update(**out_translated.ta_info)  #update outmessage transaction with ta_info; statust = OK
@@ -172,7 +172,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
-            ta_parsed.update(statust=DONE,rsrv2=row['rsrv2'],**edifile.ta_info)
+            ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)
             botsglobal.logger.debug(_(u'translated input file "%s".'),row['filename'])
         finally:
             ta_fromfile.update(statust=DONE)

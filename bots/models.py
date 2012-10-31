@@ -94,8 +94,8 @@ EDI_AS_ATTACHMENT = (
     ('body',_(u'edi file in body of email')),
     )
 ENCODE_ZIP_IN = (
-    ('zip_in_always',_(u'unzip always')),
-    ('zip_in_test',_(u'unzip if zip')),
+    (1,_(u'unzip always')),
+    (2,_(u'unzip if zip')),
     )
 ENCODE_ZIP_OUT = (
     (1,_(u'zip always')),
@@ -213,6 +213,7 @@ class channel(models.Model):
     desc = models.TextField(max_length=256,null=True,blank=True)
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
     rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds for in-communication channel. Purpose: limit incoming edi files; better read more often tan everything in one time.'))   #added 20100501. 20110906: max communication time.
+    rsrv3 = models.IntegerField(null=True,blank=True)   #added 20121030.
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'
@@ -289,9 +290,11 @@ class routes(models.Model):
     translateind = models.IntegerField(default=1,choices=TRANSLATETYPES,verbose_name='translate',help_text=_(u'Indicates what to do with incoming files for this route(part).'))
     notindefaultrun = models.BooleanField(default=False,blank=True,help_text=_(u'Do not use this route in a normal run. Advanced, related to scheduling specific routes or not.'))
     desc = models.TextField(max_length=256,null=True,blank=True)
-    rsrv1 = StripCharField(max_length=35,blank=True,null=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Indicate files are received as zip-files.'))  #added 20100501 #20120828: use for zip-options
-    rsrv2 = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Indicate files are send as zip-files.'))                        #added 20100501
+    rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501 
+    rsrv2 = models.IntegerField(null=True,blank=True)           #added 20100501
     defer = models.BooleanField(default=False,blank=True,help_text=_(u'Set ready for communication, but defer actual communication (this is done in another route)'))                        #added 20100601
+    zip_incoming = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Indicate files are received as zip-files.'))  #added 20100501 #20120828: use for zip-options
+    zip_outgoing = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Indicate files are send as zip-files.'))                        #added 20100501
     class Meta:
         db_table = 'routes'
         verbose_name = _(u'route')
@@ -331,7 +334,8 @@ class filereport(models.Model):
     divtext = StripCharField(max_length=35)
     errortext = models.TextField()
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501; 20120618: email subject
-    rsrv2 = models.IntegerField(null=True)                        #added 20100501 #20120821: filesize of messages translated.
+    rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    filesize = models.IntegerField(null=True)                    #added 20121030
     class Meta:
         db_table = 'filereport'
 class mutex(models.Model):
@@ -365,7 +369,8 @@ class report(models.Model):
     type = StripCharField(max_length=35)
     status = models.BooleanField()
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
-    rsrv2 = models.IntegerField(null=True)                       ##added 20100501 #20120821: total size of messages that have been translated.
+    rsrv2 = models.IntegerField(null=True)                       #added 20100501.
+    filesize = models.IntegerField(null=True)                    #added 20121030: total size of messages that have been translated.
     class Meta:
         db_table = 'report'
 #~ #trigger for sqlite to use local time (instead of utc). I can not add this to sqlite specific sql code, as django does not allow complex (begin ... end) sql here.
@@ -403,19 +408,22 @@ class ta(models.Model):
     statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module
     retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
-    errortext = models.TextField()                      #20120921: unlimited length
+    errortext = models.TextField()                    #20120921: unlimited length
     ts = models.DateTimeField()
-    confirmasked = models.BooleanField()                #added 20091019; confirmation asked or send
-    confirmed = models.BooleanField()                   #added 20091019; is confirmation received (when asked)
+    confirmasked = models.BooleanField()              #added 20091019; confirmation asked or send
+    confirmed = models.BooleanField()                 #added 20091019; is confirmation received (when asked)
     confirmtype = StripCharField(max_length=35)       #added 20091019
-    confirmidta = models.IntegerField()                 #added 20091019
+    confirmidta = models.IntegerField()               #added 20091019
     envelope = StripCharField(max_length=35)          #added 20091024
     botskey = StripCharField(max_length=35)           #added 20091024
     cc = StripCharField(max_length=512)               #added 20091111
     rsrv1 = StripCharField(max_length=35)             #added 20100501; 20120618: email subject
-    rsrv2 = models.IntegerField(null=True)              #added 20100501; 20120802: file size
+    rsrv2 = models.IntegerField(null=True)            #added 20100501;
     rsrv3 = StripCharField(max_length=35)             #added 20100501
-    rsrv4 = models.IntegerField(null=True)              #added 20100501; 20120821: number of resends; if all OK (no resend) this is 0
+    rsrv4 = models.IntegerField(null=True)            #added 20100501; 
+    rsrv5 = StripCharField(max_length=35)             #added 20121030
+    filesize = models.IntegerField(null=True)         #added 20121030; 
+    numberofresends = models.IntegerField(null=True)  #added 20121030; if all OK (no resend) this is 0
     class Meta:
         db_table = 'ta'
 class uniek(models.Model):

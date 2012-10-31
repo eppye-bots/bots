@@ -4,7 +4,7 @@ import botsglobal
 from botsconfig import *
 from django.utils.translation import ugettext as _
 #ta-fields used in evaluation
-TAVARS = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script,rsrv1,rsrv2,rsrv4'
+TAVARS = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script,rsrv1,filesize,numberofresends'
 
 
 def evaluate(command,rootidtaofrun):
@@ -22,7 +22,7 @@ def evaluate(command,rootidtaofrun):
                                 {'status':EXTERNIN,'rootidtaofrun':rootidtaofrun}):
         traceofinfile = Trace(row,rootidtaofrun)
         resultsofrun[traceofinfile.statust] += 1
-        totalfilesize += traceofinfile.rsrv2
+        totalfilesize += traceofinfile.filesize
         traceofinfile.make_file_report()
     make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize)
     return email_error_report(rootidtaofrun)    #return report status: 0 (no error) or 1 (error)
@@ -50,7 +50,7 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
     lastreceived = resultsofrun[DONE]+resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]
     status = bool(resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]+processerrors)
     botslib.changeq(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,
-                                            send,processerrors,ts,lastreceived,status,type,rsrv2)
+                                            send,processerrors,ts,lastreceived,status,type,filesize)
                             VALUES  (%(rootidtaofrun)s,
                                     %(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,
                                     %(send)s,%(processerrors)s,%(ts)s,%(lastreceived)s,%(status)s,%(type)s,%(totalfilesize)s) ''',
@@ -192,7 +192,7 @@ class Trace(object):
                     self.incontenttype = ta_object['contenttype']
                     self.rsrv1 = ta_object['rsrv1']         #email subject
             elif ta_object['status'] == PARSED:
-                self.rsrv2 += ta_object['rsrv2']
+                self.filesize += ta_object['filesize']
                 if self.ineditype:
                     if self.ineditype != ta_object['editype'] and asterisk:
                         self.ineditype = '(several values)'
@@ -212,7 +212,7 @@ class Trace(object):
                 else:
                     self.divtext = ta_object['divtext']
             elif ta_object['status'] == EXTERNOUT:
-                if ta_object['rsrv4']:
+                if ta_object['numberofresends']:
                     if self.outidta:
                         if self.outidta != ta_object['idta'] and asterisk:
                             self.outidta = 0
@@ -301,7 +301,7 @@ class Trace(object):
         self.errortext = ''
         self.divtext = ''
         self.rsrv1 = ''         #email subject
-        self.rsrv2 = 0         #file size
+        self.filesize = 0 
         core(self.rootofinfile)
 
     def make_file_report(self):
@@ -309,11 +309,11 @@ class Trace(object):
                                                     infilename,tochannel,frompartner,topartner,frommail,
                                                     tomail,ineditype,inmessagetype,outeditype,outmessagetype,
                                                     incontenttype,outcontenttype,nrmessages,outfilename,errortext,
-                                                    divtext,outidta,rsrv1,rsrv2)
+                                                    divtext,outidta,rsrv1,filesize)
                                 VALUES  (%(idta)s,%(statust)s,%(reportidta)s,%(retransmit)s,%(idroute)s,%(fromchannel)s,%(ts)s,
                                         %(infilename)s,%(tochannel)s,%(frompartner)s,%(topartner)s,%(frommail)s,
                                         %(tomail)s,%(ineditype)s,%(inmessagetype)s,%(outeditype)s,%(outmessagetype)s,
                                         %(incontenttype)s,%(outcontenttype)s,%(nrmessages)s,%(outfilename)s,%(errortext)s,
-                                        %(divtext)s,%(outidta)s,%(rsrv1)s,%(rsrv2)s )
+                                        %(divtext)s,%(outidta)s,%(rsrv1)s,%(filesize)s )
                                 ''',
                                 self.__dict__ )

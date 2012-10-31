@@ -35,7 +35,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
             ta_info['filename'] = str(ta_tofile.idta)   #create filename for enveloped message
             botsglobal.logger.debug(u'Envelope 1 message editype: %s, messagetype: %s.',ta_info['editype'],ta_info['messagetype'])
             envelope(ta_info,[row['filename']])
-            ta_info['rsrv2'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
+            ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
         except:
             txt = botslib.txtexc()
             ta_tofile.update(statust=ERROR,errortext=txt)
@@ -91,7 +91,7 @@ def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
                 idta_list.append(row2['idta'])
             botsglobal.logger.debug(u'Merge and envelope: editype: %s, messagetype: %s, %s messages',ta_info['editype'],ta_info['messagetype'],ta_info['nrmessages'])
             envelope(ta_info,ta_list)
-            ta_info['rsrv2'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
+            ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
         except:
             txt = botslib.txtexc()
             #~ ta_tofile.mergefailure()

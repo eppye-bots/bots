@@ -35,7 +35,7 @@ sqlite.register_adapter(bool,adapter4bool)
 sqlite.register_converter('BOOLEAN',converter4bool)
 
 def connect(database):
-    con = sqlite.connect(database, factory=BotsConnection,detect_types=sqlite.PARSE_DECLTYPES, timeout=99.0, isolation_level='IMMEDIATE')
+    con = sqlite.connect(database, factory=BotsConnection,detect_types=sqlite.PARSE_DECLTYPES, timeout=99.0, isolation_level='EXCLUSIVE')
     con.row_factory = sqlite.Row
     con.execute('''PRAGMA synchronous=OFF''')
     return con

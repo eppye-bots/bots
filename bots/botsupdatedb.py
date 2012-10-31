@@ -3,11 +3,98 @@ import os
 import atexit
 import logging
 import socket
+import traceback
+from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsinit
 import botsglobal
 
+def database_is_version3():
+    for row in botslib.query('''PRAGMA table_info(routes)'''):
+        #~ print row
+        if row['name'] == 'translateind':
+            if row['type'] == 'bool':
+                #~ print 'version2'
+                return False
+            else:
+                #~ print 'version3'
+                return True
+
+def change_translateind():
+    querystring = '''
+PRAGMA writable_schema = 1;
+UPDATE SQLITE_MASTER SET SQL = 
+'CREATE TABLE "routes" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "idroute" varchar(35) NOT NULL,
+    "seq" integer unsigned NOT NULL,
+    "active" bool NOT NULL,
+    "fromchannel_id" varchar(35) REFERENCES "channel" ("idchannel"),
+    "fromeditype" varchar(35) NOT NULL,
+    "frommessagetype" varchar(35) NOT NULL,
+    "tochannel_id" varchar(35) REFERENCES "channel" ("idchannel"),
+    "toeditype" varchar(35) NOT NULL,
+    "tomessagetype" varchar(35) NOT NULL,
+    "alt" varchar(35) NOT NULL,
+    "frompartner_id" varchar(35) REFERENCES "partner" ("idpartner"),
+    "topartner_id" varchar(35) REFERENCES "partner" ("idpartner"),
+    "frompartner_tochannel_id" varchar(35) REFERENCES "partner" ("idpartner"),
+    "topartner_tochannel_id" varchar(35) REFERENCES "partner" ("idpartner"),
+    "testindicator" varchar(1) NOT NULL,
+    "translateind" integer NOT NULL,
+    "notindefaultrun" bool NOT NULL,
+    "desc" text,
+    "rsrv1" varchar(35),
+    "rsrv2" integer,
+    "defer" bool NOT NULL,
+    UNIQUE ("idroute", "seq"))' 
+WHERE NAME = 'routes';
+PRAGMA writable_schema = 0;
+'''
+    cursor = botsglobal.db.cursor()
+    cursor.executescript(querystring)
+    botsglobal.db.commit()
+    cursor.close()
+
+def sqlite3():
+    try:
+        if database_is_version3():
+            print 'database is already for bots version 3.'
+            #~ sys.exit(0)
+        else:
+            print 'change bots database to version 3.'
+            change_translateind()
+            botsglobal.db.close()
+            botsinit.connect()
+            
+            cursor = botsglobal.db.cursor()
+            #report ****************************************
+            cursor.execute('''CREATE INDEX report_ts ON report (ts)''')     #SQLite, mySQL, postgreSQL
+            cursor.execute('''ALTER TABLE report ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
+            #persist ****************************************
+            #routes ****************************************
+            cursor.execute('''ALTER TABLE routes ADD COLUMN  zip_incoming INTEGER DEFAULT 0''',None)
+            cursor.execute('''ALTER TABLE routes ADD COLUMN  zip_outgoing INTEGER DEFAULT 0''',None)
+            #channel ****************************************
+            cursor.execute('''ALTER TABLE channel ADD COLUMN  rsrv3 INTEGER DEFAULT 0''',None)
+            #ta ****************************************
+            cursor.execute('''DROP INDEX ta_script''')   #sqlite, postgreSQL
+            cursor.execute('''CREATE INDEX ta_reference ON ta (reference)''')     #SQLite, mySQL, postgreSQL
+            cursor.execute('''ALTER TABLE ta ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
+            cursor.execute('''ALTER TABLE ta ADD COLUMN  numberofresends INTEGER DEFAULT 0''',None)
+            cursor.execute('''ALTER TABLE ta ADD COLUMN  rsrv5 VARCHAR(35) DEFAULT '' ''',None)
+            #filereport ****************************************
+            cursor.execute('''DROP INDEX filereport_reportidta''')   #sqlite, postgreSQL
+            cursor.execute('''ALTER TABLE filereport ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
+    except:
+        traceback.print_exc()
+        print 'Error while updating the database. Database is not updated.'
+        botsglobal.db.rollback()
+    else:
+        botsglobal.db.commit()
+        print 'Database is updated.'
+        #~ cursor.close()
 
 def start():
     #********command line arguments**************************
@@ -61,11 +148,6 @@ def start():
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
-    #initialise user exits for the whole bots-engine
-    try:
-        userscript,scriptname = botslib.botsimport('routescripts','botsengine')
-    except ImportError:      #userscript is not there; other errors like syntax errors are not catched
-        userscript = scriptname = None
 
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
@@ -78,57 +160,22 @@ def start():
         sys.exit(3)
     atexit.register(botslib.remove_database_lock)
 
-
-    try:
-        cursor = botsglobal.db.cursor()
-        
-        #report
-        cursor.execute('''CREATE INDEX report_ts ON report (ts)''')     #SQLite, mySQL, postgreSQL
-        
-        #for SQLite: but this is not possible in SQLite
-        #mutex;
-        #cursor.execute('''DROP TRIGGER uselocaltime_mutex''')    #sqlite only
-        #cursor.execute('''ALTER TABLE mutex MODIFY ts timestamp NOT NULL DEFAULT (datetime('now','localtime'))''')     #change only for sqlite but does not work!
-        
-        #persist
-        cursor.execute('''ALTER TABLE persist MODIFY content TEXT''')     #mySQL, postgreSQL, not needed for SQLite
-        #cursor.execute('''ALTER TABLE persist MODIFY ts timestamp NOT NULL DEFAULT (datetime('now','localtime'))''')     #change only for sqlite but does not work!
-        
-        #channel
-        cursor.execute('''ALTER TABLE channel MODIFY filename varchar(256) NOT NULL''')     #mySQL, postgreSQL, not needed for SQLite
-
-        #ta
-        #cursor.execute('''DROP TRIGGER uselocaltime''')    #sqlite only
-        #cursor.execute('''ALTER TABLE ta MODIFY ts timestamp NOT NULL DEFAULT (datetime('now','localtime'))''')     #change only for sqlite but does not work!
-        cursor.execute('''DROP INDEX ta_script''')   #sqlite, postgreSQL
-        cursor.execute('''CREATE INDEX ta_reference ON ta (reference)''')     #SQLite, mySQL, postgreSQL
-        cursor.execute('''ALTER TABLE ta MODIFY errortext TEXT ''')     #mySQL, postgreSQL, not needed for SQLite
-        
-        #filereport
-        #postgresql only
-        cursor.execute('''ALTER TABLE filereport DROP CONSTRAINT filereport_pkey''')      #remove primary key
-        cursor.execute('''ALTER TABLE filereport DROP CONSTRAINT filereport_idta_key''')  #drop contraint UNIQUE(idta, reportidta)
-        cursor.execute('''DROP INDEX filereport_idta''')                                  #drop index on idta (will be primary key)
-        cursor.execute('''ALTER TABLE filereport ADD CONSTRAINT filereport_pkey PRIMARY KEY(idta)''')    #idta is primary key
-        #end of postgresql only
-        
-        cursor.execute('''ALTER TABLE filereport DROP COLUMN id''')        #SQLite, mySQL, postgreSQL; is this possible? was primary key...     
-        cursor.execute('''DROP INDEX filereport_reportidta''')   #sqlite, postgreSQL
-        cursor.execute('''DROP INDEX reportidta on filereport''') #mySQL
-        #drop contraint UNIQUE(idta, reportidta) fro MySQL? see postgresql section
-        
-        cursor.execute('''ALTER TABLE filereport MODIFY errortext TEXT''')     #mySQL, postgreSQL, not needed for SQLite
-        
-        
-    except:
-        traceback.print_exc()
-        print 'Error while updating the database. Database is not updated.'
-        botsglobal.db.rollback()
-        sys.exit(1)
-        
-    botsglobal.db.commit()
-    cursor.close()
-    print 'Database is updated.'
+    if hasattr(botsglobal.settings,'DATABASE_ENGINE'):
+        if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
+            sqlite3()
+        elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
+            mysql()
+        elif botsglobal.settings.DATABASE_ENGINE == 'postgresql_psycopg2':
+            postgresql_psycopg2()
+    elif hasattr(botsglobal.settings,'DATABASES'):
+        if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+            sqlite3()
+        elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+            mysql()
+        elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql_psycopg2':
+            postgresql_psycopg2()
+    print 'jaja6'
+    
     sys.exit(0)
 
 

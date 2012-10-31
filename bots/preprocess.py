@@ -130,7 +130,7 @@ def mailbag(ta_from,endstatus,**argv):
                     if sniffxml and sniffxml[0] == '<':
                         #is a xml file; inmessage.py can determine the right xml messagetype via xpath. 
                         filesize = len(edifile)
-                        ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag',rsrv2=filesize)
+                        ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag',filesize=filesize)
                         break
                     else:
                         raise botslib.InMessageError(_(u'[A57] Edi file has no valid content (does not start with a valid interchange).'))
@@ -210,7 +210,7 @@ def mailbag(ta_from,endstatus,**argv):
         tofile = botslib.opendata(tofilename,'wb')
         tofile.write(edifile[headpos:endpos])
         tofile.close()
-        ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype,rsrv2=filesize) #update outmessage transaction with ta_info;
+        ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype,filesize=filesize) #update outmessage transaction with ta_info;
         startpos = endpos
         nr_interchanges += 1
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
@@ -241,7 +241,7 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         tofile = botslib.opendata(tofilename,'wb')
         tofile.write(content)
         tofile.close()
-        ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize) #update outmessage transaction with ta_info;
+        ta_to.update(statust=OK,filename=tofilename,filesize=filesize) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     myzipfile.close()
 
@@ -353,7 +353,7 @@ def extractpdf(ta_from,endstatus,**argv):
         pdf_stream.close()
         csv_stream.close()
         filesize = os.path.getsize(botslib.abspathdata(tofilename))
-        ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize) #update outmessage transaction with ta_info;
+        ta_to.update(statust=OK,filename=tofilename,filesize=filesize) #update outmessage transaction with ta_info;
         botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
     except:
         txt = botslib.txtexc()

@@ -355,7 +355,7 @@ class _comsession(object):
                                 contenttype=contenttype,
                                 charset=charset,
                                 filename=outfilename,
-                                rsrv2=filesize)
+                                filesize=filesize)
             return nrmimesaved
         #*****************end of nested function savemime***************************
         @botslib.log_session
@@ -674,7 +674,7 @@ class file(_comsession):
                 ta_from.delete()
                 ta_to.delete()
             else:
-                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
                 if self.channeldict['remove']:
                     os.remove(fromfilename)
@@ -700,7 +700,7 @@ class file(_comsession):
         else:
             mode = 'ab'
         #select the db-ta's for this channel
-        for row in botslib.query(u'''SELECT idta,filename,rsrv4
+        for row in botslib.query(u'''SELECT idta,filename,numberofresends
                                        FROM ta
                                       WHERE idta>%(rootidta)s
                                         AND status=%(status)s
@@ -732,9 +732,9 @@ class file(_comsession):
                 #~ raise Exception('test')
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=ERROR,errortext=txt,numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename=tofilename,rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=DONE,filename=tofilename,numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -794,7 +794,7 @@ class pop3(_comsession):
                     self.session = None     #indicate session is not valid anymore
                     break
             else:
-                ta_to.update(statust=OK,filename=tofilename,rsrv2=filesize)
+                ta_to.update(statust=OK,filename=tofilename,filesize=filesize)
                 ta_from.update(statust=DONE)
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
@@ -889,7 +889,7 @@ class imap4(_comsession):
                 ta_from.delete()
                 ta_to.delete()
             else:
-                ta_to.update(statust=OK,filename=filename,rsrv2=filesize)
+                ta_to.update(statust=OK,filename=filename,filesize=filesize)
                 ta_from.update(statust=DONE)
                 if self.channeldict['remove']:
                     self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
@@ -948,7 +948,7 @@ class smtp(_comsession):
             SMTP does not allow rollback. So if the sending of a mail fails, other mails may have been send.
         '''
         #send messages
-        for row in botslib.query(u'''SELECT idta,filename,frommail,tomail,cc,rsrv4
+        for row in botslib.query(u'''SELECT idta,filename,frommail,tomail,cc,numberofresends
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -969,9 +969,9 @@ class smtp(_comsession):
                 self.session.sendmail(row['frommail'], addresslist, msg)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'],rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=ERROR,errortext=txt,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'],numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'],rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=DONE,filename='smtp://'+self.channeldict['username']+'@'+self.channeldict['host'],numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1090,7 +1090,7 @@ class ftp(_comsession):
                 ta_from.delete()
                 ta_to.delete()
             else:
-                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
                 if self.channeldict['remove']:
                     self.session.delete(fromfilename)
@@ -1112,7 +1112,7 @@ class ftp(_comsession):
             mode = 'STOR '
         else:
             mode = 'APPE '
-        for row in botslib.query('''SELECT idta,filename,rsrv4
+        for row in botslib.query('''SELECT idta,filename,numberofresends
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                       AND status=%(status)s
@@ -1134,9 +1134,9 @@ class ftp(_comsession):
                 fromfile.close()
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename='ftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=ERROR,errortext=txt,filename='ftp:/'+posixpath.join(self.dirpath,tofilename),numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename='ftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=DONE,filename='ftp:/'+posixpath.join(self.dirpath,tofilename),numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1354,7 +1354,7 @@ class sftp(_comsession):
                 ta_from.delete()
                 ta_to.delete()
             else:
-                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
                 if self.channeldict['remove']:
                     self.session.remove(fromfilename)
@@ -1375,7 +1375,7 @@ class sftp(_comsession):
             mode = 'w'
         else:
             mode = 'a'
-        for row in botslib.query('''SELECT idta,filename,rsrv4
+        for row in botslib.query('''SELECT idta,filename,numberofresends
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                       AND status=%(status)s
@@ -1395,9 +1395,9 @@ class sftp(_comsession):
                 fromfile.close()
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename),numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename='sftp:/'+posixpath.join(self.dirpath,tofilename),rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=DONE,filename='sftp:/'+posixpath.join(self.dirpath,tofilename),numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1416,7 +1416,7 @@ class xmlrpc(_comsession):
             each to be send file is transaction.
             each send file is transaction.
         '''
-        for row in botslib.query('''SELECT idta,filename,charset,rsrv4
+        for row in botslib.query('''SELECT idta,filename,charset,numberofresends
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -1434,9 +1434,9 @@ class xmlrpc(_comsession):
                 filename = tocall(content)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=ERROR,errortext=txt,numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename=self.uri.update(path=self.channeldict['path'],filename=str(filename)),rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=DONE,filename=self.uri.update(path=self.channeldict['path'],filename=str(filename)),numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1466,7 +1466,7 @@ class xmlrpc(_comsession):
                 ta_from.delete()
                 ta_to.delete()
             else:
-                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
             finally:
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
@@ -1532,14 +1532,14 @@ class db(_comsession):
                 ta_from.delete()
                 ta_to.delete()
             else:
-                ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
 
     @botslib.log_session
     def outcommunicate(self):
         ''' write data to database.
         '''
-        for row in botslib.query('''SELECT idta,filename,rsrv4
+        for row in botslib.query('''SELECT idta,filename,numberofresends
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -1555,9 +1555,9 @@ class db(_comsession):
                 botslib.runscript(self.userscript,self.scriptname,'outcommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection,db_object=db_object)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'],rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=ERROR,errortext=txt,filename=self.channeldict['path'],numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename=self.channeldict['path'],rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=DONE,filename=self.channeldict['path'],numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
@@ -1621,7 +1621,7 @@ class communicationscript(_comsession):
                     ta_from.delete()
                     ta_to.delete()
                 else:
-                    ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                    ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                     ta_from.update(statust=DONE)
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
@@ -1651,7 +1651,7 @@ class communicationscript(_comsession):
                     ta_from.delete()
                     ta_to.delete()
                 else:
-                    ta_to.update(filename=tofilename,statust=OK,rsrv2=filesize)
+                    ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                     ta_from.update(statust=DONE)
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
@@ -1673,7 +1673,7 @@ class communicationscript(_comsession):
         else:
             mode = 'ab'
         #select the db-ta's for this channel
-        for row in botslib.query(u'''SELECT idta,filename,rsrv4
+        for row in botslib.query(u'''SELECT idta,filename,numberofresends
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -1699,9 +1699,9 @@ class communicationscript(_comsession):
                         os.remove(tofilename)
             except:
                 txt = botslib.txtexc()
-                ta_to.update(statust=ERROR,errortext=txt,rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=ERROR,errortext=txt,numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename=tofilename,rsrv4=row['rsrv4']+1)
+                ta_to.update(statust=DONE,filename=tofilename,numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
