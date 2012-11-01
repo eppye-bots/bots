@@ -3,25 +3,22 @@ import os
 import atexit
 import logging
 import socket
-import traceback
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsinit
 import botsglobal
 
-def database_is_version3():
+def sqlite_database_is_version3():
     for row in botslib.query('''PRAGMA table_info(routes)'''):
-        #~ print row
         if row['name'] == 'translateind':
             if row['type'] == 'bool':
-                #~ print 'version2'
                 return False
             else:
-                #~ print 'version3'
                 return True
+    raise Exception('Could determine version of database')
 
-def change_translateind():
+def sqlite_change_translateind():
     querystring = '''
 PRAGMA writable_schema = 1;
 UPDATE SQLITE_MASTER SET SQL = 
@@ -53,26 +50,32 @@ WHERE NAME = 'routes';
 PRAGMA writable_schema = 0;
 '''
     cursor = botsglobal.db.cursor()
-    cursor.executescript(querystring)
-    botsglobal.db.commit()
-    cursor.close()
+    try:
+        cursor.executescript(querystring)
+    except:
+        txt = botslib.txtexc()
+        raise Exception('Could not change schema for routes: "%s".',txt)
+    else:
+        botsglobal.db.commit()
+        cursor.close()
 
 def sqlite3():
-    try:
-        if database_is_version3():
-            print 'database is already for bots version 3.'
-            #~ sys.exit(0)
-        else:
-            print 'change bots database to version 3.'
-            change_translateind()
-            botsglobal.db.close()
-            botsinit.connect()
+    if sqlite_database_is_version3():
+        print 'database is already for bots version 3.'
+        return
+    else:
+        print 'change bots database to version 3.'
+        sqlite_change_translateind()
             
-            cursor = botsglobal.db.cursor()
+        #have to close & open database to activate changed schema for routes:
+        botsglobal.db.close()
+        botsinit.connect()
+        
+        cursor = botsglobal.db.cursor()
+        try:
             #report ****************************************
             cursor.execute('''CREATE INDEX report_ts ON report (ts)''')     #SQLite, mySQL, postgreSQL
             cursor.execute('''ALTER TABLE report ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
-            #persist ****************************************
             #routes ****************************************
             cursor.execute('''ALTER TABLE routes ADD COLUMN  zip_incoming INTEGER DEFAULT 0''',None)
             cursor.execute('''ALTER TABLE routes ADD COLUMN  zip_outgoing INTEGER DEFAULT 0''',None)
@@ -87,14 +90,14 @@ def sqlite3():
             #filereport ****************************************
             cursor.execute('''DROP INDEX filereport_reportidta''')   #sqlite, postgreSQL
             cursor.execute('''ALTER TABLE filereport ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
-    except:
-        traceback.print_exc()
-        print 'Error while updating the database. Database is not updated.'
-        botsglobal.db.rollback()
-    else:
-        botsglobal.db.commit()
-        print 'Database is updated.'
-        #~ cursor.close()
+        except:
+            txt = botslib.txtexc()
+            botsglobal.db.rollback()
+            print 'Error while updating the database: "%s".'%(txt)
+        else:
+            botsglobal.db.commit()
+            cursor.close()
+            print 'Database is updated.'
 
 def start():
     #********command line arguments**************************
@@ -174,7 +177,6 @@ def start():
             mysql()
         elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql_psycopg2':
             postgresql_psycopg2()
-    print 'jaja6'
     
     sys.exit(0)
 

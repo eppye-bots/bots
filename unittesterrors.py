@@ -5,6 +5,7 @@ import sys
 import subprocess
 import logging
 #import bots-modules
+import utilsunit
 import bots.botslib as botslib
 import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
@@ -21,45 +22,14 @@ in bots.ini:
 all tests pass if finished with 'Tests OK!!!'
 '''
 
-def dummylogger():
-    botsglobal.logger = logging.getLogger('dummy')
-    botsglobal.logger.setLevel(logging.ERROR)
-    botsglobal.logger.addHandler(logging.StreamHandler(sys.stdout))
-
-def getreportlastrun():
-    for row in botslib.query(u'''SELECT *
-                            FROM    report
-                            ORDER BY idta DESC
-                            '''):
-        #~ print row
-        return row
-    raise Exception('no report')
-
-def geterrorlastrun():
-    for row in botslib.query(u'''SELECT *
-                            FROM    filereport
-                            ORDER BY idta DESC
-                            '''):
-        #~ print row
-        return row['errortext']
-    raise Exception('no filereport')
-
-def comparedicts(dict1,dict2):
-    for key,value in dict1.items():
-        if value != dict2[key]:
-            raise Exception('error comparing "%s": should be %s but is %s (in db),'%(key,value,dict2[key]))
-
-def removeWS(str):
-    return ' '.join(str.split())
-
 def run_error_tests(lijst):
     for test in lijst:
         #write correct testfile
         shutil.copyfile(botslib.join(botssys,'infile/unittesterrors/input',test['infile']),botslib.join(botssys,'infile/unittesterrors',test['infile']))
         subprocess.call(newcommand)     #run bots
-        comparedicts({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0},getreportlastrun()) #check report
-        errortext = geterrorlastrun()
-        if removeWS(test['errortext']) != removeWS(errortext):     #check error
+        utilsunit.comparedicts({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0},utilsunit.getreportlastrun()) #check report
+        errortext = utilsunit.geterrorlastrun()
+        if utilsunit.removeWS(test['errortext']) != utilsunit.removeWS(errortext):     #check error
             raise Exception('another errortekst; test "%s"'%(test['infile']))
 
 def run_ok_tests(lijst):
@@ -72,7 +42,7 @@ def run_ok_tests(lijst):
         #write correct testfile
         shutil.copyfile(botslib.join(botssys,'infile/unittesterrors/input',test['infile']),botslib.join(botssys,'infile/unittesterrors',test['infile']))
         subprocess.call(newcommand)     #run bots
-        comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0},getreportlastrun()) #check report
+        utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0},utilsunit.getreportlastrun()) #check report
         if not filecmp.cmp(botslib.join(botssys,'infile/unittesterrors/compare',test['infile']),botslib.join(botssys,'outfile/unittesterrors/result.txt')):
             raise Exception('output translation not as expected; test "%s"'%(test['infile']))
 
@@ -93,7 +63,7 @@ NFerrorsnonfatal = [
     #~ #tradacoms->xml: all possible S and F errors
     {'infile':'NF07.tra','errortext':'''MessageError: [S02] Record "test" in message but not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/xml.orders". Content of record: "{'BOTSIDnr': u'1', 'BOTSID': u'test'}". [F01] Record: "[['envelope'], ['message']]" field "sender2" does not exist in grammar. [S01] Record "party" in message has children, but these are not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/xml.orders". Found record "test". [F02] Record "[['envelope'], ['message']]" field "sender" is mandatory. [F20] Record "[['envelope'], ['message']]" field "senderqua" too big (max 3): "1234". [F21] Record "[['envelope'], ['message']]" field "receiverqua" too small (min 3): "12". [F22] Record "[['envelope'], ['message']]" date field "envtestdtm" not a valid date: "20120230". [F23] Record "[['envelope'], ['message']]" time field "envtesttime" not a valid time: "2523". [S03] Record "[['envelope'], ['message'], ['partys'], ['party']]" occurs 0 times, min is 1. [S04] Record "[['envelope'], ['message'], ['partys']]" occurs 2 times, max is 1.'''},
     #~ #out: fixed->edifact: all possible S and F errors
-    {'infile':'OK01-ERROUT.fix','errortext':'''MessageError: [F01] Record: "[['UNH'], ['BGM']]" field "XXXX" does not exist in grammar. [S01] Record "BGM" in message has children, but these are not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/edifact.INVOICD96AUNEAN008". Found record "DTM". [S02] Record "XXX" in message but not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/edifact.INVOICD96AUNEAN008". Content of record: "{'BOTSIDnr': u'1', 'BOTSID': u'XXX', '4343': u'HEA'}". [S04] Record "[['UNH'], ['BGM']]" occurs 2 times, max is 1. [S03] Record "[['UNH'], ['DTM']]" occurs 0 times, min is 1. [F03] Record "[['UNH'], ['PAI']]" composite "C534" is mandatory. [F02] Record "[['UNH'], ['FTX']]" field "4451" is mandatory. [F20] Record "[['UNH'], ['RFF']]" field "C506.1153" too big (max 3): "AAAA". [F21] Record "[['UNH'], ['RFF']]" field "C506.4000" too small (min 35): "A". [F04] Record "[['UNH'], ['NAD']]" subfield "C082.3039" is mandatory: "{'3035': u'XX', 'BOTSID': u'NAD', 'C082.3055': u'9', 'BOTSIDnr': u'1'}". [F24] Record "[['UNH'], ['PAT'], ['MOA']]" field "C516.5004" numerical format not valid: ".". [F25] Record "[['UNH'], ['PAT'], ['MOA']]" field "C516.5004" numerical format not valid: "0001D". [F28] Record "[['UNH'], ['PAT'], ['MOA']]" field "C516.5004" too big: "12345678901234567890".'''},
+    {'infile':'OK01-ERROUT.fix','errortext':'''MessageError: [F01] Record: "[['UNH'], ['BGM']]" field "XXXX" does not exist in grammar. [S01] Record "BGM" in message has children, but these are not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/edifact.INVOICD96AUNEAN010". Found record "DTM". [S02] Record "XXX" in message but not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/edifact.INVOICD96AUNEAN010". Content of record: "{'BOTSIDnr': u'1', 'BOTSID': u'XXX', '4343': u'HEA'}". [S04] Record "[['UNH'], ['BGM']]" occurs 2 times, max is 1. [S03] Record "[['UNH'], ['DTM']]" occurs 0 times, min is 1. [F03] Record "[['UNH'], ['PAI']]" composite "C534" is mandatory. [F02] Record "[['UNH'], ['FTX']]" field "4451" is mandatory. [F20] Record "[['UNH'], ['RFF']]" field "C506.1153" too big (max 3): "AAAA". [F21] Record "[['UNH'], ['RFF']]" field "C506.4000" too small (min 35): "A". [F04] Record "[['UNH'], ['NAD']]" subfield "C082.3039" is mandatory: "{'3035': u'XX', 'BOTSID': u'NAD', 'C082.3055': u'9', 'BOTSIDnr': u'1'}". [F24] Record "[['UNH'], ['PAT'], ['MOA']]" field "C516.5004" numerical format not valid: ".". [F25] Record "[['UNH'], ['PAT'], ['MOA']]" field "C516.5004" numerical format not valid: "0001D". [F28] Record "[['UNH'], ['PAT'], ['MOA']]" field "C516.5004" too big: "12345678901234567890".'''},
     #~ #out: edifact->fixed: all possible S and F errors
     {'infile':'OK01-ERROUT.edi','errortext':'''MessageError: [S01] Record "LIN" in message has children, but these are not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/fixed.ordersfixed". Found record "HEB". [S02] Record "HEB" in message but not in grammar "/home/hje/Bots/botsdev/bots/bots.usersys/grammars/fixed.ordersfixed". Content of record: "{'BOTSIDnr': u'1', 'BOTSID': u'HEB'}". [F20] Record "[['HEA']]" field "EANONTVANGER" too big (max 13): "12345678901234". [F22] Record "[['HEA']]" date field "ORDERDATUM" not a valid date: "20120230". [F23] Record "[['HEA']]" time field "ORDERTIME" not a valid time: "2500". [S03] Record "[['HEA'], ['DUM'], ['DUL']]" occurs 0 times, min is 1. [S04] Record "[['HEA'], ['DUM']]" occurs 2 times, max is 1. [F24] Record "[['HEA'], ['DUN']]" field "DUN1" numerical format not valid: ".". [F24] Record "[['HEA'], ['DUN']]" field "DUN2" numerical format not valid: ".". [F24] Record "[['HEA'], ['DUN']]" field "DUN3" numerical format not valid: ".". [F24] Record "[['HEA'], ['DUN']]" field "DUN4" numerical format not valid: ".". [F24] Record "[['HEA'], ['DUN']]" field "DUN5" numerical format not valid: ".". [F26] Record "[['HEA'], ['DUN']]" field "DUN1" numerical format not valid: "123%". [F26] Record "[['HEA'], ['DUN']]" field "DUN2" numerical format not valid: "12345E". [F27] Record "[['HEA'], ['DUN']]" field "DUN3" numerical format not valid: "123^". [F27] Record "[['HEA'], ['DUN']]" field "DUN4" numerical format not valid: "123^". [F25] Record "[['HEA'], ['DUN']]" field "DUN5" numerical format not valid: "0.1R". [F28] Record "[['HEA'], ['DUN']]" field "DUN1" too big: "1234567". [F28] Record "[['HEA'], ['DUN']]" field "DUN2" too big: "12345.00". [F28] Record "[['HEA'], ['DUN']]" field "DUN3" too big: "1234567". [F28] Record "[['HEA'], ['DUN']]" field "DUN4" too big: "1234500". [F28] Record "[['HEA'], ['DUN']]" field "DUN5" too big: "123456.11".'''},
     ]
@@ -114,7 +84,7 @@ Aerrors = [
     #~ #no UNZ at end of file
     {'infile':'A60_01.edi','errortext':'''InMessageError: [A60] Found no valid envelope trailer in edi file for envelope header at position 491'''},
     # UNA UNB wrong seperators for file
-    {'infile':'A60_02.edi','errortext':'''InMessageError: [A60] Found no valid envelope trailer in edi file for envelope header at position 10'''},
+    {'infile':'A60_02.edi','errortext':'''InMessageError: [A60] Found no valid envelope trailer in edi file for envelope header at position 0'''},
     ]
 Eerrors = [
      {'infile':'E53_01.edi','errortext':'''InMessageError: [E53] Incoming edifact file has unknown charset "UNAA".'''},
@@ -164,7 +134,7 @@ if __name__=='__main__':
     pythoninterpreter = 'python2.7'
     newcommand = [pythoninterpreter,'bots-engine.py',]
     botsinit.generalinit('config')
-    dummylogger()
+    utilsunit.dummylogger()
     botsinit.connect()
     #~ usersys = botsglobal.ini.get('directories','usersysabs')
     botssys = botsglobal.ini.get('directories','botssys')

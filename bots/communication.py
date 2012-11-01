@@ -273,8 +273,9 @@ class _comsession(object):
                     message.add_header('MIME-Version','1.0')
 
                     #set attachment filename
+                    filename_mask = self.channeldict['filename'] if self.channeldict['filename'] else '*'
                     attachmentfilename = self.filename_formatter(filename_mask,ta_to)
-                    if attachmentfilename and row['sendmdn']!= 'body':  #if not explicitly indicated 'as body' or (old)  if attachmentfilename is None or empty string: do not send as an attachment.
+                    if attachmentfilename and self.channeldict['sendmdn']!= 'body':  #if not explicitly indicated 'as body' or (old)  if attachmentfilename is None or empty string: do not send as an attachment.
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
 
                     #set Content-Type and charset

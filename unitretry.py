@@ -5,7 +5,7 @@ import os
 import sys
 import subprocess
 import logging
-import logging
+import utilsunit
 import bots.botslib as botslib
 import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
@@ -21,105 +21,119 @@ from bots.botsconfig import *
 '''
     
 
-def dummylogger():
-    botsglobal.logger = logging.getLogger('dummy')
-    botsglobal.logger.setLevel(logging.ERROR)
-    botsglobal.logger.addHandler(logging.StreamHandler(sys.stdout))
-
-
-def getlastreport():
-    for row in botslib.query(u'''SELECT *
-                            FROM    report
-                            ORDER BY idta DESC
-                            '''):
-        #~ print row
-        return row
-
-def mycompare(dict1,dict2):
-    for key,value in dict1.items():
-        if value != dict2[key]:
-            raise Exception('error comparing "%s": should be %s but is %s (in db),'%(key,value,dict2[key]))
+def change_communication_type(idchannel,to_type):
+    botslib.changeq(u'''UPDATE channel 
+                        SET type = %(to_type)s
+                        WHERE idchannel = %(idchannel)s
+                        ''',{'to_type':to_type,'idchannel':idchannel})
 
 def scriptwrite(path,content):
     f = open(path,'w')
     f.write(content)
     f.close()
 
+def indicate_rereceive():
+    count = 0
+    for row in botslib.query(u'''SELECT idta
+                            FROM    filereport
+                            ORDER BY idta DESC
+                            '''):
+        count += 1
+        botslib.changeq(u'''UPDATE filereport
+                            SET retransmit = 1
+                            WHERE idta=%(idta)s
+                            ''',{'idta':row['idta']})
+        if count >= 2:
+            break
+
+def indicate_send():
+    count = 0
+    for row in botslib.query(u'''SELECT idta
+                            FROM    ta
+                            WHERE status=%(status)s
+                            ORDER BY idta DESC
+                            ''',{'status':EXTERNOUT}):
+        count += 1
+        botslib.changeq(u'''UPDATE ta
+                            SET retransmit = %(retransmit)s
+                            WHERE idta=%(idta)s
+                            ''',{'retransmit':True,'idta':row['idta']})
+        if count >= 2:
+            break
+
+
 if __name__ == '__main__':
     pythoninterpreter = 'python2.7'
-    newcommand = [pythoninterpreter,'bots-engine.py',]
-    retrycommand = [pythoninterpreter,'bots-engine.py','--retry']
-    
     botsinit.generalinit('config')
-    botssys = botsglobal.ini.get('directories','botssys')
-    usersys = botsglobal.ini.get('directories','usersysabs')
-    dummylogger()
+    utilsunit.dummylogger()
     botsinit.connect()
     
-    try:
-        os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.py'))
-        os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.pyc'))
-    except:
-        pass
-    scriptwrite(os.path.join(usersys,'mappings','edifact','unitretry_2.py'),
-'''
-import bots.transform as transform
-def main(inn,out):
-    raise Exception('test mapping')
-    transform.inn2out(inn,out)''')
+    #channel has type file: this goes OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #change channel type to ftp: errors (run twice)
+    change_communication_type('unitretry_automatic_out','ftp')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
+    #change channel type to file and do automaticretrycommunication: OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','--automaticretrycommunication'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #run automaticretrycommunication again: no new run is made, same results as last run 
+    subprocess.call([pythoninterpreter,'bots-engine.py','--automaticretrycommunication'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #channel has type file: this goes OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #rereceive last 2 files
+    indicate_rereceive()
+    subprocess.call([pythoninterpreter,'bots-engine.py','--rereceive'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':1,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #resend last 2 files
+    indicate_send()
+    subprocess.call([pythoninterpreter,'bots-engine.py','--resend'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    
+    #***run with communciation errors, run OK, communciation errors, run OK, run automaticretry
+    #change channel type to ftp: errors
+    change_communication_type('unitretry_automatic_out','ftp')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
+    #channel has type file: this goes OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #change channel type to ftp: errors
+    change_communication_type('unitretry_automatic_out','ftp')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
+    #channel has type file: this goes OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #change channel type to file and do automaticretrycommunication: OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','--automaticretrycommunication'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #change channel type to ftp: errors
+    change_communication_type('unitretry_automatic_out','ftp')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
+    #channel has type file: this goes OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
+    #change channel type to file and do automaticretrycommunication: OK
+    change_communication_type('unitretry_automatic_out','file')
+    subprocess.call([pythoninterpreter,'bots-engine.py','--automaticretrycommunication'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
 
-    #~ os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'))
-    #~ os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.pyc'))
-    scriptwrite(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'),
-'''
-def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
-    if not content.startswith('UNB'):
-        raise Exception('test')
-    return True
-''')
-    
-    #
-    #new;  error in mime-handling
-    subprocess.call(newcommand)
-    mycompare({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'send':0},getlastreport())
-    
-    #retry: again same error
-    subprocess.call(retrycommand)
-    mycompare({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'send':0},getlastreport())
-    
-    #
-    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'))
-    os.remove(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.pyc'))
-    scriptwrite(os.path.join(usersys,'communicationscripts','unitretry_mime1_in.py'),
-'''
-def accept_incoming_attachment(channeldict,ta,charset,content,contenttype):
-    if not content.startswith('UNB'):
-        return False
-    return True
-''')
-    #retry: mime is OK< but mapping error will occur
-    subprocess.call(retrycommand)
-    mycompare({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'send':1},getlastreport())
 
-    #retry: mime is OK, same mapping error
-    subprocess.call(retrycommand)
-    mycompare({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'send':0},getlastreport())
-
-    os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.py'))
-    os.remove(os.path.join(usersys,'mappings','edifact','unitretry_2.pyc'))
-    scriptwrite(os.path.join(usersys,'mappings','edifact','unitretry_2.py'),
-'''
-import bots.transform as transform
-def main(inn,out):
-    transform.inn2out(inn,out)''')
-    
-    #retry: whole translation is OK
-    subprocess.call(retrycommand)
-    mycompare({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'send':2},getlastreport())
-
-    #new;  whole transaltion is OK
-    subprocess.call(newcommand)
-    mycompare({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'send':2},getlastreport())
-    
     logging.shutdown()
     botsglobal.db.close
+    print 'Tests OK!!!' 
+

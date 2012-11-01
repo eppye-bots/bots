@@ -1,12 +1,11 @@
-import unittest
-import bots.botsglobal as botsglobal
-import bots.inmessage as inmessage
-import bots.botslib as botslib
-import bots.transform as transform
 import pickle
-import bots.botsinit as botsinit
-import bots.botsglobal as botsglobal
+import unittest
 import utilsunit
+import bots.botsglobal as botsglobal
+import bots.botslib as botslib
+import bots.botsinit as botsinit
+import bots.inmessage as inmessage
+import bots.transform as transform
 
 '''plugin unittranslateutils.zip '''
 #as the max length is 
