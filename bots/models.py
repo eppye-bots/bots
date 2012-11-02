@@ -293,8 +293,8 @@ class routes(models.Model):
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501 
     rsrv2 = models.IntegerField(null=True,blank=True)           #added 20100501
     defer = models.BooleanField(default=False,blank=True,help_text=_(u'Set ready for communication, but defer actual communication (this is done in another route)'))                        #added 20100601
-    zip_incoming = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Indicate files are received as zip-files.'))  #added 20100501 #20120828: use for zip-options
-    zip_outgoing = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Indicate files are send as zip-files.'))                        #added 20100501
+    zip_incoming = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Received files are zipped.'))  #added 20100501 #20120828: use for zip-options
+    zip_outgoing = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Send files as zip-files.'))                        #added 20100501
     class Meta:
         db_table = 'routes'
         verbose_name = _(u'route')
