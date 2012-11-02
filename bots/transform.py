@@ -45,10 +45,10 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
             if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
-                raise botslib.InMessageError(_(u'File size of "$filesize"; "maxfilesizeincoming" is set to "$maxfilesizeincoming" (in bots.ini).'),filesize=row['filesize'],maxfilesizeincoming=botsglobal.ini.getint('settings','maxfilesizeincoming',5000000))
+                raise botslib.InMessageError(_(u'File size of "%(filesize)s"; "maxfilesizeincoming" is set to "%(maxfilesizeincoming)s" (in bots.ini).'),{'filesize':row['filesize'],'maxfilesizeincoming':botsglobal.ini.getint('settings','maxfilesizeincoming',5000000)})
             ta_fromfile = botslib.OldTransaction(row['idta'])
             ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
-            botsglobal.logger.debug(_(u'start translating file "$filename" editype "$editype" messagetype "$messagetype".'),filename=row['filename'],editype=row['editype'],messagetype=row['messagetype'])
+            botsglobal.logger.debug(_(u'start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),{'filename':row['filename'],'editype':row['editype'],'messagetype':row['messagetype']})
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
                                                 topartner=row['topartner'],
@@ -111,7 +111,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message
                         filename_translated = str(ta_translated.idta)
                         out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
-                        botsglobal.logger.debug(_(u'Mappingscript "$tscript" translates messagetype "$messagetype" to messagetype "$tomessagetype".'),tscript=tscript,messagetype=inn_splitup.ta_info['messagetype'],tomessagetype=out_translated.ta_info['messagetype'])
+                        botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),{'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mappingscript
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
                         botsglobal.logger.debug(_(u'Mappingscript "%s" finished.'),tscript)
@@ -126,7 +126,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                             out_translated.ta_info['filename'] = ''
                             out_translated.ta_info['status'] = DISCARD
                         else:
-                            botsglobal.logger.debug(_(u'Start writing output file editype "$editype" messagetype "$messagetype".'),editype=out_translated.ta_info['editype'],messagetype=out_translated.ta_info['messagetype'])
+                            botsglobal.logger.debug(_(u'Start writing output file editype "%(editype)s" messagetype "%(messagetype)s".'),{'editype':out_translated.ta_info['editype'],'messagetype':out_translated.ta_info['messagetype']})
                             out_translated.writeall()   #write result of translation.
                             out_translated.ta_info['filesize'] = os.path.getsize(botslib.abspathdata(out_translated.ta_info['filename']))  #get filesize
                         #problem is that not all values ta_translated are know to to_message....

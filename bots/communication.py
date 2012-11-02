@@ -624,7 +624,7 @@ class _comsession(object):
                 tofilename = tofilename.format(infile=infilename,datetime=datetime.datetime.now(),**ta.__dict__)
             except:
                 txt = botslib.txtexc()
-                raise botslib.CommunicationOutError(_(u'Error in formatting outgoing filename "$filename". Error: "$error".',filename=tofilename,error=txt))
+                raise botslib.CommunicationOutError(_(u'Error in formatting outgoing filename "%(filename)s". Error: "%(error)s".'%{'filename':tofilename,'error':txt}))
         if self.userscript and hasattr(self.userscript,'filename'):
             return botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta)
         else:
