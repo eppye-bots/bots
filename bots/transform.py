@@ -234,7 +234,7 @@ def persist_lookup(domein,botskey):
 #*** 20111116: codeconversion via file is depreciated, will disappear.
 #*********************************************************************
 #***code conversion via database tabel ccode
-def ccode(ccodeid,leftcode,field='rightcode'):
+def ccode(ccodeid,leftcode,field='rightcode',safe=False):
     ''' converts code using a db-table.
         converted value is returned, exception if not there.
     '''
@@ -244,7 +244,10 @@ def ccode(ccodeid,leftcode,field='rightcode'):
                                 AND leftcode = %(leftcode)s''',
                                 {'ccodeid':ccodeid,'leftcode':leftcode}):
         return row[field]
-    raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
+    if safe:
+        return leftcode
+    else:
+        raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
 codetconversion = ccode
 
 def safe_ccode(ccodeid,leftcode,field='rightcode'):
@@ -257,7 +260,7 @@ def safe_ccode(ccodeid,leftcode,field='rightcode'):
         return leftcode
 safecodetconversion = safe_ccode
 
-def reverse_ccode(ccodeid,rightcode,field='leftcode'):
+def reverse_ccode(ccodeid,rightcode,field='leftcode',safe=False):
     ''' as ccode but reversed lookup.'''
     for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM ccode
@@ -265,7 +268,10 @@ def reverse_ccode(ccodeid,rightcode,field='leftcode'):
                                 AND rightcode = %(rightcode)s''',
                                 {'ccodeid':ccodeid,'rightcode':rightcode}):
         return row[field]
-    raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=rightcode,table=ccodeid)
+    if safe:
+        return rightcode
+    else:
+        raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=rightcode,table=ccodeid)
 rcodetconversion = reverse_ccode
 
 def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):
@@ -448,3 +454,4 @@ def unique_runcounter(domain):
     else:
         botsglobal.domain = 1
     return botsglobal.domain
+
