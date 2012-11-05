@@ -449,11 +449,13 @@ def unique_runcounter(domain):
         unh_reference = unique_runcounter(<messagetype>_<topartner>)
     '''
     domain += 'bots_1_8_4_9_6'  #avoid using/mixing other values in botsglobal
-    if hasattr(botsglobal,domain):
-        botsglobal.domain += 1
-    else:
-        botsglobal.domain = 1
-    return botsglobal.domain
+    try:
+        terug = 1 + getattr(botsglobal,domain)
+    except AttributeError:
+        terug = 1
+    finally:
+        setattr(botsglobal,domain,terug)
+    return terug
 
 #***lookup via database partner
 def partnerlookup(idpartner,field,safe=False):
