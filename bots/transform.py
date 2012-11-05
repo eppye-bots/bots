@@ -455,3 +455,17 @@ def unique_runcounter(domain):
         botsglobal.domain = 1
     return botsglobal.domain
 
+#***lookup via database partner
+def partnerlookup(idpartner,field,safe=False):
+    ''' lookup via table partner.
+        lookup value is returned, exception if not there.
+    '''
+    for row in botslib.query(u'''SELECT ''' +field+ '''
+                                FROM partner
+                                WHERE idpartner = %(idpartner)s
+                                ''',{'idpartner':idpartner}):
+        return row[field]
+    if safe:
+        return idpartner
+    else:
+        raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)

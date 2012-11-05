@@ -91,14 +91,24 @@ class MyPartnerAdminForm(django.forms.ModelForm):
 class PartnerAdmin(BotsAdmin):
     actions = ('activate',)
     form = MyPartnerAdminForm
-    fields = ('active', 'isgroup', 'idpartner', 'name','mail','cc','group')
+    #~ fields = ('active', 'isgroup', 'idpartner', 'name','mail','cc','group')
     filter_horizontal = ('group',)
     inlines = (MailInline,)
-    list_display = ('active','isgroup','idpartner', 'name','mail','cc')
+    list_display = ('active','isgroup','idpartner', 'name','mail','cc','attr1','attr2','attr3','attr4','attr5')
     list_display_links = ('idpartner',)
     list_filter = ('active','isgroup')
     ordering = ('idpartner',)
-    search_fields = ('idpartner','name','mail','cc')
+    search_fields = ('idpartner','name','mail','cc','attr1','attr2','attr3','attr4','attr5')
+    fieldsets = (
+        (None,          {'fields': (('idpartner', 'active', 'isgroup'), 'name', ('mail','cc'))
+                        }),
+        (_(u'Is in groups'),{'fields': ('group',),
+                         'classes': ('collapse',)
+                        }),
+        (_(u'User defined'),{'fields': ('attr1','attr2','attr3','attr4','attr5'),
+                         'classes': ('collapse',)
+                        }),
+    )
 admin.site.register(models.partner,PartnerAdmin)
 
 class RoutesAdmin(BotsAdmin):
@@ -145,7 +155,7 @@ class TranslateAdmin(BotsAdmin):
     fieldsets = (
         (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype','desc'))
                     }),
-        (_(u'Advanced - multiple translations per editype/messagetype'),{'fields': ('alt', 'frompartner', 'topartner'),
+        (_(u'Multiple translations per editype/messagetype'),{'fields': ('alt', 'frompartner', 'topartner'),
                      'classes': ('collapse',)
                     }),
     )

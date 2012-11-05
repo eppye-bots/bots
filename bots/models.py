@@ -225,11 +225,16 @@ class partner(models.Model):
     isgroup = models.BooleanField(default=False)
     name = StripCharField(max_length=256) #only used for user information
     mail = StripCharField(max_length=256,blank=True)
-    cc = MultipleEmailField(max_length=256,blank=True)
+    cc = MultipleEmailField(max_length=256,blank=True,help_text=_(u'Multiple CC-addresses supported (comma-seperated).'))
     mail2 = models.ManyToManyField(channel, through='chanpar',blank=True)
     group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
+    attr1 = StripCharField(max_length=35,blank=True)
+    attr2 = StripCharField(max_length=35,blank=True)
+    attr3 = StripCharField(max_length=35,blank=True)
+    attr4 = StripCharField(max_length=35,blank=True)
+    attr5 = StripCharField(max_length=70,blank=True)
     class Meta:
         ordering = ['idpartner']
         db_table = 'partner'
