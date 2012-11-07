@@ -1,5 +1,7 @@
 import sys
 import os
+import atexit
+import logging
 import botsinit
 import botslib
 import grammar
@@ -7,19 +9,26 @@ import botsglobal
 
 
 def startmulti(grammardir,editype):
-    ''' used in seperate tool for bulk checking of gramamrs while developing edifact->botsgramamrs '''
+    ''' specialized tool for bulk checking of grammars while developing botsgrammars 
+        grammardir: directory with gramars (eg bots/usersys/grammars/edifact)
+        editype: eg edifact
+    '''
     import glob
-    botsinit.generalinit('config')
-    botsinit.initenginelogging()
+    configdir = 'config'
+    botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
+    process_name = 'grammarcheck'
+    botsglobal.logger = botsinit.initenginelogging(process_name)
+    atexit.register(logging.shutdown)
+    
     for filename in glob.glob(grammardir):
         filename_basename = os.path.basename(filename)
-        filename_noextension = os.path.splitext(filename_basename)[0]
         if filename_basename in ['__init__.py']:
             continue
-        if filename_basename.startswith('edifact'):
+        if filename_basename.startswith('edifact') or filename_basename.startswith('records') or filename_basename.endswith('records.py'):
             continue
-        if filename_basename.startswith('records') or filename_basename.endswith('records.py'):
+        if filename_basename.endswith('pyc'):
             continue
+        filename_noextension = os.path.splitext(filename_basename)[0]
         try:
             grammar.grammarread(editype,filename_noextension)
         except:
@@ -74,7 +83,9 @@ def start():
         sys.exit(1)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
-    botsinit.initenginelogging()
+    process_name = 'grammarcheck'
+    botsglobal.logger = botsinit.initenginelogging(process_name)
+    atexit.register(logging.shutdown)
 
     try:
         grammar.grammarread(editype,messagetype)
