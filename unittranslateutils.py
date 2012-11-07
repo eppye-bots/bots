@@ -168,22 +168,9 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(False,transform.checkean('123456789012345670'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345677'),'UPC')
 
-def testunique_runcounter():
-    if 1 != transform.unique_runcounter('test'):
-        raise Exception('test')
-    if 1 != transform.unique_runcounter('test2'):
-        raise Exception('test')
-    if 2 != transform.unique_runcounter('test'):
-        raise Exception('test')
-    if 3 != transform.unique_runcounter('test'):
-        raise Exception('test')
-    if 2 != transform.unique_runcounter('test2'):
-        raise Exception('test')
-
 if __name__ == '__main__':
     botsinit.generalinit('config')
     botsglobal.logger = botsinit.initenginelogging('engine')
     botsinit.connect() 
     unittest.main()
-    testunique_runcounter()
     botsglobal.db.close()
