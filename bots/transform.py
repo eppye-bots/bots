@@ -466,8 +466,9 @@ def partnerlookup(idpartner,field,safe=False):
                                 FROM partner
                                 WHERE idpartner = %(idpartner)s
                                 ''',{'idpartner':idpartner}):
-        return row[field]
+        if row[field]:
+            return row[field]
     if safe:
         return idpartner
     else:
-        raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
+        raise botslib.CodeConversionError(_(u'No result found for partner lookup; either partner "$idpartner" does not exist or field "$field" has no value.'),idpartner=idpartner,field=field)
