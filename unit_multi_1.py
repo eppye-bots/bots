@@ -109,6 +109,14 @@ def test_partner_lookup():
     else:
         raise Exception('expect exception in test_partner_lookup')
 
+def grammartest(l,expect_error=True):
+    if expect_error:
+        if not subprocess.call(l):
+            raise Exception('grammartest: expected error, but no error')
+    else:
+        if subprocess.call(l):
+            raise Exception('grammartest: expected no error, but received an error')
+
 
 if __name__=='__main__':
     pythoninterpreter = 'python2.7'
@@ -152,9 +160,35 @@ if __name__=='__main__':
     test_partner_lookup()
     #*****************
     #*****************
-    #~ test_unique()
+    #tricky grammars and messages (collision tests)
+    #these test should run OK (no grammar-errors, reading & writing OK, extra checks in mappings scripts have to be OK
+    subprocess.call([pythoninterpreter,'bots-engine.py','testgrammar'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':8,'lasterror':0,'lastdone':8,'lastok':0,'lastopen':0,'send':9,'processerrors':0,'filesize':2329},utilsunit.getreportlastrun()) #check report
+    shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
+    #*****************
+    #Collision testing
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNERR001'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNERR002'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNERR003'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNERR004'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNERR005'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNERR006'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNbackcollision2'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNbackcollision3'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CUSCARD96AUNnestedcollision1'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CUSCARD96AUNnestedcollision2'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CUSCARD96AUNnestedcollision3'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','DELFORD96AUNbackcollision'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','DELJITD96AUNbackcollision'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','INVRPTD96AUNnestingcollision'])
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNno'],expect_error=False)
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONDRAD96AUNno2'],expect_error=False)
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONESTD96AUNno'],expect_error=False)
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONESTD96AUNno2'],expect_error=False)
+    grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CUSCARD96AUNno'],expect_error=False)
+    #*****************
     #*****************
     #*****************
     logging.shutdown()
     botsglobal.db.close
-    print 'Tests OK!!!' 
+    print 'Tests OK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' 
