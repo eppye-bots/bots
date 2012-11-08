@@ -264,6 +264,8 @@ class Grammar(object):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", in structure, at "$mpath": record where MIN is not whole number: "$record".'),grammar=self.grammarname,mpath=mpath,record=i)
             if not isinstance(i[MAX],int):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", in structure, at "$mpath": record where MAX is not whole number: "$record".'),grammar=self.grammarname,mpath=mpath,record=i)
+            if not i[MAX]:
+                raise botslib.GrammarError(_(u'Grammar "$grammar", in structure, at "$mpath": MAX is zero: "$record".'),grammar=self.grammarname,mpath=mpath,record=i)
             if i[MIN] > i[MAX]:
                 raise botslib.GrammarError(_(u'Grammar "$grammar", in structure, at "$mpath": record where MIN > MAX: "$record".'),grammar=self.grammarname,mpath=mpath,record=str(i)[:100])
             i[MPATH] = mpath + [[i[ID]]]
@@ -272,24 +274,33 @@ class Grammar(object):
 
     def _checkbackcollision(self,structure,collision=None):
         ''' Recursive.
-            Check if grammar has collision problem.
-            A message with collision problems is ambiguous.
+            Check if grammar has back-collision problem. A message with collision problems is ambiguous.
+            Case 1:  AAA BBB AAA
+            Case 2:  AAA     BBB
+                     BBB CCC
         '''
-        headerissave = False
         if not collision:
             collision = []
+        headerissave = False
         for i in structure:
-            #~ print 'check back',i[MPATH], 'with',collision
+            #~ print 'check back segment:',i[MPATH], 'with list:',collision
             if i[ID] in collision:
                 raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: back-collision detected at record "$mpath".'),grammar=self.grammarname,mpath=i[MPATH])
             if i[MIN]:
-                collision = []
                 headerissave = True
-            collision.append(i[ID])
+                if i[MIN] == i[MAX]:    #so: fixed number of occurences; can not lead to collision as  is always clear where in structure record is
+                    collision = []      #NOTE: this is mainly used for MIN=1, MAX=1 
+                else:
+                    collision = [i[ID]] #previous records do not cause collision.
+            else:
+                collision.append(i[ID])
             if LEVEL in i:
-                returncollision,returnheaderissave = self._checkbackcollision(i[LEVEL],[i[ID]])
+                if i[MIN] == i[MAX] == 1:
+                    returncollision,returnheaderissave = self._checkbackcollision(i[LEVEL])
+                else:
+                    returncollision,returnheaderissave = self._checkbackcollision(i[LEVEL],[i[ID]])
                 collision += returncollision
-                if returnheaderissave:  #if one of segment(groups) is required, there is always a segment after the header segment; so remove header from nowcollision:
+                if returnheaderissave and i[ID] in collision:  #if one of segment(groups) is required, there is always a segment after the header segment; so remove header from nowcollision:
                     collision.remove(i[ID])
         return collision,headerissave    #collision is used to update on higher level; cleared indicates the header segment can not collide anymore
 
@@ -312,23 +323,32 @@ class Grammar(object):
 
     def _checknestedcollision(self,structure,collision=None):
         ''' Recursive.
-            Check if grammar has collision problem.
-            A message with collision problems is ambiguous.
+            Check if grammar has nested-collision problem. A message with collision problems is ambiguous.
+            Case 1: AAA
+                    BBB CCC
+                        AAA
         '''
         if not collision:
             levelcollision = []
         else:
             levelcollision = collision[:]
         for i in reversed(structure):
-            checkthissegment = True
             if LEVEL in i:
-                checkthissegment = self._checknestedcollision(i[LEVEL],levelcollision + [i[ID]])
-            #~ print 'check nested',checkthissegment, i[MPATH], 'with',levelcollision
-            if checkthissegment and i[ID] in levelcollision:
+                if i[MIN] == i[MAX] == 1:
+                    isa_safeheadersegment = self._checknestedcollision(i[LEVEL],levelcollision)
+                else:
+                    isa_safeheadersegment = self._checknestedcollision(i[LEVEL],levelcollision + [i[ID]])
+            else:
+                isa_safeheadersegment = False
+            #~ print 'check nested segment',checkthissegment, i[MPATH], 'with list',levelcollision
+            if isa_safeheadersegment or i[MIN] == i[MAX]:    #fixed number of occurences. this can be handled umambigiously: no check needed
+                pass   #no check needed
+            elif i[ID] in levelcollision:
                 raise botslib.GrammarError(_(u'Grammar "$grammar", in structure: nesting collision detected at record "$mpath".'),grammar=self.grammarname,mpath=i[MPATH])
             if i[MIN]:
-                levelcollision = []   #enecessarympty uppercollision
-        return bool(levelcollision)
+                levelcollision = []   #empty uppercollision
+        return not bool(levelcollision)
+
 
 
     def display(self,structure,level=0):

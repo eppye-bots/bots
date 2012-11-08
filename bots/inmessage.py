@@ -239,11 +239,20 @@ class Inmessage(message.Message):
                 self.checkmessage(newnode,defmessage,subtranslation=True)      #check the results of the subtranslation
                 #~ end SUBTRANSLATION
                 # get_next_edi_record is still False; the current_edi_record not matched in the SUBTRANSLATION is still being parsed.
-            elif LEVEL in structure_level[structure_index]:        #if header, go parse segmentgroup (recursive)
-                current_edi_record = self._parse(structure_level=structure_level[structure_index][LEVEL],inode=newnode)
-                # get_next_edi_record is still False; the current_edi_record that was not matched in lower segmentgroups is still being parsed.
             else:
-                get_next_edi_record = True
+                if LEVEL in structure_level[structure_index]:        #if header, go parse segmentgroup (recursive)
+                    current_edi_record = self._parse(structure_level=structure_level[structure_index][LEVEL],inode=newnode)
+                    # get_next_edi_record is still False; the current_edi_record that was not matched in lower segmentgroups is still being parsed.
+                else:
+                    get_next_edi_record = True
+                #accomodate for UNS = UNS construction
+                if structure_level[structure_index][MIN]==structure_level[structure_index][MAX]==countnrofoccurences:
+                    #~ print 'tabel',structure_level[structure_index][ID],'message',current_edi_record[ID][VALUE],structure_index,structure_end
+                    if structure_index +1 == structure_end:
+                        pass
+                    else:
+                        structure_index += 1
+                        countnrofoccurences = 0
 
     @staticmethod
     def _manipulatemessagetype(messagetype,inode):

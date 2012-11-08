@@ -91,8 +91,10 @@ def start():
         grammar.grammarread(editype,messagetype)
     except:
         print 'Found error in grammar: ',botslib.txtexc()
+        sys.exit(1)
     else:
         print 'OK - no error found in grammar'
+        sys.exit(0)
 
 
 if __name__ == '__main__':
