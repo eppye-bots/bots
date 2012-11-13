@@ -149,4 +149,4 @@ if __name__=='__main__':
     logging.shutdown()
     botsglobal.db.close
     
-    print 'Tests OK' 
+    print 'Tests OK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' 

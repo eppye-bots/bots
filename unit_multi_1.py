@@ -126,6 +126,36 @@ if __name__=='__main__':
     botssys = botsglobal.ini.get('directories','botssys')
     shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
     
+    #test references ********
+    subprocess.call([pythoninterpreter,'bots-engine.py','testreference'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0,'filesize':262},utilsunit.getreportlastrun()) #check report
+    ta_externout = utilsunit.getlastta(EXTERNOUT)
+    if ta_externout['botskey'] != 'BOTSKEY01':
+        raise Exception('testreference: botskey not OK')
+    ta_externout = utilsunit.getlastta(PARSED)
+    if ta_externout['reference'] != 'UNBREF01':
+        raise Exception('testreference: unb ref not OK')
+    ta_externout = utilsunit.getlastta(SPLITUP)
+    if ta_externout['reference'] != 'BOTSKEY01':
+        raise Exception('testreference: botskey not OK')
+    if ta_externout['botskey'] != 'BOTSKEY01':
+        raise Exception('testreference: botskey not OK')
+    ta_externout = utilsunit.getlastta(TRANSLATED)
+    if ta_externout['reference'] != 'BOTSKEY01':
+        raise Exception('testreference: botskey not OK')
+    if ta_externout['botskey'] != 'BOTSKEY01':
+        raise Exception('testreference: botskey not OK')
+    shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
+    #*****************
+    
+    #test KECA charset ********
+    subprocess.call([pythoninterpreter,'bots-engine.py','testkeca'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0,'filesize':333},utilsunit.getreportlastrun()) #check report
+    subprocess.call([pythoninterpreter,'bots-engine.py','testkeca2'])     #run bots
+    utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0,'filesize':333},utilsunit.getreportlastrun()) #check report
+    shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
+    #*****************
+
     #mailbag ********
     subprocess.call([pythoninterpreter,'bots-engine.py','mailbagtest'])     #run bots
     utilsunit.comparedicts({'status':0,'lastreceived':13,'lasterror':0,'lastdone':13,'lastok':0,'lastopen':0,'send':39,'processerrors':0,'filesize':8469},utilsunit.getreportlastrun()) #check report
@@ -140,7 +170,7 @@ if __name__=='__main__':
 
     #botsidnr ********
     subprocess.call([pythoninterpreter,'bots-engine.py','test_botsidnr','test_changedelete'])     #run bots
-    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0,'filesize':5813},utilsunit.getreportlastrun()) #check report
+    utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':4,'processerrors':0,'filesize':5813},utilsunit.getreportlastrun()) #check report
     infile ='infile/test_botsidnr/compare/unitnodebotsidnr1.edi'
     outfile='outfile/test_botsidnr/unitnodebotsidnr1.edi'
     infile2 ='infile/test_botsidnr/compare/unitnodebotsidnr2.edi'

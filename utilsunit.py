@@ -92,7 +92,6 @@ def getreportlastrun():
                             FROM    report
                             ORDER BY idta DESC
                             '''):
-        #~ print row
         return row
     raise Exception('no report')
 
@@ -101,9 +100,17 @@ def geterrorlastrun():
                             FROM    filereport
                             ORDER BY idta DESC
                             '''):
-        #~ print row
         return row['errortext']
     raise Exception('no filereport')
+    
+def getlastta(status):
+    for row in botslib.query(u'''SELECT *
+                            FROM    ta
+                            WHERE  status=%(status)s
+                            ORDER BY idta DESC
+                            ''',{'status':status}):
+        return row
+    raise Exception('no ta')
 
 def comparedicts(dict1,dict2):
     for key,value in dict1.items():
