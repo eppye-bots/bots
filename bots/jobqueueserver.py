@@ -127,7 +127,7 @@ def start():
     logger = botsinit.initserverlogging(process_name)
     logger.log(25,u'Bots %s started.',process_name)
     logger.log(25,u'Bots %s configdir: "%s".',process_name,botsglobal.ini.get('directories','config'))
-    port = botsglobal.ini.getint('jobqueue','port',6000)
+    port = botsglobal.ini.getint('jobqueue','port',28082)
     logger.log(25,u'Bots %s listens for xmlrpc at port: "%s".',process_name,port)
 
     #start launcher thread

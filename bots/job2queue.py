@@ -22,7 +22,7 @@ def send_job_to_jobqueue(task_args,priority=5):
         4 = job is a duplicate of job already in the queue
     '''
     try:
-        remote_server = xmlrpclib.ServerProxy('http://localhost:' + str(botsglobal.ini.getint('jobqueue','port',6000)))
+        remote_server = xmlrpclib.ServerProxy('http://localhost:' + str(botsglobal.ini.getint('jobqueue','port',28082)))
         return remote_server.addjob(task_args,priority)
     except socket.error,msg:
         print 'socket.error',msg

@@ -13,7 +13,6 @@ import models
 import viewlib
 import botslib
 import pluglib
-import job2queue
 import botsglobal
 from botsconfig import *
 
@@ -552,21 +551,23 @@ def runengine(request,*kw,**kwargs):
             
         #either bots-engine is run directly or via jobqueue-server:
         if botsglobal.ini.getboolean('jobqueue','enabled',False):
+            #run bots-engine via jobqueue-server
+            import job2queue
             terug = job2queue.send_job_to_jobqueue(lijst)
             messages.add_message(request, messages.INFO, job2queue.JOBQUEUEMESSAGE2TXT[terug])
             botsglobal.logger.info(job2queue.JOBQUEUEMESSAGE2TXT[terug])
         else:
-            #**************check if another instance of bots-engine is running/if port is free******************************
+            #run bots-engine direct, first check if another instance of bots-engine is running/if port is free
             try:
                 engine_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                port = botsglobal.ini.getint('settings','port',35636)
+                port = botsglobal.ini.getint('settings','port',28081)
                 engine_socket.bind(('127.0.0.1', port))
             except socket.error:
                 messages.add_message(request, messages.INFO, _(u'Trying to run "bots-engine", but another instance of "bots-engine" is running. Please try again later.'))
                 botsglobal.logger.info(_(u'Trying to run "bots-engine", but another instance of "bots-engine" is running. Please try again later.'))
             finally:
                 engine_socket.close()
-            #run engine directly
+            #run engine
             try:
                 botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
                 terug = subprocess.Popen(lijst).pid
