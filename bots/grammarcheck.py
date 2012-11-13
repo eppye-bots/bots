@@ -22,7 +22,7 @@ def startmulti(grammardir,editype):
     
     for filename in glob.glob(grammardir):
         filename_basename = os.path.basename(filename)
-        if filename_basename in ['__init__.py']:
+        if filename_basename in ['__init__.py','envelope.py']:
             continue
         if filename_basename.startswith('edifact') or filename_basename.startswith('records') or filename_basename.endswith('records.py'):
             continue

@@ -212,9 +212,9 @@ class Outmessage(message.Message):
                     value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
             length = len(value)
             if length > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F20] Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+                self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
             if length < grammarfield[MINLENGTH]:
-                self.add2errorlist(_(u'[F21] Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
+                self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         elif grammarfield[BFORMAT] == 'D':
             try:
                 lenght = len(value)
@@ -225,11 +225,11 @@ class Outmessage(message.Message):
                 else:
                     raise ValueError(u'To be catched')
             except ValueError:
-                self.add2errorlist(_(u'[F22] Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+                self.add2errorlist(_(u'[F22]: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
             if lenght > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F31] Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+                self.add2errorlist(_(u'[F31]: Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
             if lenght < grammarfield[MINLENGTH]:
-                self.add2errorlist(_(u'[F32] Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
+                self.add2errorlist(_(u'[F32]: Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         elif grammarfield[BFORMAT] == 'T':
             try:
                 lenght = len(value)
@@ -240,11 +240,11 @@ class Outmessage(message.Message):
                 else:
                     raise ValueError(u'To be catched')
             except  ValueError:
-                self.add2errorlist(_(u'[F23] Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+                self.add2errorlist(_(u'[F23]: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
             if lenght > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F33] Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+                self.add2errorlist(_(u'[F33]: Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
             if lenght < grammarfield[MINLENGTH]:
-                self.add2errorlist(_(u'[F34] Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
+                self.add2errorlist(_(u'[F34]: Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         else:   #numerics
             if value[0] == '-':
                 minussign = '-'
@@ -254,7 +254,7 @@ class Outmessage(message.Message):
                 absvalue = value
             digits,decimalsign,decimals = absvalue.partition('.')
             if not digits and not decimals:# and decimalsign:
-                self.add2errorlist(_(u'[F24] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                self.add2errorlist(_(u'[F24]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
             if not digits:
                 digits = '0'
 
@@ -268,7 +268,7 @@ class Outmessage(message.Message):
                 try:
                     value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -len(decimals)))
                 except:
-                    self.add2errorlist(_(u'[F25] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                    self.add2errorlist(_(u'[F25]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
                 if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
                     value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)
                 elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
@@ -285,7 +285,7 @@ class Outmessage(message.Message):
                 try:
                     value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
                 except:
-                    self.add2errorlist(_(u'[F26] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                    self.add2errorlist(_(u'[F26]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
                 if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
                     value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)
                 elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
@@ -301,11 +301,11 @@ class Outmessage(message.Message):
                     dec_value = decimal.Decimal(minussign + digits + decimalsign + decimals) * 10**grammarfield[DECIMALS]
                     value = str(dec_value.quantize(NODECIMAL ))
                 except:
-                    self.add2errorlist(_(u'[F27] Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                    self.add2errorlist(_(u'[F27]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
                 value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
 
             if len(value)-lengthcorrection > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F28] Record "%(record)s" field "%(field)s" too big: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+                self.add2errorlist(_(u'[F28]: Record "%(record)s" field "%(field)s" too big: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
         return value
 
 
@@ -344,13 +344,13 @@ class Outmessage(message.Message):
                 try:
                     self._outstream.write(stringinizedrecords[i:i+wrap_length] + '\r\n')
                 except UnicodeEncodeError:
-                    raise botslib.OutMessageError(_(u'[F50] Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=stringinizedrecords[i:i+wrap_length])
+                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "$char": $content'),char=self.ta_info['charset'],content=stringinizedrecords[i:i+wrap_length])
         else:
             for record in self.records:     #loop all records
                 try:
                     self._outstream.write(self.record2string(record))
                 except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
-                    raise botslib.OutMessageError(_(u'[F50] Chars in outmessage not in charset "$char": $content'),char=self.ta_info['charset'],content=str(record))
+                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "$char": $content'),char=self.ta_info['charset'],content=str(record))
                     #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
 
     def record2string(self,record):
@@ -403,7 +403,7 @@ class Outmessage(message.Message):
                         if self.ta_info['replacechar']:
                             char = self.ta_info['replacechar']
                         else:
-                            raise botslib.OutMessageError(_(u'[F51] Character "$char" is in use as separator in this x12 file. Field: "$data".'),char=char,data=field[VALUE])
+                            raise botslib.OutMessageError(_(u'[F51]: Character "$char" is used as separator in this x12 file, so it can not be used in content. Field: "$data".'),char=char,data=field[VALUE])
                     else:
                         value +=escape
                 elif mode_quote and char == quote_char:
@@ -635,7 +635,7 @@ class xmlnocheck(xml):
         ''' fields in a node are written to xml fields;
         '''
         if 'BOTSID' not in noderecord:
-            raise botslib.OutMessageError(_(u'[X52] No field "BOTSID" in xml-output in: "$record"'),record=noderecord)
+            raise botslib.OutMessageError(_(u'[X52]: No field "BOTSID" in xml-output in: "$record"'),record=noderecord)
         #first generate the xml-'record'
         attributedict = {}
         recordtag = noderecord['BOTSID']

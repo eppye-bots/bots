@@ -111,7 +111,7 @@ def mailbag(ta_from,endstatus,**argv):
         details:
         - edifact, x12 and tradacoms can be can be mixed
         - handle multiple UNA in one file, including different charsets.
-        - handle multiple ISA's with different seperators in one file
+        - handle multiple ISA's with different separators in one file
         in bots 2.3.0 all mailbag, edifact, x12 and tradacoms go via mailbag.
     '''
     edifile = botslib.readdata(filename=ta_from.filename)
@@ -122,7 +122,7 @@ def mailbag(ta_from,endstatus,**argv):
         if found is None:
             if edifile[startpos:].strip(string.whitespace+'\x1A\x00'):  #there is content...but not valid
                 if nr_interchanges:    #found interchanges, but remainder is not valid
-                    raise botslib.InMessageError(_(u'[A56] Edi file contains data not in a valid interchange at position $pos'),pos=startpos)                
+                    raise botslib.InMessageError(_(u'[A56]: Found data not in a valid interchange at position $pos.'),pos=startpos)                
                 else:   #no interchanges found, content is not a valid edifact/x12/tradacoms interchange
                     #guess if this is an xml file.....
                     sniffxml = edifile[:25]
@@ -133,12 +133,12 @@ def mailbag(ta_from,endstatus,**argv):
                         ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag',filesize=filesize)
                         break
                     else:
-                        raise botslib.InMessageError(_(u'[A57] Edi file has no valid content (does not start with a valid interchange).'))
+                        raise botslib.InMessageError(_(u'[A57]: Edi file does not start with a valid interchange.'))
             else:   #no parseble content
                 if nr_interchanges:    #OK: there are interchanges, but no new interchange is found.
                     return
                 else:   #no edifact/x12/tradacoms envelope at all
-                    raise botslib.InMessageError(_(u'[A55] Edi file only contains whitespace.'))
+                    raise botslib.InMessageError(_(u'[A55]: Edi file contains only whitespace.'))
         elif found.group('x12'):
             editype = 'x12'
             headpos = startpos + found.start('x12')
@@ -152,7 +152,7 @@ def mailbag(ta_from,endstatus,**argv):
                     field_sep = char
                 elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. 
                     if char != field_sep:
-                        raise botslib.InMessageError(_(u'[A59] Non-valid ISA header at position $pos'),pos=headpos)
+                        raise botslib.InMessageError(_(u'[A59]: Non-valid ISA header at position $pos.'),pos=headpos)
                         
                 elif count == 106:
                     record_sep = char
@@ -190,7 +190,7 @@ def mailbag(ta_from,endstatus,**argv):
                                 edifile[headpos:],re.DOTALL|re.VERBOSE)
         elif found.group('tradacoms'):
             editype = 'tradacoms'
-            field_sep = '='     #the tradacoms 'after-segment-tag-seperator'
+            field_sep = '='     #the tradacoms 'after-segment-tag-separator'
             record_sep = "'"
             headpos = startpos + found.start('STX')
             foundtrailer = re.search(
@@ -201,7 +201,7 @@ def mailbag(ta_from,endstatus,**argv):
                                 re.escape(record_sep),
                                 edifile[headpos:],re.DOTALL|re.VERBOSE)
         if not foundtrailer:
-            raise botslib.InMessageError(_(u'[A60] Found no valid envelope trailer in edi file for envelope header at position $pos'),pos=headpos)
+            raise botslib.InMessageError(_(u'[A58]: Found no valid envelope trailer in $editype file for envelope header at position $pos.'),editype=editype, pos=headpos)
         #so: found an interchange (from headerpos until endpos)
         endpos = headpos + foundtrailer.end()
         ta_to = ta_from.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
