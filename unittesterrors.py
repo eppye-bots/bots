@@ -27,6 +27,7 @@ def run_error_tests(lijst):
         #write correct testfile
         shutil.copyfile(botslib.join(botssys,'infile/unittesterrors/input',test['infile']),botslib.join(botssys,'infile/unittesterrors',test['infile']))
         subprocess.call(newcommand)     #run bots
+        botsglobal.db.commit()
         utilsunit.comparedicts({'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0},utilsunit.getreportlastrun()) #check report
         errortext = utilsunit.geterrorlastrun()
         if utilsunit.removeWS(test['errortext']) != utilsunit.removeWS(errortext):     #check error
@@ -42,6 +43,7 @@ def run_ok_tests(lijst):
         #write correct testfile
         shutil.copyfile(botslib.join(botssys,'infile/unittesterrors/input',test['infile']),botslib.join(botssys,'infile/unittesterrors',test['infile']))
         subprocess.call(newcommand)     #run bots
+        botsglobal.db.commit()
         utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0},utilsunit.getreportlastrun()) #check report
         if not filecmp.cmp(botslib.join(botssys,'infile/unittesterrors/compare',test['infile']),botslib.join(botssys,'outfile/unittesterrors/result.txt')):
             raise Exception('output translation not as expected; test "%s"'%(test['infile']))

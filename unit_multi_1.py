@@ -150,26 +150,33 @@ if __name__=='__main__':
     
     #test KECA charset ********
     subprocess.call([pythoninterpreter,'bots-engine.py','testkeca'])     #run bots
+    botsglobal.db.commit()
+    #~ utilsunit.getreportlastrun2()
+    #~ utilsunit.getreportlastrun2()
     utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0,'filesize':333},utilsunit.getreportlastrun()) #check report
     subprocess.call([pythoninterpreter,'bots-engine.py','testkeca2'])     #run bots
+    botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0,'filesize':333},utilsunit.getreportlastrun()) #check report
     shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
     #*****************
 
     #mailbag ********
     subprocess.call([pythoninterpreter,'bots-engine.py','mailbagtest'])     #run bots
+    botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':13,'lasterror':0,'lastdone':13,'lastok':0,'lastopen':0,'send':39,'processerrors':0,'filesize':8469},utilsunit.getreportlastrun()) #check report
     shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
     #*****************
 
     #passthroughtest ********
     subprocess.call([pythoninterpreter,'bots-engine.py','passthroughtest'])     #run bots
+    botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0,'filesize':0},utilsunit.getreportlastrun()) #check report
     shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
     #*****************
 
     #botsidnr ********
     subprocess.call([pythoninterpreter,'bots-engine.py','test_botsidnr','test_changedelete'])     #run bots
+    botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':4,'processerrors':0,'filesize':5813},utilsunit.getreportlastrun()) #check report
     infile ='infile/test_botsidnr/compare/unitnodebotsidnr1.edi'
     outfile='outfile/test_botsidnr/unitnodebotsidnr1.edi'
@@ -193,6 +200,7 @@ if __name__=='__main__':
     #tricky grammars and messages (collision tests)
     #these test should run OK (no grammar-errors, reading & writing OK, extra checks in mappings scripts have to be OK
     subprocess.call([pythoninterpreter,'bots-engine.py','testgrammar'])     #run bots
+    botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':8,'lasterror':0,'lastdone':8,'lastok':0,'lastopen':0,'send':9,'processerrors':0,'filesize':2329},utilsunit.getreportlastrun()) #check report
     shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
     #*****************
@@ -217,6 +225,51 @@ if __name__=='__main__':
     grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CONESTD96AUNno2'],expect_error=False)
     grammartest([pythoninterpreter,'bots-grammarcheck.py','edifact','CUSCARD96AUNno'],expect_error=False)
     #*****************
+    #*****************
+    #plugin testing
+    for row in botslib.query(u'''SELECT COUNT(*) as count
+                                FROM    partner
+                                WHERE   isgroup = %(isgroup)s ''',
+                                {'isgroup':False}):
+        if row['count'] != 5:
+            raise Exception('error partner count')
+        break
+    else:
+        raise Exception('no partner count?')
+    for row in botslib.query(u'''SELECT COUNT(*) as count
+                                FROM    partner
+                                WHERE   isgroup = %(isgroup)s ''',
+                                {'isgroup':True}):
+        if row['count'] != 3:
+            raise Exception('error partner count')
+        break
+    else:
+        raise Exception('no partner count?')
+    for row in botslib.query(u'''SELECT COUNT(*) as count
+                                    FROM partnergroup
+                                    WHERE from_partner_id=%(from_partner_id)s  ''',
+                                {'from_partner_id':'plugintest1'}):
+        if row['count'] != 3:
+            raise Exception('error partner count')
+        break
+    else:
+        raise Exception('no partner count?')
+    for row in botslib.query(u'''SELECT to_partner_id
+                                    FROM partnergroup
+                                    WHERE from_partner_id=%(from_partner_id)s  ''',
+                                {'from_partner_id':'plugintest2'}):
+        if row['to_partner_id'] != 'plugingroup2':
+            raise Exception('error partner count')
+    for row in botslib.query(u'''SELECT COUNT(*) as count
+                                    FROM partnergroup
+                                    WHERE to_partner_id=%(to_partner_id)s  ''',
+                                {'to_partner_id':'plugingroup2'}):
+        if row['count'] != 2:
+            raise Exception('error partner count')
+        break
+    else:
+        raise Exception('no partner count?')
+    
     #*****************
     #*****************
     logging.shutdown()

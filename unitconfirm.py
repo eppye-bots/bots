@@ -37,8 +37,8 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':220,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(row[1])
-            self.failUnless(row[2]!=0)
+            self.failUnless(row['confirmed'])
+            self.failUnless(row['confirmidta']!=0)
         else:
             self.failUnless(nr_rows==1)
             
@@ -55,8 +55,8 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':500,'statust':DONE,'idroute':'testmdn','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(row[1])
-            self.failUnless(row[2]!=0)
+            self.failUnless(row['confirmed'])
+            self.failUnless(row['confirmidta']!=0)
         else:
             self.failUnless(nr_rows==1)
         
@@ -77,8 +77,8 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':500,'statust':DONE,'idroute':'testmdn2','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(not row[1])
-            self.failUnless(row[2]==0)
+            self.failUnless(not row['confirmed'])
+            self.failUnless(row['confirmidta']==0)
         else:
             self.failUnless(nr_rows==1)
 
@@ -115,11 +115,11 @@ class TestMain(unittest.TestCase):
                                 {'status':400,'statust':DONE,'idroute':'test997','confirmtype':'ask-x12-997','confirmasked':True}):
             counter += 1
             if counter == 1:
-                self.failUnless(not row[1])
-                self.failUnless(row[2]==0)
+                self.failUnless(not row['confirmed'])
+                self.failUnless(row['confirmidta']==0)
             elif counter == 2:
-                self.failUnless(row[1])
-                self.failUnless(row[2]!=0)
+                self.failUnless(row['confirmed'])
+                self.failUnless(row['confirmidta']!=0)
             else:
                 break
         else:
@@ -136,8 +136,8 @@ class TestMain(unittest.TestCase):
                                 {'status':310,'statust':DONE,'idroute':'test997','confirmtype':'send-x12-997','confirmasked':True}):
             counter += 1
             if counter <= 2:
-                self.failUnless(row[1])
-                self.failUnless(row[2]!=0)
+                self.failUnless(row['confirmed'])
+                self.failUnless(row['confirmidta']!=0)
             else:
                 break
         else:
@@ -172,11 +172,11 @@ class TestMain(unittest.TestCase):
                                 {'status':400,'statust':DONE,'idroute':'testcontrl','confirmtype':'ask-edifact-CONTRL','confirmasked':True}):
             counter += 1
             if counter == 1:
-                self.failUnless(not row[1])
-                self.failUnless(row[2]==0)
+                self.failUnless(not row['confirmed'])
+                self.failUnless(row['confirmidta']==0)
             elif counter == 2:
-                self.failUnless(row[1])
-                self.failUnless(row[2]!=0)
+                self.failUnless(row['confirmed'])
+                self.failUnless(row['confirmidta']!=0)
             else:
                 break
         else:
@@ -193,8 +193,8 @@ class TestMain(unittest.TestCase):
                                 {'status':310,'statust':DONE,'idroute':'testcontrl','confirmtype':'send-edifact-CONTRL','confirmasked':True}):
             counter += 1
             if counter <= 2:
-                self.failUnless(row[1])
-                self.failUnless(row[2]!=0)
+                self.failUnless(row['confirmed'])
+                self.failUnless(row['confirmidta']!=0)
             else:
                 break
         else:
