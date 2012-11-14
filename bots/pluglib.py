@@ -3,7 +3,6 @@ import sys
 import time
 import zipfile
 import zipimport
-import operator
 import django
 from django.core import serializers
 from django.utils.translation import ugettext as _
@@ -21,18 +20,6 @@ import botsglobal
 
 #PLUGINCOMPARELIST is used for filtering and sorting the plugins.
 PLUGINCOMPARELIST = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','chanpar','translate','routes','confirmrule']
-
-
-def pluglistcmp(key1,key2):
-    #sort by PLUGINCOMPARELIST
-    return PLUGINCOMPARELIST.index(key1) - PLUGINCOMPARELIST.index(key2)
-
-def pluglistcmpisgroup(plug1,plug2):
-    #sort partnergroups before parters
-    if plug1['plugintype'] == 'partner' and plug2['plugintype'] == 'partner':
-        return  int(plug2['isgroup']) - int(plug1['isgroup'])
-    else:
-        return 0
 
 def writetodatabase(orgpluglist):
     #sanity checks on pluglist
@@ -91,11 +78,8 @@ def writetodatabase(orgpluglist):
             continue
         pluglist.append(plug)
     #sort pluglist: this is needed for relationships
-    pluglist.sort(cmp=pluglistcmp,key=operator.itemgetter('plugintype'))
-    #2nd sort: sort partenergroups before partners
-    pluglist.sort(cmp=pluglistcmpisgroup)
-    #~ for plug in pluglist:
-        #~ print 'list:',plug
+    pluglist.sort(key=lambda k: k.get('isgroup',False),reverse=True)
+    pluglist.sort(key=lambda k: PLUGINCOMPARELIST.index(k['plugintype']))
 
     for plug in pluglist:
         botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
@@ -361,9 +345,7 @@ def plugout_database_entry_as_string(plugdict):
     '''
     terug = u'{'
     terug += repr('plugintype') + ': ' + repr(plugdict.pop('plugintype'))
-    keys = plugdict.keys()
-    keys.sort()
-    for key in keys:
+    for key in sorted(plugdict):
         terug += ', ' + repr(key) + ': ' + repr(plugdict[key])
     terug += u'},\n'
     return terug
