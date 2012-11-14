@@ -48,10 +48,8 @@ def tree2grammar(node_instance,structure,recorddefs):
         tree2grammar(childnode,structure[-1][LEVEL],recorddefs)
 
 def recorddefs2string(recorddefs,sortedstructurelist):
-    listoftags = recorddefs.keys()
-    listoftags.sort()
     recorddefsstring = "{\n"
-    for i in listoftags:
+    for i in sorted(recorddefs):
     #~ for key, value in recorddefs.items():
         recorddefsstring += "    '%s':\n        [\n"%i
         for field in recorddefs[i]:
