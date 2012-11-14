@@ -1,6 +1,5 @@
 from django.utils.translation import ugettext as _
 #bots-modules
-from botsconfig import *
 import automaticmaintenance
 import botslib
 import botsglobal
@@ -8,6 +7,7 @@ import communication
 import envelope
 import preprocess
 import transform
+from botsconfig import *
 
 @botslib.log_session
 def rundispatcher(command,routestorun):
@@ -224,8 +224,8 @@ class crashrecovery(new):
         #delete ta's after ERROR and OK for other
         for row in botslib.query('''SELECT idta  FROM ta 
                                     WHERE idta>%(rootofcrashedrun)s
-                                    AND ( statust=%(statust1)s OR statust=%(statust2)s )
-                                    AND status!=%(status)s
+                                    AND ( statust = %(statust1)s OR statust = %(statust2)s )
+                                    AND status != %(status)s
                                     AND child == 0 ''',
                                     {'rootofcrashedrun':rootofcrashedrun.idta,'status':PROCESS,'statust1':OK,'statust2':ERROR}):
             ta_object = botslib.OldTransaction(row['idta'])
@@ -236,10 +236,10 @@ class crashrecovery(new):
 class automaticretrycommunication(new):
     @staticmethod
     def get_idta_last_error(idta_lastretry):
-        for row in botslib.query('''SELECT MIN(idta) as min_idta
+        for row in botslib.query('''SELECT MIN(idta) AS min_idta
                                     FROM filereport
-                                    WHERE idta>%(idta_lastretry)s
-                                    AND statust == %(statust)s''',
+                                    WHERE idta > %(idta_lastretry)s
+                                    AND statust = %(statust)s ''',
                                     {'statust':ERROR,'idta_lastretry':idta_lastretry}):
             return row['min_idta']
 
