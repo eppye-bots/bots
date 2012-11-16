@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bots Open Source EDI Translator 2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-13 19:10+0100\n"
+"POT-Creation-Date: 2012-11-16 16:03+0100\n"
 "PO-Revision-Date: 2010-05-26\n"
 "Last-Translator: hjebbers <hjebbers@gmail.com>\n"
 "Language-Team: Dutch <LL@li.org>\n"
@@ -38,11 +38,11 @@ msgstr "Een (partner)group kan geen deel uitmaken van een (partner)group"
 
 #: admin.py:105
 msgid "Is in groups"
-msgstr ""
+msgstr "Behoort bij groepen"
 
 #: admin.py:108
 msgid "User defined"
-msgstr ""
+msgstr "Door gebruiker gedefinieerd"
 
 #: admin.py:123
 msgid "Filtering for outchannel"
@@ -134,21 +134,21 @@ msgstr "    %d files als output in deze run.\n"
 msgid "Error in automatic maintenance: \"%s\"."
 msgstr "Fout in automatic maintenance: \"%s\"."
 
-#: automaticmaintenance.py:171
+#: automaticmaintenance.py:173
 msgid "Statust OK (stuck) but has child(ren) (idta: $idta)."
 msgstr "OK maar file is niet verder verwerkt (idta: $idta)."
 
-#: automaticmaintenance.py:176
+#: automaticmaintenance.py:178
 msgid "Statust ERROR but has child(ren) (idta: $idta)."
 msgstr "ERROR maar file is niet verder verwerkt (idta: $idta)."
 
-#: automaticmaintenance.py:180
+#: automaticmaintenance.py:182
 msgid "Severe error: found statust (idta: $idta)."
 msgstr ""
 
 #: botslib.py:19
 msgid "served at port"
-msgstr "draait op poort"
+msgstr "web-server poort"
 
 #: botslib.py:20
 msgid "platform"
@@ -172,19 +172,19 @@ msgstr "bots versie"
 
 #: botslib.py:25
 msgid "bots installation path"
-msgstr "bots installatie pad"
+msgstr "path voor bots installatie"
 
 #: botslib.py:26
 msgid "config path"
-msgstr "pad voor configuratie files"
+msgstr "path voor configuratie files"
 
 #: botslib.py:27
 msgid "botssys path"
-msgstr "pad voor botsssys"
+msgstr "path voor botsssys"
 
 #: botslib.py:28
 msgid "usersys path"
-msgstr "pad voor usersys"
+msgstr "path voor usersys"
 
 #: botslib.py:455
 msgid ""
@@ -214,18 +214,18 @@ msgstr ""
 msgid "Uri is empty."
 msgstr ""
 
-#: botsupdatedb.py:213 engine.py:91
+#: botsupdatedb.py:265 engine.py:91
 #, python-format
 msgid ""
 "Could not connect to database. Database settings are in bots/config/settings."
 "py. Error: \"%s\"."
 msgstr ""
 
-#: botsupdatedb.py:216 engine.py:94
+#: botsupdatedb.py:268 engine.py:94
 msgid "Connected to database."
-msgstr ""
+msgstr "Verbonden met database."
 
-#: botsupdatedb.py:223
+#: botsupdatedb.py:275
 msgid ""
 "!Bots database is locked!\n"
 "Bots-engine has ended in an unexpected way during the last run.\n"
@@ -233,11 +233,11 @@ msgid ""
 "bots-engine terminated by user, etc."
 msgstr ""
 
-#: cleanup.py:67 cleanup.py:81
+#: cleanup.py:78 cleanup.py:92
 msgid "Cleanup could not remove file"
 msgstr "Cleanup kan bestand niet verwijderen."
 
-#: cleanup.py:86
+#: cleanup.py:97
 msgid "Cleanup could not remove directory"
 msgstr "Cleanup kan directory niet verwijderen."
 
@@ -284,11 +284,11 @@ msgstr ""
 
 #: communication.py:662 communication.py:726
 msgid "Can not do a systemlock on this platform"
-msgstr ""
+msgstr "Kan geen systemlock doen op dit OS/platform"
 
 #: communication.py:807
 msgid "Pop3 connection not OK"
-msgstr "Pop3 verbinding niet goed"
+msgstr "Pop3 verbinding niet OK"
 
 #: communication.py:810
 msgid "QUIT command to POP3 server failed"
@@ -406,7 +406,7 @@ msgstr ""
 msgid "Run all active routes from database: \"%s\"."
 msgstr ""
 
-#: engine.py:163
+#: engine.py:161
 #, python-format
 msgid ""
 "Severe error in bots system:\n"
@@ -715,9 +715,8 @@ msgid ""
 "[A51]: Found non-valid data at end of edi file; probably a problem with "
 "separators or message structure: \"$leftover\"."
 msgstr ""
-"[A51]: Niet-valide data aan het einde van edi-file; waarschijnlijk probleem met "
-"scheidingstekens of bericht-structuur: \"$leftover\"."
-
+"[A51]: Ongeldige data aan het einde van edi-file; waarschijnlijk probleem "
+"met scheidingstekens of bericht-structuur: \"$leftover\"."
 
 #: inmessage.py:98
 #, python-format
@@ -743,8 +742,8 @@ msgid ""
 "[F07]: Record \"%(record)s\" date field \"%(field)s\" not a valid date: "
 "\"%(content)s\".\n"
 msgstr ""
-"[F07]: Record \"%(record)s\" datum-veld \"%(field)s\" bevat geen valide datum: "
-"\"%(content)s\".\n"
+"[F07]: Record \"%(record)s\" datum-veld \"%(field)s\" bevat geen valide "
+"datum: \"%(content)s\".\n"
 
 #: inmessage.py:126
 #, python-format
@@ -761,9 +760,8 @@ msgid ""
 "[F09]: Record \"%(record)s\" field \"%(field)s\" contains exponent: "
 "\"%(content)s\".\n"
 msgstr ""
-"[F09]: Record \"%(record)s\" veld \"%(field)s\" bevat exponent: "
-"\"%(content)s\".\n"
-
+"[F09]: Record \"%(record)s\" veld \"%(field)s\" bevat exponent: \"%(content)s"
+"\".\n"
 
 #: inmessage.py:146
 #, python-format
@@ -1607,15 +1605,15 @@ msgstr ""
 
 #: models.py:210
 msgid "Edi file in email as"
-msgstr ""
+msgstr "Edi-files in email als"
 
 #: models.py:210
 msgid "Should edi-files in emails be send as attchment or in body?"
-msgstr ""
+msgstr "Stuur edi-files als body of attachment in emails?"
 
 #: models.py:212
 msgid "Archive path"
-msgstr "Pad voor archivering"
+msgstr "Path voor archivering"
 
 #: models.py:212
 msgid ""
@@ -1625,21 +1623,24 @@ msgstr ""
 
 #: models.py:215
 msgid "Max seconds"
-msgstr ""
+msgstr "Max seconden"
 
 #: models.py:215
 msgid ""
 "Max seconds for in-communication channel. Purpose: limit incoming edi files; "
 "better read more often tan everything in one time."
 msgstr ""
+"Max seconden voor inkomend  communicatie-kanaal. Doel: limiteren aantal "
+"inkomende edi-files; het is beter vaker te lezen dan alles in 1 keer te "
+"lezen."
 
 #: models.py:223
 msgid "partner identification"
-msgstr "partneridentificatie"
+msgstr "partner-identificatie"
 
 #: models.py:228
 msgid "Multiple CC-addresses supported (comma-seperated)."
-msgstr ""
+msgstr "Meerdere CC-adressen kunnen gebruikt worden (gescheiden door komma)."
 
 #: models.py:245
 msgid "partner"
@@ -1647,7 +1648,7 @@ msgstr ""
 
 #: models.py:254 models.py:255
 msgid "email address per channel"
-msgstr "emailadres per kanaal"
+msgstr "email-adres per kanaal"
 
 #: models.py:261
 msgid "Editype to translate from."
@@ -1659,23 +1660,23 @@ msgstr ""
 
 #: models.py:263
 msgid "Alternative translation"
-msgstr ""
+msgstr "Alt-waarde voor vertaling"
 
 #: models.py:263
 msgid "Do this translation only for this alternative translation."
-msgstr ""
+msgstr "Deze vertaling alleen voor deze alt-waarde."
 
 #: models.py:264
 msgid "Do this translation only for this frompartner."
-msgstr ""
+msgstr "Deze vertaling alleen voor deze van-partner"
 
 #: models.py:265
 msgid "Do this translation only for this topartner."
-msgstr ""
+msgstr "Deze vertaling alleen voor deze naar-partner"
 
 #: models.py:266
 msgid "User mappingscript to use for translation."
-msgstr ""
+msgstr "Mappingscript voor deze vertaling."
 
 #: models.py:267
 msgid "Editype to translate to."
@@ -1707,7 +1708,7 @@ msgstr "inkomend kanaal"
 
 #: models.py:284
 msgid "the editype of the incoming edi files."
-msgstr ""
+msgstr "Het edi-type van de inkomende files."
 
 #: models.py:285
 msgid ""
@@ -1721,11 +1722,11 @@ msgstr "uitgaand kanaal"
 
 #: models.py:287
 msgid "Only edi files with this editype to this outgoing channel."
-msgstr ""
+msgstr "Alleen edi-files van dit edi-type via dit uit-kanaal."
 
 #: models.py:288
 msgid "Only edi files of this messagetype to this outgoing channel."
-msgstr ""
+msgstr "Alleen edi-files van dit bericht-type via dit uit-kanaal."
 
 #: models.py:289
 msgid ""
@@ -1743,11 +1744,11 @@ msgstr "Ken NaarPartner toe aan het edi bestand. Zelden nodig."
 
 #: models.py:292
 msgid "Only edi files from this partner/partnergroup for this outgoing channel"
-msgstr ""
+msgstr "Alleen edi-files afkomstig van deze partner via dit uit-kanaal"
 
 #: models.py:293
 msgid "Only edi files to this partner/partnergroup to this channel"
-msgstr ""
+msgstr "Alleen edi-files bestemd voor deze partner via dit uit-kanaal"
 
 #: models.py:294
 msgid "Only edi files with this testindicator to this outgoing channel."
@@ -1755,7 +1756,7 @@ msgstr "Filter de berichten voor dit uitgaand kanaal op testindicatie."
 
 #: models.py:295
 msgid "Indicates what to do with incoming files for this route(part)."
-msgstr ""
+msgstr "Wat te doen met inkomende file in route"
 
 #: models.py:296
 msgid ""
@@ -1775,7 +1776,7 @@ msgstr ""
 
 #: models.py:301
 msgid "Received files are zipped."
-msgstr ""
+msgstr "Ontvangen file zijn gezipt"
 
 #: models.py:302
 msgid "Outgoing zip-file handling"
@@ -2076,82 +2077,82 @@ msgstr ""
 msgid "End writing to file \"%s\"."
 msgstr ""
 
-#: pluglib.py:42 pluglib.py:45
+#: pluglib.py:29 pluglib.py:32
 msgid "plugins should be list of dicts. Nothing is written."
 msgstr ""
 
-#: pluglib.py:48
+#: pluglib.py:35
 #, python-format
 msgid "key of dict is not a string: \"%s\". Nothing is written."
 msgstr ""
 
-#: pluglib.py:50
+#: pluglib.py:37
 #, python-format
 msgid "\"plugintype\" missing in: \"%s\". Nothing is written."
 msgstr ""
 
-#: pluglib.py:141 pluglib.py:152
+#: pluglib.py:125 pluglib.py:136
 #, python-format
 msgid "no field column for: \"%s\"."
 msgstr ""
 
-#: pluglib.py:188
+#: pluglib.py:172
 msgid "        Existing entry in database is deleted."
 msgstr ""
 
-#: pluglib.py:196
+#: pluglib.py:180
 msgid "        Write to database is OK."
 msgstr ""
 
-#: pluglib.py:204
+#: pluglib.py:188
 msgid "Plugin is not a valid file."
 msgstr ""
 
-#: pluglib.py:215
+#: pluglib.py:199
 #, python-format
 msgid ""
 "Error in plugin. Nothing is written. Error:\n"
 "%s"
 msgstr ""
 
-#: pluglib.py:217
+#: pluglib.py:201
 msgid "Plugin is OK."
 msgstr ""
 
-#: pluglib.py:218
+#: pluglib.py:202
 msgid "Start writing to database."
 msgstr "Start schrijven naar de database."
 
-#: pluglib.py:225
+#: pluglib.py:209
 #, python-format
 msgid ""
 "Error writing plugin to database. Nothing is written. Error:\n"
 "%s"
 msgstr ""
 
-#: pluglib.py:248
+#: pluglib.py:232
 #, python-format
 msgid "    Start writing file: \"%s\"."
 msgstr ""
 
-#: pluglib.py:251
+#: pluglib.py:235
 #, python-format
 msgid "        Create directory \"%s\"."
 msgstr ""
 
-#: pluglib.py:265 preprocess.py:216 preprocess.py:245 preprocess.py:357
+#: pluglib.py:249 preprocess.py:218 preprocess.py:247 preprocess.py:359
 #, python-format
 msgid "        File written: \"%s\"."
 msgstr ""
 
-#: pluglib.py:269
+#: pluglib.py:253
 #, python-format
 msgid ""
 "Error writing files to system. Nothing is written to database. Error:\n"
 "%s"
 msgstr ""
 
-#: pluglib.py:272
+#: pluglib.py:256
 msgid "Writing files to filesystem is OK."
 msgstr "Schrijven van bestanden is gelukt."
 
@@ -2167,32 +2168,38 @@ msgstr ""
 msgid "[A59]: Non-valid ISA header at position $pos."
 msgstr ""
 
-#: preprocess.py:204
+#: preprocess.py:182
+msgid ""
+"[A50]: Non-valid UNA-segment at position $pos. UNA-segment should be 6 "
+"positions."
+msgstr ""
+
+#: preprocess.py:206
 msgid ""
 "[A58]: Found no valid envelope trailer in $editype file for envelope header "
 "at position $pos."
 msgstr ""
 
-#: preprocess.py:225 preprocess.py:230
+#: preprocess.py:227 preprocess.py:232
 msgid "File is not a zip-file."
 msgstr "Bestand is geen zip-bestand."
 
-#: preprocess.py:227
+#: preprocess.py:229
 msgid "\"pass_non_zip\" is True, just pass the file."
 msgstr ""
 
-#: preprocess.py:324
+#: preprocess.py:326
 msgid "PDF text extraction failed, it may contain just image(s)?"
 msgstr ""
 
-#: preprocess.py:360
+#: preprocess.py:362
 #, python-format
 msgid ""
 "PDF extraction failed, may not be a PDF file? Error:\n"
 "%s"
 msgstr ""
 
-#: preprocess.py:361
+#: preprocess.py:363
 msgid ""
 "PDF extraction failed, may not be a PDF file? Error:\n"
 "$error"
@@ -2200,7 +2207,7 @@ msgstr ""
 
 #: router.py:31
 msgid "Nothing to do in run."
-msgstr ""
+msgstr "Er is niets te doen in deze run."
 
 #: router.py:58
 #, python-format
@@ -2218,7 +2225,7 @@ msgstr "Fout in automatic maintenance."
 
 #: router.py:94
 msgid "Route \"$route\" is empty: no routescript, not enough parameters."
-msgstr ""
+msgstr  "Route \"$route\" doet niets: geen route-script, er zijn onvoldoende parameters  en er is geen route-script."
 
 #: transform.py:48
 #, python-format
@@ -2321,11 +2328,13 @@ msgid ""
 "Confirm send: %(confirmasked)s; confirmed: %(confirmed)s; confirmtype: "
 "%(confirmtype)s\n"
 msgstr ""
+"Bevestiging verzonden: %(confirmasked)s; bevestigd: %(confirmed)s; type bevestiging: "
+"%(confirmtype)s\n"
 
 #: views.py:25
 #, python-format
 msgid "Ran into server error: \"%s\""
-msgstr ""
+msgstr "Server fout: \"%s\""
 
 #: views.py:306
 msgid "Manual confirmed."
@@ -2458,6 +2467,8 @@ msgid ""
 "Trying to run \"bots-engine\", but another instance of \"bots-engine\" is "
 "running. Please try again later."
 msgstr ""
+"Probeer \"bots-engine\" te draaien, maar \"bots-engine\" draait al. "
+"Probeer later nogmaals."
 
 #: views.py:572
 #, python-format
@@ -2489,14 +2500,16 @@ msgid ""
 "Trying to send test mail, but in bots.ini, section [settings], "
 "\"sendreportiferror\" is not \"True\"."
 msgstr ""
+"Wil een test rapport via mail versturen, maar in bots.ini, section [settings], "
+"\"sendreportiferror\" is niet \"True\"."
 
 #: views.py:592
 msgid "testsubject"
-msgstr ""
+msgstr "test onderwerp"
 
 #: views.py:592
 msgid "test content of report"
-msgstr ""
+msgstr "test rapport"
 
 #: views.py:595
 msgid "Sending test mail failed."
@@ -3095,128 +3108,3 @@ msgstr "Procesfouten"
 msgid "Show selection"
 msgstr "Bekijk selectie"
 
-#~ msgid "Permission denied"
-#~ msgstr "Niet voldoende rechten"
-
-#~ msgid "%(name)s object with primary key %(key)r does not exist."
-#~ msgstr ""
-#~ "Object '%(name)s' met sleutel '%(key)r' bestaat niet in de database."
-
-#~ msgid "The %(name)s \"%(obj)s\" was deleted successfully."
-#~ msgstr "%(name)s \"%(obj)s\" is verwijderd."
-
-#~ msgid "delete selected"
-#~ msgstr "verwijder selectie"
-
-#~ msgid "OK but file is not processed further (idta: $idta)."
-#~ msgstr "OK maar file is niet verder verwerkt (idta: $idta)."
-
-#~ msgid "server name"
-#~ msgstr "naam server"
-
-#~ msgid ""
-#~ "Charset \"$charset2\" for channel not matching with charset \"$charset1\" "
-#~ "for edi-file."
-#~ msgstr ""
-#~ "Tekenset \"$charset2\" voor kanaal komt niet overeen met tekenset "
-#~ "\"$charset1\" van het edi-bestand."
-
-#~ msgid ""
-#~ "Emailaddress \"$email\" unknown (or not authorised for channel "
-#~ "\"$idchannel\")."
-#~ msgstr ""
-#~ "Mail-adres \"$email\" onbekend of niet geautoriseerd voor kanaal "
-#~ "\"$idchannel\")."
-
-#~ msgid "Run automatic communication retry."
-#~ msgstr "Herzend"
-
-#~ msgid "FileReceive"
-#~ msgstr "Ontvangen"
-
-#~ msgid "Do a translation in this route."
-#~ msgstr "Vertaal in deze route."
-
-#~ msgid "Found no content in mailbag."
-#~ msgstr "Leeg bestand."
-
-#~ msgid "Found no valid envelope trailer in mailbag."
-#~ msgstr "Leeg bestand."
-
-#~ msgid "merge<<<"
-#~ msgstr "samenvoeg<<<"
-
-#~ msgid "External file. Can not be displayed. Use \"next\"."
-#~ msgstr "Extern bestand; kan niet getoond worden."
-
-#~ msgid "External file. Can not be displayed. Use \"previous\"."
-#~ msgstr "Extern bestand; kan niet getoond worden."
-
-#~ msgid "File has error status and does not exist. Use \"previous\"."
-#~ msgstr "Bestand heeft foutstatus en bestaat niet."
-
-#~ msgid "File can not be displayed."
-#~ msgstr "Bestand kan niet getoond worden."
-
-#~ msgid "Errors while trying to run bots-engine."
-#~ msgstr "Starten van bots-engine niet gelukt."
-
-#~ msgid "Unlocked database."
-#~ msgstr "Database ontgrendeld."
-
-#~ msgid "Request to unlock database, but database was not locked."
-#~ msgstr ""
-#~ "Getracht database te ontgrendelen, maar database was niet vergrendeld."
-
-#~ msgid "Bots web-server started."
-#~ msgstr "Bots webserver is gestart."
-
-#~ msgid "Unlock database"
-#~ msgstr "Ontgrendel database"
-
-#~ msgid "Retry user-indicated comm errors"
-#~ msgstr "Herstel aangegeven communicatie fouten"
-
-#~ msgid "Are you sure you want to retry ALL previous errors?\\n"
-#~ msgstr "Weet u zeker dat u ALLE voorafgaande fouten opnieuw wilt draaien?"
-
-#~ msgid "Retry all previous errors"
-#~ msgstr "Start run voor alle eerder opgetreden fouten"
-
-#~ msgid "Retry communication"
-#~ msgstr "Herzend"
-
-#~ msgid "Could not find database file for SQLite"
-#~ msgstr "Kan geen SQLite-database vinden"
-
-#~ msgid "    write file \"%s\"."
-#~ msgstr "    schrijf bestand \"%s\"."
-
-#~ msgid "Plugin %s created successful."
-#~ msgstr "Plugin %s gemaakt."
-
-#~ msgid "Home *"
-#~ msgstr "Start *"
-
-#~ msgid "Incoming *"
-#~ msgstr "Inkomend *"
-
-#~ msgid "Report (per run) *"
-#~ msgstr "Rapportage (per run) *"
-
-#~ msgid "Document *"
-#~ msgstr "Documenten *"
-
-#~ msgid "Write plugin"
-#~ msgstr "Maak plugin"
-
-#~ msgid "Generate plugin"
-#~ msgstr "Maak plugin"
-
-#~ msgid "Run (only new) *"
-#~ msgstr "Run (alleen nieuwe berichten) *"
-
-#~ msgid ""
-#~ "*****Javascript is not enabled. Bots works beter with javascript*****"
-#~ msgstr ""
-#~ "*****Javascript staat uit. Bots werkt beter met Javascript aan.*****"
