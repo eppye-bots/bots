@@ -97,7 +97,7 @@ else:
             self.logger = logger
             
         def process_IN_CREATE(self, event):
-            """ these events are not needed, but otherwise auto_add does not work...."""
+            ''' these events are not needed, but otherwise auto_add does not work....'''
             pass
             
         def process_default(self,event):

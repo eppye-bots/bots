@@ -1568,7 +1568,7 @@ class db(_comsession):
 
 
 class communicationscript(_comsession):
-    """
+    ''' 
     For running an userscript for communication.
     Examples of use:
     - call external communication program
@@ -1591,7 +1591,7 @@ class communicationscript(_comsession):
     2. for outgoing files (bots sends the files):
         2.1 if there is a 'main' function: the 'main' function is called by bots after writing each file. bots can remove the files (if you use the 'remove' switch of the channel).
         2.2 no 'main' function: the processing of all the files can be done in 'disconnect'. bots can remove the files (if you use the 'remove' switch of the channel).
-    """
+    ''' 
     def connect(self):
         if self.userscript is None or not botslib.tryrunscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict):
             raise ImportError(_(u'Channel "%s" is type "communicationscript", but no communicationscript exists.'%self.channeldict['idchannel']))

@@ -88,7 +88,7 @@ def recorddefs2string(recorddefs,sortedstructurelist):
     '''
 
 def structure2string(structure,level=0):
-    structurestring = ""
+    structurestring = ''
     for i in structure:
         structurestring += level*"    " + "{ID:'%s',MIN:%s,MAX:%s"%(i[ID],i[MIN],i[MAX])
         recursivestructurestring = structure2string(i[LEVEL],level+1)

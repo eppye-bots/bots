@@ -17,10 +17,10 @@ import botsglobal
 from botsconfig import *
 
 def server_error(request, template_name='500.html'):
-    """ the 500 error handler.
+    ''' the 500 error handler.
         Templates: `500.html`
         Context: None
-    """
+    '''
     exc_info = traceback.format_exc(None).decode('utf-8','ignore')
     botsglobal.logger.info(_(u'Ran into server error: "%s"'),str(exc_info))
     temp = django.template.loader.get_template(template_name)  #You need to create a 500.html template.
