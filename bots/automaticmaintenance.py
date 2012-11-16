@@ -129,7 +129,8 @@ class Trace(object):
         if tacurrent['child']:     #find successor by using child relation ship (when merging)
             for row in botslib.query('''SELECT ''' + TAVARS + '''
                                          FROM ta
-                                         WHERE idta=%(child)s''',
+                                         WHERE idta=%(child)s
+                                         ORDER BY idta ''',
                                         {'child':tacurrent['child']}):
                 tacurrent['talijst'] = [dict(row)]    #add next one (a child has only one parent)
         else:   #find successor by using parent-relationship; for one-one-one relation an splitting
@@ -137,7 +138,8 @@ class Trace(object):
             for row in botslib.query('''SELECT ''' + TAVARS + '''
                                         FROM ta
                                         WHERE idta > %(currentidta)s
-                                        AND parent=%(currentidta)s ''',      #adding the idta > %(parent)s to selection speeds up a lot.
+                                        AND parent=%(currentidta)s
+                                        ORDER BY idta ''',      #adding the idta > %(currentidta)s to selection speeds up a lot.
                                         {'currentidta':tacurrent['idta']}):
                 talijst.append(dict(row))
             #there ws logic here to assure that earlier try's where not used. this is only needed for communication-retries now
