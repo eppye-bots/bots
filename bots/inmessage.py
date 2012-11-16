@@ -218,7 +218,7 @@ class Inmessage(message.Message):
                 # start a SUBTRANSLATION; find the right messagetype, etc
                 messagetype = newnode.enhancedget(structure_level[structure_index][SUBTRANSLATION])
                 if not messagetype:
-                    raise botslib.InMessageError(_(u'Could not find SUBTRANSLATION "$sub" in (sub)message.'),sub=structure_level[structure_index][SUBTRANSLATION])
+                    raise botslib.TranslationNotFoundError(_(u'Could not find SUBTRANSLATION "$sub" in (sub)message.'),sub=structure_level[structure_index][SUBTRANSLATION])
                 messagetype = self._manipulatemessagetype(messagetype,inode)
                 try:
                     defmessage = grammar.grammarread(self.__class__.__name__,messagetype)
@@ -233,7 +233,7 @@ class Inmessage(message.Message):
                             except ImportError:
                                 pass
                     if raisenovalidmapping_error:
-                        raise botslib.InMessageError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)
+                        raise botslib.TranslationNotFoundError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)
                 self.messagecount += 1
                 self.messagetypetxt = _(u'Message nr %(count)s, type %(type)s, '%{'count':self.messagecount,'type':messagetype})
                 current_edi_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
