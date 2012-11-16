@@ -166,6 +166,7 @@ def mailbag(ta_from,endstatus,**argv):
                                 edifile[headpos:],re.DOTALL|re.VERBOSE)
         elif found.group('edifact'):
             editype = 'edifact'
+            headpos = startpos + found.start('edifact')
             #determine field_sep and record_sep
             if found.group('UNA'):
                 count = 0
@@ -177,10 +178,11 @@ def mailbag(ta_from,endstatus,**argv):
                         field_sep = char
                     elif count == 6:
                         record_sep = char
+                if count < 6:
+                    raise botslib.InMessageError(_(u'[A50]: Non-valid UNA-segment at position $pos. UNA-segment should be 6 positions.'),pos=headpos)
             else:
                 field_sep = '+'
                 record_sep = "'"
-            headpos = startpos + found.start('edifact')
             foundtrailer = re.search(
                                 re.escape(record_sep) + 
                                 '\s*U[\n\r]*N[\n\r]*Z[\n\r]*' + 
