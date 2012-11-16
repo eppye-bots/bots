@@ -9,6 +9,7 @@ import botslib
 import botsinit
 import botsglobal
 
+
 def sqlite_database_is_version3():
     for row in botslib.query('''PRAGMA table_info(routes)'''):
         if row['name'] == 'translateind':
@@ -18,8 +19,8 @@ def sqlite_database_is_version3():
                 return True
     raise Exception('Could determine version of database')
 
-def sqlite_change_translateind():
-    querystring = '''
+
+QUERYSTRING = '''
 PRAGMA writable_schema = 1;
 UPDATE SQLITE_MASTER SET SQL = 
 'CREATE TABLE "routes" (
@@ -45,59 +46,174 @@ UPDATE SQLITE_MASTER SET SQL =
     "rsrv1" varchar(35),
     "rsrv2" integer,
     "defer" bool NOT NULL,
+    "zip_incoming" integer,
+    "zip_outgoing" integer,
     UNIQUE ("idroute", "seq"))' 
 WHERE NAME = 'routes';
 PRAGMA writable_schema = 0;
 '''
+
+def sqlite3():
+    if sqlite_database_is_version3():
+        print 'Database sqlite3 is already bots version 3. No action is taken.'
+        return 2
+
+    print 'Start changing sqlite3 database to bots version 3.'
     cursor = botsglobal.db.cursor()
     try:
-        cursor.executescript(querystring)
+        #channel ****************************************
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''',None)
+        #filereport ****************************************
+        cursor.execute('''DROP INDEX "filereport_reportidta" ''')
+        cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        #partner *************************************
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr1" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr2" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr3" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr4" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr5" VARCHAR(70) DEFAULT '' ''',None)
+        #report ****************************************
+        cursor.execute('''CREATE INDEX "report_ts" ON "report" ("ts")''')
+        cursor.execute('''ALTER TABLE "report" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        #routes ****************************************
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_incoming" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_outgoing" INTEGER DEFAULT 0''',None)
+        #ta ****************************************
+        cursor.execute('''DROP INDEX "ta_script" ''')
+        cursor.execute('''CREATE INDEX "ta_reference" ON "ta" ("reference")''')
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "numberofresends" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "rsrv5" VARCHAR(35) DEFAULT '' ''',None)
     except:
         txt = botslib.txtexc()
-        raise Exception('Could not change schema for routes: "%s".',txt)
+        botsglobal.db.rollback()
+        cursor.close()
+        print 'Error in adding fields to sqlite3 database: "%s".'%(txt)
+        return 1
     else:
         botsglobal.db.commit()
         cursor.close()
 
-def sqlite3():
-    if sqlite_database_is_version3():
-        print 'database is already for bots version 3.'
-        return
+    cursor = botsglobal.db.cursor()
+    try:
+        cursor.executescript(QUERYSTRING)
+    except:
+        txt = botslib.txtexc()
+        botsglobal.db.rollback()
+        cursor.close()
+        print 'Error in changing sqlite3 database-schema "routes": "%s".'%(txt)
+        return 1
     else:
-        print 'change bots database to version 3.'
-        sqlite_change_translateind()
-            
-        #have to close & open database to activate changed schema for routes:
-        botsglobal.db.close()
-        botsinit.connect()
+        botsglobal.db.commit()
+        cursor.close()
         
-        cursor = botsglobal.db.cursor()
-        try:
-            #report ****************************************
-            cursor.execute('''CREATE INDEX report_ts ON report (ts)''')     #SQLite, mySQL, postgreSQL
-            cursor.execute('''ALTER TABLE report ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
-            #routes ****************************************
-            cursor.execute('''ALTER TABLE routes ADD COLUMN  zip_incoming INTEGER DEFAULT 0''',None)
-            cursor.execute('''ALTER TABLE routes ADD COLUMN  zip_outgoing INTEGER DEFAULT 0''',None)
-            #channel ****************************************
-            cursor.execute('''ALTER TABLE channel ADD COLUMN  rsrv3 INTEGER DEFAULT 0''',None)
-            #ta ****************************************
-            cursor.execute('''DROP INDEX ta_script''')   #sqlite, postgreSQL
-            cursor.execute('''CREATE INDEX ta_reference ON ta (reference)''')     #SQLite, mySQL, postgreSQL
-            cursor.execute('''ALTER TABLE ta ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
-            cursor.execute('''ALTER TABLE ta ADD COLUMN  numberofresends INTEGER DEFAULT 0''',None)
-            cursor.execute('''ALTER TABLE ta ADD COLUMN  rsrv5 VARCHAR(35) DEFAULT '' ''',None)
-            #filereport ****************************************
-            cursor.execute('''DROP INDEX filereport_reportidta''')   #sqlite, postgreSQL
-            cursor.execute('''ALTER TABLE filereport ADD COLUMN  filesize INTEGER DEFAULT 0''',None)
-        except:
-            txt = botslib.txtexc()
-            botsglobal.db.rollback()
-            print 'Error while updating the database: "%s".'%(txt)
-        else:
-            botsglobal.db.commit()
-            cursor.close()
-            print 'Database is updated.'
+    print 'Succesful changed sqlite3 database to bots version 3.'
+    return 0
+            
+
+
+def postgresql_psycopg2():
+    print 'Start changing postgresql database to bots version 3.'
+    cursor = botsglobal.db.cursor()
+    try:
+        #channel ****************************************
+        cursor.execute('''ALTER TABLE "channel" ALTER COLUMN "filename" TYPE VARCHAR(256)''')
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''',None)
+        #filereport ****************************************
+        cursor.execute('''ALTER TABLE "filereport" DROP CONSTRAINT "filereport_pkey" ''')      #remove primary key
+        cursor.execute('''ALTER TABLE "filereport" DROP CONSTRAINT "filereport_idta_key" ''')  #drop contraint UNIQUE(idta, reportidta)
+        cursor.execute('''DROP INDEX "filereport_idta" ''')                                  #drop index on idta (will be primary key)
+        cursor.execute('''DROP INDEX "filereport_reportidta" ''')
+        cursor.execute('''ALTER TABLE "filereport" DROP COLUMN "id" ''')     
+        cursor.execute('''ALTER TABLE "filereport" ADD CONSTRAINT "filereport_pkey" PRIMARY KEY("idta")''')    #idta is primary key
+        cursor.execute('''ALTER TABLE "filereport" ALTER COLUMN "errortext" TYPE TEXT''')
+        cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        #partner *************************************
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr1" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr2" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr3" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr4" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr5" VARCHAR(70) DEFAULT '' ''',None)
+        #persist ****************************************
+        cursor.execute('''ALTER TABLE "persist" ALTER COLUMN "content" TYPE TEXT''')
+        #report ****************************************
+        cursor.execute('''CREATE INDEX "report_ts" ON "report" ("ts")''')
+        cursor.execute('''ALTER TABLE "report" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        #routes ****************************************
+        cursor.execute('''ALTER TABLE "routes" ALTER COLUMN "translateind" TYPE integer USING CASE WHEN "translateind"=FALSE THEN 0 ELSE 1 END''')
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_incoming" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_outgoing" INTEGER DEFAULT 0''',None)
+        #ta ****************************************
+        cursor.execute('''DROP INDEX "ta_script" ''')
+        cursor.execute('''CREATE INDEX "ta_reference" ON "ta" ("reference")''')
+        cursor.execute('''ALTER TABLE "ta" ALTER COLUMN "errortext" TYPE TEXT ''') 
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "numberofresends" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "rsrv5" VARCHAR(35) DEFAULT '' ''',None)
+    except:
+        txt = botslib.txtexc()
+        botsglobal.db.rollback()
+        cursor.close()
+        print 'Error in changing postgresql database: "%s".'%(txt)
+        return 1
+    else:
+        botsglobal.db.commit()
+        cursor.close()
+        
+    print 'Succesful changed postgresql database to bots version 3.'
+    return 0
+
+
+def mysql():
+    print 'Start changing mysql database to bots version 3.'
+    cursor = botsglobal.db.cursor()
+    try:
+        #channel ****************************************
+        cursor.execute('''ALTER TABLE `channel` MODIFY `filename` varchar(256) NOT NULL''')
+        cursor.execute('''ALTER TABLE `channel` ADD COLUMN `rsrv3` INTEGER DEFAULT 0''',None)
+        #filereport ****************************************
+        cursor.execute('''ALTER TABLE `filereport` CHANGE `id` `id` INTEGER ''')    #drop autoincrement
+        cursor.execute('''ALTER TABLE `filereport` DROP PRIMARY KEY ''')            #drop index on id
+        cursor.execute('''ALTER TABLE `filereport` DROP COLUMN `id` ''')            #drop id veld
+        cursor.execute('''ALTER TABLE `filereport` DROP KEY `idta` ''')             #remove UNIQUE constraint     
+        #~ cursor.execute('''ALTER TABLE `filereport` DROP INDEX `reportidta` ''')  #not possible as index name is not known
+        cursor.execute('''ALTER TABLE `filereport` MODIFY `errortext` TEXT''')
+        cursor.execute('''ALTER TABLE `filereport` ADD COLUMN `filesize` INTEGER DEFAULT 0''',None)
+        #partner *************************************
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr1` VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr2` VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr3` VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr4` VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr5` VARCHAR(70) DEFAULT '' ''',None)
+        #persist ****************************************
+        cursor.execute('''ALTER TABLE `persist` MODIFY `content` TEXT''')
+        #report ****************************************
+        cursor.execute('''CREATE INDEX `report_ts` ON `report` (`ts`)''')
+        cursor.execute('''ALTER TABLE `report` ADD COLUMN `filesize` INTEGER DEFAULT 0''',None)
+        #routes ****************************************
+        cursor.execute('''ALTER TABLE `routes` ADD COLUMN `zip_incoming` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `routes` ADD COLUMN `zip_outgoing` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `routes` MODIFY `translateind` integer NOT NULL''')
+        #ta ****************************************
+        #~ cursor.execute('''ALTER TABLE `ta` DROP INDEX `script` ''')   #not possible as index name is not known
+        cursor.execute('''CREATE INDEX `ta_reference` ON `ta` (`reference`)''') 
+        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `filesize` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `numberofresends` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `rsrv5` VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE `ta` MODIFY `errortext` TEXT ''')
+    except:
+        txt = botslib.txtexc()
+        botsglobal.db.rollback()
+        cursor.close()
+        print 'Error in changing mysql database: "%s".'%(txt)
+        return 1
+    else:
+        botsglobal.db.commit()
+        cursor.close()
+        
+    print 'Succesful changed mysql database to bots version 3.'
+    return 0
+
 
 def start():
     #********command line arguments**************************
@@ -117,7 +233,7 @@ def start():
             configdir = arg[2:]
             if not configdir:
                 print 'Error: configuration directory indicated, but no directory name.'
-                sys.exit(1)
+                sys.exit(3)
         else:   #pick up names of routes to run
             print usage
             sys.exit(0)
@@ -127,7 +243,7 @@ def start():
     #**************check if another instance of bots-engine is running/if port is free******************************
     try:
         engine_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        port = botsglobal.ini.getint('settings','port',35636)
+        port = botsglobal.ini.getint('settings','port',28081)
         engine_socket.bind(('127.0.0.1', port))
     except socket.error:
         engine_socket.close()
@@ -147,7 +263,7 @@ def start():
         botsinit.connect()
     except Exception,msg:
         botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%s".'),msg)
-        sys.exit(1)
+        sys.exit(3)
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
@@ -165,20 +281,20 @@ def start():
 
     if hasattr(botsglobal.settings,'DATABASE_ENGINE'):
         if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
-            sqlite3()
+            terug = sqlite3()
         elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
-            mysql()
+            terug = mysql()
         elif botsglobal.settings.DATABASE_ENGINE == 'postgresql_psycopg2':
-            postgresql_psycopg2()
+            terug = postgresql_psycopg2()
     elif hasattr(botsglobal.settings,'DATABASES'):
         if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
-            sqlite3()
+            terug = sqlite3()
         elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
-            mysql()
+            terug = mysql()
         elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql_psycopg2':
-            postgresql_psycopg2()
+            terug = postgresql_psycopg2()
     
-    sys.exit(0)
+    sys.exit(terug)
 
 
 if __name__ == '__main__':
