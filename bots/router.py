@@ -187,8 +187,8 @@ class crashrecovery(new):
         '''
         for row in botslib.query('''SELECT MAX(idta) as crashed_idta
                                     FROM ta
-                                    WHERE idta<%(rootidta_of_current_run)s
-                                    AND script= 0 ''',
+                                    WHERE idta < %(rootidta_of_current_run)s
+                                    AND script = 0 ''',
                                     {'rootidta_of_current_run':self.rootidta_of_current_run}):
             if row['crashed_idta']:
                 self.crashrecoverypossible = True
@@ -212,9 +212,9 @@ class crashrecovery(new):
         #delete ta's after ERROR and OK for crashed merges
         mergedidtatodelete = set()
         for row in botslib.query('''SELECT child  FROM ta 
-                                    WHERE idta>%(rootofcrashedrun)s
-                                    AND statust=%(statust)s
-                                    AND status!=%(status)s
+                                    WHERE idta > %(rootofcrashedrun)s
+                                    AND statust = %(statust)s
+                                    AND status != %(status)s
                                     AND child != 0 ''',
                                     {'rootofcrashedrun':rootofcrashedrun.idta,'status':PROCESS,'statust':OK}):
             mergedidtatodelete.add(row['child'])
@@ -223,10 +223,10 @@ class crashrecovery(new):
             ta_object.delete()
         #delete ta's after ERROR and OK for other
         for row in botslib.query('''SELECT idta  FROM ta 
-                                    WHERE idta>%(rootofcrashedrun)s
+                                    WHERE idta > %(rootofcrashedrun)s
                                     AND ( statust = %(statust1)s OR statust = %(statust2)s )
                                     AND status != %(status)s
-                                    AND child == 0 ''',
+                                    AND child = 0 ''',
                                     {'rootofcrashedrun':rootofcrashedrun.idta,'status':PROCESS,'statust1':OK,'statust2':ERROR}):
             ta_object = botslib.OldTransaction(row['idta'])
             ta_object.deletechildren()
@@ -255,9 +255,9 @@ class automaticretrycommunication(new):
             return False
         for row in botslib.query('''SELECT idta,numberofresends
                                     FROM ta
-                                    WHERE idta>%(startidta)s
-                                    AND status=%(status)s
-                                    AND statust=%(statust)s ''',
+                                    WHERE idta > %(startidta)s
+                                    AND status = %(status)s
+                                    AND statust = %(statust)s ''',
                                     {'statust':ERROR,'status':EXTERNOUT,'startidta':startidta}):
             do_retransmit = True
             ta_resend = botslib.OldTransaction(row['idta'])
@@ -275,8 +275,8 @@ class resend(new):
         #for resend; this one is slow. Can be improved by having a separate list of idta to resend
         for row in botslib.query('''SELECT idta,parent,numberofresends
                                     FROM ta
-                                    WHERE retransmit=%(retransmit)s
-                                    AND status=%(status)s''',
+                                    WHERE retransmit = %(retransmit)s
+                                    AND status = %(status)s''',
                                     {'retransmit':True,'status':EXTERNOUT}):
             do_retransmit = True
             ta_outgoing = botslib.OldTransaction(row['idta'])
@@ -294,16 +294,16 @@ class rereceive(new):
         do_retransmit = False
         for row in botslib.query('''SELECT idta
                                     FROM filereport
-                                    WHERE retransmit=%(retransmit)s ''',
-                                    {'retransmit':True}):
+                                    WHERE retransmit = %(retransmit)s ''',
+                                    {'retransmit':1}):
             do_retransmit = True
             botslib.changeq('''UPDATE filereport
-                              SET retransmit=%(retransmit)s
-                              WHERE idta=%(idta)s ''',
-                              {'idta':row['idta'],'retransmit':False})
+                              SET retransmit = %(retransmit)s
+                              WHERE idta = %(idta)s ''',
+                              {'idta':row['idta'],'retransmit':0})
             for row2 in botslib.query('''SELECT idta
                                         FROM ta
-                                        WHERE parent=%(parent)s ''',
+                                        WHERE parent = %(parent)s ''',
                                         {'parent':row['idta']}):
                 ta_rereceive = botslib.OldTransaction(row2['idta'])
                 ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
