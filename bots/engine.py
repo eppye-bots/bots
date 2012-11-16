@@ -44,7 +44,7 @@ def start():
     commandspossible = ['--automaticretrycommunication','--resend','--rereceive','--new']
     commandstorun = []
     routestorun = []    #list with routes to run
-    cleanupcommand = False
+    do_cleanup_parameter = False
     for arg in sys.argv[1:]:
         if arg.startswith('-c'):
             configdir = arg[2:]
@@ -54,7 +54,7 @@ def start():
         elif arg in commandspossible:
             commandstorun.append(arg)
         elif arg == '--cleanup':
-            cleanupcommand = True
+            do_cleanup_parameter = True
         elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
             print usage
             sys.exit(0)
@@ -156,9 +156,7 @@ def start():
             errorinrun += router.rundispatcher(command,use_routestorun)
             if userscript and hasattr(userscript,'post' + command):
                 botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
-        if cleanupcommand or botsglobal.ini.get('settings','whencleanup','always')=='always':
-            cleanup.cleanup()
-            botsglobal.logger.info(u'Done cleanup.')
+        cleanup.cleanup(do_cleanup_parameter)
     except Exception,msg:
         botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(msg))    #of course this 'should' not happen.
         sys.exit(1)

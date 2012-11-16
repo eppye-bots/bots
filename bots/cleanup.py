@@ -11,20 +11,31 @@ import botsglobal
 #~ from botsconfig import *
 
 
-def cleanup():
+def cleanup(do_cleanup_parameter):
     ''' public function, does all cleanup of the database and file system.
-        most cleanup functions are done only once a day.
+        most cleanup functions are by default done only once a day.
     '''
-    try:
+    if  botsglobal.ini.get('settings','whencleanup','always')=='always':
+        #perform full cleanup only first run of the day.
         cur_day = int(time.strftime('%Y%m%d'))    #get current date, convert to int
-        if cur_day != botslib.uniquecore('bots_cleanup_day',updatewith=cur_day):    
+        if cur_day != botslib.uniquecore('bots_cleanup_day',updatewith=cur_day):
+            do_full_cleanup = True
+        else:
+            do_full_cleanup = False
+    elif do_cleanup_parameter:  #if explicit indicated via commandline parameter 
+        do_full_cleanup = True
+    else:
+        do_full_cleanup = False
+    try:
+        if do_full_cleanup:
             _cleandatafile()
             _cleanarchive()
             _cleanupsession()
             _cleanpersist()
             _cleantransactions()
             _vacuum()
-        _cleanrunsnothingreceived()          #do this for every run
+        _cleanrunsnothingreceived()          #do this every run
+        botsglobal.logger.info(u'Done cleanup.')
     except:
         botsglobal.logger.exception(u'Cleanup error.')
 
@@ -44,7 +55,7 @@ def _cleanupsession():
 def _cleanarchive():
     ''' delete all archive directories older than maxdaysarchive days.'''
     vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
-    for row in botslib.query('''SELECT archivepath FROM channel WHERE archivepath != "" '''):
+    for row in botslib.query('''SELECT archivepath FROM channel WHERE archivepath != '' '''):
         vanafdir = botslib.join(row['archivepath'],vanaf)
         for entry in glob.glob(botslib.join(row['archivepath'],'*')):
             if entry < vanafdir:
