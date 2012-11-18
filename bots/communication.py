@@ -22,6 +22,7 @@ import email
 import email.Utils
 import email.Generator
 import email.Message
+import email.header
 import email.encoders
 import smtplib
 import ftplib
@@ -461,7 +462,15 @@ class _comsession(object):
                 #~ tomail          = tos[0][1]  #tomail is the email address of the first "To"-recipient
                 cc_content      = ','.join([emailaddress[1] for emailaddress in (tos + ccs)])
                 reference       = msg['message-id']
-                subject         = msg['subject']
+                #handle subject
+                subject,encoding = email.header.decode_header(msg['subject'])[0]    #for subjects with non-ascii content special notation exists in MIME-standard
+                if encoding is not None:
+                    subject = subject.decode(encoding)                              #decode (to unicode)
+                else:
+                    try:                        #test if subject is valid; use case: spam... need to test because database-storage will give errors otherwise. 
+                        subject.encode('utf8')
+                    except:
+                        subject = ''
                 contenttype     = msg.get_content_type()
                 #authorize: find the frompartner
                 frompartner = ''
