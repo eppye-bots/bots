@@ -88,6 +88,7 @@ HEADER = re.compile('''
             (?P<UNB>
                 U[\n\r]*N[\n\r]*B
             )
+            (?P<field_sep>[^\n\r])
         )
         |
         (?P<tradacoms>
@@ -153,55 +154,72 @@ def mailbag(ta_from,endstatus,**argv):
                 elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. 
                     if char != field_sep:
                         raise botslib.InMessageError(_(u'[A59]: Non-valid ISA header at position $pos.'),pos=headpos)
-                        
                 elif count == 106:
                     record_sep = char
                     break
-            foundtrailer = re.search(
-                                re.escape(record_sep) +
-                                '\s*I[\n\r]*E[\n\r]*A[\n\r]*' +
-                                re.escape(field_sep) +
-                                '.+?'   +
-                                re.escape(record_sep),
-                                edifile[headpos:],re.DOTALL|re.VERBOSE)
+            foundtrailer = re.search('''%(record_sep)s
+                                        \s*
+                                        I[\n\r]*E[\n\r]*A
+                                        .+?
+                                        %(record_sep)s
+                                        '''%{'record_sep':re.escape(record_sep)},
+                                        edifile[headpos:],re.DOTALL|re.VERBOSE)
         elif found.group('edifact'):
             editype = 'edifact'
             headpos = startpos + found.start('edifact')
-            #determine field_sep and record_sep
+            #parse UNA. valid UNA: UNA:+.? '
             if found.group('UNA'):
                 count = 0
                 for char in found.group('UNAstring'):
                     if char in '\r\n':
                         continue
                     count += 1
-                    if count == 2:
-                        field_sep = char
+                    #~ if count == 2:
+                        #~ field_sep = char
+                    if count == 4:
+                        escape = char
                     elif count == 6:
                         record_sep = char
-                if count < 6:
+                if count != 6:
                     raise botslib.InMessageError(_(u'[A50]: Non-valid UNA-segment at position $pos. UNA-segment should be 6 positions.'),pos=headpos)
-            else:
-                field_sep = '+'
-                record_sep = "'"
-            foundtrailer = re.search(
-                                re.escape(record_sep) + 
-                                '\s*U[\n\r]*N[\n\r]*Z[\n\r]*' + 
-                                re.escape(field_sep) + 
-                                '.+?' +
-                                re.escape(record_sep),
-                                edifile[headpos:],re.DOTALL|re.VERBOSE)
+            else:   #no UNA, interpret UNB
+                if found.group('field_sep') == '+':
+                    record_sep = "'"
+                    escape = '?'
+                elif found.group('field_sep') == '\x1D':        #according to std this was preffered way...probably quite theoretic...but does no harm
+                    record_sep = '\x1C'
+                    escape = ''
+                else:
+                    raise botslib.InMessageError(_(u'[A54]: Edifact file with non-standard separators. UNA segment should be used.'))
+            #search trailer
+            foundtrailer = re.search('''[^%(escape)s\n\r]       #char that is not escape or cr/lf
+                                        [\n\r]*?                #maybe some cr/lf's
+                                        %(record_sep)s          #segment separator
+                                        \s*                     #whitespace between segments
+                                        U[\n\r]*N[\n\r]*Z       #UNZ
+                                        .+?                     #any chars
+                                        [^%(escape)s\n\r]       #char that is not escape or cr/lf
+                                        [\n\r]*?                #maybe some cr/lf's
+                                        %(record_sep)s          #segment separator
+                                        '''%{'escape':escape,'record_sep':re.escape(record_sep)},
+                                        edifile[headpos:],re.DOTALL|re.VERBOSE)
         elif found.group('tradacoms'):
             editype = 'tradacoms'
-            field_sep = '='     #the tradacoms 'after-segment-tag-separator'
+            #~ field_sep = '='     #the tradacoms 'after-segment-tag-separator'
             record_sep = "'"
+            escape = '?'
             headpos = startpos + found.start('STX')
-            foundtrailer = re.search(
-                                re.escape(record_sep) +
-                                '\s*E[\n\r]*N[\n\r]*D[\n\r]*' +
-                                re.escape(field_sep) +
-                                '.+?' +
-                                re.escape(record_sep),
-                                edifile[headpos:],re.DOTALL|re.VERBOSE)
+            foundtrailer = re.search('''[^%(escape)s\n\r]       #char that is not escape or cr/lf
+                                        [\n\r]*?                #maybe some cr/lf's
+                                        %(record_sep)s          #segment separator
+                                        \s*                     #whitespace between segments
+                                        E[\n\r]*N[\n\r]*D
+                                        .+?
+                                        [^%(escape)s\n\r]       #char that is not escape or cr/lf
+                                        [\n\r]*?                #maybe some cr/lf's
+                                        %(record_sep)s          #segment separator
+                                        '''%{'escape':escape,'record_sep':re.escape(record_sep)},
+                                        edifile[headpos:],re.DOTALL|re.VERBOSE)
         if not foundtrailer:
             raise botslib.InMessageError(_(u'[A58]: Found no valid envelope trailer in $editype file for envelope header at position $pos.'),editype=editype, pos=headpos)
         #so: found an interchange (from headerpos until endpos)

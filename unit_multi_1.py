@@ -119,7 +119,7 @@ def grammartest(l,expect_error=True):
 
 
 if __name__=='__main__':
-    pythoninterpreter = 'python2.7'
+    pythoninterpreter = 'python'
     botsinit.generalinit('config')
     utilsunit.dummylogger()
     botsinit.connect()
@@ -163,7 +163,7 @@ if __name__=='__main__':
     #mailbag ********
     subprocess.call([pythoninterpreter,'bots-engine.py','mailbagtest'])     #run bots
     botsglobal.db.commit()
-    utilsunit.comparedicts({'status':0,'lastreceived':13,'lasterror':0,'lastdone':13,'lastok':0,'lastopen':0,'send':39,'processerrors':0,'filesize':8469},utilsunit.getreportlastrun()) #check report
+    utilsunit.comparedicts({'status':0,'lastreceived':18,'lasterror':0,'lastdone':18,'lastok':0,'lastopen':0,'send':44,'processerrors':0,'filesize':16163},utilsunit.getreportlastrun()) #check report
     shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
     #*****************
 
