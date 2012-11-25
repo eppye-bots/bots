@@ -452,48 +452,39 @@ class _comsession(object):
                 confirmed = False
                 confirmasked = False
                 confirmidta = 0
+                #read & parse email
                 ta_from = botslib.OldTransaction(row['idta'])
                 infile = botslib.opendata(row['filename'], 'rb')
                 msg             = email.message_from_file(infile)   #read and parse mail
                 infile.close()
-                frommail        = email.Utils.parseaddr(msg['from'])[1]
-                tos             = email.Utils.getaddresses(msg.get_all('to', []))
-                ccs             = email.Utils.getaddresses(msg.get_all('cc', []))
-                #~ tomail          = tos[0][1]  #tomail is the email address of the first "To"-recipient
-                cc_content      = ','.join([emailaddress[1] for emailaddress in (tos + ccs)])
-                reference       = msg['message-id']
-                #handle subject
-                subject,encoding = email.header.decode_header(msg['subject'])[0]    #for subjects with non-ascii content special notation exists in MIME-standard
-                if encoding is not None:
-                    subject = subject.decode(encoding)                              #decode (to unicode)
-                else:
-                    try:                        #test if subject is valid; use case: spam... need to test because database-storage will give errors otherwise. 
-                        subject.encode('utf8')
-                    except:
-                        subject = ''
-                contenttype     = msg.get_content_type()
-                #authorize: find the frompartner
+                #******get information from email (sender, receiver etc)***********************************************************
+                reference       = self.checkheaderforcharset(msg['message-id'])
+                subject = self.checkheaderforcharset(msg['subject'])
+                contenttype     = self.checkheaderforcharset(msg.get_content_type())
+                #frompartner (incl autorization)
+                frommail        = self.checkheaderforcharset(email.Utils.parseaddr(msg['from'])[1])
                 frompartner = ''
                 if not self.channeldict['starttls']:    #starttls in channeldict is: 'no check on "from:" email adress'
                     frompartner = self.mailaddress2idpartner(frommail)
                     if frompartner is None:
                         raise botslib.CommunicationInError(_(u'"From" emailaddress(es) $email not authorised/unknown for channel "$idchannel".'),email=frommail,idchannel=self.channeldict['idchannel'])
-                #authorize: find the topartner
+                #topartner, cc (incl autorization)
+                list_to_address = [self.checkheaderforcharset(address) for name,address in email.Utils.getaddresses(msg.get_all('to', []))] 
+                list_cc_address = [self.checkheaderforcharset(address) for name,address in email.Utils.getaddresses(msg.get_all('cc', []))] 
+                cc_content      = ','.join([address for address in (list_to_address + list_cc_address)])
                 topartner = ''  #initialise topartner
                 tomail = ''     #initialise tomail
                 if not self.channeldict['apop']:    #apop in channeldict is: 'no check on "to:" email adress'
-                    for toname,tomail_tmp in tos:   #all tos-addresses are checked; only one needs to be authorised.
-                        topartner =  self.mailaddress2idpartner(tomail_tmp)
-                        tomail = tomail_tmp
+                    for address in list_to_address:   #all tos-addresses are checked; only one needs to be authorised.
+                        topartner =  self.mailaddress2idpartner(address)
+                        tomail = address
                         if topartner is not None:   #if topartner found: break out of loop
                             break
-                    else:   #if no valid topartner was found:
-                        emailtos = [address[1] for address in tos]      #make list of email-to-addresses
-                        raise botslib.CommunicationInError(_(u'"To" emailaddress(es) $email not authorised/unknown for channel "$idchannel".'),email=emailtos,idchannel=self.channeldict['idchannel'])
-
-
+                    else:   #if no valid topartner: generate error
+                        raise botslib.CommunicationInError(_(u'"To" emailaddress(es) $email not authorised/unknown for channel "$idchannel".'),email=list_to_address,idchannel=self.channeldict['idchannel'])
+ 
                 #update transaction of mail with information found in mail
-                ta_from.update(frommail=frommail,   #why now why not later: attachemnts are saved alter, their ta's need the info from get ier use ta_mime is copied to separate files later, so need the info now
+                ta_from.update(frommail=frommail,   #why save now not later: when saving the attachments need the amil-header-info to be in ta (copyta)
                                 tomail=tomail,
                                 reference=reference,
                                 contenttype=contenttype,
@@ -521,6 +512,20 @@ class _comsession(object):
                 ta_from.update(statust=DONE,confirmtype=confirmtype,confirmed=confirmed,confirmasked=confirmasked,confirmidta=confirmidta)
         return
 
+    @staticmethod
+    def checkheaderforcharset(org_header):
+        ''' correct handling of charset for email headers that are saved in database.
+        ''' 
+        header,encoding = email.header.decode_header(org_header)[0]    #for subjects with non-ascii content special notation exists in MIME-standard
+        try:
+            if encoding is not None:
+                return header.decode(encoding)                       #decode (to unicode)
+            #test if valid; use case: spam... need to test because database-storage will give errors otherwise. 
+            header.encode('utf8')
+            return header
+        except:
+            raise botslib.CommunicationInError(_(u'Email header valid - probably issues with characterset.'))
+                        
     def mailaddress2idpartner(self,mailaddress):
         ''' lookup email address to see if know in configuration. '''
         #first check in chanpar email-addresses for this channel
