@@ -3,6 +3,8 @@ import sys
 import os
 import glob
 import logging
+import subprocess
+import shutil
 import bots.botslib as botslib
 import bots.botsglobal as botsglobal
 import bots.inmessage as inmessage
@@ -120,5 +122,12 @@ def comparedicts(dict1,dict2):
 def removeWS(str):
     return ' '.join(str.split())
 
+def cleanoutputdir():
+    botssys = botsglobal.ini.get('directories','botssys')
+    shutil.rmtree(os.path.join(botssys,'outfile'),ignore_errors=True)    #remove whole output directory
 
+def RunTestCompareResults(command,comparedict):
+    subprocess.call(command)     #run bots
+    botsglobal.db.commit()
+    comparedicts(comparedict,getreportlastrun()) #check report
 
