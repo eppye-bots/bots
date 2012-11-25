@@ -508,11 +508,10 @@ class x12(var):
 
 
 class xml(Outmessage):
-    ''' 20110919: code for _write is almost the same as for envelopewrite.
-        this could be one method.
-        Some problems with right xml prolog, standalone, DOCTYPE, processing instructons: Different ET versions give different results:
+    ''' 20110919: code for _write is almost the same as for envelopewrite: this could be one method.
+        Some problems with right xml prolog, standalone, DOCTYPE, processing instructons: Different ET versions give different results.
+        Things work OK for python 2.7
         celementtree in 2.7 is version 1.0.6, but different implementation in 2.6??
-        So: this works OK for python 2.7
         For python <2.7: do not generate standalone, DOCTYPE, processing instructions for encoding !=utf-8,ascii OR if elementtree package is installed (version 1.3.0 or bigger)
     '''
     def _write(self,node_instance):
@@ -532,6 +531,9 @@ class xml(Outmessage):
         self._closewrite()
 
     def _xmlcorewrite(self,xmltree,root):
+        if sys.version >= '2.7.0' and self.ta_info['namespace_prefixes']:   # Register any namespace prefixes specified in syntax
+            for eachns in self.ta_info['namespace_prefixes']:
+                ET.register_namespace(eachns[0], eachns[1])        
         #xml prolog: always use.*********************************
         #standalone, DOCTYPE, processing instructions: only possible in python >= 2.7 or if encoding is utf-8/ascii
         if sys.version >= '2.7.0' or self.ta_info['charset'] in ['us-ascii','utf-8'] or ET.VERSION >= '1.3.0':

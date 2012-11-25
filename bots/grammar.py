@@ -523,7 +523,7 @@ class xml(Grammar):
         'checkunknownentities': True,
         'contenttype':'text/xml ',
         'decimaal':'.',
-        'DOCTYPE':'',                   #doctype declaration to use in xml header. DOCTYPE = 'mydoctype SYSTEM "mydoctype.dtd"'  will lead to: <!DOCTYPE mydoctype SYSTEM "mydoctype.dtd">
+        'DOCTYPE':'',                   #doctype declaration to use in xml header. 'DOCTYPE': 'mydoctype SYSTEM "mydoctype.dtd"'  will lead to: <!DOCTYPE mydoctype SYSTEM "mydoctype.dtd">
         'envelope':'',
         'extra_character_entity':{},    #additional character entities to resolve when parsing XML; mostly html character entities. Not in python 2.4. Example: {'euro':u'','nbsp':unichr(160),'apos':u'\u0027'}
         'escape':'',
@@ -532,10 +532,12 @@ class xml(Grammar):
         'indented':False,               #False: xml output is one string (no cr/lf); True: xml output is indented/human readable
         'lengthnumericbare':False,
         'merge':False,
+        'namespace_prefixes':None,  #to over-ride default namespace prefixes (ns0, ns1 etc) for outgoing xml. is a list, consisting of tuples, each tuple consists of prefix and uri.
+                                    #Example: 'namespace_prefixes':[('orders','http://www.company.com/EDIOrders'),]
         'noBOTSID':False,
         'pass_all':False,
         'processing_instructions': None,    #to generate processing instruction in xml prolog. is a list, consisting of tuples, each tuple consists of type of instruction and text for instruction.
-                                            #Example: processing_instructions': [('xml-stylesheet' ,'href="mystylesheet.xsl" type="text/xml"'),('type-of-ppi' ,'attr1="value1" attr2="value2"')]
+                                            #Example: 'processing_instructions': [('xml-stylesheet' ,'href="mystylesheet.xsl" type="text/xml"'),('type-of-ppi' ,'attr1="value1" attr2="value2"')]
                                             #leads to this output in xml-file:  <?xml-stylesheet href="mystylesheet.xsl" type="text/xml"?><?type-of-ppi attr1="value1" attr2="value2"?>
         'quote_char':"",
         'record_sep':"",
@@ -570,6 +572,8 @@ class xmlnocheck(xml):
         'indented':False,               #False: xml output is one string (no cr/lf); True: xml output is indented/human readable
         'lengthnumericbare':False,
         'merge':False,
+        'namespace_prefixes':None,  #to over-ride default namespace prefixes (ns0, ns1 etc) for outgoing xml. is a list, consisting of tuples, each tuple consists of prefix and uri.
+                                    #Example: 'namespace_prefixes':[('orders','http://www.company.com/EDIOrders'),]
         'noBOTSID':False,
         'pass_all':False,
         'processing_instructions': None,    #to generate processing instruction in xml prolog. is a list, consisting of tuples, each tuple consists of type of instruction and text for instruction.
