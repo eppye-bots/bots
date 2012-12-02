@@ -55,7 +55,7 @@ class ChannelAdmin(BotsAdmin):
         (_(u'FTP specific'),{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
                          'classes': ('collapse',)
                         }),
-        (_(u'Advanced'),{'fields': ('syslock', 'lockname', 'parameters', 'rsrv2'),
+        (_(u'Advanced'),{'fields': ('syslock', 'lockname', 'parameters', 'rsrv2', 'keyfile', 'certfile'),
                          'classes': ('collapse',)
                         }),
     )
@@ -94,18 +94,21 @@ class PartnerAdmin(BotsAdmin):
     #~ fields = ('active', 'isgroup', 'idpartner', 'name','mail','cc','group')
     filter_horizontal = ('group',)
     inlines = (MailInline,)
-    list_display = ('active','isgroup','idpartner', 'name','mail','cc','attr1','attr2','attr3','attr4','attr5')
+    list_display = ('active','isgroup','idpartner', 'name','mail','cc','startdate', 'enddate','phone1','phone2','attr1','attr2','attr3','attr4','attr5')
     list_display_links = ('idpartner',)
     list_filter = ('active','isgroup')
     ordering = ('idpartner',)
-    search_fields = ('idpartner','name','mail','cc','attr1','attr2','attr3','attr4','attr5')
+    search_fields = ('idpartner','name','mail','cc','attr1','attr2','attr3','attr4','attr5','name1','name2','name3')
     fieldsets = (
-        (None,          {'fields': (('idpartner', 'active', 'isgroup'), 'name', ('mail','cc'))
+        (None,          {'fields': (('idpartner', 'active', 'isgroup'), 'name', ('mail','cc'),'desc',('startdate', 'enddate'))
                         }),
         (_(u'Is in groups'),{'fields': ('group',),
                          'classes': ('collapse',)
                         }),
         (_(u'User defined'),{'fields': ('attr1','attr2','attr3','attr4','attr5'),
+                         'classes': ('collapse',)
+                        }),
+        (_(u'Address'),{'fields': ('name1','name2','name3','address1','address2','address3',('postalcode','city'),('countrycode','countrysubdivision'),('phone1','phone2')),
                          'classes': ('collapse',)
                         }),
     )

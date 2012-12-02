@@ -835,10 +835,11 @@ class pop3(_comsession):
 class pop3s(pop3):
     def connect(self):
         import poplib
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
-        #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        elif self.channeldict['keyfile']:
+            keyfile = self.channeldict['keyfile']
+            certfile = self.channeldict['certfile']
         else:
             keyfile = certfile = None
         self.session = poplib.POP3_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile)
@@ -925,10 +926,11 @@ class imap4(_comsession):
 class imap4s(imap4):
     def connect(self):
         import imaplib
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
-        #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        elif self.channeldict['keyfile']:
+            keyfile = self.channeldict['keyfile']
+            certfile = self.channeldict['certfile']
         else:
             keyfile = certfile = None
         imaplib.Debug = botsglobal.ini.getint('settings','imap4debug',0)    #if used, gives information about session (on screen), for debugging imap4
@@ -1000,10 +1002,11 @@ class smtp(_comsession):
 
 class smtps(smtp):
     def connect(self):
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
-        #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        elif self.channeldict['keyfile']:
+            keyfile = self.channeldict['keyfile']
+            certfile = self.channeldict['certfile']
         else:
             keyfile = certfile = None
         if hasattr(smtplib,'SMTP_SSL'):
@@ -1016,10 +1019,11 @@ class smtps(smtp):
 
 class smtpstarttls(smtp):
     def connect(self):
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
-        #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        elif self.channeldict['keyfile']:
+            keyfile = self.channeldict['keyfile']
+            certfile = self.channeldict['certfile']
         else:
             keyfile = certfile = None
         self.session = smtplib.SMTP(host=self.channeldict['host'],port=int(self.channeldict['port'])) #make connection
@@ -1170,10 +1174,11 @@ class ftps(ftp):
     def connect(self):
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_(u'ftps is not supported by your python version, use >=2.7'))
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
-        #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        elif self.channeldict['keyfile']:
+            keyfile = self.channeldict['keyfile']
+            certfile = self.channeldict['certfile']
         else:
             keyfile = certfile = None
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
@@ -1244,10 +1249,11 @@ class ftpis(ftp):
     def connect(self):
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_(u'ftpis is not supported by your python version, use >=2.7'))
-        #keyfile, certfile: 20120521: as this is currently not in channel parameters, use a user exit to retrieve these.
-        #In future these paramaters will be added; for now no change in database.
         if self.userscript and hasattr(self.userscript,'keyfile'):
             keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
+        elif self.channeldict['keyfile']:
+            keyfile = self.channeldict['keyfile']
+            certfile = self.channeldict['certfile']
         else:
             keyfile = certfile = None
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))

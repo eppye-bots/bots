@@ -214,6 +214,8 @@ class channel(models.Model):
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
     rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds for in-communication channel. Purpose: limit incoming edi files; better read more often tan everything in one time.'))   #added 20100501. 20110906: max communication time.
     rsrv3 = models.IntegerField(null=True,blank=True)   #added 20121030.
+    keyfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Private key file'),help_text=_(u'Path to file that contains PEM formatted private key.'))          #added 20121201
+    certfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Certificate chain file'),help_text=_(u'Path to file that contains PEM formatted certificate chain.'))          #added 20121201
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'
@@ -230,11 +232,26 @@ class partner(models.Model):
     group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
-    attr1 = StripCharField(max_length=35,blank=True)
-    attr2 = StripCharField(max_length=35,blank=True)
-    attr3 = StripCharField(max_length=35,blank=True)
-    attr4 = StripCharField(max_length=35,blank=True)
-    attr5 = StripCharField(max_length=70,blank=True)
+    name1 = StripCharField(max_length=70,blank=True,null=True)          #added 20121201
+    name2 = StripCharField(max_length=70,blank=True,null=True)          #added 20121201
+    name3 = StripCharField(max_length=70,blank=True,null=True)          #added 20121201
+    address1 = StripCharField(max_length=70,blank=True,null=True)          #added 20121201
+    address2 = StripCharField(max_length=70,blank=True,null=True)          #added 20121201
+    address3 = StripCharField(max_length=70,blank=True,null=True)          #added 20121201
+    city = StripCharField(max_length=35,blank=True,null=True)          #added 20121201
+    postalcode = StripCharField(max_length=17,blank=True,null=True)          #added 20121201
+    countrysubdivision = StripCharField(max_length=9,blank=True,null=True)          #added 20121201
+    countrycode = StripCharField(max_length=3,blank=True,null=True)          #added 20121201
+    phone1 = StripCharField(max_length=17,blank=True,null=True)          #added 20121201
+    phone2 = StripCharField(max_length=17,blank=True,null=True)          #added 20121201
+    startdate = models.DateField(blank=True,null=True)          #added 20121201
+    enddate = models.DateField(blank=True,null=True)          #added 20121201
+    desc = models.TextField(blank=True,null=True)                                                 #added 20121201
+    attr1 = StripCharField(max_length=35,blank=True,null=True)
+    attr2 = StripCharField(max_length=35,blank=True,null=True)
+    attr3 = StripCharField(max_length=35,blank=True,null=True)
+    attr4 = StripCharField(max_length=35,blank=True,null=True)
+    attr5 = StripCharField(max_length=35,blank=True,null=True)
     class Meta:
         ordering = ['idpartner']
         db_table = 'partner'
