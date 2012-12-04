@@ -188,7 +188,7 @@ class Trace(object):
         '''
         def core(ta_object):
             if ta_object['status'] == FILEIN:   #get data for incoming email, not attachments
-                if  not self.incontenttype:
+                if not self.incontenttype:
                     self.frommail = ta_object['frommail']
                     self.tomail = ta_object['tomail']
                     self.incontenttype = ta_object['contenttype']

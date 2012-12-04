@@ -139,9 +139,9 @@ class Node(object):
             if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": getrecord($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
-                if  not isinstance(key,basestring):
+                if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: getrecord($mpath)'),mpath=mpaths)
-                if  not isinstance(value,basestring):
+                if not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: getrecord($mpath)'),mpath=mpaths)
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
@@ -180,9 +180,9 @@ class Node(object):
             if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": change(where=$where,change=$change)'),where=where,change=change)
             for key,value in part.iteritems():
-                if  not isinstance(key,basestring):
+                if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: change(where=$where,change=$change)'),where=where,change=change)
-                if  not isinstance(value,basestring):
+                if not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: change(where=$where,change=$change)'),where=where,change=change)
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
@@ -192,9 +192,9 @@ class Node(object):
         change.pop('BOTSID','nep')  #remove 'BOTSID' from change. BOTSID can not be changed
         change.pop('BOTSIDnr','nep')  #remove 'BOTSIDnr' from change. BOTSIDnr can not be changed
         for key,value in change.iteritems():
-            if  not isinstance(key,basestring):
+            if not isinstance(key,basestring):
                 raise botslib.MappingFormatError(_(u'keys in "change" must be strings: change(where=$where,change=$change)'),where=where,change=change)
-            if  not isinstance(value,basestring) and value is not None:     #if None, item is deleted
+            if not isinstance(value,basestring) and value is not None:     #if None, item is deleted
                 raise botslib.MappingFormatError(_(u'values in "change" must be strings or "None": change(where=$where,change=$change)'),where=where,change=change)
         #go get it!
         terug =  self._changecore(where,change)
@@ -234,9 +234,9 @@ class Node(object):
             if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": delete($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
-                if  not isinstance(key,basestring):
+                if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: delete($mpath)'),mpath=mpaths)
-                if  not isinstance(value,basestring):
+                if not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: delete($mpath)'),mpath=mpaths)
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
@@ -279,9 +279,9 @@ class Node(object):
             if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": get($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
-                if  not isinstance(key,basestring):
+                if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: get($mpath)'),mpath=mpaths)
-                if  not isinstance(value,basestring):
+                if not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: get($mpath)'),mpath=mpaths)
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
@@ -292,7 +292,7 @@ class Node(object):
             raise botslib.MappingFormatError(_(u'last section without "BOTSID": get($mpath)'),mpath=mpaths)
         count = 0
         for key,value in mpaths[-1].iteritems():
-            if  not isinstance(key,basestring):
+            if not isinstance(key,basestring):
                 raise botslib.MappingFormatError(_(u'keys must be strings in last section: get($mpath)'),mpath=mpaths)
             if value is None:
                 count += 1
@@ -367,9 +367,9 @@ class Node(object):
             if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": getloop($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
-                if  not isinstance(key,basestring):
+                if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: getloop($mpath)'),mpath=mpaths)
-                if  not isinstance(value,basestring):
+                if not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: getloop($mpath)'),mpath=mpaths)
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
@@ -419,7 +419,7 @@ class Node(object):
                 if value is None:
                     botsglobal.logmap.debug(u'"None" in put %s.',str(mpaths))
                     return False
-                if  not isinstance(key,basestring):
+                if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: put($mpath)'),mpath=mpaths)
                 if kwargs and 'strip' in kwargs and kwargs['strip'] == False:
                     part[key] = unicode(value)          #used for fixed ISA header of x12
@@ -456,11 +456,11 @@ class Node(object):
             if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": putloop($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
-                if  not isinstance(key,basestring):
+                if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: putloop($mpath)'),mpath=mpaths)
                 if value is None:
                     return False
-                #~ if  not isinstance(value,basestring):
+                #~ if not isinstance(value,basestring):
                     #~ raise botslib.MappingFormatError(_(u'values must be strings in putloop%s'%(str(mpaths)))
                 part[key] = unicode(value).strip()
             if 'BOTSIDnr' not in part:
