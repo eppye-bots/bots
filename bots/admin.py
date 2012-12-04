@@ -91,7 +91,6 @@ class MyPartnerAdminForm(django.forms.ModelForm):
 class PartnerAdmin(BotsAdmin):
     actions = ('activate',)
     form = MyPartnerAdminForm
-    #~ fields = ('active', 'isgroup', 'idpartner', 'name','mail','cc','group')
     filter_horizontal = ('group',)
     inlines = (MailInline,)
     list_display = ('active','isgroup','idpartner', 'name','mail','cc','startdate', 'enddate','phone1','phone2','attr1','attr2','attr3','attr4','attr5')
@@ -102,13 +101,13 @@ class PartnerAdmin(BotsAdmin):
     fieldsets = (
         (None,          {'fields': (('idpartner', 'active', 'isgroup'), 'name', ('mail','cc'),'desc',('startdate', 'enddate'))
                         }),
+        (_(u'Address'),{'fields': ('name1','name2','name3','address1','address2','address3',('postalcode','city'),('countrycode','countrysubdivision'),('phone1','phone2')),
+                         'classes': ('collapse',)
+                        }),
         (_(u'Is in groups'),{'fields': ('group',),
                          'classes': ('collapse',)
                         }),
         (_(u'User defined'),{'fields': ('attr1','attr2','attr3','attr4','attr5'),
-                         'classes': ('collapse',)
-                        }),
-        (_(u'Address'),{'fields': ('name1','name2','name3','address1','address2','address3',('postalcode','city'),('countrycode','countrysubdivision'),('phone1','phone2')),
                          'classes': ('collapse',)
                         }),
     )
