@@ -62,28 +62,44 @@ def sqlite3():
     cursor = botsglobal.db.cursor()
     try:
         #channel ****************************************
-        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "keyfile" VARCHAR(256) ''')
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "certfile" VARCHAR(256) ''')
         #filereport ****************************************
         cursor.execute('''DROP INDEX "filereport_reportidta" ''')
-        cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
         #partner *************************************
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr1" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr2" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr3" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr4" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr5" VARCHAR(70) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr1" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr2" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr3" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr4" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr5" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "name1" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "name2" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "name3" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "address1" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "address2" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "address3" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "city" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "postalcode" VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "countrysubdivision" VARCHAR(9) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "countrycode" VARCHAR(3) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone1" VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone2" VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" DATE ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "enddate" DATE ''')
         #report ****************************************
         cursor.execute('''CREATE INDEX "report_ts" ON "report" ("ts")''')
-        cursor.execute('''ALTER TABLE "report" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "report" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
         #routes ****************************************
-        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_incoming" INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_outgoing" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_incoming" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_outgoing" INTEGER DEFAULT 0''')
         #ta ****************************************
         cursor.execute('''DROP INDEX "ta_script" ''')
         cursor.execute('''CREATE INDEX "ta_reference" ON "ta" ("reference")''')
-        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "numberofresends" INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "rsrv5" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "numberofresends" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "rsrv5" VARCHAR(35) DEFAULT '' ''')
     except:
         txt = botslib.txtexc()
         botsglobal.db.rollback()
@@ -118,7 +134,9 @@ def postgresql_psycopg2():
     try:
         #channel ****************************************
         cursor.execute('''ALTER TABLE "channel" ALTER COLUMN "filename" TYPE VARCHAR(256)''')
-        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "keyfile" VARCHAR(256) ''')
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "certfile" VARCHAR(256) ''')
         #filereport ****************************************
         cursor.execute('''ALTER TABLE "filereport" DROP CONSTRAINT "filereport_pkey" ''')      #remove primary key
         cursor.execute('''ALTER TABLE "filereport" DROP CONSTRAINT "filereport_idta_key" ''')  #drop contraint UNIQUE(idta, reportidta)
@@ -127,29 +145,43 @@ def postgresql_psycopg2():
         cursor.execute('''ALTER TABLE "filereport" DROP COLUMN "id" ''')     
         cursor.execute('''ALTER TABLE "filereport" ADD CONSTRAINT "filereport_pkey" PRIMARY KEY("idta")''')    #idta is primary key
         cursor.execute('''ALTER TABLE "filereport" ALTER COLUMN "errortext" TYPE TEXT''')
-        cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
         #partner *************************************
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr1" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr2" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr3" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr4" VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr5" VARCHAR(70) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr1" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr2" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr3" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr4" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr5" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "name1" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "name2" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "name3" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "address1" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "address2" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "address3" VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "city" VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "postalcode" VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "countrysubdivision" VARCHAR(9) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "countrycode" VARCHAR(3) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone1" VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone2" VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" DATE ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "enddate" DATE ''')
         #persist ****************************************
         cursor.execute('''ALTER TABLE "persist" ALTER COLUMN "content" TYPE TEXT''')
         #report ****************************************
         cursor.execute('''CREATE INDEX "report_ts" ON "report" ("ts")''')
-        cursor.execute('''ALTER TABLE "report" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "report" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
         #routes ****************************************
         cursor.execute('''ALTER TABLE "routes" ALTER COLUMN "translateind" TYPE integer USING CASE WHEN "translateind"=FALSE THEN 0 ELSE 1 END''')
-        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_incoming" INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_outgoing" INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_incoming" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_outgoing" INTEGER DEFAULT 0''')
         #ta ****************************************
         cursor.execute('''DROP INDEX "ta_script" ''')
         cursor.execute('''CREATE INDEX "ta_reference" ON "ta" ("reference")''')
         cursor.execute('''ALTER TABLE "ta" ALTER COLUMN "errortext" TYPE TEXT ''') 
-        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "filesize" INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "numberofresends" INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "rsrv5" VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "numberofresends" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "ta" ADD COLUMN "rsrv5" VARCHAR(35) DEFAULT '' ''')
     except:
         txt = botslib.txtexc()
         botsglobal.db.rollback()
@@ -170,7 +202,9 @@ def mysql():
     try:
         #channel ****************************************
         cursor.execute('''ALTER TABLE `channel` MODIFY `filename` varchar(256) NOT NULL''')
-        cursor.execute('''ALTER TABLE `channel` ADD COLUMN `rsrv3` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `channel` ADD COLUMN `rsrv3` INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE `channel` ADD COLUMN `keyfile` VARCHAR(256) ''')
+        cursor.execute('''ALTER TABLE `channel` ADD COLUMN `certfile` VARCHAR(256) ''')
         #filereport ****************************************
         cursor.execute('''ALTER TABLE `filereport` CHANGE `id` `id` INTEGER ''')    #drop autoincrement
         cursor.execute('''ALTER TABLE `filereport` DROP PRIMARY KEY ''')            #drop index on id
@@ -178,28 +212,42 @@ def mysql():
         cursor.execute('''ALTER TABLE `filereport` DROP KEY `idta` ''')             #remove UNIQUE constraint     
         #~ cursor.execute('''ALTER TABLE `filereport` DROP INDEX `reportidta` ''')  #not possible as index name is not known
         cursor.execute('''ALTER TABLE `filereport` MODIFY `errortext` TEXT''')
-        cursor.execute('''ALTER TABLE `filereport` ADD COLUMN `filesize` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `filereport` ADD COLUMN `filesize` INTEGER DEFAULT 0''')
         #partner *************************************
-        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr1` VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr2` VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr3` VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr4` VARCHAR(35) DEFAULT '' ''',None)
-        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr5` VARCHAR(70) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr1` VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr2` VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr3` VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr4` VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr5` VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `name1` VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `name2` VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `name3` VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `address1` VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `address2` VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `address3` VARCHAR(70) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `city` VARCHAR(35) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `postalcode` VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `countrysubdivision` VARCHAR(9) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `countrycode` VARCHAR(3) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `phone1` VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `phone2` VARCHAR(17) ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `desc` DATE ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `enddate` DATE ''')
         #persist ****************************************
         cursor.execute('''ALTER TABLE `persist` MODIFY `content` TEXT''')
         #report ****************************************
         cursor.execute('''CREATE INDEX `report_ts` ON `report` (`ts`)''')
-        cursor.execute('''ALTER TABLE `report` ADD COLUMN `filesize` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `report` ADD COLUMN `filesize` INTEGER DEFAULT 0''')
         #routes ****************************************
-        cursor.execute('''ALTER TABLE `routes` ADD COLUMN `zip_incoming` INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE `routes` ADD COLUMN `zip_outgoing` INTEGER DEFAULT 0''',None)
+        cursor.execute('''ALTER TABLE `routes` ADD COLUMN `zip_incoming` INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE `routes` ADD COLUMN `zip_outgoing` INTEGER DEFAULT 0''')
         cursor.execute('''ALTER TABLE `routes` MODIFY `translateind` integer NOT NULL''')
         #ta ****************************************
         #~ cursor.execute('''ALTER TABLE `ta` DROP INDEX `script` ''')   #not possible as index name is not known
         cursor.execute('''CREATE INDEX `ta_reference` ON `ta` (`reference`)''') 
-        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `filesize` INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `numberofresends` INTEGER DEFAULT 0''',None)
-        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `rsrv5` VARCHAR(35) DEFAULT '' ''',None)
+        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `filesize` INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `numberofresends` INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE `ta` ADD COLUMN `rsrv5` VARCHAR(35) DEFAULT '' ''')
         cursor.execute('''ALTER TABLE `ta` MODIFY `errortext` TEXT ''')
     except:
         txt = botslib.txtexc()
