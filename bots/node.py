@@ -15,7 +15,7 @@ class Node(object):
     def __init__(self,record=None,botsidnr=None):
         self.record = record    #record is a dict with fields
         if self.record:
-            if not 'BOTSIDnr' in self.record:
+            if 'BOTSIDnr' not in self.record:
                 if botsidnr:
                     self.record['BOTSIDnr'] = botsidnr
                 else:
@@ -136,14 +136,14 @@ class Node(object):
         for part in mpaths:
             if not isinstance(part,dict):
                 raise botslib.MappingFormatError(_(u'parameter "mpaths" must be dicts in a tuple: getrecord($mpath)'),mpath=mpaths)
-            if not 'BOTSID' in part:
+            if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": getrecord($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: getrecord($mpath)'),mpath=mpaths)
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: getrecord($mpath)'),mpath=mpaths)
-            if not 'BOTSIDnr' in part:
+            if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         #go get it!
         terug =  self._getrecordcore(*mpaths)
@@ -177,14 +177,14 @@ class Node(object):
         for part in where:
             if not isinstance(part,dict):
                 raise botslib.MappingFormatError(_(u'parameter "where" must be dicts in a tuple: change(where=$where,change=$change)'),where=where,change=change)
-            if not 'BOTSID' in part:
+            if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": change(where=$where,change=$change)'),where=where,change=change)
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: change(where=$where,change=$change)'),where=where,change=change)
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: change(where=$where,change=$change)'),where=where,change=change)
-            if not 'BOTSIDnr' in part:
+            if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         #sanity check 'change' parameter
         if not change or not isinstance(change,dict):
@@ -231,14 +231,14 @@ class Node(object):
         for part in mpaths:
             if not isinstance(part,dict):
                 raise botslib.MappingFormatError(_(u'must be dicts in tuple: delete($mpath)'),mpath=mpaths)
-            if not 'BOTSID' in part:
+            if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": delete($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: delete($mpath)'),mpath=mpaths)
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: delete($mpath)'),mpath=mpaths)
-            if not 'BOTSIDnr' in part:
+            if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         #go get it!
         terug =  bool(self._deletecore(*mpaths))
@@ -276,19 +276,19 @@ class Node(object):
         for part in mpaths[:-1]:
             if not isinstance(part,dict):
                 raise botslib.MappingFormatError(_(u'must be dicts in tuple: get($mpath)'),mpath=mpaths)
-            if not 'BOTSID' in part:
+            if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": get($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: get($mpath)'),mpath=mpaths)
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: get($mpath)'),mpath=mpaths)
-            if not 'BOTSIDnr' in part:
+            if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         #sanity check of mpaths: None only allowed in last section of Mpath; check last part
         if not isinstance(mpaths[-1],dict):
             raise botslib.MappingFormatError(_(u'must be dicts in tuple: get($mpath)'),mpath=mpaths)
-        if not 'BOTSID' in mpaths[-1]:
+        if 'BOTSID' not in mpaths[-1]:
             raise botslib.MappingFormatError(_(u'last section without "BOTSID": get($mpath)'),mpath=mpaths)
         count = 0
         for key,value in mpaths[-1].iteritems():
@@ -300,7 +300,7 @@ class Node(object):
                 raise botslib.MappingFormatError(_(u'values must be strings (or none) in last section: get($mpath)'),mpath=mpaths)
         if count > 1:
             raise botslib.MappingFormatError(_(u'max one "None" in last section: get($mpath)'),mpath=mpaths)
-        if not 'BOTSIDnr' in mpaths[-1]:
+        if 'BOTSIDnr' not in mpaths[-1]:
             mpaths[-1]['BOTSIDnr'] = u'1'
         #go get it!
         terug =  self._getcore(*mpaths)
@@ -312,7 +312,7 @@ class Node(object):
         for key,value in mpaths[0].iteritems():          #check all items in mpath;
             if key not in self.record:
                 return None         #does not match/is not right node
-            if not value is None:   #regular value (string), so compare
+            if value is not None:   #regular value (string), so compare
                 if value != self.record[key]:
                     return None     #does not match/is not right node
                 continue            #matches, so continue to check other items
@@ -364,14 +364,14 @@ class Node(object):
         for part in mpaths:
             if not isinstance(part,dict):
                 raise botslib.MappingFormatError(_(u'must be dicts in tuple: getloop($mpath)'),mpath=mpaths)
-            if not 'BOTSID' in part:
+            if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": getloop($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'keys must be strings: getloop($mpath)'),mpath=mpaths)
                 if  not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'values must be strings: getloop($mpath)'),mpath=mpaths)
-            if not 'BOTSIDnr' in part:
+            if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
 
         for terug in self._getloopcore(*mpaths):
@@ -382,7 +382,7 @@ class Node(object):
         ''' recursive part of getloop()
         '''
         for key,value in mpaths[0].iteritems():
-            if not key in self.record or value != self.record[key]:
+            if key not in self.record or value != self.record[key]:
                 return
         else:   #all items are checked and OK.
             if len(mpaths) == 1:
@@ -413,7 +413,7 @@ class Node(object):
         for part in mpaths:
             if not isinstance(part,dict):
                 raise botslib.MappingFormatError(_(u'must be dicts in tuple: put($mpath)'),mpath=mpaths)
-            if not 'BOTSID' in part:
+            if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": put($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
                 if value is None:
@@ -425,7 +425,7 @@ class Node(object):
                     part[key] = unicode(value)          #used for fixed ISA header of x12
                 else:
                     part[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
-            if not 'BOTSIDnr' in part:
+            if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
 
         if self._sameoccurence(mpaths[0]):
@@ -453,7 +453,7 @@ class Node(object):
         for part in mpaths:
             if not isinstance(part,dict):
                 raise botslib.MappingFormatError(_(u'must be dicts in tuple: putloop($mpath)'),mpath=mpaths)
-            if not 'BOTSID' in part:
+            if 'BOTSID' not in part:
                 raise botslib.MappingFormatError(_(u'section without "BOTSID": putloop($mpath)'),mpath=mpaths)
             for key,value in part.iteritems():
                 if  not isinstance(key,basestring):
@@ -463,7 +463,7 @@ class Node(object):
                 #~ if  not isinstance(value,basestring):
                     #~ raise botslib.MappingFormatError(_(u'values must be strings in putloop%s'%(str(mpaths)))
                 part[key] = unicode(value).strip()
-            if not 'BOTSIDnr' in part:
+            if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         if self._sameoccurence(mpaths[0]):
             if len(mpaths)==1:

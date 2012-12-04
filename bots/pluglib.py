@@ -67,7 +67,7 @@ def writetodatabase(orgpluglist):
             plug['errortext'] = plug['errortext'][:2047]
         elif plug['plugintype'] == 'routes':
             plug['active'] = False
-            if not 'defer' in plug:
+            if 'defer' not in plug:
                 plug['defer'] = False
             else:
                 if plug['defer'] is None:
