@@ -109,15 +109,15 @@ Serrors = [
     ]
 Othererrors = [
     #~ #unknown messagetype
-    {'infile':'OTHER_01.edi','errortext':'''InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
+    {'infile':'OTHER_01.edi','errortext':'''TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
     # UNA UNB UNA UNB
-    {'infile':'OTHER_02.edi','errortext':'''InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004". InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
+    {'infile':'OTHER_02.edi','errortext':'''TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004". TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
     # UNA UNB UNB
-    {'infile':'OTHER_03.edi','errortext':'''InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004". InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
+    {'infile':'OTHER_03.edi','errortext':'''TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004". TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
     # UNA UNB UNB; wrapped with <LF>
-    {'infile':'OTHER_04.edi','errortext':'''InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004". InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
+    {'infile':'OTHER_04.edi','errortext':'''TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004". TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
     # tradacoms x12 edifact
-    {'infile':'OTHER_05.edi','errortext':'''InMessageError: No (valid) grammar for editype "x12" messagetype "850999999". InMessageError: No (valid) grammar for editype "tradacoms" messagetype "ORDHDR8". InMessageError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
+    {'infile':'OTHER_05.edi','errortext':'''TranslationNotFoundError: No (valid) grammar for editype "x12" messagetype "850999999". TranslationNotFoundError: No (valid) grammar for editype "tradacoms" messagetype "ORDHDR8". TranslationNotFoundError: No (valid) grammar for editype "edifact" messagetype "ORDERSD96AUNEAN004".'''},
     ]
 oktests = [
     {'infile':'OK01.edi'},
