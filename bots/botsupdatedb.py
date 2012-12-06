@@ -87,6 +87,7 @@ def sqlite3():
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone1" VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone2" VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" DATE ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "startdate" DATE ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "enddate" DATE ''')
         #report ****************************************
         cursor.execute('''CREATE INDEX "report_ts" ON "report" ("ts")''')
@@ -165,6 +166,7 @@ def postgresql_psycopg2():
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone1" VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone2" VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" DATE ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "startdate" DATE ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "enddate" DATE ''')
         #persist ****************************************
         cursor.execute('''ALTER TABLE "persist" ALTER COLUMN "content" TYPE TEXT''')
@@ -232,6 +234,7 @@ def mysql():
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `phone1` VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `phone2` VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `desc` DATE ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `startdate` DATE ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `enddate` DATE ''')
         #persist ****************************************
         cursor.execute('''ALTER TABLE `persist` MODIFY `content` TEXT''')
