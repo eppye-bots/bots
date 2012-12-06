@@ -113,7 +113,7 @@ def mailbag(ta_from,endstatus,**argv):
         - edifact, x12 and tradacoms can be can be mixed
         - handle multiple UNA in one file, including different charsets.
         - handle multiple ISA's with different separators in one file
-        in bots 2.3.0 all mailbag, edifact, x12 and tradacoms go via mailbag.
+        in bots > 3.0.0 all mailbag, edifact, x12 and tradacoms go via mailbag.
     '''
     edifile = botslib.readdata(filename=ta_from.filename)
     startpos = 0

@@ -50,7 +50,7 @@ for dirpath, dirnames, filenames in os.walk('bots'):
 
 setup(
     name = 'bots',
-    version = '2.2.0',
+    version = '3.0.0',
     author = 'hjebbers',
     author_email = 'hjebbers@gmail.com',
     url = 'http://bots.sourceforge.net/',
@@ -72,10 +72,14 @@ setup(
     ],
     scripts = [ 'bots-webserver.py',
             'bots-engine.py',
-            
             'bots-grammarcheck.py',
             'bots-xml2botsgrammar.py',
-            #~ 'bots/bots-updatedb.py',
+            'bots-updatedb.py',
+            'bots-dirmonitor.py',
+            'bots-jobqueueserver.py',
+            'bots-plugoutindex.py',
+            'bots-job2queue.py',
+            
             ],
     packages = packages,
     data_files = data_files,
