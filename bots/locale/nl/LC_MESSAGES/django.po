@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bots Open Source EDI Translator 2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-16 16:03+0100\n"
+"POT-Creation-Date: 2012-12-07 00:43+0100\n"
 "PO-Revision-Date: 2010-05-26\n"
 "Last-Translator: hjebbers <hjebbers@gmail.com>\n"
 "Language-Team: Dutch <LL@li.org>\n"
@@ -28,7 +28,7 @@ msgstr "Email parameters"
 msgid "FTP specific"
 msgstr "FTP parameters"
 
-#: admin.py:58 admin.py:126
+#: admin.py:58 admin.py:128
 msgid "Advanced"
 msgstr "Geavanceerd"
 
@@ -36,19 +36,23 @@ msgstr "Geavanceerd"
 msgid "A group can not be part of a group."
 msgstr "Een (partner)group kan geen deel uitmaken van een (partner)group"
 
-#: admin.py:105
+#: admin.py:104
+msgid "Address"
+msgstr "Adres"
+
+#: admin.py:107
 msgid "Is in groups"
 msgstr "Behoort bij groepen"
 
-#: admin.py:108
+#: admin.py:110
 msgid "User defined"
 msgstr "Door gebruiker gedefinieerd"
 
-#: admin.py:123
+#: admin.py:125
 msgid "Filtering for outchannel"
 msgstr "Filter voor uitgaand kanaal"
 
-#: admin.py:144
+#: admin.py:146
 msgid ""
 "Combination of fromeditype,frommessagetype,alt,frompartner,topartner already "
 "exists."
@@ -56,7 +60,7 @@ msgstr ""
 "Deze combinatie van (fromeditype,frommessagetype,alt,frompartner,topartner) "
 "bestaat al."
 
-#: admin.py:158
+#: admin.py:160
 msgid "Multiple translations per editype/messagetype"
 msgstr "Meerdere vertalingen per editype/berichttype"
 
@@ -148,7 +152,7 @@ msgstr ""
 
 #: botslib.py:19
 msgid "served at port"
-msgstr "web-server poort"
+msgstr "webserver poort"
 
 #: botslib.py:20
 msgid "platform"
@@ -214,18 +218,18 @@ msgstr ""
 msgid "Uri is empty."
 msgstr ""
 
-#: botsupdatedb.py:265 engine.py:91
+#: botsupdatedb.py:316 engine.py:91
 #, python-format
 msgid ""
 "Could not connect to database. Database settings are in bots/config/settings."
 "py. Error: \"%s\"."
 msgstr ""
 
-#: botsupdatedb.py:268 engine.py:94
+#: botsupdatedb.py:319 engine.py:94
 msgid "Connected to database."
 msgstr "Verbonden met database."
 
-#: botsupdatedb.py:275
+#: botsupdatedb.py:326
 msgid ""
 "!Bots database is locked!\n"
 "Bots-engine has ended in an unexpected way during the last run.\n"
@@ -241,22 +245,22 @@ msgstr "Cleanup kan bestand niet verwijderen."
 msgid "Cleanup could not remove directory"
 msgstr "Cleanup kan directory niet verwijderen."
 
-#: communication.py:68
+#: communication.py:69
 msgid "Channel \"$idchannel\" is unknown."
 msgstr "Kanaal \"$idchannel\" is onbekend."
 
-#: communication.py:366 communication.py:373
+#: communication.py:367 communication.py:374
 msgid "Received email-MDN with errors."
 msgstr "Ontvangen email-MDN bevat fouten."
 
-#: communication.py:471
+#: communication.py:470
 msgid ""
 "\"From\" emailaddress(es) $email not authorised/unknown for channel "
 "\"$idchannel\"."
 msgstr ""
 "Mail-adres(en) $email not geauthoriseerd of onbekend (kanaal \"$idchannel\")."
 
-#: communication.py:483
+#: communication.py:484
 msgid ""
 "\"To\" emailaddress(es) $email not authorised/unknown for channel "
 "\"$idchannel\"."
@@ -267,38 +271,42 @@ msgstr ""
 msgid "No valid attachment in received email"
 msgstr "Geen (valide) attachment in ontvangen email."
 
-#: communication.py:555
+#: communication.py:527
+msgid "Email header valid - probably issues with characterset."
+msgstr ""
+
+#: communication.py:569
 msgid "No mail-address for partner \"$partner\" (channel \"$idchannel\")."
 msgstr "Geen mail-adres voor partner \"$partner\" (kanaal \"$idchannel\")."
 
-#: communication.py:613
+#: communication.py:627
 #, python-format
 msgid "Error in format of \"{filename}\": unknown format: \"%s\"."
 msgstr ""
 
-#: communication.py:627
+#: communication.py:641
 #, python-format
 msgid ""
 "Error in formatting outgoing filename \"%(filename)s\". Error: \"%(error)s\"."
 msgstr ""
 
-#: communication.py:662 communication.py:726
+#: communication.py:676 communication.py:740
 msgid "Can not do a systemlock on this platform"
 msgstr "Kan geen systemlock doen op dit OS/platform"
 
-#: communication.py:807
+#: communication.py:821
 msgid "Pop3 connection not OK"
 msgstr "Pop3 verbinding niet OK"
 
-#: communication.py:810
+#: communication.py:824
 msgid "QUIT command to POP3 server failed"
 msgstr ""
 
-#: communication.py:941
+#: communication.py:957
 msgid "SMTP server did not accept user/password combination."
 msgstr "STMP/email server accepteert user/passwoord niet."
 
-#: communication.py:944
+#: communication.py:960
 msgid ""
 "SMTP login failed. Error:\n"
 "$txt"
@@ -306,15 +314,15 @@ msgstr ""
 "SMTP/email login mislukt. Foutmelding:\n"
 "$txt"
 
-#: communication.py:1158
+#: communication.py:1176
 msgid "ftps is not supported by your python version, use >=2.7"
 msgstr "ftps wordt niet ondersteund door uw python versie, gebruik >=2.7"
 
-#: communication.py:1232
+#: communication.py:1251
 msgid "ftpis is not supported by your python version, use >=2.7"
 msgstr "ftpis wordt niet ondersteund door uw python versie, gebruik >=2.7"
 
-#: communication.py:1268
+#: communication.py:1288
 #, python-format
 msgid ""
 "Dependency failure: communicationtype \"sftp\" requires python library "
@@ -322,7 +330,7 @@ msgid ""
 "%s"
 msgstr ""
 
-#: communication.py:1273
+#: communication.py:1293
 #, python-format
 msgid ""
 "Dependency failure: communicationtype \"sftp\" requires python library "
@@ -330,36 +338,36 @@ msgid ""
 "%s"
 msgstr ""
 
-#: communication.py:1489
+#: communication.py:1509
 #, python-format
 msgid "Channel \"%s\" is type \"db\", but no communicationscript exists."
 msgstr ""
 
-#: communication.py:1492
+#: communication.py:1512
 msgid ""
 "No function \"connect\" in imported communicationscript "
 "\"$communicationscript\"."
 msgstr ""
 
-#: communication.py:1494
+#: communication.py:1514
 msgid ""
 "No function \"incommunicate\" in imported communicationscript "
 "\"$communicationscript\"."
 msgstr ""
 
-#: communication.py:1496
+#: communication.py:1516
 msgid ""
 "No function \"outcommunicate\" in imported communicationscript "
 "\"$communicationscript\"."
 msgstr ""
 
-#: communication.py:1498
+#: communication.py:1518
 msgid ""
 "No function \"disconnect\" in imported communicationscript "
 "\"$communicationscript\"."
 msgstr ""
 
-#: communication.py:1597
+#: communication.py:1617
 #, python-format
 msgid ""
 "Channel \"%s\" is type \"communicationscript\", but no communicationscript "
@@ -421,7 +429,7 @@ msgstr ""
 msgid "In enveloping \"frompartner\" or \"topartner\" unknown: \"$ta_info\"."
 msgstr ""
 
-#: envelope.py:333 outmessage.py:752
+#: envelope.py:333 outmessage.py:754
 msgid ""
 "Dependency failure: editype \"template\" requires python library \"kid\"."
 msgstr ""
@@ -438,7 +446,7 @@ msgid ""
 "$txt"
 msgstr ""
 
-#: envelope.py:369 outmessage.py:794
+#: envelope.py:369 outmessage.py:796
 msgid ""
 "Dependency failure: editype \"template\" requires python library \"genshi\"."
 msgstr ""
@@ -911,7 +919,7 @@ msgstr ""
 msgid "[E51]: Edifact file contains only whitespace."
 msgstr ""
 
-#: inmessage.py:721
+#: inmessage.py:721 preprocess.py:193
 msgid ""
 "[A54]: Edifact file with non-standard separators. UNA segment should be used."
 msgstr ""
@@ -1006,7 +1014,7 @@ msgstr ""
 msgid "[E12]: Count of segments in UNT is invalid: \"%(count)s\".\n"
 msgstr ""
 
-#: inmessage.py:854 preprocess.py:141
+#: inmessage.py:854 preprocess.py:142
 msgid "[A55]: Edi file contains only whitespace."
 msgstr ""
 
@@ -1463,11 +1471,11 @@ msgstr ""
 msgid "all"
 msgstr ""
 
-#: models.py:81 models.py:148 models.py:305
+#: models.py:81 models.py:148 models.py:322
 msgid "route"
 msgstr ""
 
-#: models.py:82 models.py:149 models.py:246
+#: models.py:82 models.py:149 models.py:263
 msgid "channel"
 msgstr "kanaal"
 
@@ -1634,159 +1642,175 @@ msgstr ""
 "inkomende edi-files; het is beter vaker te lezen dan alles in 1 keer te "
 "lezen."
 
-#: models.py:223
+#: models.py:217
+msgid "Private key file"
+msgstr ""
+
+#: models.py:217
+msgid "Path to file that contains PEM formatted private key."
+msgstr ""
+
+#: models.py:218
+msgid "Certificate chain file"
+msgstr ""
+
+#: models.py:218
+msgid "Path to file that contains PEM formatted certificate chain."
+msgstr ""
+
+#: models.py:225
 msgid "partner identification"
 msgstr "partner-identificatie"
 
-#: models.py:228
+#: models.py:230
 msgid "Multiple CC-addresses supported (comma-seperated)."
 msgstr "Meerdere CC-adressen kunnen gebruikt worden (gescheiden door komma)."
 
-#: models.py:245
+#: models.py:262
 msgid "partner"
 msgstr ""
 
-#: models.py:254 models.py:255
+#: models.py:271 models.py:272
 msgid "email address per channel"
 msgstr "email-adres per kanaal"
 
-#: models.py:261
+#: models.py:278
 msgid "Editype to translate from."
 msgstr ""
 
-#: models.py:262
+#: models.py:279
 msgid "Messagetype to translate from."
 msgstr ""
 
-#: models.py:263
+#: models.py:280
 msgid "Alternative translation"
 msgstr "Alt-waarde voor vertaling"
 
-#: models.py:263
+#: models.py:280
 msgid "Do this translation only for this alternative translation."
 msgstr "Deze vertaling alleen voor deze alt-waarde."
 
-#: models.py:264
+#: models.py:281
 msgid "Do this translation only for this frompartner."
 msgstr "Deze vertaling alleen voor deze van-partner"
 
-#: models.py:265
+#: models.py:282
 msgid "Do this translation only for this topartner."
 msgstr "Deze vertaling alleen voor deze naar-partner"
 
-#: models.py:266
+#: models.py:283
 msgid "User mappingscript to use for translation."
 msgstr "Mappingscript voor deze vertaling."
 
-#: models.py:267
+#: models.py:284
 msgid "Editype to translate to."
 msgstr "Editype waar naar vertaald wordt."
 
-#: models.py:268
+#: models.py:285
 msgid "Messagetype to translate to."
 msgstr "Berichttype waar naar vertaald wordt."
 
-#: models.py:274
+#: models.py:291
 msgid "translation"
 msgstr "vertaling"
 
-#: models.py:280
+#: models.py:297
 msgid ""
 "identification of route; one route can consist of multiple parts having the "
 "same \"idroute\"."
 msgstr ""
 
-#: models.py:281
+#: models.py:298
 msgid ""
 "for routes consisting of multiple parts, \"seq\" indicates the order these "
 "parts are run."
 msgstr ""
 
-#: models.py:283
+#: models.py:300
 msgid "incoming channel"
 msgstr "inkomend kanaal"
 
-#: models.py:284
+#: models.py:301
 msgid "the editype of the incoming edi files."
 msgstr "Het edi-type van de inkomende files."
 
-#: models.py:285
+#: models.py:302
 msgid ""
 "the messagetype of incoming edi files. For edifact: messagetype=edifact; for "
 "x12: messagetype=x12."
 msgstr ""
 
-#: models.py:286
+#: models.py:303
 msgid "outgoing channel"
 msgstr "uitgaand kanaal"
 
-#: models.py:287
+#: models.py:304
 msgid "Only edi files with this editype to this outgoing channel."
 msgstr "Alleen edi-files van dit edi-type via dit uit-kanaal."
 
-#: models.py:288
+#: models.py:305
 msgid "Only edi files of this messagetype to this outgoing channel."
 msgstr "Alleen edi-files van dit bericht-type via dit uit-kanaal."
 
-#: models.py:289
+#: models.py:306
 msgid ""
 "Only use if there is more than one \"translation\" for the same editype and "
 "messagetype."
 msgstr ""
 
-#: models.py:290
+#: models.py:307
 msgid "The frompartner of the incoming edi files."
 msgstr "Ken VanPartner toe aan het edi bestand. Zelden nodig."
 
-#: models.py:291
+#: models.py:308
 msgid "The topartner of the incoming edi files."
 msgstr "Ken NaarPartner toe aan het edi bestand. Zelden nodig."
 
-#: models.py:292
+#: models.py:309
 msgid "Only edi files from this partner/partnergroup for this outgoing channel"
 msgstr "Alleen edi-files afkomstig van deze partner via dit uit-kanaal"
 
-#: models.py:293
+#: models.py:310
 msgid "Only edi files to this partner/partnergroup to this channel"
 msgstr "Alleen edi-files bestemd voor deze partner via dit uit-kanaal"
 
-#: models.py:294
+#: models.py:311
 msgid "Only edi files with this testindicator to this outgoing channel."
 msgstr "Filter de berichten voor dit uitgaand kanaal op testindicatie."
 
-#: models.py:295
+#: models.py:312
 msgid "Indicates what to do with incoming files for this route(part)."
 msgstr "Wat te doen met inkomende file in route"
 
-#: models.py:296
+#: models.py:313
 msgid ""
 "Do not use this route in a normal run. Advanced, related to scheduling "
 "specific routes or not."
 msgstr ""
 
-#: models.py:300
+#: models.py:317
 msgid ""
 "Set ready for communication, but defer actual communication (this is done in "
 "another route)"
 msgstr ""
 
-#: models.py:301
+#: models.py:318
 msgid "Incoming zip-file handling"
 msgstr ""
 
-#: models.py:301
+#: models.py:318
 msgid "Received files are zipped."
 msgstr "Ontvangen file zijn gezipt"
 
-#: models.py:302
+#: models.py:319
 msgid "Outgoing zip-file handling"
 msgstr ""
 
-#: models.py:302
+#: models.py:319
 msgid "Send files as zip-files."
 msgstr "Files sturen als zip-bestand."
 
-#: models.py:440
+#: models.py:457
 msgid "counter"
 msgstr "teller"
 
@@ -1958,7 +1982,7 @@ msgstr ""
 msgid "Unknown editype for outgoing message: $editype"
 msgstr ""
 
-#: outmessage.py:110 outmessage.py:491 outmessage.py:829 outmessage.py:848
+#: outmessage.py:110 outmessage.py:491 outmessage.py:831 outmessage.py:850
 msgid "No outgoing message"
 msgstr "Er is geen uitgaand bestand"
 
@@ -2062,17 +2086,17 @@ msgid ""
 "not be used in content. Field: \"$data\"."
 msgstr ""
 
-#: outmessage.py:638
+#: outmessage.py:640
 msgid "[X52]: No field \"BOTSID\" in xml-output in: \"$record\""
 msgstr ""
 
-#: outmessage.py:761 outmessage.py:770 outmessage.py:804 outmessage.py:811
+#: outmessage.py:763 outmessage.py:772 outmessage.py:806 outmessage.py:813
 msgid ""
 "While templating \"$editype.$messagetype\", error:\n"
 "$txt"
 msgstr ""
 
-#: outmessage.py:771 outmessage.py:812
+#: outmessage.py:773 outmessage.py:814
 #, python-format
 msgid "End writing to file \"%s\"."
 msgstr ""
@@ -2140,7 +2164,7 @@ msgstr ""
 msgid "        Create directory \"%s\"."
 msgstr ""
 
-#: pluglib.py:249 preprocess.py:218 preprocess.py:247 preprocess.py:359
+#: pluglib.py:249 preprocess.py:236 preprocess.py:265 preprocess.py:377
 #, python-format
 msgid "        File written: \"%s\"."
 msgstr ""
@@ -2156,50 +2180,50 @@ msgstr ""
 msgid "Writing files to filesystem is OK."
 msgstr "Schrijven van bestanden is gelukt."
 
-#: preprocess.py:125
+#: preprocess.py:126
 msgid "[A56]: Found data not in a valid interchange at position $pos."
 msgstr ""
 
-#: preprocess.py:136
+#: preprocess.py:137
 msgid "[A57]: Edi file does not start with a valid interchange."
 msgstr ""
 
-#: preprocess.py:155
+#: preprocess.py:156
 msgid "[A59]: Non-valid ISA header at position $pos."
 msgstr ""
 
-#: preprocess.py:182
+#: preprocess.py:184
 msgid ""
 "[A50]: Non-valid UNA-segment at position $pos. UNA-segment should be 6 "
 "positions."
 msgstr ""
 
-#: preprocess.py:206
+#: preprocess.py:224
 msgid ""
 "[A58]: Found no valid envelope trailer in $editype file for envelope header "
 "at position $pos."
 msgstr ""
 
-#: preprocess.py:227 preprocess.py:232
+#: preprocess.py:245 preprocess.py:250
 msgid "File is not a zip-file."
 msgstr "Bestand is geen zip-bestand."
 
-#: preprocess.py:229
+#: preprocess.py:247
 msgid "\"pass_non_zip\" is True, just pass the file."
 msgstr ""
 
-#: preprocess.py:326
+#: preprocess.py:344
 msgid "PDF text extraction failed, it may contain just image(s)?"
 msgstr ""
 
-#: preprocess.py:362
+#: preprocess.py:380
 #, python-format
 msgid ""
 "PDF extraction failed, may not be a PDF file? Error:\n"
 "%s"
 msgstr ""
 
-#: preprocess.py:363
+#: preprocess.py:381
 msgid ""
 "PDF extraction failed, may not be a PDF file? Error:\n"
 "$error"
@@ -2225,7 +2249,9 @@ msgstr "Fout in automatic maintenance."
 
 #: router.py:94
 msgid "Route \"$route\" is empty: no routescript, not enough parameters."
-msgstr  "Route \"$route\" doet niets: geen route-script, er zijn onvoldoende parameters  en er is geen route-script."
+msgstr ""
+"Route \"$route\" doet niets: geen route-script, er zijn onvoldoende "
+"parameters  en er is geen route-script."
 
 #: transform.py:48
 #, python-format
@@ -2328,8 +2354,8 @@ msgid ""
 "Confirm send: %(confirmasked)s; confirmed: %(confirmed)s; confirmtype: "
 "%(confirmtype)s\n"
 msgstr ""
-"Bevestiging verzonden: %(confirmasked)s; bevestigd: %(confirmed)s; type bevestiging: "
-"%(confirmtype)s\n"
+"Bevestiging verzonden: %(confirmasked)s; bevestigd: %(confirmed)s; type "
+"bevestiging: %(confirmtype)s\n"
 
 #: views.py:25
 #, python-format
@@ -2467,8 +2493,8 @@ msgid ""
 "Trying to run \"bots-engine\", but another instance of \"bots-engine\" is "
 "running. Please try again later."
 msgstr ""
-"Probeer \"bots-engine\" te draaien, maar \"bots-engine\" draait al. "
-"Probeer later nogmaals."
+"Probeer \"bots-engine\" te draaien, maar \"bots-engine\" draait al. Probeer "
+"later nogmaals."
 
 #: views.py:572
 #, python-format
@@ -2500,8 +2526,8 @@ msgid ""
 "Trying to send test mail, but in bots.ini, section [settings], "
 "\"sendreportiferror\" is not \"True\"."
 msgstr ""
-"Wil een test rapport via mail versturen, maar in bots.ini, section [settings], "
-"\"sendreportiferror\" is niet \"True\"."
+"Wil een test rapport via mail versturen, maar in bots.ini, section "
+"[settings], \"sendreportiferror\" is niet \"True\"."
 
 #: views.py:592
 msgid "testsubject"
@@ -3107,4 +3133,3 @@ msgstr "Procesfouten"
 #: templates/bots/selectform.html:34
 msgid "Show selection"
 msgstr "Bekijk selectie"
-
