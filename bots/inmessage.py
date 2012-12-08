@@ -805,7 +805,7 @@ class edifact(var):
                 if message_received['unhtype'] == 'CONTRL': #do not generate CONTRL for a CONTRL message
                     continue
                 if botslib.checkconfirmrules('send-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
-                                                topartner=confirmation['sender'],frompartner=confirmation['receiver'],
+                                                frompartner=confirmation['sender'],topartner=confirmation['receiver'],
                                                 editype='edifact',messagetype=message_received['unhtype']):
                     tmpmessagelist.append(message_received)
             confirmation['UNHlist'] = tmpmessagelist
@@ -937,7 +937,7 @@ class x12(var):
             tmpmessagelist = []
             for message_received in confirmation['STlist']:
                 if botslib.checkconfirmrules('send-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
-                                                topartner=confirmation['sender'],frompartner=confirmation['receiver'],
+                                                frompartner=confirmation['sender'],topartner=confirmation['receiver'],
                                                 editype='x12',messagetype=message_received['stqualifier']):
                     tmpmessagelist.append(message_received)
             confirmation['STlist'] = tmpmessagelist
@@ -950,7 +950,7 @@ class x12(var):
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED,reference=reference)
             filename = str(ta_confirmation.idta)
             out = outmessage.outmessage_init(editype='x12',messagetype='997004010',filename=filename)    #make outmessage object
-            out.ta_info['frompartner'] = confirmation['receiver']
+            out.ta_info['frompartner'] = confirmation['receiver']   #sender and receiver are swapped for sending 997!
             out.ta_info['topartner'] = confirmation['sender']
             out.put({'BOTSID':'ST','ST01':'997','ST02':reference})
             out.put({'BOTSID':'ST'},{'BOTSID':'AK1','AK101':confirmation['gsqualifier'],'AK102':confirmation['gsreference']})

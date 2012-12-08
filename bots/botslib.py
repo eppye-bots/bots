@@ -543,7 +543,9 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
 #***************###############  misc.   #############
 #**********************************************************/**
 def checkconfirmrules(confirmtype,**kwargs):
-    terug = False       #boolean to return: ask a confirm of not?
+    confirm = False       #boolean to return: confirm of not?
+    #confirmrules are evaluated one by one; first the positive rules, than the negative rules.
+    #this make it possible to include first, than exclude. Eg: send for 'all', than exclude certain partners.
     for confirmdict in query(u'''SELECT ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,editype,messagetype,negativerule
                         FROM confirmrule
                         WHERE active=%(active)s
@@ -552,24 +554,24 @@ def checkconfirmrules(confirmtype,**kwargs):
                         ''',
                         {'active':True,'confirmtype':confirmtype}):
         if confirmdict['ruletype'] == 'all':
-            terug = not confirmdict['negativerule']
+            confirm = not confirmdict['negativerule']
         elif confirmdict['ruletype'] == 'route':
             if 'idroute' in kwargs and confirmdict['idroute'] == kwargs['idroute']:
-                terug = not confirmdict['negativerule']
+                confirm = not confirmdict['negativerule']
         elif confirmdict['ruletype'] == 'channel':
             if 'idchannel' in kwargs and confirmdict['idchannel'] == kwargs['idchannel']:
-                terug = not confirmdict['negativerule']
+                confirm = not confirmdict['negativerule']
         elif confirmdict['ruletype'] == 'frompartner':
             if 'frompartner' in kwargs and confirmdict['frompartner'] == kwargs['frompartner']:
-                terug = not confirmdict['negativerule']
+                confirm = not confirmdict['negativerule']
         elif confirmdict['ruletype'] == 'topartner':
             if 'topartner' in kwargs and confirmdict['topartner'] == kwargs['topartner']:
-                terug = not confirmdict['negativerule']
+                confirm = not confirmdict['negativerule']
         elif confirmdict['ruletype'] == 'messagetype':
             if 'editype' in kwargs and confirmdict['editype'] == kwargs['editype'] and 'messagetype' in kwargs and confirmdict['messagetype'] == kwargs['messagetype']:
-                terug = not confirmdict['negativerule']
-    #~ print '>>>>>>>>>>>>', terug,confirmtype,kwargs
-    return terug
+                confirm = not confirmdict['negativerule']
+        #~ print '>>>>>>>>>>>>', confirm,confirmtype,kwargs,confirmdict
+    return confirm
 
 class Uri(object):
     ''' generate uri from parts. '''

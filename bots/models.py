@@ -13,8 +13,8 @@ STATUST = [
     (4, _(u'Resend')),
     ]
 STATUS = [
-    (1,_(u'process')),
-    (3,_(u'discarded')),
+    (1,_(u'Process')),
+    (3,_(u'Discarded')),
     (200,_(u'Received')),
     (220,_(u'Infile')),
     (310,_(u'Parsed')),
@@ -77,28 +77,28 @@ CONFIRMTYPE = [
     ('send-edifact-CONTRL',_(u'send an edifact confirmation (CONTRL) when receiving')),
     ]
 RULETYPE = (
-    ('all',_(u'all')),
-    ('route',_(u'route')),
-    ('channel',_(u'channel')),
-    ('frompartner',_(u'frompartner')),
-    ('topartner',_(u'topartner')),
-    ('messagetype',_(u'messagetype')),
+    ('all',_(u'Confirm all incoming')),
+    ('route',_(u'Route')),
+    ('channel',_(u'Channel')),
+    ('frompartner',_(u'Frompartner')),
+    ('topartner',_(u'Topartner')),
+    ('messagetype',_(u'Messagetype')),
     )
 ENCODE_MIME = (
-    ('always',_(u'base64')),
-    ('never',_(u'never')),
-    ('ascii',_(u'base64 if not ascii')),
+    ('always',_(u'Base64')),
+    ('never',_(u'Never')),
+    ('ascii',_(u'Base64 if not ascii')),
     )
 EDI_AS_ATTACHMENT = (
-    ('attachment',_(u'edi file as attachment')),
-    ('body',_(u'edi file in body of email')),
+    ('attachment',_(u'As attachment')),
+    ('body',_(u'In body of email')),
     )
 ENCODE_ZIP_IN = (
-    (1,_(u'unzip always')),
-    (2,_(u'unzip if zip')),
+    (1,_(u'Always unzip file')),
+    (2,_(u'If zip-file: unzip')),
     )
 ENCODE_ZIP_OUT = (
-    (1,_(u'zip always')),
+    (1,_(u'Always zip')),
     )
 TRANSLATETYPES = (
     (0,_(u'Nothing')),
