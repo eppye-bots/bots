@@ -39,8 +39,6 @@ def start():
     if os.path.exists(join(botsdir,'config','settings.py')):    #use this to see if this is an existing installation
         print '    Found existing configuration files'
         print '        Configuration files bots.ini and settings.py not overwritten.'
-        #~ print '        Manual action is needed.'
-        print '        See bots wiki for more info.'
     else:
         shutil.copy(join(botsdir,'install','bots.ini'),join(botsdir,'config','bots.ini'))
         shutil.copy(join(botsdir,'install','settings.py'),join(botsdir,'config','settings.py'))
@@ -52,8 +50,9 @@ def start():
     sqlitedir = join(botsdir,'botssys','sqlitedb')
     if os.path.exists(join(sqlitedir,'botsdb')):    #use this to see if this is an existing installation
         print '    Found existing database file botssys/sqlitedb/botsdb'
-        #~ print '        Manual action is needed - there is a tool/program to update the database.'
-        print '        See bots wiki for more info.'
+        print '        Manual action is needed to convert the database to new bots 3.0 format.'
+        print '        There is a script to update the database.'
+        print '        See bots wiki for more info: http://code.google.com/p/bots/wiki/Migrate.'
     else:
         if not os.path.exists(sqlitedir):    #use this to see if this is an existing installation
             os.makedirs(sqlitedir)
@@ -89,7 +88,7 @@ def start():
 #***    shortcuts       *******************************************************
 #******************************************************************************
     scriptpath = join(sys.prefix,'Scripts')
-    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots2.2')
+    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots3.0')
     try:
         os.mkdir(shortcutdir)
     except: 
