@@ -13,8 +13,8 @@ ECHO build exe
 DEL /Q "C:\Users\hje\Documents\Bots\botsdev\setup.py"
 COPY /Y "C:\Users\hje\Documents\Bots\botsdev\setup_win.py" "C:\Users\hje\Documents\Bots\botsdev\setup.py"
 REM ~ c:\python26\python setup.py --quiet bdist_wininst  --target-version=2.6 --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=auto --bitmap=botslogo.bmp --title="Bots open source edi translator"
-c:\python27\python setup.py --quiet bdist_wininst   --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=force --bitmap=botslogo.bmp --title="Bots open source edi translator"
-REM c:\python27-64\python setup.py --quiet bdist_wininst   --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=force --bitmap=botslogo.bmp --title="Bots open source edi translator"
+REM c:\python27\python setup.py --quiet bdist_wininst   --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=force --bitmap=botslogo.bmp --title="Bots open source edi translator"
+c:\python27-64\python setup.py --quiet bdist_wininst   --install-script=postinstallation.py  --no-target-compile  --no-target-optimize  --user-access-control=force --bitmap=botslogo.bmp --title="Bots open source edi translator"
 
 
 REM COPY /Y "C:\Users\hje\Documents\Bots\botsdev\bots\install\settings.py"  "C:\Users\hje\Documents\Bots\botsdev\bots\config"
