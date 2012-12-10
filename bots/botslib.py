@@ -3,7 +3,7 @@ import sys
 import os
 import codecs
 import traceback
-import socket   #to set a time-out for connections
+import socket
 import string
 import urlparse
 import urllib
@@ -542,6 +542,21 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
 #**********************************************************/**
 #***************###############  misc.   #############
 #**********************************************************/**
+def check_if_other_engine_is_running():
+    ''' bots-engine always connects to 127.0.0.1 port 28081 (or port as set in bots.ini).
+        this  is a good way of detecting that another bots-engien is still running.
+        problem is avoided anyway if using jobqueueserver.
+    ''' 
+    try:
+        engine_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        port = botsglobal.ini.getint('settings','port',28081)
+        engine_socket.bind(('127.0.0.1', port))
+    except socket.error:
+        engine_socket.close()
+        raise
+    else:
+        return engine_socket
+
 def checkconfirmrules(confirmtype,**kwargs):
     confirm = False       #boolean to return: confirm of not?
     #confirmrules are evaluated one by one; first the positive rules, than the negative rules.
