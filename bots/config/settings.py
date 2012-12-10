@@ -1,7 +1,6 @@
 # Django settings for bots project.
 import os
 import bots
-import django
 PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 
 #*******settings for sending bots error reports via email**********************************
@@ -22,11 +21,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb'),
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
-        'OPTIONS': {},
+        'USER': '',         #not needed for SQLite
+        'PASSWORD': '',     #not needed for SQLite
+        'HOST': '',         #not needed for SQLite
+        'PORT': '',         #not needed for SQLite
+        'OPTIONS': {},      #not needed for SQLite
         }
     }
 #MySQL:
@@ -36,8 +35,7 @@ DATABASES = {
         #~ 'NAME': 'botsdb',
         #~ 'USER': 'bots',
         #~ 'PASSWORD': 'botsbots',
-        #~ 'HOST': '192.168.0.7',
-        #~ 'HOST': 'localhost',
+        #~ 'HOST': '127.0.0.1',
         #~ 'PORT': '3306',
         #~ 'OPTIONS': {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'},
         #~ }
@@ -49,7 +47,7 @@ DATABASES = {
         #~ 'NAME': 'botsdb',
         #~ 'USER': 'bots',
         #~ 'PASSWORD': 'botsbots',
-        #~ 'HOST': '192.168.0.7',
+        #~ 'HOST': '127.0.0.1',
         #~ 'PORT': '5432',
         #~ 'OPTIONS': {},
         #~ }
