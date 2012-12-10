@@ -1,5 +1,6 @@
 import os
 import sys
+import atexit
 import copy
 import inmessage
 import outmessage
@@ -154,6 +155,7 @@ def start():
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
     process_name = 'xml2botsgrammar'
     botsglobal.logger = botsinit.initenginelogging(process_name)
+    atexit.register(logging.shutdown)
     
     editype = 'xmlnocheck'
     messagetype = 'xmlnocheckxxxtemporaryforxml2grammar'
