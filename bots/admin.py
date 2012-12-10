@@ -115,7 +115,7 @@ admin.site.register(models.partner,PartnerAdmin)
 
 class RoutesAdmin(BotsAdmin):
     actions = ('activate',)
-    list_display = ('active','idroute','seq','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translateind','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','testindicator','notindefaultrun','zip_incoming','zip_outgoing')
+    list_display = ('active','idroute','seq','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','testindicator','notindefaultrun','zip_incoming','zip_outgoing')
     list_display_links = ('idroute',)
     list_filter = ('idroute','active','fromeditype')
     ordering = ('idroute','seq')

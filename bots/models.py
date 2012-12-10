@@ -324,6 +324,15 @@ class routes(models.Model):
         ordering = ['idroute','seq']
     def __unicode__(self):
         return unicode(self.idroute) + u' ' + unicode(self.seq)
+    def translt(self):
+        if self.translateind == 0:
+            return '<img alt="%s" src="/media/admin/img/icon-no.gif"></img>'%(self.get_translateind_display())
+        elif self.translateind == 1:
+            return '<img alt="%s" src="/media/admin/img/icon-yes.gif"></img>'%(self.get_translateind_display())
+        elif self.translateind == 2:
+            return '<img alt="%s" src="/media/admin/img/tooltag-arrowright_over.gif"></img>'%(self.get_translateind_display())
+    translt.allow_tags = True
+    translt.admin_order_field = 'translateind'
 
 #***********************************************************************************
 #******** written by engine ********************************************************
