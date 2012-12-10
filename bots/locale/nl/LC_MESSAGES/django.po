@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Bots Open Source EDI Translator 2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-07 00:43+0100\n"
+"POT-Creation-Date: 2012-12-10 18:28+0100\n"
 "PO-Revision-Date: 2010-05-26\n"
 "Last-Translator: hjebbers <hjebbers@gmail.com>\n"
 "Language-Team: Dutch <LL@li.org>\n"
@@ -210,26 +210,26 @@ msgstr ""
 msgid "Script file \"$filename\": \"$txt\"."
 msgstr ""
 
-#: botslib.py:585
+#: botslib.py:602
 msgid "No scheme in uri."
 msgstr ""
 
-#: botslib.py:604
+#: botslib.py:621
 msgid "Uri is empty."
 msgstr ""
 
-#: botsupdatedb.py:316 engine.py:91
+#: botsupdatedb.py:313 engine.py:88
 #, python-format
 msgid ""
 "Could not connect to database. Database settings are in bots/config/settings."
 "py. Error: \"%s\"."
 msgstr ""
 
-#: botsupdatedb.py:319 engine.py:94
+#: botsupdatedb.py:316 engine.py:91
 msgid "Connected to database."
 msgstr "Verbonden met database."
 
-#: botsupdatedb.py:326
+#: botsupdatedb.py:323
 msgid ""
 "!Bots database is locked!\n"
 "Bots-engine has ended in an unexpected way during the last run.\n"
@@ -379,7 +379,7 @@ msgstr ""
 msgid "Bots %s started."
 msgstr "Bots %s is gestart."
 
-#: engine.py:110
+#: engine.py:107
 msgid ""
 "!Bots database is locked!\n"
 "Bots did an integrity check on the database, but database was not OK.\n"
@@ -387,11 +387,11 @@ msgid ""
 "Bots has stopped processing EDI files."
 msgstr ""
 
-#: engine.py:115
+#: engine.py:112
 msgid "[Bots severe error]Database is damaged"
 msgstr "[Bots ernstige fout]Database is beschadigd"
 
-#: engine.py:117
+#: engine.py:114
 msgid ""
 "!Bots database is locked!\n"
 "Bots-engine has ended in an unexpected way during the last run.\n"
@@ -400,21 +400,21 @@ msgid ""
 "Bots will do an automatic crash recovery now."
 msgstr ""
 
-#: engine.py:122
+#: engine.py:119
 msgid "[Bots severe error]Database is locked"
 msgstr "[Bots ernstige fout]Database is vergrendeld"
 
-#: engine.py:146
+#: engine.py:143
 #, python-format
 msgid "Run active routes from database that are in default run: \"%s\"."
 msgstr ""
 
-#: engine.py:155
+#: engine.py:152
 #, python-format
 msgid "Run all active routes from database: \"%s\"."
 msgstr ""
 
-#: engine.py:161
+#: engine.py:158
 #, python-format
 msgid ""
 "Severe error in bots system:\n"
@@ -1259,12 +1259,12 @@ msgstr "Gedaan"
 msgid "Resend"
 msgstr "Herzend"
 
-#: models.py:16
-msgid "process"
-msgstr "proces"
+#: models.py:16 templates/bots/process.html:24
+msgid "Process"
+msgstr "Proces"
 
 #: models.py:17
-msgid "discarded"
+msgid "Discarded"
 msgstr ""
 
 #: models.py:18 templates/bots/confirm.html:22
@@ -1468,59 +1468,63 @@ msgid "send an edifact confirmation (CONTRL) when receiving"
 msgstr ""
 
 #: models.py:80
-msgid "all"
+msgid "Confirm all incoming"
 msgstr ""
 
-#: models.py:81 models.py:148 models.py:322
-msgid "route"
+#: models.py:81 templates/bots/confirm.html:21 templates/bots/detail.html:9
+#: templates/bots/document.html:22 templates/bots/filer.html:19
+#: templates/bots/incoming.html:24 templates/bots/outgoing.html:25
+#: templates/bots/process.html:20
+msgid "Route"
 msgstr ""
 
-#: models.py:82 models.py:149 models.py:263
-msgid "channel"
-msgstr "kanaal"
+#: models.py:82 templates/bots/detail.html:27 templates/bots/document.html:23
+msgid "Channel"
+msgstr "Kanaal"
 
 #: models.py:83
-msgid "frompartner"
+msgid "Frompartner"
 msgstr "VanPartner"
 
 #: models.py:84
-msgid "topartner"
+msgid "Topartner"
 msgstr "NaarPartner"
 
-#: models.py:85 templates/bots/filer.html:23
-msgid "messagetype"
-msgstr "berichttype"
+#: models.py:85 templates/bots/confirm.html:30 templates/bots/detail.html:18
+#: templates/bots/document.html:27 templates/bots/outgoing.html:34
+msgid "Messagetype"
+msgstr ""
 
 #: models.py:88
-msgid "base64"
+msgid "Base64"
 msgstr ""
 
 #: models.py:89
-msgid "never"
+msgid "Never"
 msgstr ""
 
 #: models.py:90
-msgid "base64 if not ascii"
+msgid "Base64 if not ascii"
 msgstr ""
 
 #: models.py:93
-msgid "edi file as attachment"
+msgid "As attachment"
 msgstr ""
 
 #: models.py:94
-msgid "edi file in body of email"
+msgid "In body of email"
 msgstr ""
 
 #: models.py:97
-msgid "unzip always"
+msgid "Always unzip file"
 msgstr ""
 
 #: models.py:98
-msgid "unzip if zip"
+msgid "If zip-file: unzip"
 msgstr ""
 
 #: models.py:101
-msgid "zip always"
+msgid "Always zip"
 msgstr ""
 
 #: models.py:104
@@ -1542,6 +1546,14 @@ msgstr ""
 #: models.py:134
 msgid "One or more e-mail address(es),separated by \",\"."
 msgstr ""
+
+#: models.py:148 models.py:322
+msgid "route"
+msgstr ""
+
+#: models.py:149 models.py:263
+msgid "channel"
+msgstr "kanaal"
 
 #: models.py:158
 msgid "confirm rule"
@@ -2488,7 +2500,12 @@ msgstr "    Backups van gebruikers-scripts zijn verwijderd (in usersys)."
 msgid "Finished deleting in configuration."
 msgstr "Configuratie verwijderd."
 
-#: views.py:566 views.py:567
+#: views.py:559
+#, python-format
+msgid "Run bots-engine with parameters: \"%s\""
+msgstr "Run bots-engine met parameters: \"%s\""
+
+#: views.py:564 views.py:565
 msgid ""
 "Trying to run \"bots-engine\", but another instance of \"bots-engine\" is "
 "running. Please try again later."
@@ -2496,23 +2513,14 @@ msgstr ""
 "Probeer \"bots-engine\" te draaien, maar \"bots-engine\" draait al. Probeer "
 "later nogmaals."
 
-#: views.py:572
-#, python-format
-msgid "Run bots-engine with parameters: \"%s\""
-msgstr "Run bots-engine met parameters: \"%s\""
-
-#: views.py:574
-msgid "Bots-engine is started."
-msgstr "Bots-engine is gestart."
-
-#: views.py:576
+#: views.py:573
 #, python-format
 msgid "Errors while trying to run bots-engine: \"%s\"."
 msgstr ""
 "Fouten tijden het starten van bots-engine:\n"
 "%s."
 
-#: views.py:577
+#: views.py:574
 #, python-format
 msgid ""
 "Errors while trying to run bots-engine:\n"
@@ -2521,7 +2529,11 @@ msgstr ""
 "Fouten tijden het starten van bots-engine:\n"
 "%s."
 
-#: views.py:586 views.py:587
+#: views.py:576
+msgid "Bots-engine is started."
+msgstr "Bots-engine is gestart."
+
+#: views.py:585 views.py:586
 msgid ""
 "Trying to send test mail, but in bots.ini, section [settings], "
 "\"sendreportiferror\" is not \"True\"."
@@ -2529,19 +2541,19 @@ msgstr ""
 "Wil een test rapport via mail versturen, maar in bots.ini, section "
 "[settings], \"sendreportiferror\" is niet \"True\"."
 
-#: views.py:592
+#: views.py:591
 msgid "testsubject"
 msgstr "test onderwerp"
 
-#: views.py:592
+#: views.py:591
 msgid "test content of report"
 msgstr "test rapport"
 
-#: views.py:595
+#: views.py:594
 msgid "Sending test mail failed."
 msgstr "Zenden van test rapportage mislukt."
 
-#: views.py:596
+#: views.py:595
 #, python-format
 msgid ""
 "Sending test mail failed, error:\n"
@@ -2550,7 +2562,7 @@ msgstr ""
 "Zenden van test rapportage mislukt, melding:\n"
 "%s"
 
-#: views.py:598 views.py:599
+#: views.py:597 views.py:598
 msgid "Sending test mail succeeded."
 msgstr "Zenden van test rapportage is gelukt."
 
@@ -2654,13 +2666,6 @@ msgstr "Bevestigd"
 msgid "Type"
 msgstr "Soort"
 
-#: templates/bots/confirm.html:21 templates/bots/detail.html:9
-#: templates/bots/document.html:22 templates/bots/filer.html:19
-#: templates/bots/incoming.html:24 templates/bots/outgoing.html:25
-#: templates/bots/process.html:20
-msgid "Route"
-msgstr ""
-
 #: templates/bots/confirm.html:23 templates/bots/detail.html:20
 #: templates/bots/document.html:24 templates/bots/incoming.html:29
 #: templates/bots/outgoing.html:29
@@ -2690,11 +2695,6 @@ msgstr "KanaalUit"
 #: templates/bots/confirm.html:29 templates/bots/detail.html:17
 #: templates/bots/document.html:26 templates/bots/outgoing.html:33
 msgid "Editype"
-msgstr ""
-
-#: templates/bots/confirm.html:30 templates/bots/detail.html:18
-#: templates/bots/document.html:27 templates/bots/outgoing.html:34
-msgid "Messagetype"
 msgstr ""
 
 #: templates/bots/confirm.html:31 templates/bots/detail.html:28
@@ -2752,10 +2752,6 @@ msgstr ""
 #: templates/bots/detail.html:24
 msgid "File"
 msgstr "Bestand"
-
-#: templates/bots/detail.html:27 templates/bots/document.html:23
-msgid "Channel"
-msgstr "Kanaal"
 
 #: templates/bots/detail.html:30 templates/bots/incoming.html:37
 #: templates/bots/reports.html:23
@@ -2829,6 +2825,10 @@ msgstr ""
 #: templates/bots/filer.html:22
 msgid "editype"
 msgstr ""
+
+#: templates/bots/filer.html:23
+msgid "messagetype"
+msgstr "berichttype"
 
 #: templates/bots/filer.html:24
 msgid "date"
@@ -3090,10 +3090,6 @@ msgstr "items"
 msgid "Read"
 msgstr "Gelezen"
 
-#: templates/bots/process.html:24
-msgid "Process"
-msgstr "Proces"
-
 #: templates/bots/reports.html:21
 msgid "#out"
 msgstr "#uit"
@@ -3133,3 +3129,6 @@ msgstr "Procesfouten"
 #: templates/bots/selectform.html:34
 msgid "Show selection"
 msgstr "Bekijk selectie"
+
+#~ msgid "process"
+#~ msgstr "proces"
