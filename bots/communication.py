@@ -86,8 +86,8 @@ class _comsession(object):
         if self.channeldict['inorout'] == 'out':
             #routes can have the same outchannel.
             #the different outchannels can be 'direct' or deferred (in route)
-            if self.command not in ['--automaticretrycommunication','--resend']: #for out-communicate: only precommunicate/mime if not retry.
-                self.precommunicate()
+            #~ if self.command not in ['automaticretrycommunication','resend']: #for out-communicate: only precommunicate/mime if not retry.
+            self.precommunicate()
             if self.countoutfiles() > 0: #for out-comm: send if something to send
                 self.connect()
                 self.outcommunicate()
