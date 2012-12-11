@@ -319,7 +319,6 @@ def start():
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
     if not botslib.set_database_lock():
-        #for SQLite: do a integrity check on the database
         warn =  _(u'!Bots database is locked!\n'\
                     'Bots-engine has ended in an unexpected way during the last run.\n'\
                     'Most likely causes: sudden power-down, system crash, problems with disk I/O, bots-engine terminated by user, etc.')
@@ -327,20 +326,12 @@ def start():
         sys.exit(3)
     atexit.register(botslib.remove_database_lock)
 
-    if hasattr(botsglobal.settings,'DATABASE_ENGINE'):
-        if botsglobal.settings.DATABASE_ENGINE == 'sqlite3':
-            terug = sqlite3()
-        elif botsglobal.settings.DATABASE_ENGINE == 'mysql':
-            terug = mysql()
-        elif botsglobal.settings.DATABASE_ENGINE == 'postgresql_psycopg2':
-            terug = postgresql_psycopg2()
-    elif hasattr(botsglobal.settings,'DATABASES'):
-        if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
-            terug = sqlite3()
-        elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
-            terug = mysql()
-        elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql_psycopg2':
-            terug = postgresql_psycopg2()
+    if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+        terug = sqlite3()
+    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+        terug = mysql()
+    elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql_psycopg2':
+        terug = postgresql_psycopg2()
     
     sys.exit(terug)
 
