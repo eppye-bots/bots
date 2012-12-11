@@ -50,6 +50,9 @@ def generalinit(configdir):
             settings = botslib.botsbaseimport(importnameforsettings)
     #settings are accessed using botsglobal
     botsglobal.settings = settings
+    if hasattr(botsglobal.settings,'DATABASE_ENGINE'):      #check for old django settings.py
+        print u'You use an old settings.py. Please change settings.py first. See migration instructions in wiki: http://code.google.com/p/bots/wiki/Migrate'
+        sys.exit(0)
     #Find pathname configdir using imported settings.py.
     configdirectory = os.path.abspath(os.path.dirname(settings.__file__))
 
