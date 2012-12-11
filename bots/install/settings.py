@@ -134,7 +134,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.admin',
     'django.contrib.messages',
-    #~ 'django.contrib.staticfiles',
     'bots',
     )
 TEMPLATE_CONTEXT_PROCESSORS = (
