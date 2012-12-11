@@ -220,7 +220,7 @@ class channel(models.Model):
         ordering = ['idchannel']
         db_table = 'channel'
     def __unicode__(self):
-        return self.idchannel
+        return self.idchannel + ' (' + self.type + ')'
 class partner(models.Model):
     idpartner = StripCharField(max_length=35,primary_key=True,verbose_name=_(u'partner identification'))
     active = models.BooleanField(default=False)
