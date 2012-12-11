@@ -1,6 +1,7 @@
 import sys
 import os
 import atexit
+import glob
 import logging
 import botsinit
 import botslib
@@ -13,7 +14,6 @@ def startmulti(grammardir,editype):
         grammardir: directory with gramars (eg bots/usersys/grammars/edifact)
         editype: eg edifact
     '''
-    import glob
     configdir = 'config'
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
     process_name = 'grammarcheck'
