@@ -732,7 +732,7 @@ class x12(Grammar):
         'stripfield_sep':True,
         'triad':'',
         'version':'00403',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with cr/lf.
         'ISA01':'00',
         'ISA02':'          ',
         'ISA03':'00',
