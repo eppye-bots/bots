@@ -6,6 +6,7 @@ import datetime
 import glob
 import shutil
 import fnmatch
+import zipfile
 if os.name == 'nt':
     import msvcrt
 elif os.name == 'posix':
