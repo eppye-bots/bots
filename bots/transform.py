@@ -17,7 +17,7 @@ from botsconfig import *
 #*******************************************************************************************************************
 #****** functions imported from other modules. reason: user scripting uses primary transform functions *************
 #*******************************************************************************************************************
-from botslib import addinfo,updateinfo,changestatustinfo,checkunique
+from botslib import addinfo,updateinfo,changestatustinfo,checkunique,changeq,sendbotsemail
 from envelope import mergemessages
 from communication import run
 
@@ -250,7 +250,7 @@ def ccode(ccodeid,leftcode,field='rightcode',safe=False):
         raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
 codetconversion = ccode
 
-def safe_ccode(ccodeid,leftcode,field='rightcode'):
+def safe_ccode(ccodeid,leftcode,field='rightcode'):   #depreciated, use ccode with safe=True
     ''' converts code using a db-table.
         converted value is returned, if not there return orginal code
     '''
@@ -274,7 +274,7 @@ def reverse_ccode(ccodeid,rightcode,field='leftcode',safe=False):
         raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=rightcode,table=ccodeid)
 rcodetconversion = reverse_ccode
 
-def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):
+def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):   #depreciated, use reverse_ccode with safe=True
     ''' as safe_ccode but reversed lookup.'''
     try:
         return reverse_ccode(ccodeid,rightcode,field)
