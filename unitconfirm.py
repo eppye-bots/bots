@@ -15,6 +15,11 @@ from bots.botsconfig import *
 plugin unitconfirm.zip
 active all routes
 before each run: clear transactions!
+
+tested is:
+- seperate unit tests
+- total expectation of whoel run
+- seperate unit-tests to check confirm-rules 
 '''
 
 botssys = 'bots/botssys'
@@ -199,6 +204,21 @@ class TestMain(unittest.TestCase):
                 break
         else:
             self.failUnless(counter!=0)
+
+    def testconfirmrulesdirect(self):
+        self.failUnless(True==botslib.checkconfirmrules('send-x12-997',idroute='idroute',idchannel='tochannel',topartner='topartner',frompartner='frompartner',editype='x12',messagetype='messagetype'))
+        self.failUnless(True==botslib.checkconfirmrules('send-x12-997',idroute='idroute',idchannel='tochannel',topartner='topartner',frompartner='frompartner',editype='x12',messagetype='justfortes'))
+        self.failUnless(True==botslib.checkconfirmrules('send-x12-997',idroute='idroute',idchannel='tochannel',topartner='topartner',frompartner='frompartner',editype='x12',messagetype='justfortest2'))
+        self.failUnless(False==botslib.checkconfirmrules('send-x12-997',idroute='idroute',idchannel='tochannel',topartner='topartner',frompartner='frompartner',editype='x12',messagetype='justfortest'))
+
+        self.failUnless(True==botslib.checkconfirmrules('send-email-MDN',idroute='idroute',idchannel='tochannel',topartner='topartner',frompartner='frompartner',editype='x12',messagetype='messagetype'))
+        self.failUnless(False==botslib.checkconfirmrules('send-email-MDN',idroute='otherx12',idchannel='tochannel',topartner='topartner',frompartner='frompartner',editype='x12',messagetype='messagetype'))
+        self.failUnless(False==botslib.checkconfirmrules('send-email-MDN',idroute='idroute',idchannel='mdn2_in',topartner='topartner',frompartner='frompartner',editype='x12',messagetype='messagetype'))
+        self.failUnless(False==botslib.checkconfirmrules('send-email-MDN',idroute='idroute',idchannel='tochannel',topartner='partnerunittest',frompartner='frompartner',editype='x12',messagetype='messagetype'))
+        self.failUnless(False==botslib.checkconfirmrules('send-email-MDN',idroute='idroute',idchannel='tochannel',topartner='topartner',frompartner='partnerunittest',editype='x12',messagetype='messagetype'))
+        self.failUnless(False==botslib.checkconfirmrules('send-email-MDN',idroute='otherx12',idchannel='mdn2_in',topartner='partnerunittest',frompartner='partnerunittest',editype='x12',messagetype='messagetype'))
+        self.failUnless(True==botslib.checkconfirmrules('send-email-MDN',idroute='otherx1',idchannel='mdn2_i',topartner='partnerunittes',frompartner='partnerunittes',editype='x12',messagetype='messagetype'))
+
 
 
 if __name__ == '__main__':

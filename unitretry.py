@@ -71,15 +71,15 @@ if __name__ == '__main__':
     #############route unitretry_automatic###################
     #channel has type file: this goes OK
     change_communication_type('unitretry_automatic_out','file')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
     #change channel type to ftp: errors (run twice)
     change_communication_type('unitretry_automatic_out','ftp')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
     #change channel type to file and do automaticretrycommunication: OK
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     utilsunit.comparedicts({'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0},utilsunit.getreportlastrun()) #check report
     #channel has type file: this goes OK
     change_communication_type('unitretry_automatic_out','file')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
     #rereceive last 2 files
@@ -110,22 +110,22 @@ if __name__ == '__main__':
     #***run with communciation errors, run OK, communciation errors, run OK, run automaticretry
     #change channel type to ftp: errors
     change_communication_type('unitretry_automatic_out','ftp')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
     #channel has type file: this goes OK
     change_communication_type('unitretry_automatic_out','file')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
     #change channel type to ftp: errors
     change_communication_type('unitretry_automatic_out','ftp')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
     #channel has type file: this goes OK
     change_communication_type('unitretry_automatic_out','file')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
     #change channel type to file and do automaticretrycommunication: OK
@@ -135,12 +135,12 @@ if __name__ == '__main__':
     utilsunit.comparedicts({'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0},utilsunit.getreportlastrun()) #check report
     #change channel type to ftp: errors
     change_communication_type('unitretry_automatic_out','ftp')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':1,'lastreceived':2,'lasterror':2,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':1},utilsunit.getreportlastrun()) #check report
     #channel has type file: this goes OK
     change_communication_type('unitretry_automatic_out','file')
-    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic'])     #run bots
+    subprocess.call([pythoninterpreter,'bots-engine.py','unitretry_automatic','unitretry_automatic3'])     #run bots
     botsglobal.db.commit()
     utilsunit.comparedicts({'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0},utilsunit.getreportlastrun()) #check report
     #change channel type to file and do automaticretrycommunication: OK
