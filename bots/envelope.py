@@ -270,7 +270,7 @@ class edifact(Envelope):
         tofile.close()
         if self.ta_info['messagetype'][:6] != 'CONTRL' and botslib.checkconfirmrules('ask-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
-                                                                                editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype']):
+                                                                                editype='edifact',messagetype=self.ta_info['messagetype']):
             self.ta_info['confirmtype'] = u'ask-edifact-CONTRL'
             self.ta_info['confirmasked'] = True
 
@@ -476,7 +476,7 @@ class x12(Envelope):
         tofile.close()
         if self.ta_info['functionalgroup'] != 'FA' and botslib.checkconfirmrules('ask-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
-                                                                                editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype']):
+                                                                                editype='x12',messagetype=self.ta_info['messagetype']):
             self.ta_info['confirmtype'] = u'ask-x12-997'
             self.ta_info['confirmasked'] = True
 
