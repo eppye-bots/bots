@@ -550,12 +550,12 @@ def runengine(request,*kw,**kwargs):
             lijst.append(request.GET['clparameter'])
             
         #either bots-engine is run directly or via jobqueue-server:
-        if botsglobal.ini.getboolean('jobqueue','enabled',False):   #run bots-engine via jobqueue-server
+        if botsglobal.ini.getboolean('jobqueue','enabled',False):   #run bots-engine via jobqueue-server; reports back if job is queued
             import job2queue
             terug = job2queue.send_job_to_jobqueue(lijst)
             messages.add_message(request, messages.INFO, job2queue.JOBQUEUEMESSAGE2TXT[terug])
             botsglobal.logger.info(job2queue.JOBQUEUEMESSAGE2TXT[terug])
-        else:                                                       #run bots-engine direct.
+        else:                                                       #run bots-engine direct.; reports back if bots-engien is started succesful. **not reported: problems with running.
             botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
             #first check if another instance of bots-engine is running/if port is free
             try:
