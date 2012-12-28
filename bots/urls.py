@@ -1,4 +1,5 @@
-from django.conf.urls.defaults import patterns,include
+from django.conf.urls.defaults import patterns,include   #depreciated in 1.5
+#~ from django.conf.urls import patterns,include           #does not work in django 1.3
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.contrib.auth.decorators import login_required,user_passes_test
