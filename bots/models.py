@@ -18,8 +18,8 @@ STATUS = [
     (200,_(u'Received')),
     (220,_(u'Infile')),
     (310,_(u'Parsed')),
-    (320,_(u'Split')),
-    (330,_(u'Translated')),
+    (320,_(u'Document-In')),
+    (330,_(u'Document-out')),
     (400,_(u'Merged')),
     (500,_(u'Outfile')),
     (520,_(u'Send')),
@@ -147,7 +147,7 @@ class confirmrule(models.Model):
     #~ idroute = models.ForeignKey('routes',null=True,blank=True,verbose_name='route')
     idroute = StripCharField(max_length=35,null=True,blank=True,verbose_name=_(u'route'))
     idchannel = models.ForeignKey('channel',null=True,on_delete=models.CASCADE,blank=True,verbose_name=_(u'channel'))
-    editype = StripCharField(max_length=35,choices=EDITYPES,blank=True)
+    editype = StripCharField(max_length=35,choices=EDITYPES,blank=True)         #20121229"is not used anymore.....editype is always clear from context.
     messagetype = StripCharField(max_length=35,blank=True,help_text=_(u'Eg "850004010" (x12) or "ORDERSD96AUN" (edifact).'))
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
@@ -169,9 +169,9 @@ class ccodetrigger(models.Model):
 class ccode(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     ccodeid = models.ForeignKey(ccodetrigger,on_delete=models.CASCADE,verbose_name=_(u'Type of user code'))
-    leftcode = StripCharField(max_length=35,db_index=True,help_text=_(u'Data value to translate from/to. Default translation is leftcode to rightcode, but can be reverse translated.'))
-    rightcode = StripCharField(max_length=70,db_index=True,help_text=_(u'Data value to translate from/to.'))
-    attr1 = StripCharField(max_length=70,blank=True,help_text=_(u'Optional translated data attributes, can not be translated from in reverse.'))
+    leftcode = StripCharField(max_length=35,db_index=True)
+    rightcode = StripCharField(max_length=35,db_index=True)
+    attr1 = StripCharField(max_length=35,blank=True)
     attr2 = StripCharField(max_length=35,blank=True)
     attr3 = StripCharField(max_length=35,blank=True)
     attr4 = StripCharField(max_length=35,blank=True)
@@ -199,13 +199,13 @@ class channel(models.Model):
     apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #20110104: used as 'no check on "to:" email address'
     remove = models.BooleanField(default=False,help_text=_(u"Delete incoming edi files after reading. Use this in production, else edi files are read over and over again."))
     path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both are used
-    filename = StripCharField(max_length=256,blank=True,help_text=_(u'Incoming: use wildcards eg: "*.edi". <br>Outgoing: many options, see <a target="_blank" href="http://code.google.com/p/bots/wiki/Filenames">wiki</a>. Advised: use "*" in filename (is replaced by unique counter per channel); eg "D_*.edi" gives D_1.edi, D_2.edi, etc.'))
+    filename = StripCharField(max_length=256,blank=True,help_text=_(u'Incoming: use wild-cards eg: "*.edi". <br>Outgoing: many options, see <a target="_blank" href="http://code.google.com/p/bots/wiki/Filenames">wiki</a>. Advised: use "*" in filename (is replaced by unique counter per channel); eg "D_*.edi" gives D_1.edi, D_2.edi, etc.'))
     lockname = StripCharField(max_length=35,blank=True,help_text=_(u'Use directory locking: when reading or writing edi files use this file to indicate directory lock.'))
     syslock = models.BooleanField(default=False,help_text=_(u'Use system file locking for reading or writing edi files (windows, *nix).'))
-    parameters = StripCharField(max_length=70,blank=True,help_text=_(u'For use in communicationscripting.'))
+    parameters = StripCharField(max_length=70,blank=True,help_text=_(u'For use in communication scripting.'))
     ftpaccount = StripCharField(max_length=35,blank=True,verbose_name=_(u'ftp account'),help_text=_(u'FTP account information; note that few systems implement this.'))
     ftpactive = models.BooleanField(default=False,verbose_name=_(u'ftp active mode'),help_text=_(u'Passive mode is used unless this is ticked.'))
-    ftpbinary = models.BooleanField(default=False,verbose_name=_(u'ftp binary transfer mode'),help_text=_(u'File transfers are ascii unless this is ticked.'))
+    ftpbinary = models.BooleanField(default=False,verbose_name=_(u'ftp binary transfer mode'),help_text=_(u'File transfers are ASCII unless this is ticked.'))
     askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'))     #20100703: used to indicate mime-encoding
     sendmdn = StripCharField(max_length=17,blank=True,choices=EDI_AS_ATTACHMENT,verbose_name=_(u'Edi file in email as'),help_text=_(u'Send edi-files in emails as attachment or in body?'))      #20120922: for email/mime: edi file as attachment or in body 
     mdnchannel = StripCharField(max_length=35,blank=True)           #not used anymore 20091019
@@ -227,7 +227,7 @@ class partner(models.Model):
     isgroup = models.BooleanField(default=False,help_text=_(u'Indicate if normal partner or a partner group. Partners can be assigned to partner groups.'))
     name = StripCharField(max_length=256) #only used for user information
     mail = StripCharField(max_length=256,blank=True)
-    cc = MultipleEmailField(max_length=256,blank=True,help_text=_(u'Multiple CC-addresses supported (comma-seperated).'))
+    cc = MultipleEmailField(max_length=256,blank=True,help_text=_(u'Multiple CC-addresses supported (comma-separated).'))
     mail2 = models.ManyToManyField(channel, through='chanpar',blank=True)
     group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
@@ -294,9 +294,9 @@ class translate(models.Model):
         return unicode(self.fromeditype) + u' ' + unicode(self.frommessagetype) + u' ' + unicode(self.alt) + u' ' + unicode(self.frompartner) + u' ' + unicode(self.topartner)
 class routes(models.Model):
     #~ id = models.IntegerField(primary_key=True)
-    idroute = StripCharField(max_length=35,db_index=True,help_text=_(u'Identification of route; a compostie route consists of multiple parts having the same "idroute".'))
+    idroute = StripCharField(max_length=35,db_index=True,help_text=_(u'Identification of route; a composite route consists of multiple parts having the same "idroute".'))
     seq = models.PositiveIntegerField(default=1,verbose_name=_(u'Sequence'),help_text=_(u'For routes consisting of multiple parts, this indicates the order these parts are run.'))
-    active = models.BooleanField(default=False,help_text=_(u'Only active routes are used when bots-engine runs.'))
+    active = models.BooleanField(default=False,help_text=_(u'Bots-engine only uses active routes.'))
     fromchannel = models.ForeignKey(channel,related_name='rfromchannel',null=True,on_delete=models.SET_NULL,blank=True,verbose_name=_(u'incoming channel'),limit_choices_to = {'inorout': 'in'},help_text=_(u'Receive edi files via this communication channel.'))
     fromeditype = StripCharField(max_length=35,choices=EDITYPES,blank=True,help_text=_(u'Editype of the incoming edi files.'))
     frommessagetype = StripCharField(max_length=35,blank=True,help_text=_(u'Messagetype of incoming edi files. For edifact: messagetype=edifact; for x12: messagetype=x12.'))
@@ -308,13 +308,13 @@ class routes(models.Model):
     topartner = models.ForeignKey(partner,related_name='rtopartner',null=True,on_delete=models.SET_NULL,blank=True,limit_choices_to = {'isgroup': False},help_text=_(u'The topartner of the incoming edi files.'))
     frompartner_tochannel = models.ForeignKey(partner,related_name='rfrompartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Filter edi files of this partner/partnergroup for outgoing channel'))
     topartner_tochannel = models.ForeignKey(partner,related_name='rtopartner_tochannel',null=True,on_delete=models.PROTECT,blank=True,help_text=_(u'Filter edi files of this partner/partnergroup for outgoing channel'))
-    testindicator = StripCharField(max_length=1,blank=True,help_text=_(u'Filter edi files with this testindicator for outgoing channel.'))
+    testindicator = StripCharField(max_length=1,blank=True,help_text=_(u'Filter edi files with this test-indicator for outgoing channel.'))
     translateind = models.IntegerField(default=1,choices=TRANSLATETYPES,verbose_name='translate',help_text=_(u'Indicates what to do with incoming files for this route(part).'))
     notindefaultrun = models.BooleanField(default=False,blank=True,verbose_name=_(u'Not in default run'),help_text=_(u'Do not use this route in a normal run. Advanced, related to scheduling specific routes or not.'))
     desc = models.TextField(max_length=256,null=True,blank=True,verbose_name=_(u'Description'))
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501 
     rsrv2 = models.IntegerField(null=True,blank=True)           #added 20100501
-    defer = models.BooleanField(default=False,blank=True,help_text=_(u'Set ready for communication, defer actual communication. Communcation is done later in another route(-part).'))                        #added 20100601
+    defer = models.BooleanField(default=False,blank=True,help_text=_(u'Set ready for communication, defer actual communication. Communication is done later in another route(-part).'))                        #added 20100601
     zip_incoming = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Unzip received files.'))  #added 20100501 #20120828: use for zip-options
     zip_outgoing = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Send files as zip-files.'))                        #added 20100501
     class Meta:

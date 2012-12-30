@@ -10,7 +10,7 @@ import botsglobal
 
 
 class BotsAdmin(admin.ModelAdmin):
-    ''' all classes in this module arre sub-classed from BotsAdmin.
+    ''' all classes in this module are sub-classed from BotsAdmin.
     '''
     list_per_page = botsglobal.ini.getint('settings','adminlimit',botsglobal.ini.getint('settings','limit',30))
     save_as = True
@@ -28,6 +28,12 @@ class CcodeAdmin(BotsAdmin):
     list_filter = ('ccodeid',)
     ordering = ('ccodeid','leftcode')
     search_fields = ('ccodeid__ccodeid','leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8')
+    fieldsets = (
+        (None, {'fields': ('ccodeid','leftcode','rightcode','attr1','attr2','attr3','attr4','attr5','attr6','attr7','attr8'),
+                'description': 'For description of user code lists and usage in mapping: see <a target="_blank" href="http://code.google.com/p/bots/wiki/MappingCcode">wiki</a>.',
+                'classes': ('wide extrapretty',)
+               }),
+        )
     def lookup_allowed(self, lookup, *args, **kwargs):
         if lookup.startswith('ccodeid'):
             return True
