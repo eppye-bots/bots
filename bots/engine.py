@@ -153,7 +153,7 @@ def start():
             errorinrun += router.rundispatcher(command,use_routestorun)
             if userscript and hasattr(userscript,'post' + command):
                 botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
-        cleanup.cleanup(do_cleanup_parameter)
+        cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception,msg:
         botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(msg))    #of course this 'should' not happen.
         sys.exit(1)

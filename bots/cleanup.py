@@ -11,11 +11,12 @@ import botsglobal
 #~ from botsconfig import *
 
 
-def cleanup(do_cleanup_parameter):
+def cleanup(do_cleanup_parameter,userscript,scriptname):
     ''' public function, does all cleanup of the database and file system.
         most cleanup functions are by default done only once a day.
     '''
-    if botsglobal.ini.get('settings','whencleanup','always')=='always':
+    whencleanup = botsglobal.ini.get('settings','whencleanup','always')
+    if whencleanup in ['always','daily']:
         #perform full cleanup only first run of the day.
         cur_day = int(time.strftime('%Y%m%d'))    #get current date, convert to int
         if cur_day != botslib.uniquecore('bots_cleanup_day',updatewith=cur_day):
@@ -34,9 +35,13 @@ def cleanup(do_cleanup_parameter):
             _cleanpersist()
             _cleantransactions()
             _vacuum()
-        _cleanrunsnothingreceived()          #do this every run
-        botsglobal.logger.info(u'Done cleanup.')
-    except:
+            botsglobal.logger.info(u'Done full cleanup.')
+            # postcleanup user exit in botsengine script
+            if userscript and hasattr(userscript,'postcleanup'):
+                botsglobal.logger.info(u'User exit postcleanup')
+                botslib.runscript(userscript,scriptname,'postcleanup',whencleanup=whencleanup)
+        _cleanrunsnothingreceived()          #do this every run, but not logged
+   except:
         botsglobal.logger.exception(u'Cleanup error.')
 
 
