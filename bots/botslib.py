@@ -561,7 +561,7 @@ def checkconfirmrules(confirmtype,**kwargs):
     confirm = False       #boolean to return: confirm of not?
     #confirmrules are evaluated one by one; first the positive rules, than the negative rules.
     #this make it possible to include first, than exclude. Eg: send for 'all', than exclude certain partners.
-    for confirmdict in query(u'''SELECT ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,editype,messagetype,negativerule
+    for confirmdict in query(u'''SELECT ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,messagetype,negativerule
                         FROM confirmrule
                         WHERE active=%(active)s
                         AND confirmtype=%(confirmtype)s
@@ -583,7 +583,7 @@ def checkconfirmrules(confirmtype,**kwargs):
             if 'topartner' in kwargs and confirmdict['topartner'] == kwargs['topartner']:
                 confirm = not confirmdict['negativerule']
         elif confirmdict['ruletype'] == 'messagetype':
-            if 'editype' in kwargs and confirmdict['editype'] == kwargs['editype'] and 'messagetype' in kwargs and confirmdict['messagetype'] == kwargs['messagetype']:
+            if 'messagetype' in kwargs and confirmdict['messagetype'] == kwargs['messagetype']:
                 confirm = not confirmdict['negativerule']
         #~ print '>>>>>>>>>>>>', confirm,confirmtype,kwargs,confirmdict
     return confirm

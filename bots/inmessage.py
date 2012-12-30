@@ -658,7 +658,7 @@ class edifact(var):
     ''' class for edifact inmessage objects.'''
     @staticmethod
     def _manipulatemessagetype(messagetype,inode):
-        ''' default: just return messgetype. ''' 
+        ''' default: just return messagetype. ''' 
         return messagetype.replace('.','_')      #older edifact messages have eg 90.1 as version...does not match with python imports...so convert this
 
     def _readcontent_edifile(self):
@@ -778,6 +778,11 @@ class edifact(var):
                 except:
                     self.add2errorlist(_(u'[E09]: Groupcount in UNE is invalid: "%(count)s".\n')%{'count':unecount})
                 for nodeunh in nodeung.getloop({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
+                    unhtype = nodeunh.get({'BOTSID':'UNH','S009.0065':None})
+                    unhversion = nodeunh.get({'BOTSID':'UNH','S009.0052':None})
+                    unhrelease = nodeunh.get({'BOTSID':'UNH','S009.0054':None})
+                    unhcontrollingagency = nodeunh.get({'BOTSID':'UNH','S009.0051':None})
+                    unhassociationassigned = nodeunh.get({'BOTSID':'UNH','S009.0057':None})
                     unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                     untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                     if unhreference and untreference and unhreference != untreference:
@@ -789,6 +794,7 @@ class edifact(var):
                             self.add2errorlist(_(u'[E11]: Segmentcount in UNT is %(untcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'untcount':untcount,'segmentcount':segmentcount})
                     except:
                         self.add2errorlist(_(u'[E12]: Count of segments in UNT is invalid: "%(count)s".\n')%{'count':untcount})
+                    self.confirmationlist[-1]['UNHlist'].append({'unhreference':unhreference,'unhtype':unhtype,'unhversion':unhversion,'unhrelease':unhrelease,'unhcontrollingagency':unhcontrollingagency,'unhassociationassigned':unhassociationassigned})   #add info per message to interchange
             botsglobal.logmap.debug(u'Parsing edifact envelopes is OK')
 
     def handleconfirm(self,ta_fromfile,error):
@@ -802,11 +808,16 @@ class edifact(var):
         for confirmation in self.confirmationlist:
             tmpmessagelist = []
             for message_received in confirmation['UNHlist']:
-                if message_received['unhtype'] == 'CONTRL': #do not generate CONTRL for a CONTRL message
+                if message_received['unhtype'] in ['CONTRL','APERAK']: #do not generate CONTRL for a CONTRL or APERAK message
                     continue
+                #gather full messagetype:
+                messagetype = ''
+                for key in ['unhtype','unhversion','unhrelease','unhcontrollingagency','unhassociationassigned']:
+                    if message_received[key]:
+                        messagetype += message_received[key]
                 if botslib.checkconfirmrules('send-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
                                                 frompartner=confirmation['sender'],topartner=confirmation['receiver'],
-                                                editype='edifact',messagetype=message_received['unhtype']):
+                                                editype='edifact',messagetype=messagetype):
                     tmpmessagelist.append(message_received)
             confirmation['UNHlist'] = tmpmessagelist
             if not tmpmessagelist: #if no messages/transactions in interchange
@@ -895,6 +906,7 @@ class x12(var):
                 receiver = nodegs.get({'BOTSID':'GS','GS03':None})
                 gsqualifier = nodegs.get({'BOTSID':'GS','GS01':None})
                 gsreference = nodegs.get({'BOTSID':'GS','GS06':None})
+                gsversion = nodegs.get({'BOTSID':'GS','GS08':None})
                 gereference = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
                 if gsreference and gereference and gsreference != gereference:
                     self.add2errorlist(_(u'[E16]: GS-reference is "%(gsreference)s"; should be equal to GE-reference "%(gereference)s".\n')%{'gsreference':gsreference,'gereference':gereference})
@@ -920,7 +932,7 @@ class x12(var):
                             self.add2errorlist(_(u'[E20]: Count in SE-SE01 is %(secount)s; should be equal to number of segments %(segmentcount)s.\n')%{'secount':secount,'segmentcount':segmentcount})
                     except:
                         self.add2errorlist(_(u'[E21]: Count of segments in SE is invalid: "%(count)s".\n')%{'count':secount})
-                    self.confirmationlist[-1]['STlist'].append({'streference':streference,'stqualifier':stqualifier})   #add info per message to functional group
+                    self.confirmationlist[-1]['STlist'].append({'streference':streference,'stqualifier':stqualifier,'gsversion':gsversion})   #add info per message to functional group
             botsglobal.logmap.debug(u'Parsing X12 envelopes is OK')
 
     def handleconfirm(self,ta_fromfile,error):
@@ -936,9 +948,14 @@ class x12(var):
                 continue
             tmpmessagelist = []
             for message_received in confirmation['STlist']:
+                #gather full messagetype:
+                messagetype = ''
+                for key in ['stqualifier','gsversion']:
+                    if message_received[key]:
+                        messagetype += message_received[key]
                 if botslib.checkconfirmrules('send-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
                                                 frompartner=confirmation['sender'],topartner=confirmation['receiver'],
-                                                editype='x12',messagetype=message_received['stqualifier']):
+                                                editype='x12',messagetype=messagetype):
                     tmpmessagelist.append(message_received)
             confirmation['STlist'] = tmpmessagelist
             if not tmpmessagelist: #if no messages/transactions in GS-GE
