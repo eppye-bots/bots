@@ -170,8 +170,8 @@ class ccode(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     ccodeid = models.ForeignKey(ccodetrigger,on_delete=models.CASCADE,verbose_name=_(u'Type of user code'))
     leftcode = StripCharField(max_length=35,db_index=True)
-    rightcode = StripCharField(max_length=35,db_index=True)
-    attr1 = StripCharField(max_length=35,blank=True)
+    rightcode = StripCharField(max_length=70,db_index=True)
+    attr1 = StripCharField(max_length=70,blank=True)
     attr2 = StripCharField(max_length=35,blank=True)
     attr3 = StripCharField(max_length=35,blank=True)
     attr4 = StripCharField(max_length=35,blank=True)

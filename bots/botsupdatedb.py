@@ -138,6 +138,9 @@ def postgresql_psycopg2():
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''')
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "keyfile" VARCHAR(256) ''')
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "certfile" VARCHAR(256) ''')
+        #ccode ****************************************
+        cursor.execute('''ALTER TABLE "ccode" ALTER COLUMN "rightcode" TYPE VARCHAR(70)''')
+        cursor.execute('''ALTER TABLE "ccode" ALTER COLUMN "attr1" TYPE VARCHAR(70)''')
         #filereport ****************************************
         cursor.execute('''ALTER TABLE "filereport" DROP CONSTRAINT "filereport_pkey" ''')      #remove primary key
         cursor.execute('''ALTER TABLE "filereport" DROP CONSTRAINT "filereport_idta_key" ''')  #drop contraint UNIQUE(idta, reportidta)
@@ -203,10 +206,13 @@ def mysql():
     cursor = botsglobal.db.cursor()
     try:
         #channel ****************************************
-        cursor.execute('''ALTER TABLE `channel` MODIFY `filename` varchar(256) NOT NULL''')
+        cursor.execute('''ALTER TABLE `channel` MODIFY `filename` VARCHAR(256) NOT NULL''')
         cursor.execute('''ALTER TABLE `channel` ADD COLUMN `rsrv3` INTEGER DEFAULT 0''')
         cursor.execute('''ALTER TABLE `channel` ADD COLUMN `keyfile` VARCHAR(256) ''')
         cursor.execute('''ALTER TABLE `channel` ADD COLUMN `certfile` VARCHAR(256) ''')
+        #ccode ****************************************
+        cursor.execute('''ALTER TABLE `ccode` MODIFY `rightcode` VARCHAR(70)''')
+        cursor.execute('''ALTER TABLE `ccode` MODIFY `attr1` VARCHAR(70)''')
         #filereport ****************************************
         cursor.execute('''ALTER TABLE `filereport` CHANGE `id` `id` INTEGER ''')    #drop autoincrement
         cursor.execute('''ALTER TABLE `filereport` DROP PRIMARY KEY ''')            #drop index on id
