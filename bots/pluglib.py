@@ -324,7 +324,7 @@ def plugout_database(cleaned_data):
     #serialize database objects
     orgplugs = serializers.serialize("python", db_objects)
     #write serialized objects to str/buffer
-    tmpbotsindex = u'import datetime\nversion = 2\nplugins = [\n'
+    tmpbotsindex = [u'import datetime','version = 2','plugins = [']
     for plug in orgplugs:
         app,tablename = plug['model'].split('.',1)
         plug['fields']['plugintype'] = tablename
@@ -332,11 +332,10 @@ def plugout_database(cleaned_data):
         pk = table._meta.pk.name
         if pk != 'id':
             plug['fields'][pk] = plug['pk']
-        tmpbotsindex += plugout_database_entry_as_string(plug['fields'])
-        #~ tmpbotsindex += repr(plug['fields']) + u',\n'
+        tmpbotsindex.append(plugout_database_entry_as_string(plug['fields']))
         #check confirmrule: id is non-artifical key?
-    tmpbotsindex += u']\n'
-    return tmpbotsindex
+    tmpbotsindex.append(u']\n')
+    return '\n'.join(tmpbotsindex)
 
 def plugout_database_entry_as_string(plugdict):
     ''' a bit like repr() for a dict, but:
@@ -347,7 +346,7 @@ def plugout_database_entry_as_string(plugdict):
     terug += repr('plugintype') + ': ' + repr(plugdict.pop('plugintype'))
     for key in sorted(plugdict):
         terug += ', ' + repr(key) + ': ' + repr(plugdict[key])
-    terug += u'},\n'
+    terug += u'},'
     return terug
 
 def plugout_files(cleaned_data):
