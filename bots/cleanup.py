@@ -15,16 +15,16 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
     ''' public function, does all cleanup of the database and file system.
         most cleanup functions are by default done only once a day.
     '''
-    whencleanup = botsglobal.ini.get('settings','whencleanup','always')
-    if whencleanup in ['always','daily']:
+    whencleanup = botsglobal.ini.get('settings','whencleanup','daily')
+    if do_cleanup_parameter:  #if explicit indicated via commandline parameter 
+        do_full_cleanup = True
+    elif whencleanup in ['always','daily']:
         #perform full cleanup only first run of the day.
         cur_day = int(time.strftime('%Y%m%d'))    #get current date, convert to int
         if cur_day != botslib.uniquecore('bots_cleanup_day',updatewith=cur_day):
             do_full_cleanup = True
         else:
             do_full_cleanup = False
-    elif do_cleanup_parameter:  #if explicit indicated via commandline parameter 
-        do_full_cleanup = True
     else:
         do_full_cleanup = False
     try:
