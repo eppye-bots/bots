@@ -324,7 +324,7 @@ def plugout_database(cleaned_data):
     #serialize database objects
     orgplugs = serializers.serialize("python", db_objects)
     #write serialized objects to str/buffer
-    tmpbotsindex = [u'import datetime','version = 2','plugins = [']
+    tmpbotsindex = [u'import datetime','version = ' + botsglobal.version,'plugins = [']
     for plug in orgplugs:
         app,tablename = plug['model'].split('.',1)
         plug['fields']['plugintype'] = tablename
