@@ -60,7 +60,7 @@ def start():
             sys.exit(0)
         else:   #pick up names of routes to run
             routestorun.append(arg)
-    if not commandstorun:   #if no command on command line, use new (default)
+    if not commandstorun and not do_cleanup_parameter:   #if no command on command line, use new (default)
         commandstorun = ['--new']
     commandstorun = [command[2:] for command in commandspossible if command in commandstorun]   #sort commands
     #***end handling command line arguments**************************
