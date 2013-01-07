@@ -41,7 +41,7 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
                 botsglobal.logger.info(u'User exit postcleanup')
                 botslib.runscript(userscript,scriptname,'postcleanup',whencleanup=whencleanup)
         _cleanrunsnothingreceived()          #do this every run, but not logged
-   except:
+    except:
         botsglobal.logger.exception(u'Cleanup error.')
 
 
