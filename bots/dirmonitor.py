@@ -207,7 +207,7 @@ def start():
                 if current_time - last_time >= timeout:  #cond.wait returned probably because of a timeout
                     try:
                         for task in tasks:
-                            logger.info(u'Send to queue "%s %s".',botsenginepath,'-c' + configdir,task)
+                            logger.info(u'Send to queue "%s %s %s".',botsenginepath,'-c' + configdir,task)
                             job2queue.send_job_to_jobqueue([sys.executable,botsenginepath,'-c' + configdir,task])
                     except Exception, msg:
                         logger.info(u'Error in running task: "%s".',msg)
