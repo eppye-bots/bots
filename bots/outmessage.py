@@ -531,12 +531,12 @@ class xml(Outmessage):
         self._closewrite()
 
     def _xmlcorewrite(self,xmltree,root):
-        if sys.version >= '2.7.0' and self.ta_info['namespace_prefixes']:   # Register any namespace prefixes specified in syntax
+        if sys.version_info[1] >= 7 and self.ta_info['namespace_prefixes']:   # Register any namespace prefixes specified in syntax
             for eachns in self.ta_info['namespace_prefixes']:
                 ET.register_namespace(eachns[0], eachns[1])        
         #xml prolog: always use.*********************************
         #standalone, DOCTYPE, processing instructions: only possible in python >= 2.7 or if encoding is utf-8/ascii
-        if sys.version >= '2.7.0' or self.ta_info['charset'] in ['us-ascii','utf-8'] or ET.VERSION >= '1.3.0':
+        if sys.version_info[1] >= 7 or self.ta_info['charset'] in ['us-ascii','utf-8'] or ET.VERSION >= '1.3.0':
             if self.ta_info['indented']:
                 indentstring = '\n'
             else:
@@ -559,7 +559,7 @@ class xml(Outmessage):
         if self.ta_info['indented']:
             self._botsindent(root)
         #write tree to file; this is differnt for different python/elementtree versions
-        if sys.version < '2.7.0' and ET.VERSION < '1.3.0':
+        if sys.version_info[1] < 7 and ET.VERSION < '1.3.0':
             xmltree.write(self._outstream,encoding=self.ta_info['charset'])
         else:
             xmltree.write(self._outstream,encoding=self.ta_info['charset'],xml_declaration=False)
