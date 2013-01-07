@@ -32,7 +32,7 @@ class new(object):
             return 0
         for route in self.routestorun:
             foundroute = False
-            for routedict in botslib.query('''SELECT idroute     ,
+            for row in botslib.query('''SELECT idroute     ,
                                                      fromchannel_id as fromchannel,
                                                      tochannel_id as tochannel,
                                                      fromeditype,
@@ -55,6 +55,8 @@ class new(object):
                                             AND active=%(active)s
                                             ORDER BY seq''',
                                             {'idroute':route,'active':True}):
+                routedict = dict(row)   #convert to real dictionary (as self.command is added to routedict)
+                routedict['command'] = self.command
                 botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),{'idroute':routedict['idroute'],'seq':routedict['seq']})
                 botslib.setrouteid(routedict['idroute'])
                 foundroute = True
@@ -98,7 +100,7 @@ class new(object):
         #communication.run incoming channel
         if routedict['fromchannel']:     #do incoming part of route: in-communication;
             botslib.tryrunscript(userscript,scriptname,'preincommunication',routedict=routedict)
-            communication.run(idchannel=routedict['fromchannel'],command=self.command,idroute=routedict['idroute'])  #communication.run incommunication
+            communication.run(idchannel=routedict['fromchannel'],command=routedict['command'],idroute=routedict['idroute'])  #communication.run incommunication
             #add attributes from route to the received files
             where = {'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute']}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
@@ -161,7 +163,7 @@ class new(object):
                 botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
                 if routedict['zip_outgoing'] == 1:               #zip outgoing.
                     preprocess.postprocess(routedict=routedict,function=preprocess.botszip)
-                communication.run(idchannel=routedict['tochannel'],command=self.command,idroute=routedict['idroute'])
+                communication.run(idchannel=routedict['tochannel'],command=routedict['command'],idroute=routedict['idroute'])
                 #in communication several things can go wrong.
                 #but: ALL file ready for communication should have same status etc; this way all recomnnunication can be handled same way:
                 # status EXTERNOUT statust DONE (if communication goes OK)
