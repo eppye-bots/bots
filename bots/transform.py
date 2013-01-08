@@ -69,8 +69,8 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                     inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
                     while 1:    #continue as long as there are (alt-)translations
                         #***lookup the translation
-                        tscript,toeditype,tomessagetype = lookup_translation(editype=inn_splitup.ta_info['editype'],
-                                                                            messagetype=inn_splitup.ta_info['messagetype'],
+                        tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=inn_splitup.ta_info['editype'],
+                                                                            frommessagetype=inn_splitup.ta_info['messagetype'],
                                                                             frompartner=inn_splitup.ta_info['frompartner'],
                                                                             topartner=inn_splitup.ta_info['topartner'],
                                                                             alt=inn_splitup.ta_info['alt'])
@@ -153,38 +153,6 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             botsglobal.logger.debug(_(u'translated input file "%s".'),row['filename'])
         finally:
             ta_fromfile.update(statust=DONE)
-
-
-
-def lookup_translation(frommessagetype,fromeditype,alt,frompartner,topartner):
-    ''' lookup the translation: frommessagetype,fromeditype,alt,frompartner,topartner -> mappingscript, tomessagetype, toeditype
-    '''
-    for row2 in botslib.query(u'''SELECT tscript,tomessagetype,toeditype
-                                FROM translate
-                                WHERE frommessagetype = %(frommessagetype)s
-                                AND fromeditype = %(fromeditype)s
-                                AND active=%(booll)s
-                                AND alt=%(alt)s
-                                AND (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
-                                                                                                                        FROM partnergroup
-                                                                                                                        WHERE from_partner_id=%(frompartner)s ))
-                                AND (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
-                                                                                                                FROM partnergroup
-                                                                                                                WHERE from_partner_id=%(topartner)s ))
-                                ORDER BY alt DESC,
-                                         CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id ,
-                                         CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
-                                {'frommessagetype':frommessagetype,
-                                 'fromeditype':fromeditype,
-                                 'alt':alt,
-                                 'frompartner':frompartner,
-                                 'topartner':topartner,
-                                'booll':True}):
-        return row2['tscript'],row2['toeditype'],row2['tomessagetype']
-        #translation is found; only the first one is used - this is what the ORDER BY in the query takes care of
-    else:       #no translation found in translate table
-        return None,None,None
-
 
 #*********************************************************************
 #*** utily functions for persist: store things in the bots database.

@@ -542,6 +542,36 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
 #**********************************************************/**
 #***************###############  misc.   #############
 #**********************************************************/**
+def lookup_translation(frommessagetype,fromeditype,alt,frompartner,topartner):
+    ''' lookup the translation: frommessagetype,fromeditype,alt,frompartner,topartner -> mappingscript, tomessagetype, toeditype
+    '''
+    for row2 in query(u'''SELECT tscript,tomessagetype,toeditype
+                            FROM translate
+                            WHERE frommessagetype = %(frommessagetype)s
+                            AND fromeditype = %(fromeditype)s
+                            AND active=%(booll)s
+                            AND alt=%(alt)s
+                            AND (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
+                                                                                                                    FROM partnergroup
+                                                                                                                    WHERE from_partner_id=%(frompartner)s ))
+                            AND (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
+                                                                                                            FROM partnergroup
+                                                                                                            WHERE from_partner_id=%(topartner)s ))
+                            ORDER BY alt DESC,
+                                     CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id ,
+                                     CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
+                            {'frommessagetype':frommessagetype,
+                             'fromeditype':fromeditype,
+                             'alt':alt,
+                             'frompartner':frompartner,
+                             'topartner':topartner,
+                            'booll':True}):
+        return row2['tscript'],row2['toeditype'],row2['tomessagetype']
+        #translation is found; only the first one is used - this is what the ORDER BY in the query takes care of
+    else:       #no translation found in translate table
+        return None,None,None
+
+
 def check_if_other_engine_is_running():
     ''' bots-engine always connects to 127.0.0.1 port 28081 (or port as set in bots.ini).
         this  is a good way of detecting that another bots-engien is still running.
@@ -556,6 +586,18 @@ def check_if_other_engine_is_running():
         raise
     else:
         return engine_socket
+
+def globalcheckconfirmrules(confirmtype):
+    ''' global check if confirmrules with this confirmtype is uberhaupt used. 
+    ''' 
+    for confirmdict in query(u'''SELECT confirmtype
+                        FROM confirmrule
+                        WHERE active=%(active)s
+                        AND confirmtype=%(confirmtype)s
+                        ''',
+                        {'active':True,'confirmtype':confirmtype}):
+        return True
+    return False
 
 def checkconfirmrules(confirmtype,**kwargs):
     confirm = False       #boolean to return: confirm of not?
