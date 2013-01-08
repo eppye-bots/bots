@@ -814,9 +814,13 @@ class edifact(var):
             #remove message not to beconfirmed from tree (is destructive, but this is end of file processing anyway.
             for message_not_confirm in messages_not_confirm:
                 nodeunb.children.remove(message_not_confirm)
+            #check if there is a user mappingscript
             tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=editype,frommessagetype='CONTRL',frompartner=receiver,topartner=sender,alt='')
             if not tscript:
-                tomessagetype = 'CONTRL22UNEAN002'
+                tomessagetype = 'CONTRL22UNEAN002'  #default messagetype for CONTRL
+                translationscript = None
+            else:
+                translationscript,scriptfilename = botslib.botsimport('mappings',editype + '.' + tscript)  #import the mappingscript
                 #~ ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message
                 #~ out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=editype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
             #generate CONTRL-message. One received interchange->one CONTRL-message
@@ -826,9 +830,8 @@ class edifact(var):
             out = outmessage.outmessage_init(editype=editype,messagetype=tomessagetype,filename=filename,reference=reference,statust=OK)    #make outmessage object
             out.ta_info['frompartner'] = receiver   #reverse!
             out.ta_info['topartner'] = sender       #reverse!
-            if tscript:
-                translationscript,scriptfilename = botslib.botsimport('mappings',editype + '.' + tscript) #get the mappingscript
-                doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
+            if translationscript and hasattr(translationscript,'main'):
+                botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
             else:
                 #default mapping script for CONTRL
                 out.put({'BOTSID':'UNH','0062':reference,'S009.0065':'CONTRL','S009.0052':'2','S009.0054':'2','S009.0051':'UN','S009.0057':'EAN002'})
@@ -851,6 +854,8 @@ class edifact(var):
                     lou.put({'BOTSID':'UCM','S009.0051':nodeunh.get({'BOTSID':'UNH','S009.0051':None})})
                     lou.put({'BOTSID':'UCM','S009.0057':nodeunh.get({'BOTSID':'UNH','S009.0057':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':out.getcount()+1,'0062':reference})  #last line (counts the segments produced in out-message)
+                if translationscript and hasattr(translationscript,'change'):       #user mapping script that only changes the default mapping
+                    botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
             #write tomessage (result of translation)
             out.writeall()
             botsglobal.logger.debug(u'Send edifact confirmation (CONTRL) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
