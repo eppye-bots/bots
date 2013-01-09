@@ -86,7 +86,7 @@ def sqlite3():
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "countrycode" VARCHAR(3) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone1" VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone2" VARCHAR(17) ''')
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" DATE ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" TEXT ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "startdate" DATE ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "enddate" DATE ''')
         #report ****************************************
@@ -168,7 +168,7 @@ def postgresql_psycopg2():
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "countrycode" VARCHAR(3) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone1" VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "phone2" VARCHAR(17) ''')
-        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" DATE ''')
+        cursor.execute('''ALTER TABLE "partner" ADD COLUMN "desc" TEXT ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "startdate" DATE ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "enddate" DATE ''')
         #persist ****************************************
@@ -239,7 +239,7 @@ def mysql():
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `countrycode` VARCHAR(3) ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `phone1` VARCHAR(17) ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `phone2` VARCHAR(17) ''')
-        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `desc` DATE ''')
+        cursor.execute('''ALTER TABLE `partner` ADD COLUMN `desc` TEXT ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `startdate` DATE ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `enddate` DATE ''')
         #persist ****************************************
