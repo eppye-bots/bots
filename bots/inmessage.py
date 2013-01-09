@@ -797,10 +797,10 @@ class edifact(var):
             return
         editype = self.__class__.__name__
         for nodeunb in self.getloop({'BOTSID':'UNB'}):
-            messages_not_confirm = []
             sender = nodeunb.get({'BOTSID':'UNB','S002.0004':None})
             receiver = nodeunb.get({'BOTSID':'UNB','S003.0010':None})
             nr_message_to_confirm = 0
+            messages_not_confirm = []
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                 messagetype=nodeunh.queries['messagetype']
                 #no CONTRL for CONTRL or APERAK message; check if CONTRL should be send via confirmrules
@@ -821,8 +821,6 @@ class edifact(var):
                 translationscript = None
             else:
                 translationscript,scriptfilename = botslib.botsimport('mappings',editype + '.' + tscript)  #import the mappingscript
-                #~ ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message
-                #~ out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=editype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
             #generate CONTRL-message. One received interchange->one CONTRL-message
             reference = str(botslib.unique('messagecounter'))
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED)
@@ -855,7 +853,7 @@ class edifact(var):
                     lou.put({'BOTSID':'UCM','S009.0057':nodeunh.get({'BOTSID':'UNH','S009.0057':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':out.getcount()+1,'0062':reference})  #last line (counts the segments produced in out-message)
                 if translationscript and hasattr(translationscript,'change'):       #user mapping script that only changes the default mapping
-                    botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
+                    botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out)
             #write tomessage (result of translation)
             out.writeall()
             botsglobal.logger.debug(u'Send edifact confirmation (CONTRL) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
