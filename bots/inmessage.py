@@ -786,7 +786,7 @@ class edifact(var):
         ''' generates CONTRL messages.
             done at end of edifact file handling.
             for now: only called if no parser errors in interchange: no 'error'-CONTRL is generated.
-            AFAICS generating error-CONTRL would no be hard...
+            AFAICS generating error-CONTRL would not be hard...
             parameter 'error' is not used now.
         '''
         #global check if confirmrules use 'send-edifact-CONTRL' at all. Check is only done once per bots-run. Reason: performance; CONTRL-message is not that much used.
@@ -833,15 +833,16 @@ class edifact(var):
             else:
                 #default mapping script for CONTRL
                 out.put({'BOTSID':'UNH','0062':reference,'S009.0065':'CONTRL','S009.0052':'2','S009.0054':'2','S009.0051':'UN','S009.0057':'EAN002'})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'7','0020':nodeunb.get({'BOTSID':'UNB','0020':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0004':receiver})   #reverse!
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0007':nodeunb.get({'BOTSID':'UNB','S003.0007':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0014':nodeunb.get({'BOTSID':'UNB','S003.0014':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0042':nodeunb.get({'BOTSID':'UNB','S003.0042':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0010':sender})     #reverse!
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0007':nodeunb.get({'BOTSID':'UNB','S002.0007':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0014':nodeunb.get({'BOTSID':'UNB','S002.0014':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0042':nodeunb.get({'BOTSID':'UNB','S002.0042':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'7'})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0020':nodeunb.get({'BOTSID':'UNB','0020':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0010':sender})     #not reverse!
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0007':nodeunb.get({'BOTSID':'UNB','S002.0007':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0014':nodeunb.get({'BOTSID':'UNB','S002.0014':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0042':nodeunb.get({'BOTSID':'UNB','S002.0042':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0004':receiver})   #not reverse!
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0007':nodeunb.get({'BOTSID':'UNB','S003.0007':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0014':nodeunb.get({'BOTSID':'UNB','S003.0014':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0042':nodeunb.get({'BOTSID':'UNB','S003.0042':None})})
                 for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                     lou = out.putloop({'BOTSID':'UNH'},{'BOTSID':'UCM'})
                     lou.put({'BOTSID':'UCM','0083':'7'})
