@@ -44,10 +44,12 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 AND idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
-            if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
-                raise botslib.InMessageError(_(u'File size of "%(filesize)s"; "maxfilesizeincoming" is set to "%(maxfilesizeincoming)s" (in bots.ini).'),{'filesize':row['filesize'],'maxfilesizeincoming':botsglobal.ini.getint('settings','maxfilesizeincoming',5000000)})
             ta_fromfile = botslib.OldTransaction(row['idta'])
             ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
+            if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
+                raise botslib.InMessageError(_(u'File size of $filesize is too big; option "maxfilesizeincoming" in bots.ini is $maxfilesizeincoming.'),
+                                                filesize=row['filesize'],
+                                                maxfilesizeincoming=botsglobal.ini.getint('settings','maxfilesizeincoming',5000000))
             botsglobal.logger.debug(_(u'start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),{'filename':row['filename'],'editype':row['editype'],'messagetype':row['messagetype']})
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
