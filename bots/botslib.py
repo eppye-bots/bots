@@ -343,7 +343,7 @@ def sendbotserrorreport(subject,reporttext):
         Email is send to MANAGERS in config/settings.py.
         Email parameters are in config/settings.py (EMAIL_HOST, etc).
     '''
-    if botsglobal.ini.getboolean('settings','sendreportiferror',False):
+    if botsglobal.ini.getboolean('settings','sendreportiferror',False) and not botsglobal.ini.getboolean('settings','runacceptancetest',False):
         from django.core.mail import mail_managers
         try:
             mail_managers(subject, reporttext)

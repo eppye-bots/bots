@@ -153,6 +153,18 @@ def start():
             errorinrun += router.rundispatcher(command,use_routestorun)
             if userscript and hasattr(userscript,'post' + command):
                 botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
+        #acceptance tests: run a user script that can do checks on results of acceptance test.******************************
+        if botsglobal.ini.getboolean('settings','runacceptancetest',False):
+            try:
+                botsglobal.logger.info(_(u'This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
+                acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','botsacceptancetest')
+                if acceptance_userscript and hasattr(acceptance_userscript,'main'):
+                    botslib.runscript(userscript,scriptname,'main',routestorun=use_routestorun)
+                else:
+                    botsglobal.logger.info(_(u'In acceptance test no "main"-function in the script "botsacceptancetest.py".'))
+            except ImportError:      #userscript is not there; other errors like syntax errors are not catched
+                botsglobal.logger.info(_(u'In acceptance test no script script "botsacceptancetest.py" to check results of acceptance test.'))
+        
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception,msg:
         botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(msg))    #of course this 'should' not happen.

@@ -65,6 +65,7 @@ def sqlite3():
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''')
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "keyfile" VARCHAR(256) ''')
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "certfile" VARCHAR(256) ''')
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "testpath" VARCHAR(256) ''')
         #filereport ****************************************
         cursor.execute('''DROP INDEX "filereport_reportidta" ''')
         cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
@@ -138,6 +139,7 @@ def postgresql_psycopg2():
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "rsrv3" INTEGER DEFAULT 0''')
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "keyfile" VARCHAR(256) ''')
         cursor.execute('''ALTER TABLE "channel" ADD COLUMN "certfile" VARCHAR(256) ''')
+        cursor.execute('''ALTER TABLE "channel" ADD COLUMN "testpath" VARCHAR(256) ''')
         #ccode ****************************************
         cursor.execute('''ALTER TABLE "ccode" ALTER COLUMN "rightcode" TYPE VARCHAR(70)''')
         cursor.execute('''ALTER TABLE "ccode" ALTER COLUMN "attr1" TYPE VARCHAR(70)''')
@@ -210,6 +212,7 @@ def mysql():
         cursor.execute('''ALTER TABLE `channel` ADD COLUMN `rsrv3` INTEGER DEFAULT 0''')
         cursor.execute('''ALTER TABLE `channel` ADD COLUMN `keyfile` VARCHAR(256) ''')
         cursor.execute('''ALTER TABLE `channel` ADD COLUMN `certfile` VARCHAR(256) ''')
+        cursor.execute('''ALTER TABLE `channel` ADD COLUMN `testpath` VARCHAR(256) ''')
         #ccode ****************************************
         cursor.execute('''ALTER TABLE `ccode` MODIFY `rightcode` VARCHAR(70)''')
         cursor.execute('''ALTER TABLE `ccode` MODIFY `attr1` VARCHAR(70)''')

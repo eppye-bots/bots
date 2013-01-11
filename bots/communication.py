@@ -38,11 +38,23 @@ from botsconfig import *
 @botslib.log_session
 def run(idchannel,command,idroute=''):
     '''run a communication session (dispatcher for communication functions).'''
-    for channeldict in botslib.query('''SELECT *
+    for row in botslib.query('''SELECT *
                                 FROM channel
                                 WHERE idchannel=%(idchannel)s''',
                                 {'idchannel':idchannel}):
+        channeldict = dict(row)   #convert to real dictionary ()
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
+        #for acceptance testing bots has an option to turn of external communication in channels
+        if botsglobal.ini.getboolean('settings','runacceptancetest',False):
+            if channeldict['testpath']:
+                # over-ride the channel path and type for testing
+                channeldict['type'] = 'file'    #I/O not to outside but from/to file system.
+                channeldict['path'] = channeldict['testpath']    #use the testpath to specify where to find acceptance  tests.
+                channeldict['remove'] = False    #never remove during acceptance testing
+                botsglobal.logger.debug(u'Channel %s is using testpath %s',channeldict['idchannel'],channeldict['testpath'])
+            else:
+                pass    #is this dangerous?
+                
         #update communication/run process with idchannel
         ta_run = botslib.OldTransaction(botslib._Transaction.processlist[-1])
         if channeldict['inorout'] == 'in':
