@@ -100,6 +100,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                                                                 topartner=inn_splitup.ta_info['topartner'],
                                                                                 alt=inn_splitup.ta_info['alt'])
 
+                        inn_splitup.ta_info['divtext'] = tscript     #in case of errors this leads to beter reporting in GUI.
                         if not post_mapping_mode:
                             #initialize new out-object*************************
                             ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
@@ -111,7 +112,6 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mappingscript
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
                         botsglobal.logger.debug(_(u'Mappingscript "%s" finished.'),tscript)
-                        post_mapping_mode = False       #translation is done; reset post_mapping_mode
                         
                         #manipulate for some attributes after mapping script
                         if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
