@@ -18,7 +18,7 @@ STATUS = [
     (200,_(u'Received')),
     (220,_(u'Infile')),
     (310,_(u'Parsed')),
-    (320,_(u'Document-In')),
+    (320,_(u'Document-in')),
     (330,_(u'Document-out')),
     (400,_(u'Merged')),
     (500,_(u'Outfile')),
