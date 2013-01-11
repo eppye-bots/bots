@@ -35,11 +35,10 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
             _cleanpersist()
             _cleantransactions()
             _vacuum()
-            botsglobal.logger.info(u'Done full cleanup.')
             # postcleanup user exit in botsengine script
             if userscript and hasattr(userscript,'postcleanup'):
-                botsglobal.logger.info(u'User exit postcleanup')
                 botslib.runscript(userscript,scriptname,'postcleanup',whencleanup=whencleanup)
+            botsglobal.logger.info(u'Done full cleanup.')
         _cleanrunsnothingreceived()          #do this every run, but not logged
     except:
         botsglobal.logger.exception(u'Cleanup error.')
