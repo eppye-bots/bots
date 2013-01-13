@@ -90,11 +90,19 @@ def start():
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
-    #initialise user exits for the whole bots-engine
+    #************initialise user exits for the whole bots-engine*************************
     try:
         userscript,scriptname = botslib.botsimport('routescripts','botsengine')
     except ImportError:      #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
+    #***acceptance tests: initialiase acceptance user script******************************
+    acceptance_userscript = acceptance_scriptname = None
+    if botsglobal.ini.getboolean('settings','runacceptancetest',False):
+        botsglobal.logger.info(_(u'This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
+        try:
+            acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','botsacceptancetest')
+        except ImportError:
+            botsglobal.logger.info(_(u'In acceptance test no script script "botsacceptancetest.py" to check results of acceptance test.'))
 
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
@@ -124,6 +132,13 @@ def start():
     #for each command: run all routes
     #    for each route: run all seq
     try:
+        #in acceptance tests: run a user script before running eg to clean output directories******************************
+        if acceptance_userscript:
+            if hasattr(acceptance_userscript,'pretest'):
+                botslib.runscript(acceptance_userscript,acceptance_scriptname,'pretest',routestorun=use_routestorun)
+            else:
+                botsglobal.logger.info(_(u'In acceptance test no "pretest"-function in the script "botsacceptancetest.py".'))
+                
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
         for command in commandstorun:
             botsglobal.logger.info('Run %s.'%command)
@@ -153,17 +168,13 @@ def start():
             errorinrun += router.rundispatcher(command,use_routestorun)
             if userscript and hasattr(userscript,'post' + command):
                 botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
-        #acceptance tests: run a user script that can do checks on results of acceptance test.******************************
-        if botsglobal.ini.getboolean('settings','runacceptancetest',False):
-            try:
-                botsglobal.logger.info(_(u'This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
-                acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','botsacceptancetest')
-                if acceptance_userscript and hasattr(acceptance_userscript,'main'):
-                    botslib.runscript(userscript,scriptname,'main',routestorun=use_routestorun)
-                else:
-                    botsglobal.logger.info(_(u'In acceptance test no "main"-function in the script "botsacceptancetest.py".'))
-            except ImportError:      #userscript is not there; other errors like syntax errors are not catched
-                botsglobal.logger.info(_(u'In acceptance test no script script "botsacceptancetest.py" to check results of acceptance test.'))
+        #in acceptance tests: run a user script that can do checks on results of acceptance test.******************************
+        #this is before the cleanup, but this is not critical 
+        if acceptance_userscript:
+            if hasattr(acceptance_userscript,'posttest'):
+                botslib.runscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
+            else:
+                botsglobal.logger.info(_(u'In acceptance test no "posttest"-function in the script "botsacceptancetest.py".'))
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception,msg:
