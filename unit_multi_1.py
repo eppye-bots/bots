@@ -115,15 +115,15 @@ def test_ccode_with_unicode():
 
 
 def test_unique_in_run_counter():
-    if 1 != transform.unique_runcounter('test'):
+    if 1 != int(transform.unique_runcounter('test')):
         raise Exception('test_unique_in_run_counter')
-    if 1 != transform.unique_runcounter('test2'):
+    if 1 != int(transform.unique_runcounter('test2')):
         raise Exception('test_unique_in_run_counter')
-    if 2 != transform.unique_runcounter('test'):
+    if 2 != int(transform.unique_runcounter('test')):
         raise Exception('test_unique_in_run_counter')
-    if 3 != transform.unique_runcounter('test'):
+    if 3 != int(transform.unique_runcounter('test')):
         raise Exception('test_unique_in_run_counter')
-    if 2 != transform.unique_runcounter('test2'):
+    if 2 != int(transform.unique_runcounter('test2')):
         raise Exception('test_unique_in_run_counter')
 
 def test_partner_lookup():
@@ -260,6 +260,10 @@ if __name__=='__main__':
         if not filecmp.cmp(os.path.join(botssys,cmpfile),filename):
             raise Exception('error in file compare')
     
+    #****************************************************************************************************************************************
+    #mailbag **********************************************************************************************************************
+    utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','maxsizeinfile'],
+                                    {'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0,'filesize':6702823})
     #****************************************************************************************************************************************
     #****************************************************************************************************************************************
     logging.shutdown()
