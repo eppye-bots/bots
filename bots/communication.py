@@ -45,7 +45,7 @@ def run(idchannel,command,idroute=''):
         channeldict = dict(row)   #convert to real dictionary ()
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         #for acceptance testing bots has an option to turn of external communication in channels
-        if botsglobal.ini.getboolean('settings','runacceptancetest',False):
+        if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
             if channeldict['testpath']:
                 # over-ride the channel path and type for testing
                 channeldict['type'] = 'file'    #I/O not to outside but from/to file system.

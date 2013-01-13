@@ -97,10 +97,10 @@ def start():
         userscript = scriptname = None
     #***acceptance tests: initialiase acceptance user script******************************
     acceptance_userscript = acceptance_scriptname = None
-    if botsglobal.ini.getboolean('settings','runacceptancetest',False):
+    if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
         botsglobal.logger.info(_(u'This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
         try:
-            acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','botsacceptancetest')
+            acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','bots_acceptancetest')
         except ImportError:
             botsglobal.logger.info(_(u'In acceptance test no script script "botsacceptancetest.py" to check results of acceptance test.'))
 
