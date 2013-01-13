@@ -53,7 +53,7 @@ class ChannelAdmin(BotsAdmin):
     ordering = ('idchannel',)
     search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath')
     fieldsets = (
-        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'remove', ('host','port'), ('username', 'secret'), ('path', 'filename'), 'archivepath', 'desc'),
+        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'remove', ('host','port'), ('username', 'secret'), ('path', 'filename'), ('archivepath','testpath'), 'desc'),
                          'classes': ('wide extrapretty',)
                         }),
         (_(u'Email specific'),{'fields': ('starttls', 'apop', 'askmdn', 'sendmdn' ),
