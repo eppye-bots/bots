@@ -223,7 +223,7 @@ class edifact(Envelope):
             if self.ta_info['charset'] not in ['UNOA','UNOB']:
                 write_una = True
 
-        #UNB counter is per sender or receiver
+        #UNB reference is counter is per sender or receiver
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
             self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['topartner']))
         else:
