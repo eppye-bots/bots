@@ -296,6 +296,21 @@ def insertta(querystring,*args):
     cursor.close()
     return newidta
 
+def unique_runcounter(domain):
+    ''' generate unique counter within range domain during one run of bots.
+        if domain not used before, initialize as 1; for each subsequent call this is incremented with 1
+        usage example:
+        unh_reference = unique_runcounter(<messagetype>_<topartner>)
+    '''
+    domain += 'bots_1_8_4_9_6'  #avoid using/mixing other values in botsglobal
+    try:
+        terug = 1 + getattr(botsglobal,domain)
+    except AttributeError:
+        terug = 1
+    finally:
+        setattr(botsglobal,domain,terug)
+    return terug
+
 def unique(domein):
     ''' generate unique number within range domain.
         uses db to keep track of last generated number
@@ -308,20 +323,23 @@ def unique(domein):
     return nummer
 
 def uniquecore(domein,updatewith=None):
-    cursor = botsglobal.db.cursor()
-    try:
-        cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
-        nummer = cursor.fetchone()['nummer']
-    except TypeError: #if domein does not exist, fetchone returns None, so TypeError
-        cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
-        nummer = 0
-    if updatewith is None:
-        nummer += 1
-        updatewith = nummer
-    cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':updatewith})
-    botsglobal.db.commit()
-    cursor.close()
-    return nummer
+    if botsglobal.ini.getboolean('settings','runacceptancetest',False):
+        return unique_runcounter(domein)
+    else:
+        cursor = botsglobal.db.cursor()
+        try:
+            cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
+            nummer = cursor.fetchone()['nummer']
+        except TypeError: #if domein does not exist, fetchone returns None, so TypeError
+            cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
+            nummer = 0
+        if updatewith is None:
+            nummer += 1
+            updatewith = nummer
+        cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':updatewith})
+        botsglobal.db.commit()
+        cursor.close()
+        return nummer
     
 def checkunique(domein, receivednumber):
     ''' to check if received number is sequential: value is compare with earlier received value.
