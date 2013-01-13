@@ -47,6 +47,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             ta_fromfile = botslib.OldTransaction(row['idta'])
             ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
             if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
+                ta_parsed.update(filesize=row['filesize'])
                 raise botslib.InMessageError(_(u'File size of $filesize is too big; option "maxfilesizeincoming" in bots.ini is $maxfilesizeincoming.'),
                                                 filesize=row['filesize'],
                                                 maxfilesizeincoming=botsglobal.ini.getint('settings','maxfilesizeincoming',5000000))
@@ -400,6 +401,13 @@ def unique(domein):
         if domein not used before, initialized with 1.
     '''
     return str(botslib.unique(domein))
+    
+def unique_runcounter(domein):
+    ''' generate unique number within range domein.
+        uses db to keep track of last generated number.
+        if domein not used before, initialized with 1.
+    '''
+    return str(botslib.unique_runcounter(domein))
 
 def inn2out(inn,out):
     ''' copies inn-message to outmessage
@@ -462,21 +470,6 @@ def concat(*args):
         return terug
     else:
         return None
-
-def unique_runcounter(domain):
-    ''' generate unique counter within range domain during one run of bots.
-        if domain not used before, initialize as 1; for each subsequent call this is incremented with 1
-        usage example:
-        unh_reference = unique_runcounter(<messagetype>_<topartner>)
-    '''
-    domain += 'bots_1_8_4_9_6'  #avoid using/mixing other values in botsglobal
-    try:
-        terug = 1 + getattr(botsglobal,domain)
-    except AttributeError:
-        terug = 1
-    finally:
-        setattr(botsglobal,domain,terug)
-    return terug
 
 #***lookup via database partner
 def partnerlookup(idpartner,field,safe=False):
