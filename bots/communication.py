@@ -127,6 +127,8 @@ class _comsession(object):
         '''
         if not self.channeldict['archivepath']:
             return  #do not archive if not indicated
+        if botsglobal.ini.getboolean('acceptance','runacceptancetest',False): 
+            return  #do not archive in acceptance testing
         if self.channeldict['filename'] and self.channeldict['type'] in ('file','ftp','ftps','ftpis','sftp','mimefile','communicationscript'):
             archiveexternalname = botsglobal.ini.getboolean('settings','archiveexternalname',False) #use external filename in archive 
         else:
@@ -648,7 +650,11 @@ class _comsession(object):
             else:
                 infilename = ''
             try:
-                tofilename = tofilename.format(infile=infilename,datetime=datetime.datetime.now(),**ta.__dict__)
+                if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+                    datetime_object = datetime.datetime.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")
+                else:
+                    datetime_object=datetime.datetime.now()
+                tofilename = tofilename.format(infile=infilename,datetime=datetime_object,**ta.__dict__)
             except:
                 txt = botslib.txtexc()
                 raise botslib.CommunicationOutError(_(u'Error in formatting outgoing filename "%(filename)s". Error: "%(error)s".'%{'filename':tofilename,'error':txt}))
@@ -670,8 +676,11 @@ class file(_comsession):
         ''' gets files from filesystem.
         '''
         frompath = botslib.join(self.channeldict['path'],self.channeldict['filename'])
+        filelist = [filename for filename in glob.glob(frompath) if os.path.isfile(filename)]
+        if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+            filelist.sort()
         startdatetime = datetime.datetime.now()
-        for fromfilename in [filename for filename in glob.glob(frompath) if os.path.isfile(filename)]:
+        for fromfilename in filelist:
             try:
                 ta_from = botslib.NewTransaction(filename=fromfilename,
                                                 status=EXTERNIN,
