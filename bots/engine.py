@@ -102,7 +102,7 @@ def start():
         try:
             acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','bots_acceptancetest')
         except ImportError:
-            botsglobal.logger.info(_(u'In acceptance test no script script "botsacceptancetest.py" to check results of acceptance test.'))
+            botsglobal.logger.info(_(u'In acceptance test therre is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
 
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
@@ -135,9 +135,7 @@ def start():
         #in acceptance tests: run a user script before running eg to clean output directories******************************
         if acceptance_userscript:
             if hasattr(acceptance_userscript,'pretest'):
-                botslib.runscript(acceptance_userscript,acceptance_scriptname,'pretest',routestorun=use_routestorun)
-            else:
-                botsglobal.logger.info(_(u'In acceptance test no "pretest"-function in the script "botsacceptancetest.py".'))
+                botslib.runscript(acceptance_userscript,acceptance_scriptname,'pretest',routestorun=routestorun)
                 
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
         for command in commandstorun:
@@ -173,8 +171,6 @@ def start():
         if acceptance_userscript:
             if hasattr(acceptance_userscript,'posttest'):
                 botslib.runscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
-            else:
-                botsglobal.logger.info(_(u'In acceptance test no "posttest"-function in the script "botsacceptancetest.py".'))
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception,msg:

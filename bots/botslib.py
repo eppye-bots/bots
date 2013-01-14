@@ -1,6 +1,7 @@
 ''' Base library for bots. Botslib should not import code from other Bots-modules.'''
 import sys
 import os
+import time
 import codecs
 import traceback
 import socket
@@ -560,6 +561,13 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
 #**********************************************************/**
 #***************###############  misc.   #############
 #**********************************************************/**
+def strftime(format,*arg,**kwarg):
+    if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+        return time.strftime(format,time.gmtime(1358000000))    #if acceptance test use fixed date/time
+    else:
+        return time.strftime(format,*arg,**kwarg)
+    
+    
 def lookup_translation(frommessagetype,fromeditype,alt,frompartner,topartner):
     ''' lookup the translation: frommessagetype,fromeditype,alt,frompartner,topartner -> mappingscript, tomessagetype, toeditype
     '''
