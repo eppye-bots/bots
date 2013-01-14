@@ -49,14 +49,13 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
     rootta.syn('ts')    #get the timestamp of this run
     lastreceived = resultsofrun[DONE]+resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]
     status = bool(resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]+processerrors)
-    botslib.changeq(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,
-                                            send,processerrors,ts,lastreceived,status,type,filesize)
-                            VALUES  (%(rootidtaofrun)s,
-                                    %(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,
-                                    %(send)s,%(processerrors)s,%(ts)s,%(lastreceived)s,%(status)s,%(type)s,%(totalfilesize)s) ''',
-                            {'rootidtaofrun':rootidtaofrun,
-                            'lastopen':resultsofrun[OPEN],'lasterror':resultsofrun[ERROR],'lastok':resultsofrun[OK],'lastdone':resultsofrun[DONE],
-                            'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':lastreceived,'status':status,'type':command,'totalfilesize':totalfilesize})
+    botslib.changeq(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,send,processerrors,
+                                            ts,lastreceived,status,type,filesize,acceptance)
+                            VALUES  (%(rootidtaofrun)s,%(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,%(send)s,%(processerrors)s,
+                                    %(ts)s,%(lastreceived)s,%(status)s,%(type)s,%(totalfilesize)s,%(acceptance)s) ''',
+                            {'rootidtaofrun':rootidtaofrun,'lastopen':resultsofrun[OPEN],'lasterror':resultsofrun[ERROR],'lastok':resultsofrun[OK],
+                            'lastdone':resultsofrun[DONE],'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':lastreceived,
+                            'status':status,'type':command,'totalfilesize':totalfilesize,'acceptance':int(botsglobal.ini.getboolean('acceptance','runacceptancetest',False))})
     #20120830: if new run with nothing received and no process errors: delete ta's.
     if command == 'new' and not lastreceived and not processerrors:
         botslib.changeq('''DELETE FROM ta WHERE idta>=%(rootidtaofrun)s''',{'rootidtaofrun':rootidtaofrun})
