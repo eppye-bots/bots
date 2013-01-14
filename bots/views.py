@@ -488,6 +488,23 @@ def delete(request,*kw,**kwargs):
                     botslib.dirshouldbethere(deletefrompath)
                     messages.add_message(request, messages.INFO, _(u'Data files are deleted.'))
                     botsglobal.logger.info(_(u'    Data files are deleted.'))
+                elif form.cleaned_data['delacceptance']:
+                    from django.db.models import Min
+                    for min_report in models.report.objects.filter(acceptance=1):
+                        max_report_idta = models.report.objects.filter(idta__gt=min_report.idta).aggregate(Min('idta'))['idta__min']
+                        if not max_report_idta:
+                            max_report_idta = sys.maxint
+                        models.ta.objects.filter(idta__gte=min_report.idta).filter(idta__lt=max_report_idta).delete()
+                        models.filereport.objects.filter(idta__gte=min_report.idta).filter(idta__lt=max_report_idta).delete()
+                    models.report.objects.filter(acceptance=1).delete()
+                    messages.add_message(request, messages.INFO, _(u'Transactions from acceptance-testing are deleted.'))
+                    botsglobal.logger.info(_(u'    Transactions from acceptance-testing are deleted.'))
+                    #clean data files
+                    #~ deletefrompath = botsglobal.ini.get('directories','data','botssys/data')
+                    #~ shutil.rmtree(deletefrompath,ignore_errors=True)
+                    #~ botslib.dirshouldbethere(deletefrompath)
+                    #~ messages.add_message(request, messages.INFO, _(u'Data files are deleted.'))
+                    #~ botsglobal.logger.info(_(u'    Data files are deleted.'))
                 if form.cleaned_data['delconfiguration']:
                     models.confirmrule.objects.all().delete()
                     models.routes.objects.all().delete()
