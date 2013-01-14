@@ -602,7 +602,7 @@ class _comsession(object):
     def filename_formatter(self,filename_mask,ta):
         ''' Output filename generation from "template" filename configured in the channel
             Basically python's string.Formatter is used; see http://docs.python.org/library/string.html
-            As in string.Formatter, substitution values are surrounded by braces; format specifiers cna be used.
+            As in string.Formatter, substitution values are surrounded by braces; format specifiers can be used.
             Any ta value can be used
               eg. {botskey}, {alt}, {editype}, {messagetype}, {topartner}
             Next to the value in ta you can use:
