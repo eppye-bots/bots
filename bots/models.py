@@ -403,6 +403,7 @@ class report(models.Model):
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                       #added 20100501.
     filesize = models.IntegerField(null=True)                    #added 20121030: total size of messages that have been translated.
+    acceptance = models.IntegerField(null=True)                            #added 20130114: 
     class Meta:
         db_table = 'report'
 #~ #trigger for sqlite to use local time (instead of utc). I can not add this to sqlite specific sql code, as django does not allow complex (begin ... end) sql here.

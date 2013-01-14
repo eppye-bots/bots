@@ -93,6 +93,7 @@ def sqlite3():
         #report ****************************************
         cursor.execute('''CREATE INDEX "report_ts" ON "report" ("ts")''')
         cursor.execute('''ALTER TABLE "report" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "report" ADD COLUMN "acceptance" INTEGER DEFAULT 0''')
         #routes ****************************************
         cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_incoming" INTEGER DEFAULT 0''')
         cursor.execute('''ALTER TABLE "routes" ADD COLUMN "zip_outgoing" INTEGER DEFAULT 0''')
@@ -152,6 +153,7 @@ def postgresql_psycopg2():
         cursor.execute('''ALTER TABLE "filereport" ADD CONSTRAINT "filereport_pkey" PRIMARY KEY("idta")''')    #idta is primary key
         cursor.execute('''ALTER TABLE "filereport" ALTER COLUMN "errortext" TYPE TEXT''')
         cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "filesize" INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE "filereport" ADD COLUMN "acceptance" INTEGER DEFAULT 0''')
         #partner *************************************
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr1" VARCHAR(35) ''')
         cursor.execute('''ALTER TABLE "partner" ADD COLUMN "attr2" VARCHAR(35) ''')
@@ -224,6 +226,7 @@ def mysql():
         #~ cursor.execute('''ALTER TABLE `filereport` DROP INDEX `reportidta` ''')  #not possible as index name is not known
         cursor.execute('''ALTER TABLE `filereport` MODIFY `errortext` TEXT''')
         cursor.execute('''ALTER TABLE `filereport` ADD COLUMN `filesize` INTEGER DEFAULT 0''')
+        cursor.execute('''ALTER TABLE `filereport` ADD COLUMN `acceptance` INTEGER DEFAULT 0''')
         #partner *************************************
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr1` VARCHAR(35) ''')
         cursor.execute('''ALTER TABLE `partner` ADD COLUMN `attr2` VARCHAR(35) ''')
