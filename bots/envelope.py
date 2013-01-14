@@ -1,6 +1,5 @@
 import os
 import shutil
-import time
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
@@ -213,12 +212,12 @@ class edifact(Envelope):
         #version dependent enveloping
         write_una = False
         if self.ta_info['version'] < '4':
-            date = time.strftime('%y%m%d')
+            date = botslib.strftime('%y%m%d')
             reserve = ' '
             if self.ta_info['charset'] != 'UNOA':
                 write_una = True
         else:
-            date = time.strftime('%Y%m%d')
+            date = botslib.strftime('%Y%m%d')
             reserve = self.ta_info['reserve']
             if self.ta_info['charset'] not in ['UNOA','UNOB']:
                 write_una = True
@@ -243,7 +242,7 @@ class edifact(Envelope):
                         'S002.0004':self.ta_info['frompartner'],
                         'S003.0010':self.ta_info['topartner'],
                         'S004.0017':date,
-                        'S004.0019':time.strftime('%H%M'),
+                        'S004.0019':botslib.strftime('%H%M'),
                         '0020':self.ta_info['reference']})
         #the following fields are conditional; do not write these when empty string (separator compression does take empty strings into account)
         for field in ('S001.0080','S001.0133','S002.0007','S002.0008','S002.0042',
@@ -294,8 +293,8 @@ class tradacoms(Envelope):
                         'STDS2':self.ta_info['STX.STDS2'],
                         'FROM.01':self.ta_info['frompartner'],
                         'UNTO.01':self.ta_info['topartner'],
-                        'TRDT.01':time.strftime('%y%m%d'),
-                        'TRDT.02':time.strftime('%H%M%S'),
+                        'TRDT.01':botslib.strftime('%y%m%d'),
+                        'TRDT.02':botslib.strftime('%H%M%S'),
                         'SNRF':self.ta_info['reference']})
         if self.ta_info['STX.FROM.02']:
             self.out.put({'BOTSID':'STX','FROM.02':self.ta_info['STX.FROM.02']})
@@ -402,7 +401,7 @@ class x12(Envelope):
         self.ta_info['functionalgroup'] = defmessage.syntax['functionalgroup']
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #prepare data for envelope
-        isa09date = time.strftime('%y%m%d')
+        isa09date = botslib.strftime('%y%m%d')
         #test indicator can either be from configuration (self.ta_info['ISA15']) or by mapping (self.ta_info['testindicator'])
         #mapping overrules.
         if self.ta_info['testindicator'] and self.ta_info['testindicator'] != '0':    #'0' is default value (in db)
@@ -434,7 +433,7 @@ class x12(Envelope):
                         'ISA07':self.ta_info['ISA07'],
                         'ISA08':isa08receiver,
                         'ISA09':isa09date,
-                        'ISA10':time.strftime('%H%M'),
+                        'ISA10':botslib.strftime('%H%M'),
                         'ISA11':self.ta_info['ISA11'],      #if ISA version > 00403, replaced by reprtion separator
                         'ISA12':self.ta_info['version'],
                         'ISA13':self.ta_info['reference'],
@@ -443,15 +442,15 @@ class x12(Envelope):
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':'1','IEA02':self.ta_info['reference']})
         gs08messagetype = self.ta_info['messagetype'][3:]
         if gs08messagetype[:6] < '004010':
-            gs04date = time.strftime('%y%m%d')
+            gs04date = botslib.strftime('%y%m%d')
         else:
-            gs04date = time.strftime('%Y%m%d')
+            gs04date = botslib.strftime('%Y%m%d')
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'GS',
                                         'GS01':self.ta_info['functionalgroup'],
                                         'GS02':gs02sender,
                                         'GS03':gs03receiver,
                                         'GS04':gs04date,
-                                        'GS05':time.strftime('%H%M'),
+                                        'GS05':botslib.strftime('%H%M'),
                                         'GS06':self.ta_info['reference'],
                                         'GS07':self.ta_info['GS07'],
                                         'GS08':gs08messagetype})
