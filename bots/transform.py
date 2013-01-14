@@ -17,7 +17,7 @@ from botsconfig import *
 #*******************************************************************************************************************
 #****** functions imported from other modules. reason: user scripting uses primary transform functions *************
 #*******************************************************************************************************************
-from botslib import addinfo,updateinfo,changestatustinfo,checkunique,changeq,sendbotsemail
+from botslib import addinfo,updateinfo,changestatustinfo,checkunique,changeq,sendbotsemail,strftime
 from envelope import mergemessages
 from communication import run
 

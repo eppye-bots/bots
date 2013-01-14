@@ -102,7 +102,7 @@ def start():
         try:
             acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','bots_acceptancetest')
         except ImportError:
-            botsglobal.logger.info(_(u'In acceptance test therre is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
+            botsglobal.logger.info(_(u'In acceptance test there is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
 
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.

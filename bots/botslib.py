@@ -561,11 +561,11 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
 #**********************************************************/**
 #***************###############  misc.   #############
 #**********************************************************/**
-def strftime(format,*arg,**kwarg):
+def strftime(format):
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-        return time.strftime(format,time.gmtime(1358000000))    #if acceptance test use fixed date/time
+        return time.strftime(format,time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S"))    #if acceptance test use fixed date/time
     else:
-        return time.strftime(format,*arg,**kwarg)
+        return time.strftime(format)
     
     
 def lookup_translation(frommessagetype,fromeditype,alt,frompartner,topartner):
