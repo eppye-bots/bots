@@ -74,7 +74,7 @@ def readwrite(filenamein='',filenameout='',**args):
 
 
 def getdirbysize(path):
-    ''' read fils in directory path, return as a sorted list.'''
+    ''' read files in directory path, return as a sorted list.'''
     lijst = getdir(path)
     lijst.sort(key=lambda s: os.path.getsize(s))
     return lijst
