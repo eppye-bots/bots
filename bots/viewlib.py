@@ -86,7 +86,7 @@ def django_trace_origin(idta,where):
             if ta_object.parent not in donelijst:   #search via parent
                 yield models.ta.objects.get(idta=ta_object.parent)
         else:
-            for parent in models.ta.objects.filter(child=ta_object.idta).all():
+            for parent in models.ta.objects.filter(child=ta_object.idta):
                 if parent.idta in donelijst:
                     continue
                 yield parent
@@ -108,7 +108,7 @@ def trace_document(pquery):
             child = models.ta.objects.get(idta=ta_object.child)
         else:
             try:
-                child = models.ta.objects.filter(parent=ta_object.idta).all()[0]
+                child = models.ta.objects.filter(parent=ta_object.idta)[0]
             except IndexError:
                 return    #no result, return
         if child.confirmasked:
@@ -123,7 +123,7 @@ def trace_document(pquery):
             parent = models.ta.objects.get(idta=ta_object.parent)
         else:
             try:
-                parent = models.ta.objects.filter(child=ta_object.idta).all()[0]   #just get one parent
+                parent = models.ta.objects.filter(child=ta_object.idta)[0]   #just get one parent
             except IndexError:
                 return    #no result, return
         if parent.confirmasked:
@@ -148,7 +148,7 @@ def gettrace(ta_object):
     if ta_object.child:  #has a explicit child
         ta_object.talijst = [models.ta.objects.get(idta=ta_object.child)]
     else:   #search in ta_object-table who is reffering to ta_object
-        ta_object.talijst = list(models.ta.objects.filter(parent=ta_object.idta).all())
+        ta_object.talijst = list(models.ta.objects.filter(parent=ta_object.idta))
     for child in ta_object.talijst:
         gettrace(child)
 
@@ -159,7 +159,7 @@ def trace2delete(trace):
             gathermember(child)
     def gatherdelete(ta_object):
         if ta_object.status == MERGED:
-            for includedta in models.ta.objects.filter(child=ta_object.idta,status=TRANSLATED).all():    #select all db-ta_object's included in MERGED ta_object
+            for includedta in models.ta.objects.filter(child=ta_object.idta,status=TRANSLATED):    #select all db-ta_object's included in MERGED ta_object
                 if includedta not in memberlist:
                     #~ print 'not found idta',includedta.idta, 'not to deletelist:',ta_object.idta
                     return

@@ -119,7 +119,7 @@ def incoming(request,*kw,**kwargs):
                 filereport.save()
             elif 'rereceiveall' in request.POST:
                 #select all objects with parameters and set retransmit
-                query = models.filereport.objects.filter().all()
+                query = models.filereport.objects.all()
                 incomingfiles = viewlib.filterquery2(query,formin.cleaned_data)
                 for incomingfile in incomingfiles:
                     if incomingfile.statust != RESEND:
@@ -171,7 +171,7 @@ def outgoing(request,*kw,**kwargs):
                     ta_object.save()
             elif 'resendall' in request.POST:
                 #select all objects with parameters and set retransmit
-                query = models.ta.objects.filter(status=EXTERNOUT).all()
+                query = models.ta.objects.filter(status=EXTERNOUT)
                 outgoingfiles = viewlib.filterquery2(query,formin.cleaned_data)
                 for outgoingfile in outgoingfiles:
                     if outgoingfile.statust != RESEND:
@@ -181,8 +181,8 @@ def outgoing(request,*kw,**kwargs):
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
 
-    #~ query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE).all()
-    query = models.ta.objects.filter(status=EXTERNOUT).all()
+    #~ query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE)
+    query = models.ta.objects.filter(status=EXTERNOUT)
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewOutgoing(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
@@ -217,7 +217,7 @@ def document(request,*kw,**kwargs):
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
 
-    query = models.ta.objects.filter(django.db.models.Q(status=SPLITUP)|django.db.models.Q(status=TRANSLATED)).all()
+    query = models.ta.objects.filter(django.db.models.Q(status=SPLITUP)|django.db.models.Q(status=TRANSLATED))
     pquery = viewlib.filterquery(query,cleaned_data)
     viewlib.trace_document(pquery)
     formout = forms.ViewDocument(initial=cleaned_data)
@@ -256,7 +256,7 @@ def process(request,*kw,**kwargs):
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
 
-    query = models.ta.objects.filter(status=PROCESS,statust=ERROR).all()
+    query = models.ta.objects.filter(status=PROCESS,statust=ERROR)
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewProcess(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
@@ -321,7 +321,7 @@ def confirm(request,*kw,**kwargs):
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
 
-    query = models.ta.objects.filter(confirmasked=True).all()
+    query = models.ta.objects.filter(confirmasked=True)
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewConfirm(initial=cleaned_data)
     return viewlib.render(request,formout,pquery)
