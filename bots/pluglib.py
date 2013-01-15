@@ -13,10 +13,7 @@ import botsglobal
 #~ this is not usable for plugins: 'id' is never written to a plugin.
 #~ often a tabel with 'id' has an 'unique together' attribute.
 #~ than this is used to check if the entry already exists (this is reported).
-#~ existing entries are always overwritten.
-#~ exceptions:
-#~ - confirmrule; there is no clear unique key. AFAICS this will never be a problem.
-#~ - translate: may be confusing. But anyway, no existing translate will be overwritten....
+#~ existing entries are kept/overwritten.
 
 #PLUGINCOMPARELIST is used for filtering and sorting the plugins.
 PLUGINCOMPARELIST = ['uniek','persist','mutex','ta','filereport','report','ccodetrigger','ccode', 'channel','partner','chanpar','translate','routes','confirmrule']
@@ -63,8 +60,6 @@ def writetodatabase(orgpluglist):
                 plug['frompartner'] = None
             if not plug['topartner']:
                 plug['topartner'] = None
-        elif plug['plugintype'] in ['ta','filereport']: #sqlite can have errortexts that are to long. Chop these
-            plug['errortext'] = plug['errortext'][:2047]
         elif plug['plugintype'] == 'routes':
             plug['active'] = False
             if 'defer' not in plug:
@@ -78,18 +73,16 @@ def writetodatabase(orgpluglist):
             continue
         pluglist.append(plug)
     #sort pluglist: this is needed for relationships
-    pluglist.sort(key=lambda k: k.get('isgroup',False),reverse=True)
-    pluglist.sort(key=lambda k: PLUGINCOMPARELIST.index(k['plugintype']))
+    pluglist.sort(key=lambda k: k.get('isgroup',False),reverse=True)       #sort partners on being partnergroup or not
+    pluglist.sort(key=lambda k: PLUGINCOMPARELIST.index(k['plugintype']))   #sort all plugs on plugintype; are partners/partenrgroups are already sorted, this will still be true in this new sort (python guarantees!)
 
     for plug in pluglist:
         botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
         #remember the plugintype
         plugintype = plug['plugintype']
-        #~ print '\nstart plug', plug
-        table = django.db.models.get_model('bots',plug['plugintype'])
-        #~ print table
+        table = django.db.models.get_model('bots',plugintype)
 
-        #delete fields not in model (create compatibility plugin-version)
+        #delete fields not in model for compatibility; note that 'plugintype' is also removed.
         loopdictionary = plug.keys()
         for key in loopdictionary:
             try:
@@ -99,7 +92,7 @@ def writetodatabase(orgpluglist):
 
         #get key(s), put in dict 'sleutel'
         pk = table._meta.pk.name
-        if pk == 'id':
+        if pk == 'id':  #'id' is the artificial key django makes, if no key is indicated. Note the django has no 'composite keys'.
             sleutel = {}
             if table._meta.unique_together:
                 for key in table._meta.unique_together[0]:
@@ -107,10 +100,13 @@ def writetodatabase(orgpluglist):
         else:
             sleutel = {pk:plug.pop(pk)}
 
-        #now we have:
-        #- sleutel: unique key fields. mind: translate and confirmrule have empty 'sleutel' now
-        #- plug: rest of database fields
         sleutelorg = sleutel.copy()     #make a copy of the original sleutel; this is needed later
+        #now we have:
+        #- plugintype (is removed from plug)
+        #- sleutelorg: original key fields
+        #- sleutel: unique key fields. mind: translate and confirmrule have empty 'sleutel'
+        #- plug: rest of database fields
+        #for sleutel and plug: convert names to real database names
 
         #get real column names for fields in plug
         loopdictionary = plug.keys()
@@ -120,10 +116,8 @@ def writetodatabase(orgpluglist):
                 if fieldobject.column != fieldname:     #if name in plug is not the real field name (in database)
                     plug[fieldobject.column] = plug[fieldname]  #add new key in plug
                     del plug[fieldname]                         #delete old key in plug
-                    #~ print 'replace _id for:',fieldname
             except:
                 raise botslib.PluginError(_(u'no field column for: "%s".')%(fieldname))
-
         #get real column names for fields in sleutel; basically the same loop but now for sleutel
         loopdictionary = sleutel.keys()
         for fieldname in loopdictionary:
@@ -134,49 +128,34 @@ def writetodatabase(orgpluglist):
                     del sleutel[fieldname]
             except:
                 raise botslib.PluginError(_(u'no field column for: "%s".')%(fieldname))
-        #now we have:
-        #- sleutel: unique key fields. mind: translate and confirmrule have empty 'sleutel' now
-        #- sleutelorg: original key fields
-        #- plug: rest of database fields
-        #- plugintype
-        #all fields have the right database name
 
-        #~ print 'plug attr',plug
-        #~ print 'orgsleutel',sleutelorg
-        #~ print 'sleutel',sleutel
-
-        #existing ccodetriggers are not overwritten (as deleting ccodetrigger also deletes ccodes)
-        if plugintype == 'ccodetrigger':
-            listexistingentries = table.objects.filter(**sleutelorg).all()
-            if listexistingentries:
-                continue
-        #now find the entry using the keys in sleutelorg; delete the existing entry.
-        elif sleutelorg:  #not for translate and confirmrule; these have an have an empty 'sleutel'
-            listexistingentries = table.objects.filter(**sleutelorg).all()
-        elif plugintype == 'translate':   #for translate: delete existing entry
-            listexistingentries = table.objects.filter(fromeditype=plug['fromeditype'],frommessagetype=plug['frommessagetype'],alt=plug['alt'],frompartner=plug['frompartner_id'],topartner=plug['topartner_id']).all()
-        elif plugintype == 'confirmrule':   #for confirmrule: delete existing entry; but how to find this??? what are keys???
+        #find existing entry (if exists)
+        if sleutelorg:  #note that translate and confirmrule have an empty 'sleutel'
+            listexistingentries = table.objects.filter(**sleutelorg)
+        elif plugintype == 'translate':
+            listexistingentries = table.objects.filter(fromeditype=plug['fromeditype'],
+                                                        frommessagetype=plug['frommessagetype'],
+                                                        alt=plug['alt'],
+                                                        frompartner=plug['frompartner_id'],
+                                                        topartner=plug['topartner_id'])
+        elif plugintype == 'confirmrule':
             listexistingentries = table.objects.filter(confirmtype=plug['confirmtype'],
                                                         ruletype=plug['ruletype'],
                                                         negativerule=plug['negativerule'],
                                                         idroute=plug.get('idroute'),
                                                         idchannel=plug.get('idchannel_id'),
-                                                        editype=plug.get('editype'),
                                                         messagetype=plug.get('messagetype'),
                                                         frompartner=plug.get('frompartner_id'),
-                                                        topartner=plug.get('topartner_id')).all()
-
+                                                        topartner=plug.get('topartner_id'))
         if listexistingentries:
-            for entry in listexistingentries:
-                entry.delete()
-            botsglobal.logger.info(_(u'        Existing entry in database is deleted.'))
-
-        dbobject = table(**sleutel)   #create db-object
-        if plugintype == 'partner':   #for partners, first the partner needs to be saved before groups can be made
-            dbobject.save()
-        for key,value in plug.items():
+            dbobject = listexistingentries[0]  #exists, so use existing db-object
+        else:
+            dbobject = table(**sleutel)         #create db-object
+            if plugintype == 'partner':        #for partners, first the partner needs to be saved before groups can be made
+                dbobject.save()
+        for key,value in plug.items():      #update object with attributes from plugin
             setattr(dbobject,key,value)
-        dbobject.save()
+        dbobject.save()                     #and save the updated object.
         botsglobal.logger.info(_(u'        Write to database is OK.'))
 
 
