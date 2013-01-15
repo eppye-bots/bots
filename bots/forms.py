@@ -212,11 +212,11 @@ class PlugoutForm(django.forms.Form):
     database = django.forms.BooleanField(required=False,initial=False,label='SQLite database',help_text='Only for support purposes, on request.')
 
 class DeleteForm(django.forms.Form):
-    delbackup = django.forms.BooleanField(required=False,label='Delete backups of user scripts',initial=True,help_text='Delete backup files in usersys (purge).')
+    delacceptance = django.forms.BooleanField(required=False,label='Delete transactions in acceptance testing',initial=True,help_text='Delete runs, reports, incoming, outgoing, data files from acceptance testing.')
     deltransactions = django.forms.BooleanField(required=False,label='Delete transactions',initial=True,help_text='Delete runs, reports, incoming, outgoing, data files.')
-    delacceptance = django.forms.BooleanField(required=False,label='Delete transactions in acceptance testing',initial=False,help_text='Delete runs, reports, incoming, outgoing, data files from acceptance testing.')
-    delconfiguration = django.forms.BooleanField(required=False,label='Delete configuration',initial=False,help_text='Delete routes, channels, translations, partners etc.')
+    deloutfile = django.forms.BooleanField(required=False,label='Delete botssys/outfiles',initial=False,help_text='Delete files in botssys/outfile.')
+    delbackup = django.forms.BooleanField(required=False,label='Delete backups of user scripts',initial=False,help_text='Delete backup files in usersys (purge).')
     delcodelists = django.forms.BooleanField(required=False,label='Delete user code lists',initial=False,help_text='Delete user code lists.')
     deluserscripts = django.forms.BooleanField(required=False,label='Delete all user scripts',initial=False,help_text='Delete all scripts in usersys (grammars, mappings etc) except charsets.')
     delinfile = django.forms.BooleanField(required=False,label='Delete botssys/infiles',initial=False,help_text='Delete files in botssys/infile.')
-    deloutfile = django.forms.BooleanField(required=False,label='Delete botssys/outfiles',initial=False,help_text='Delete files in botssys/outfile.')
+    delconfiguration = django.forms.BooleanField(required=False,label='Delete configuration',initial=False,help_text='Delete routes, channels, translations, partners etc.')
