@@ -3,7 +3,6 @@ import sys
 import os
 import botsinit
 import botsglobal
-import pluglib
 
 
 def start():
@@ -35,6 +34,7 @@ def start():
     usersys = botsglobal.ini.get('directories','usersysabs')
     index_filename = os.path.join(usersys,'index.py')
     filehandler = open(index_filename,'w')
+    import pluglib              #import here, import at start of file gives error; first initialize.
     filehandler.write(pluglib.plugoutindex())
     filehandler.close()
     
