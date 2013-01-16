@@ -425,9 +425,26 @@ def plugin(request,*kw,**kwargs):
                 messages.add_message(request, messages.INFO, _(u'No plugin read.'))
         return django.shortcuts.redirect('/home')
 
-def write_backup_plugout(request,*kw,**kwargs):
+def plugout_index(request,*kw,**kwargs):
     if request.method == 'GET':
-        filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y-%m-%d %H%M%S'))
+        filename = botslib.join(botsglobal.ini.get('directories','usersysabs'),'index.py')
+        botsglobal.logger.info(_(u'Start writing configuration index file "%s".'),filename)
+        try:
+            filehandler = open(filename,'w')
+            filehandler.write(pluglib.plugoutindex())
+            filehandler.close()
+        except Exception,msg:
+            notification = u'Error writing configuration index file: "%s".'%str(msg)
+            botsglobal.logger.error(notification)
+            messages.add_message(request, messages.INFO, notification)
+        else:
+            botsglobal.logger.info(_(u'Configuration index file "%s" is written successful.'),filename)
+            messages.add_message(request, messages.INFO, _(u'Configuration index file "%s" is written successful.')%filename)
+        return django.shortcuts.redirect('/home')
+        
+def plugout_backup(request,*kw,**kwargs):
+    if request.method == 'GET':
+        filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y%m%d%H%M%S'))
         botsglobal.logger.info(_(u'Start writing backup plugin "%s".'),filename)
         try:
             pluglib.plugoutasbackup(filename)
