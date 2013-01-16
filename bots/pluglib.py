@@ -245,13 +245,13 @@ def plugoutasbackup(filename):
     dummy_for_cleaned_data = {'databaseconfiguration':True,
                                 'umlists':True,
                                 'fileconfiguration':True,
+                                'infiles':False,
                                 'charset':True,
                                 'databasetransactions':False,
-                                'config':False,
                                 'data':False,
-                                'database':False,
-                                'infiles':False,
                                 'logfiles':False,
+                                'config':False,
+                                'database':False,
                                 }
     plugoutcore(dummy_for_cleaned_data,filename)
     
