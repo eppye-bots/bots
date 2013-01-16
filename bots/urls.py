@@ -31,6 +31,7 @@ urlpatterns = patterns('',
     (r'^runengine.+', run_permission(views.runengine)),
     #only superuser
     (r'^delete.*', superuser_required(views.delete)),
+    (r'^plugin/index.*', superuser_required(views.plugin_index)),
     (r'^plugin.*', superuser_required(views.plugin)),
     (r'^plugout/index.*', superuser_required(views.plugout_index)),
     (r'^plugout/backup.*', superuser_required(views.plugout_backup)),

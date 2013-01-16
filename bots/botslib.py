@@ -461,7 +461,11 @@ def botsimport(soort,modulename):
         modulename.encode('ascii')
     except UnicodeEncodeError:  #if not us-ascii, convert to punycode
         modulename = modulename.encode('punycode')
-    modulepath = '.'.join((botsglobal.usersysimportpath,soort,modulename))  #assemble import string
+    if soort:
+        lijst = (botsglobal.usersysimportpath,soort,modulename)
+    else:
+        lijst = (botsglobal.usersysimportpath,modulename)
+    modulepath = '.'.join(lijst)  #assemble import string
     modulefile = join(botsglobal.usersysimportpath,soort,modulename)   #assemble abs filename for errortexts
     try:
         module = botsbaseimport(modulepath)

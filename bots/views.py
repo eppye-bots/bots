@@ -397,17 +397,7 @@ def plugin(request,*kw,**kwargs):
             form = forms.UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
                 #always write backup plugin first
-                filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y%m%d%H%M%S'))
-                botsglobal.logger.info(_(u'Start writing backup plugin "%s".'),filename)
-                try:
-                    pluglib.plugoutasbackup(filename)
-                except Exception,msg:
-                    notification = u'Error writing backup plugin: "%s".'%str(msg)
-                    botsglobal.logger.error(notification)
-                    messages.add_message(request, messages.INFO, notification)
-                    return django.shortcuts.redirect('/home')
-                else:
-                    botsglobal.logger.info(_(u'Backup plugin "%s" is written successful.'),filename)
+                plugout_backup_core(request,*kw,**kwargs)        
                 #read the plugin
                 try:
                     if pluglib.load(request.FILES['file'].temporary_file_path()):
@@ -423,6 +413,25 @@ def plugin(request,*kw,**kwargs):
                     request.FILES['file'].close()
             else:
                 messages.add_message(request, messages.INFO, _(u'No plugin read.'))
+        return django.shortcuts.redirect('/home')
+
+def plugin_index(request,*kw,**kwargs):
+    if request.method == 'GET':
+        return django.shortcuts.render_to_response('bots/plugin_index.html', context_instance=django.template.RequestContext(request))
+    else:
+        if 'submit' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
+            #always write backup plugin first
+            plugout_backup_core(request,*kw,**kwargs)        
+            #read the plugin
+            try:
+                pluglib.load_index('index')
+            except Exception,msg:
+                notification = u'Error reading configuration index file: "%s".'%str(msg)
+                botsglobal.logger.error(notification)
+                messages.add_message(request, messages.INFO, notification)
+            else:
+                botsglobal.logger.info(_(u'Finished reading configuration index file successful.'))
+                messages.add_message(request, messages.INFO, _(u'Configuration index file is read successful.'))
         return django.shortcuts.redirect('/home')
 
 def plugout_index(request,*kw,**kwargs):
@@ -444,18 +453,21 @@ def plugout_index(request,*kw,**kwargs):
         
 def plugout_backup(request,*kw,**kwargs):
     if request.method == 'GET':
-        filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y%m%d%H%M%S'))
-        botsglobal.logger.info(_(u'Start writing backup plugin "%s".'),filename)
-        try:
-            pluglib.plugoutasbackup(filename)
-        except Exception,msg:
-            notification = u'Error writing backup plugin: "%s".'%str(msg)
-            botsglobal.logger.error(notification)
-            messages.add_message(request, messages.INFO, notification)
-        else:
-            botsglobal.logger.info(_(u'Backup plugin "%s" is written successful.'),filename)
-            messages.add_message(request, messages.INFO, _(u'Backup plugin "%s" is written successful.')%filename)
-        return django.shortcuts.redirect('/home')
+        plugout_backup_core(request,*kw,**kwargs)        
+    return django.shortcuts.redirect('/home')
+        
+def plugout_backup_core(request,*kw,**kwargs):
+    filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y%m%d%H%M%S'))
+    botsglobal.logger.info(_(u'Start writing backup plugin "%s".'),filename)
+    try:
+        pluglib.plugoutasbackup(filename)
+    except Exception,msg:
+        notification = u'Error writing backup plugin: "%s".'%str(msg)
+        botsglobal.logger.error(notification)
+        messages.add_message(request, messages.INFO, notification)
+    else:
+        botsglobal.logger.info(_(u'Backup plugin "%s" is written successful.'),filename)
+        messages.add_message(request, messages.INFO, _(u'Backup plugin "%s" is written successful.')%filename)
         
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':

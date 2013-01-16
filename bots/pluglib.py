@@ -160,6 +160,31 @@ def writetodatabase(orgpluglist):
 
 
 @django.db.transaction.commit_on_success  #if no exception raised: commit, else rollback.
+def load_index(filename):
+    ''' process index file in default location. '''
+    try:
+        importedbotsindex,scriptname = botslib.botsimport('','index')
+        pluglist = importedbotsindex.plugins[:]
+        if 'botsindex' in sys.modules:
+            del sys.modules['botsindex']
+    except:
+        txt = botslib.txtexc()
+        raise botslib.PluginError(_(u'Error in configuration index file. Nothing is written. Error:\n%s')%(txt))
+    else:
+        botsglobal.logger.info(_(u'Configuration index file is OK.'))
+        botsglobal.logger.info(_(u'Start writing to database.'))
+
+    #write content of index file to the bots database
+    try:
+        writetodatabase(pluglist)
+    except:
+        txt = botslib.txtexc()
+        raise botslib.PluginError(_(u'Error writing configuration index to database. Nothing is written. Error:\n%s'%(txt)))
+    else:
+        botsglobal.logger.info(u'Writing to database is OK.')
+
+
+@django.db.transaction.commit_on_success  #if no exception raised: commit, else rollback.
 def load(pathzipfile):
     ''' process uploaded plugin. '''
     #test is valid zipfile
