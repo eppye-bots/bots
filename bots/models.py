@@ -156,7 +156,7 @@ class confirmrule(models.Model):
     class Meta:
         db_table = 'confirmrule'
         verbose_name = _(u'confirm rule')
-        ordering = ['confirmtype','ruletype']
+        ordering = ['confirmtype','ruletype','negativerule','frompartner','topartner','idroute','idchannel','messagetype']
 class ccodetrigger(models.Model):
     ccodeid = StripCharField(primary_key=True,max_length=35,verbose_name=_(u'Type of user code'))
     ccodeid_desc = models.TextField(blank=True,null=True,verbose_name=_(u'Description'))
@@ -267,7 +267,8 @@ class chanpar(models.Model):
     askmdn = models.BooleanField(default=False)     #not used anymore 20091019
     sendmdn = models.BooleanField(default=False)    #not used anymore 20091019
     class Meta:
-        unique_together = (("idpartner","idchannel"),)
+        unique_together = (('idpartner','idchannel'),)
+        ordering = ['idpartner','idchannel']
         db_table = 'chanpar'
         verbose_name = _(u'email address per channel')
         verbose_name_plural = _(u'email address per channel')
@@ -290,7 +291,7 @@ class translate(models.Model):
     class Meta:
         db_table = 'translate'
         verbose_name = _(u'translation rule')
-        ordering = ['fromeditype','frommessagetype']
+        ordering = ['fromeditype','frommessagetype','frompartner','topartner','alt']
     def __unicode__(self):
         return unicode(self.fromeditype) + u' ' + unicode(self.frommessagetype) + u' ' + unicode(self.alt) + u' ' + unicode(self.frompartner) + u' ' + unicode(self.topartner)
 class routes(models.Model):
@@ -321,7 +322,7 @@ class routes(models.Model):
     class Meta:
         db_table = 'routes'
         verbose_name = _(u'route')
-        unique_together = (("idroute","seq"),)
+        unique_together = (('idroute','seq'),)
         ordering = ['idroute','seq']
     def __unicode__(self):
         return unicode(self.idroute) + u' ' + unicode(self.seq)
