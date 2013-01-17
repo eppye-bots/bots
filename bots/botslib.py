@@ -514,6 +514,15 @@ def abspathdata(filename):
             datasubdir = '0'
         return join(directory,datasubdir,filename)
 
+def deldata(filename):
+    ''' delete internal data file.'''
+    filename = abspathdata(filename)
+    try:
+        os.remove(filename)
+    except:
+        print 'not deleted', filename
+        pass
+
 def opendata(filename,mode,charset=None,errors='strict'):
     ''' open internal data file. if no encoding specified: read file raw/binary.'''
     filename = abspathdata(filename)

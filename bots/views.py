@@ -502,8 +502,8 @@ def delete(request,*kw,**kwargs):
             if form.is_valid():
                 botsglobal.logger.info(_(u'Start deleting in configuration.'))
                 if form.cleaned_data['deltransactions']:
-                    #while testing with very big loads, deleting transaction when wrong. Using raw SQL solved this.
                     from django.db import connection, transaction
+                    #while testing with very big loads, deleting transaction when wrong. Using raw SQL solved this.
                     cursor = connection.cursor()
                     cursor.execute("DELETE FROM ta")
                     cursor.execute("DELETE FROM filereport")
@@ -519,21 +519,26 @@ def delete(request,*kw,**kwargs):
                     botsglobal.logger.info(_(u'    Data files are deleted.'))
                 elif form.cleaned_data['delacceptance']:
                     from django.db.models import Min
-                    for min_report in models.report.objects.filter(acceptance=1):
-                        max_report_idta = models.report.objects.filter(idta__gt=min_report.idta).aggregate(Min('idta'))['idta__min']
-                        if not max_report_idta:
+                    list_file = []  #list of files in data-directory
+                    report_idta_lowest = 0
+                    for acc_report in models.report.objects.filter(acceptance=1): #for each acceptance report. is not very efficient.
+                        if not report_idta_lowest:
+                            report_idta_lowest = acc_report.idta
+                        max_report_idta = models.report.objects.filter(idta__gt=acc_report.idta).aggregate(Min('idta'))['idta__min'] #select 'next' report...
+                        if not max_report_idta: #if report is report of last run, there is no next report
                             max_report_idta = sys.maxint
-                        models.ta.objects.filter(idta__gte=min_report.idta).filter(idta__lt=max_report_idta).delete()
-                        models.filereport.objects.filter(idta__gte=min_report.idta).filter(idta__lt=max_report_idta).delete()
-                    models.report.objects.filter(acceptance=1).delete()
-                    messages.add_message(request, messages.INFO, _(u'Transactions from acceptance-testing are deleted.'))
-                    botsglobal.logger.info(_(u'    Transactions from acceptance-testing are deleted.'))
-                    #clean data files
-                    #~ deletefrompath = botsglobal.ini.get('directories','data','botssys/data')
-                    #~ shutil.rmtree(deletefrompath,ignore_errors=True)
-                    #~ botslib.dirshouldbethere(deletefrompath)
-                    #~ messages.add_message(request, messages.INFO, _(u'Data files are deleted.'))
-                    #~ botsglobal.logger.info(_(u'    Data files are deleted.'))
+                        #we have a idta-range now: from (and including) acc_report.idta till (and excluding) max_report_idta
+                        list_file += models.ta.objects.filter(idta__gte=acc_report.idta,idta__lt=max_report_idta).exclude(status=1).values_list('filename', flat=True).distinct()
+                        models.ta.objects.filter(idta__gte=acc_report.idta,idta__lt=max_report_idta).delete()   #delete ta in range 
+                        models.filereport.objects.filter(idta__gte=acc_report.idta,idta__lt=max_report_idta).delete()   #delete filereports in range
+                    if report_idta_lowest:
+                        models.report.objects.filter(idta__gte=report_idta_lowest,acceptance=1).delete()     #delete all acceptance reports
+                        for filename in list_file:      #delete all files in data directory geenrated during acceptance testing
+                            if not filename.isdigit():
+                                continue
+                            botslib.deldata(filename)
+                    messages.add_message(request, messages.INFO, _(u'Transactions from acceptance-testing deleted.'))
+                    botsglobal.logger.info(_(u'    Transactions from acceptance-testing deleted.'))
                 if form.cleaned_data['delconfiguration']:
                     models.confirmrule.objects.all().delete()
                     models.routes.objects.all().delete()
