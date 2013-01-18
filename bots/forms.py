@@ -20,11 +20,11 @@ def getoutmessagetypes():
 def getallmessagetypes():
     return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(list(models.translate.objects.values_list('tomessagetype', flat=True).all()) + list(models.translate.objects.values_list('frommessagetype', flat=True).all()) )) ]
 def getpartners():
-    return [DEFAULT_ENTRY]+[(l,l) for l in models.partner.objects.values_list('idpartner', flat=True).filter(isgroup=False,active=True).order_by('idpartner') ]
+    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,n)) for (l,n) in models.partner.objects.values_list('idpartner','name').filter(active=True).order_by('idpartner') ]
 def getfromchannels():
-    return [DEFAULT_ENTRY]+[(l,l) for l in models.channel.objects.values_list('idchannel', flat=True).filter(inorout='in').order_by('idchannel') ]
+    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,t)) for (l,t) in models.channel.objects.values_list('idchannel','type').filter(inorout='in').order_by('idchannel') ]
 def gettochannels():
-    return [DEFAULT_ENTRY]+[(l,l) for l in models.channel.objects.values_list('idchannel', flat=True).filter(inorout='out').order_by('idchannel') ]
+    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,t)) for (l,t) in models.channel.objects.values_list('idchannel','type').filter(inorout='out').order_by('idchannel') ]
 
 
 class Select(django.forms.Form):
@@ -200,16 +200,16 @@ class UploadFileForm(django.forms.Form):
     file  = django.forms.FileField(label='Plugin to read',required=True,widget=django.forms.widgets.FileInput(attrs={'size':'100'}))
 
 class PlugoutForm(django.forms.Form):
-    databaseconfiguration = django.forms.BooleanField(required=False,initial=True,help_text='Routes, channels, translations, partners, etc.')
-    umlists = django.forms.BooleanField(required=False,initial=True,label='User maintained code lists',help_text='')
-    fileconfiguration = django.forms.BooleanField(required=False,initial=True,help_text='Grammars, mapping scrips, routes scripts, etc. (bots/usersys)')
-    infiles = django.forms.BooleanField(required=False,initial=True,help_text='Examples edi file in bots/botssys/infile')
-    charset = django.forms.BooleanField(required=False,initial=False,label='(Edifact) files with character sets',help_text='seldom needed.')
-    databasetransactions = django.forms.BooleanField(required=False,initial=False,help_text='From the database: Runs, incoming files, outgoing files, documents;  only for support purposes, on request.')
-    data = django.forms.BooleanField(required=False,initial=False,label='All transaction files',help_text='bots/botssys/data; only for support purposes, on request.')
-    logfiles = django.forms.BooleanField(required=False,initial=False,label='Log files',help_text='bots/botssys/logging; only for support purposes, on request.')
-    config = django.forms.BooleanField(required=False,initial=False,label='configuration files',help_text='bots/config; only for support purposes, on request.')
-    database = django.forms.BooleanField(required=False,initial=False,label='SQLite database',help_text='Only for support purposes, on request.')
+    databaseconfiguration = django.forms.BooleanField(required=False,initial=True,label='Database configuration',help_text='Routes, channels, translations, partners, etc. from the database.')
+    umlists = django.forms.BooleanField(required=False,initial=True,label='User code lists',help_text='Your user code data from the database.')
+    fileconfiguration = django.forms.BooleanField(required=False,initial=True,label='Script files',help_text='[bots/usersys] Grammars, mapping scrips, routes scripts, etc.')
+    infiles = django.forms.BooleanField(required=False,initial=True,label='Input files',help_text='[bots/botssys/infile] Example/test edi files.')
+    charset = django.forms.BooleanField(required=False,initial=False,label='Edifact character sets',help_text='[bots/usersys/charsets] Seldom needed, only if changed.')
+    databasetransactions = django.forms.BooleanField(required=False,initial=False,label='Database transactions',help_text='Transaction details of all bots runs from the database. Only for support purposes, on request. May generate a very large plugin!')
+    data = django.forms.BooleanField(required=False,initial=False,label='All transaction files',help_text='[bots/botssys/data] Copies of all incoming, intermediate and outgoing files. Only for support purposes, on request. May generate a very large plugin!')
+    logfiles = django.forms.BooleanField(required=False,initial=False,label='Log files',help_text='[bots/botssys/logging] Log files from engine, webserver etc. Only for support purposes, on request.')
+    config = django.forms.BooleanField(required=False,initial=False,label='Configuration files',help_text='[bots/config] Your customised configuration files. Only for support purposes, on request.')
+    database = django.forms.BooleanField(required=False,initial=False,label='SQLite database',help_text='[bots/botssys/sqlitedb] Entire database file. Only for support purposes, on request.')
 
 class DeleteForm(django.forms.Form):
     delacceptance = django.forms.BooleanField(required=False,label='Delete transactions in acceptance testing',initial=True,help_text='Delete runs, reports, incoming, outgoing, data files from acceptance testing.')

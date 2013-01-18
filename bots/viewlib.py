@@ -264,6 +264,10 @@ def filterquery(query , org_cleaned_data, incoming=False):
                     query = query.filter(reportidta=idtalastrun)
                 else:
                     query = query.filter(idta__gt=idtalastrun)
+    if 'frompartner' in cleaned_data and cleaned_data['frompartner']:
+        query = frompartnerquery(query,cleaned_data.pop('frompartner'))
+    if 'topartner' in cleaned_data and cleaned_data['topartner']:
+        query = topartnerquery(query,cleaned_data.pop('topartner'))
     for key,value in cleaned_data.items():
         if not value:
             del cleaned_data[key]
@@ -297,8 +301,29 @@ def filterquery2(query , org_cleaned_data, incoming=False):
                     query = query.filter(reportidta=idtalastrun)
                 else:
                     query = query.filter(idta__gt=idtalastrun)
+    if 'frompartner' in cleaned_data and cleaned_data['frompartner']:
+        query = frompartnerquery(query,cleaned_data.pop('frompartner'))
+    if 'topartner' in cleaned_data and cleaned_data['topartner']:
+        query = topartnerquery(query,cleaned_data.pop('topartner'))
     for key,value in cleaned_data.items():
         if not value:
             del cleaned_data[key]
     return query.filter(**cleaned_data)
+
+def frompartnerquery(query,idpartner):
+    # return the appropriate query according to partner type
+    # if group: select partners in the group
+    # else: select the partner
+    isgroup = models.partner.objects.values_list('isgroup', flat=True).filter(idpartner=idpartner)
+    if isgroup[0]:
+        return query.filter(frompartner__in=models.partner.objects.values_list('idpartner', flat=True).filter(group=idpartner))
+    else:
+        return query.filter(frompartner=idpartner)
+
+def topartnerquery(query,idpartner):
+    isgroup = models.partner.objects.values_list('isgroup', flat=True).filter(idpartner=idpartner)
+    if isgroup[0]:
+        return query.filter(topartner__in=models.partner.objects.values_list('idpartner', flat=True).filter(group=idpartner))
+    else:
+        return query.filter(topartner=idpartner)
 
