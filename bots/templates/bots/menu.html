@@ -41,6 +41,7 @@
 		{% if perms.bots.change_translate %}<li><a href="/admin/bots/translate/" >{% trans 'Translations' %}</a></li>{% endif %}
 		{% if perms.bots.change_partner %}<li><a href="/admin/bots/partner/" >{% trans 'Partners &amp; groups' %}</a></li>{% endif %}
 		{% if perms.bots.change_confirmrule %}<li><a href="/admin/bots/confirmrule/" >{% trans 'Confirmrules' %}</a></li>{% endif %}
+        <li><hr/></li>
 		{% if perms.bots.change_ccode %}<li><a href="/admin/bots/ccode/" >{% trans 'User Codes list' %}</a></li>{% endif %}
 		{% if perms.bots.change_ccodetrigger %}<li><a href="/admin/bots/ccodetrigger/" >{% trans 'User Code types' %}</a></li>{% endif %}
 	</ul>
