@@ -185,3 +185,13 @@ table#botstable td {
 .row2 {
 	background: #f8f8f8;
 	}
+/*nicer layout for sort boxes in admin for django1.4*/
+table thead th .text span {
+    padding: 15px 5px 2px 5px;
+    display:block;
+}
+table thead th .text a {
+    display: block;
+    cursor: pointer;
+    padding: 15px 5px 2px 5px;
+}
