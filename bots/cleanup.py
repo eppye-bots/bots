@@ -29,11 +29,14 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
         do_full_cleanup = False
     try:
         if do_full_cleanup:
+            botsglobal.logger.info(u'Cleanup files')
             _cleandatafile()
             _cleanarchive()
+            botsglobal.logger.info(u'Cleanup database')
             _cleanupsession()
             _cleanpersist()
             _cleantransactions()
+            botsglobal.logger.info(u'Vacuum database')
             _vacuum()
             # postcleanup user exit in botsengine script
             if userscript and hasattr(userscript,'postcleanup'):
