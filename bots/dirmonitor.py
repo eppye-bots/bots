@@ -186,7 +186,7 @@ def start():
         dir_watch_thread.start()
 
     # this main thread get the results from the watch-thread(s).
-    logger.info(_(u'Bots %s started.'),process_name)
+    logger.info(u'Bots %s started.',process_name)
     active_receiving = False
     timeout = 2.0
     cond.acquire()
