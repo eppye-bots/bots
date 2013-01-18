@@ -153,8 +153,8 @@ class MyRouteAdminForm(django.forms.ModelForm):
         model = models.routes
     def clean(self):
         super(MyRouteAdminForm, self).clean()
-        if self.cleaned_data['fromchannel'] and (not self.cleaned_data['fromeditype'] or not self.cleaned_data['frommessagetype']):
-            raise django.forms.util.ValidationError(_(u'When using an inchannel both "fromeditype" and "frommessagetype" are required.'))
+        if self.cleaned_data['fromchannel'] and self.cleaned_data['translateind'] != 2 and (not self.cleaned_data['fromeditype'] or not self.cleaned_data['frommessagetype']):
+            raise django.forms.util.ValidationError(_(u'When using an inchannel and not pass-through, both "fromeditype" and "frommessagetype" are required.'))
         return self.cleaned_data
 
 class RoutesAdmin(BotsAdmin):
