@@ -519,7 +519,7 @@ def delete(request,*kw,**kwargs):
                     botsglobal.logger.info(_(u'    Data files are deleted.'))
                 elif form.cleaned_data['delacceptance']:
                     from django.db.models import Min
-                    list_file = []  #list of files in data-directory
+                    list_file = []  #list of files for deletion in data-directory
                     report_idta_lowest = 0
                     for acc_report in models.report.objects.filter(acceptance=1): #for each acceptance report. is not very efficient.
                         if not report_idta_lowest:
@@ -534,9 +534,8 @@ def delete(request,*kw,**kwargs):
                     if report_idta_lowest:
                         models.report.objects.filter(idta__gte=report_idta_lowest,acceptance=1).delete()     #delete all acceptance reports
                         for filename in list_file:      #delete all files in data directory geenrated during acceptance testing
-                            if not filename.isdigit():
-                                continue
-                            botslib.deldata(filename)
+                            if filename.isdigit():
+                                botslib.deldata(filename)
                     messages.add_message(request, messages.INFO, _(u'Transactions from acceptance-testing deleted.'))
                     botsglobal.logger.info(_(u'    Transactions from acceptance-testing deleted.'))
                 if form.cleaned_data['delconfiguration']:
