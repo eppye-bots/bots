@@ -27,6 +27,7 @@ import bots.outmessage as outmessage
 pluging unitinisout.zip
     in bots.ini: max_number_errors = 1
     runs OK in python2.7 (xml behave slightly differnt in 2.6)
+    not an acceptance test
 '''
 
 class TestInmessage_xml(unittest.TestCase):

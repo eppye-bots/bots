@@ -9,6 +9,7 @@ import utilsunit
 
 ''' plugin unitformats 
     set bots.ini: max_number_errors = 1
+    not an acceptance-test.
 '''
 #python 2.6 treats -0 different. in outmessage this is adapted, for inmessage: python 2.6 does this correct
 

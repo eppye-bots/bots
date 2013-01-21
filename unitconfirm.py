@@ -18,7 +18,7 @@ before each run: clear transactions!
 
 tested is:
 - seperate unit tests
-- total expectation of whoel run
+- total expectation of whole run
 - seperate unit-tests to check confirm-rules 
 '''
 

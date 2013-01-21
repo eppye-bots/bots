@@ -14,6 +14,7 @@ from bots.botsconfig import *
 '''
 plugin unitfilenameout.zip
 active all routes
+no acceptance-test!
 '''
 
 botssys = 'bots/botssys'

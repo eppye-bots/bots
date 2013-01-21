@@ -7,7 +7,9 @@ import bots.botsinit as botsinit
 import bots.inmessage as inmessage
 import bots.transform as transform
 
-'''plugin unittranslateutils.zip '''
+'''plugin unittranslateutils.zip 
+in bots.ini:  runacceptancetest = False
+'''
 #as the max length is 
 
 class TestTranslate(unittest.TestCase):

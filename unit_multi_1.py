@@ -17,6 +17,7 @@ from bots.botsconfig import *
 '''
 plugin 'unit_multi_1'
 enable routes
+not an acceptance test.
 '''
 
 def test_plugin():

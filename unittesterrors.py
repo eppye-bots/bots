@@ -14,6 +14,7 @@ from bots.botsconfig import *
 '''
 plugin 'unittesterros'
 activate routes
+not an acceptance test
 in bots.ini: 
     debug = False
     max_number_errors = 25

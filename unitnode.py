@@ -9,7 +9,9 @@ import bots.node as node
 import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
 
-'''plugin unitnode.zip'''
+'''plugin unitnode.zip
+not an acceptance tst
+'''
 
 #fetchqueries is dynamically added to node, to retrieve and check 
 collectqueries = {}

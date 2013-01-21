@@ -7,7 +7,9 @@ import bots.outmessage as outmessage
 import bots.botsglobal as botsglobal 
 import utilsunit
 
-''' plugin unitgrammar.zip '''
+''' plugin unitgrammar.zip 
+    not an acceptance test.
+'''
 
 
 class TestGrammar(unittest.TestCase):
