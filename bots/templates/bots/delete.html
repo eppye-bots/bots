@@ -5,13 +5,14 @@
 
 {% block content %}
 <br/>
-<h1>Delete from configuration, user scripts etc.</h1>
-<p>Deletions can NOT be undone!</p>
+<h1>Bulk delete from configuration, user scripts etc.</h1>
+<p>!Deletions can NOT be undone!</p>
 <br/>
 <form action="/delete" method="POST" enctype="multipart/form-data">{% csrf_token %}
     <table>
         {{ form }}
     </table>
-    <input type="submit" name="submit" value="{% trans 'Delete' %}" />
+    <input type="submit" name="cancel" value="{% trans 'Cancel' %}" />
+    <input type="submit" name="submit" value="{% trans 'Bulk delete' %}" />
 </form>
 {% endblock %}
