@@ -64,7 +64,7 @@ def _cleanarchive():
     vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
     for row in botslib.query('''SELECT archivepath FROM channel WHERE archivepath != '' '''):
         vanafdir = botslib.join(row['archivepath'],vanaf)
-        for entry in glob.glob(botslib.join(row['archivepath'],'*')):
+        for entry in glob.iglob(botslib.join(row['archivepath'],'*')):
             if entry < vanafdir:
                 if entry.endswith('.zip'):
                     os.remove(entry)
@@ -76,7 +76,7 @@ def _cleandatafile():
     ''' delete all data files older than xx days.'''
     vanaf = time.time() - (botsglobal.ini.getint('settings','maxdays',30) * 3600 * 24)
     frompath = botslib.join(botsglobal.ini.get('directories','data','botssys/data'),'*')
-    for filename in glob.glob(frompath):
+    for filename in glob.iglob(frompath):
         statinfo = os.stat(filename)
         if not stat.S_ISDIR(statinfo.st_mode):
             try:
@@ -88,7 +88,7 @@ def _cleandatafile():
         else:   #check files in dir and remove all older than maxdays
             frompath2 = botslib.join(filename,'*')
             emptydir = True   #track check if directory is empty after loop (should directory itself be deleted/)
-            for filename2 in glob.glob(frompath2):
+            for filename2 in glob.iglob(frompath2):
                 statinfo2 = os.stat(filename2)
                 if statinfo2.st_mtime > vanaf  or stat.S_ISDIR(statinfo2.st_mode): #check files in dir and remove all older than maxdays
                     emptydir = False

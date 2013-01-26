@@ -20,7 +20,7 @@ def startmulti(grammardir,editype):
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
     
-    for filename in glob.glob(grammardir):
+    for filename in glob.iglob(grammardir):
         filename_basename = os.path.basename(filename)
         if filename_basename in ['__init__.py','envelope.py']:
             continue

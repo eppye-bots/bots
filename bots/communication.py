@@ -676,9 +676,8 @@ class file(_comsession):
         ''' gets files from filesystem.
         '''
         frompath = botslib.join(self.channeldict['path'],self.channeldict['filename'])
-        filelist = [filename for filename in glob.glob(frompath) if os.path.isfile(filename)]
-        if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-            filelist.sort()
+        filelist = [filename for filename in glob.iglob(frompath) if os.path.isfile(filename)]
+        filelist.sort()
         startdatetime = datetime.datetime.now()
         for fromfilename in filelist:
             try:
@@ -1673,7 +1672,9 @@ class communicationscript(_comsession):
                         break
         else:   #all files have been set ready by external communicationscript using 'connect'.
             frompath = botslib.join(self.channeldict['path'], self.channeldict['filename'])
-            for fromfilename in [c for c in glob.glob(frompath) if os.path.isfile(c)]:
+            filelist = [filename for filename in glob.iglob(frompath) if os.path.isfile(filename)]
+            filelist.sort()
+            for fromfilename in filelist:
                 try:
                     ta_from = botslib.NewTransaction(filename = fromfilename,
                                                     status = EXTERNIN,
@@ -1752,8 +1753,9 @@ class communicationscript(_comsession):
         botslib.tryrunscript(self.userscript,self.scriptname,'disconnect',channeldict=self.channeldict)
         if self.channeldict['remove'] and not hasattr(self.userscript,'main'):  #if bots should remove the files, and all files are passed at once, delete these files.
             outputdir = botslib.join(self.channeldict['path'], self.channeldict['filename'])
-            for filename in [namefile for namefile in glob.glob(outputdir) if os.path.isfile(namefile)]:
-                try:
-                    os.remove(filename)
-                except:
-                    pass
+            for filename in glob.iglob(outputdir):
+                if os.path.isfile(filename):
+                    try:
+                        os.remove(filename)
+                    except:
+                        pass
