@@ -65,6 +65,13 @@ def start():
     commandstorun = [command[2:] for command in commandspossible if command in commandstorun]   #sort commands
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
+    #set working directory to bots installation. 
+    #possible advantage: when using relative paths it is clear that this point paths within bots installation. 
+    #most of time not needed: 
+    #1. in production: do not use relative paths within bots directory
+    #2. in eg incoming messages path name is used via botslib.join, which makes an absulute path...
+    #use this as bots2.* always ad this; avoid breaking.
+    os.chdir(botsglobal.ini.get('directories','botspath'))
 
     #**************check if another instance of bots-engine is running/if port is free******************************
     try:
