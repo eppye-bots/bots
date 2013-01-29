@@ -398,7 +398,7 @@ class _comsession(object):
             #for now no checking if processing was OK.....
             #performance: not good. Index should be on the reference.
         @botslib.log_session
-        def mdnsend():
+        def mdnsend(ta_from):
             if not botslib.checkconfirmrules('send-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
                                                             frompartner=frompartner,topartner=topartner):
                 return 0 #do not send
@@ -448,7 +448,8 @@ class _comsession(object):
                             reference=mdn_reference,
                             content='multipart/report',
                             fromchannel=self.channeldict['idchannel'],
-                            charset='ascii')
+                            charset='ascii',
+                            parent=ta_from.idta)
             return ta_mdn.idta
         #*****************end of nested function dispositionnotification***************************
         #get received mails for channel
@@ -511,7 +512,7 @@ class _comsession(object):
                     mdnreceive()
                 else:
                     if msg.has_key('disposition-notification-To'):  #sender requests a MDN
-                        confirmidta = mdnsend()
+                        confirmidta = mdnsend(ta_from)
                         if confirmidta:
                             confirmtype = 'send-email-MDN'
                             confirmed = True
@@ -1759,3 +1760,30 @@ class communicationscript(_comsession):
                         os.remove(filename)
                     except:
                         pass
+
+class trash(_comsession):
+    @botslib.log_session
+    def outcommunicate(self):
+        ''' does output of files to 'nothing' (trash it).
+        '''
+        #select the db-ta's for this channel
+        for row in botslib.query(u'''SELECT idta,filename,numberofresends
+                                       FROM ta
+                                      WHERE idta>%(rootidta)s
+                                        AND status=%(status)s
+                                        AND statust=%(statust)s
+                                        AND tochannel=%(tochannel)s
+                                        ''',
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    'status':FILEOUT,'statust':OK}):
+            try:    #for each db-ta:
+                ta_from = botslib.OldTransaction(row['idta'])
+                ta_to =   ta_from.copyta(status=EXTERNOUT)
+            except:
+                txt = botslib.txtexc()
+                ta_to.update(statust=ERROR,errortext=txt,numberofresends=row['numberofresends']+1)
+            else:
+                ta_to.update(statust=DONE,filename='',numberofresends=row['numberofresends']+1)
+            finally:
+                ta_from.update(statust=DONE)
+

@@ -64,6 +64,7 @@ CHANNELTYPE = (
     ('sftp', _(u'sftp (ssh)')),
     ('xmlrpc', _(u'xmlrpc')),
     ('mimefile', _(u'mimefile')),
+    ('trash', _(u'trash/discard')),
     ('communicationscript', _(u'communicationscript')),
     ('db', _(u'db')),
     ('database', _(u'database (old)')),
