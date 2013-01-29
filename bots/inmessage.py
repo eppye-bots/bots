@@ -408,95 +408,101 @@ class idoc(fixed):
 
 
 class var(Inmessage):
-    ''' abstract class for ediobjects with records of variabele length.'''
+    ''' abstract class for edi-objects with records of variabele length.'''
     def _lex(self):
         ''' lexes file with variable records to list of records, fields and subfields (self.records).'''
-        quote_char  = self.ta_info['quote_char']
-        skip_char   = self.ta_info['skip_char'] #skip char (ignore);
-        escape      = self.ta_info['escape']    #char after escape-char is not interpreted as separator
+        record_sep  = self.ta_info['record_sep']
+        mode_inrecord = 0  # 1 indicates: lexing in record, 0 is lexing 'between records'.
         field_sep   = self.ta_info['field_sep'] + self.ta_info['record_tag_sep']    #for tradacoms; field_sep and record_tag_sep have same function.
         sfield_sep  = self.ta_info['sfield_sep']
-        record_sep  = self.ta_info['record_sep']
-        mode_escape = 0 #0=not escaping, 1=escaping
-        mode_quote = 0 #0=not in quote, 1=in quote
-        mode_2quote = 0 #0=not escaping quote, 1=escaping quote.
-        mode_inrecord = 0    #indicates if lexing a record. If mode_inrecord==0: skip whitespace
-        sfield = False # True: is subveld, False is geen subveld
-        value = u''    #the value of the current token
-        record = []
-        valueline = 1    #starting line of token
-        valuepos = 1    #starting position of token
-        countline = 1
-        countpos = 0
-        #bepaal tekenset, separators etc adhv UNA/UNOB
+        sfield      = False # True: subfield, False: not a subfield
+        quote_char  = self.ta_info['quote_char']  #typical fo csv. example with quote_char ":  ,"1523",TEXT,"123", 
+        mode_quote  = 0    #0=not in quote, 1=in quote
+        mode_2quote = 0    #status within mode_quote. 0=just another char within quote, 1=met 2nd quote char; might be end of quote OR escaping of another quote-char.
+        escape      = self.ta_info['escape']      #char after escape-char is not interpreted as separator
+        mode_escape = 0    #0=not escaping, 1=escaping
+        skip_char   = self.ta_info['skip_char']   #chars to ignore/skip/discard. eg edifact: if wrapped to 80pos lines and <CR/LF> at end of segment
+        record      = []   #gather the content of a record
+        value       = u''  #gather the content of (sub)field; the current token
+        valueline   = 1    #record line of token
+        valuepos    = 1    #record position of token in line
+        countline   = 1    #count number of lines; start with 1
+        countpos    = 0    #count position/number of chars within line
+
         for char in self.rawinput:    #get next char
-            if char == u'\n':    #line within file
-                countline += 1
-                countpos = 0            #new line, pos back to 0
-                #no continue, because \n can be record separator. In edifact: catched with skip_char
+            #just count number lines/position; no action.
+            if char == u'\n':
+                countline += 1      #count line
+                countpos = 0        #position back to 0
             else:
-                countpos += 1        #position within line
-            if mode_quote:          #within a quote: quote-char is also escape-char
-                if mode_2quote and char == quote_char: #thus we were escaping quote_char
+                countpos += 1       #position within line
+            #lexing within a quote; note that quote-char works as escape-char within a quote
+            if mode_quote:
+                if mode_2quote:
                     mode_2quote = 0
-                    value += char    #append quote_char
-                    continue
+                    if char == quote_char: #after quote-char another quote-char: used to escape quote_char:
+                        value += char    #append quote_char
+                        continue
+                    else: #quote is ended:
+                        mode_quote = 0
+                        #continue parsing of this char
                 elif mode_escape:        #tricky: escaping a quote char
                     mode_escape = 0
                     value += char
                     continue
-                elif mode_2quote:   #thus is was a end-quote
-                    mode_2quote = 0
-                    mode_quote = 0
-                    #go on parsing
                 elif char == quote_char:    #either end-quote or escaping quote_char,we do not know yet
                     mode_2quote = 1
                     continue
                 elif char == escape:
                     mode_escape = 1
                     continue
-                else:
+                else:                       #we are in quote, just append char to token
                     value += char
                     continue
-            if mode_inrecord:
-                pass               #do nothing, is already in mode_inrecord
-            else:
-                if char.isspace():
-                    continue       #not in mode_inrecord, and a space: ignore space between records.
-                else:
-                    mode_inrecord = 1
-            if char in skip_char:    #after mode_quote, but before mode_escape!!
+            #handle char 'between' records. 
+            if not mode_inrecord:
+                if char.isspace():  #if space: ignor char, get next char. note: whitespace = ' \t\n\r\v\f'
+                    continue
+                mode_inrecord = 1   #not whitespace so a new record is started
+            #check if char needs to be skipped. In csv these chars could be in a quote; in eg edifact chars will be skipped, even if after escape sign.
+            if char in skip_char:
                 continue
-            if mode_escape:        #always append in escaped_mode
+            #in escaped_mode: char after escape sign is appended to token 
+            if mode_escape:
                 mode_escape = 0
                 value += char
                 continue
-            if not value:        #if no char in token: this is a new token, get line and pos for (new) token
+            #if no char in token: this is a new token, get line and pos for (new) token
+            if not value:        
                 valueline = countline
                 valuepos = countpos
-            if char == quote_char:
+            #for csv: handle new quote value. New quote value only makes sense for new field (value is empty) or field contains only whitespace 
+            if char == quote_char and (not value or value.isspace()):
                 mode_quote = 1
                 continue
             if char == escape:
                 mode_escape = 1
                 continue
-            if char in field_sep:  #for tradacoms: record_tag_sep is appended to field_sep; in lexing they have the same function
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
+            #end of (sub)field. Note: first field of composite is marked as 'field'
+            if char in field_sep:
+                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
                 value = u''
-                sfield = False
+                sfield = False      #new token is field
                 continue
+            #end of (sub)field. Note: first field of composite is marked as 'field'
             if char == sfield_sep:
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
+                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
                 value = u''
-                sfield = True
+                sfield = True        #new token is sub-field
                 continue
+            #end of record
             if char in record_sep:
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
+                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
                 self.records += [record]    #write record to recordlist
                 record = []
+                mode_inrecord = 0    #    
                 value = u''
-                sfield = False
-                mode_inrecord = 0
+                sfield = False      #new token is field 
                 continue
             value += char    #just a char: append char to value
         #end of for-loop. all characters have been processed.
@@ -898,7 +904,6 @@ class x12(var):
         # ISA-version: if <004030: SHOULD use repeating element?
         self.ta_info['reserve'] = ''
         self.ta_info['skip_char'] = self.ta_info['skip_char'].replace(self.ta_info['record_sep'],'') #if <CR> is segment terminator: cannot be in the skip_char-string!
-        #more ISA's in file: find IEA+
 
     def checkenvelope(self):
         ''' check envelopes, gather information to generate 997 '''
