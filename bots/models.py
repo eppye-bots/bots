@@ -48,7 +48,7 @@ INOROUT = (
     ('in', _(u'in')),
     ('out', _(u'out')),
     )
-CHANNELTYPE = (
+CHANNELTYPE = (     #Note: in communication.py these channeltypes are converted to channeltype to use in acceptance tests.
     ('file', _(u'file')),
     ('smtp', _(u'smtp')),
     ('smtps', _(u'smtps')),
