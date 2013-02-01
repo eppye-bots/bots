@@ -177,12 +177,11 @@ def start():
         #this is before the cleanup, but this is not critical 
         if acceptance_userscript:
             if hasattr(acceptance_userscript,'posttest'):
-                #notification of results in post-test script?
+                #no good reporting of errors/results in post-test script. Reason: this is after automaticmaintence.
                 try:
                     botslib.runscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
                 except Exception,msg:
-                    #should change results of last route to indicated process error
-                    botslib.ErrorProcess(functionname='runacceptancetest',errortext=str(msg))
+                    print str(msg)
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception,msg:
