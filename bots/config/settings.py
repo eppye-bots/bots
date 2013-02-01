@@ -40,7 +40,7 @@ DATABASES = {
         #~ 'OPTIONS': {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'},
         #~ }
     #~ }
-#PostgreSQL:
+#~ #PostgreSQL:
 #~ DATABASES = {
     #~ 'default': {
         #~ 'ENGINE': 'django.db.backends.postgresql_psycopg2',

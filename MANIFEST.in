@@ -1,7 +1,5 @@
 recursive-include bots *
 recursive-exclude bots *.pyc
-prune bots/templates1.?
-prune bots/media/js1.?
 prune bots/botssys/logging
 prune bots/botssys/infile
 prune bots/botssys/outfile
