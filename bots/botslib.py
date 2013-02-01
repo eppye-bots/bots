@@ -351,8 +351,11 @@ def checkunique(domein, receivednumber):
         return True
     else:
         #set back number
-        changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':earlierreceivednumber})
-        return False
+        if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+            return False     #TODO: set the unique_runcounter
+        else:
+            changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':earlierreceivednumber})
+            return False
 
 #**********************************************************/**
 #*************************Logging, Error handling********************/**
