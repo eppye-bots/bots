@@ -46,14 +46,18 @@ def run(idchannel,command,idroute=''):
         botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
         #for acceptance testing bots has an option to turn of external communication in channels
         if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+            #override values in channels for acceptance testing.
+            #testpath is used to 'trigger' this: if testpath has value, use acceptance.
             if channeldict['testpath']:
-                # over-ride the channel path and type for testing
-                channeldict['type'] = 'file'    #I/O not to outside but from/to file system.
                 channeldict['path'] = channeldict['testpath']    #use the testpath to specify where to find acceptance  tests.
                 channeldict['remove'] = False    #never remove during acceptance testing
-                botsglobal.logger.debug(u'Channel %s is using testpath %s',channeldict['idchannel'],channeldict['testpath'])
-            else:
-                pass    #is this dangerous?
+                if channeldict['type'] in ['file','mimefile','trash']:
+                    pass #do nothing, same type
+                elif channeldict['type'] in ['smtp','smtps','smtpstarttls','pop3','pop3s','pop3apop','imap4','imap4s']:
+                    channeldict['type'] = 'mimefile'
+                else:   #channeldict['type'] in ['ftp','ftps','ftpis','sftp','xmlrpc','ftp','ftp','communicationscript','db',]
+                    channeldict['type'] = 'file'
+            botsglobal.logger.debug(u'Channel "%s" adapted for acceptance test: type "%s", testpath "%s".',channeldict['idchannel'],channeldict['testpath'],channeldict['type'])
                 
         #update communication/run process with idchannel
         ta_run = botslib.OldTransaction(botslib._Transaction.processlist[-1])
@@ -263,13 +267,15 @@ class _comsession(object):
                     if ccto:
                         message.add_header('CC',ccto)
 
-                    #set Message-ID
-                    reference = email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
+                    if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+                        reference = '123message-ID email should be unique123'
+                        email_datetime = email.Utils.formatdate(timeval=time.mktime(time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")),localtime=True)
+                    else:
+                        reference = email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
+                        email_datetime = email.Utils.formatdate(localtime=True)
                     message.add_header('Message-ID',reference)
+                    message.add_header("Date",email_datetime)
                     ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use correct & updated ta_to in userscript)
-
-                    #set date-time stamp
-                    message.add_header("Date",email.Utils.formatdate(localtime=True))
 
                     #set Disposition-Notification-To: ask/ask not a a MDN?
                     if botslib.checkconfirmrules('ask-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
@@ -408,7 +414,6 @@ class _comsession(object):
             dispositionnotificationto = email.Utils.parseaddr(msg['disposition-notification-to'])[1]
             message.add_header('To', dispositionnotificationto)
             message.add_header('Subject', 'Return Receipt (displayed) - '+subject)
-            message.add_header("Date", email.Utils.formatdate(localtime=True))
             message.add_header('MIME-Version','1.0')
             message.add_header('Content-Type','multipart/report',reporttype='disposition-notification')
             #~ message.set_type('multipart/report')
@@ -430,8 +435,16 @@ class _comsession(object):
 
             #write email to file;
             ta_mdn = botslib.NewTransaction(status=MERGED)  #new transaction for group-file
-            mdn_reference = email.Utils.make_msgid(str(ta_mdn.idta))    #we first have to get the mda-ta to make this reference
+            
+            if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+                mdn_reference = '123message-ID email should be unique123'
+                mdn_datetime = email.Utils.formatdate(timeval=time.mktime(time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")),localtime=True)
+            else:
+                mdn_reference = email.Utils.make_msgid(str(ta_mdn.idta))    #we first have to get the mda-ta to make this reference
+                mdn_datetime = email.Utils.formatdate(localtime=True)
+            message.add_header('Date',mdn_datetime)
             message.add_header('Message-ID', mdn_reference)
+            
             mdnfilename = str(ta_mdn.idta)
             mdnfile = botslib.opendata(mdnfilename, 'wb')
             generator = email.Generator.Generator(mdnfile, mangle_from_=False, maxheaderlen=78)
