@@ -4,9 +4,10 @@
 {% block content %}
 <br/>
 <h1>Confirm reading index file</h1>
-<p>Please confirm reading the default index file bots/usersys/index.py. This might change your configuration!</p>
+<p>&nbsp;Please confirm reading the default index file bots/usersys/index.py. This might change your configuration!</p>
 <br/>
 <form action="/plugin/index" method="POST" enctype="multipart/form-data">{% csrf_token %}
+    <br/>&nbsp;
     <input type="submit" name="cancel" value="{% trans 'Cancel' %}" />
     <input type="submit" name="submit" value="{% trans 'Confirm read' %}" />
 </form>
