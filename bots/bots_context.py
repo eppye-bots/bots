@@ -5,6 +5,7 @@ def set_context(request):
     ''' set variables in the context of templates.
     '''
     bots_environment_text = botsglobal.ini.get('webserver','environment_text',' ')
+    bots_environment_text_color = botsglobal.ini.get('webserver','environment_text_color','#000000')
     botslogo = botsglobal.ini.get('webserver','botslogo',"bots/botslogo.html")
     bots_mindate = 0 - botsglobal.ini.getint('settings','maxdays',30)
 
@@ -45,6 +46,7 @@ def set_context(request):
 
     #the variables in the dict are set. eg in template use {{ bots_environment_text }}
     return {'bots_environment_text':bots_environment_text,
+            'bots_environment_text_color':bots_environment_text_color,
             'botslogo':botslogo,
             'bots_minDate':bots_mindate,
             'bots_http_path':bots_http_path,

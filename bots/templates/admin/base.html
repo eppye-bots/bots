@@ -19,7 +19,7 @@
 {% if not is_popup %}
     {% include botslogo %}
     <div id="environment">
-        <div>{{ bots_environment_text }}</div>
+        <div style="color:{{ bots_environment_text_color }}">{{ bots_environment_text }}</div>
     </div>
     {% include "bots/menu.html" %}
 {% endif %}
