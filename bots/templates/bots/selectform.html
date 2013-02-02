@@ -30,10 +30,24 @@
 {% endblock %}
 
 {% block content %}
+<br/>
+{% if request.META.PATH_INFO == "/processes/" %}
+    <h1>Select process errors</h1>
+{% else %}
+    {% if request.META.PATH_INFO == "/confirm/" %}
+        <h1>Select confirmations</h1>
+    {% else %}
+        <h1>Select {{request.META.PATH_INFO|cut:'/'}}</h1>
+    {% endif %}
+{% endif %}
+<p>&nbsp;Make your required selections below:</p>
+<br/>
 <form action="{{ form.action }}" method="post">{% csrf_token %}
     <input type="submit" name="fromselect" value="{% trans 'Show selection' %}" />
     <table>
         {{ form.as_table }}
     </table>
+    <br/>&nbsp;
+    <input type="submit" class="formsubmit" name="fromselect" value="{% trans 'Show selection' %}" />
 </form>
 {% endblock %}
