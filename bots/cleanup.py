@@ -15,6 +15,8 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
     ''' public function, does all cleanup of the database and file system.
         most cleanup functions are by default done only once a day.
     '''
+    if not botsglobal.ini.getboolean('acceptance','runacceptancetest',False): # no cleanup during acceptance testing
+        return
     whencleanup = botsglobal.ini.get('settings','whencleanup','daily')
     if do_cleanup_parameter:  #if explicit indicated via commandline parameter 
         do_full_cleanup = True
