@@ -463,8 +463,8 @@ class ta(models.Model):
         db_table = 'ta'
 class uniek(models.Model):
     #specific SQL is used (database defaults are used)
-    domein = StripCharField(max_length=35,primary_key=True)
-    nummer = models.IntegerField()
+    domein = StripCharField(max_length=35,primary_key=True,verbose_name=_(u'Counter domain'))
+    nummer = models.IntegerField(verbose_name=_(u'Last used number'))
     class Meta:
         db_table = 'uniek'
         verbose_name = _(u'counter')
