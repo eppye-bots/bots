@@ -43,11 +43,10 @@
 <p>&nbsp;Make your required selections below:</p>
 <br/>
 <form action="{{ form.action }}" method="post">{% csrf_token %}
-    <input type="submit" name="fromselect" value="{% trans 'Show selection' %}" />
     <table>
         {{ form.as_table }}
     </table>
     <br/>&nbsp;
-    <input type="submit" class="formsubmit" name="fromselect" value="{% trans 'Show selection' %}" />
+    <input type="submit" name="fromselect" value="{% trans 'Show selection' %}" />
 </form>
 {% endblock %}
