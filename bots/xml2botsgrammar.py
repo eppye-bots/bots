@@ -4,6 +4,7 @@ import atexit
 import copy
 import inmessage
 import outmessage
+import logging
 import botslib
 import botsinit
 import botsglobal
