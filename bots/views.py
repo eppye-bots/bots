@@ -368,8 +368,10 @@ def filer(request,*kw,**kwargs):
                     if ta_object.charset:  
                         ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
                     else:   #guess charset if not available; uft-8 is reasonable
+                        #20130212: if not utf-8: changes are VERY big an error will occur, in that case use iso-8859-1   
                         ta_object.content = botslib.readdata(ta_object.filename,charset='us-ascii',errors='ignore')
                     ta_object.has_file = True
+                    #for edifact, x12: if not CR or LF: add after each segment.
                 else:
                     ta_object.has_file = False
                     ta_object.content = _(u'No file available for display.')
