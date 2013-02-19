@@ -74,7 +74,7 @@ class Outmessage(message.Message):
     '''
     def __init__(self,ta_info):
         self.ta_info = ta_info
-        self.root = node.Node({})         #message tree; build via put()-interface in mappingscript. Initialise with empty dict
+        self.root = node.Node(record={})         #message tree; build via put()-interface in mappingscript. Initialise with empty dict
         super(Outmessage,self).__init__()
 
     def outmessagegrammarread(self,editype,messagetype):
@@ -198,7 +198,7 @@ class Outmessage(message.Message):
         self.records += [buildrecord]
 
 
-    def _formatfield(self,value, grammarfield,structure_record):
+    def _formatfield(self,value, grammarfield,structure_record,node_instance):
         ''' Input: value (as a string) and field definition.
             Some parameters of self.syntax are used, eg decimaal
             Format is checked and converted (if needed).
@@ -212,9 +212,11 @@ class Outmessage(message.Message):
                     value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
             length = len(value)
             if length > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+                self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
             if length < grammarfield[MINLENGTH]:
-                self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
+                self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         elif grammarfield[BFORMAT] == 'D':
             try:
                 lenght = len(value)
@@ -225,11 +227,14 @@ class Outmessage(message.Message):
                 else:
                     raise ValueError(u'To be catched')
             except ValueError:
-                self.add2errorlist(_(u'[F22]: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+                self.add2errorlist(_(u'[F22]: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
             if lenght > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F31]: Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+                self.add2errorlist(_(u'[F31]: Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
             if lenght < grammarfield[MINLENGTH]:
-                self.add2errorlist(_(u'[F32]: Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
+                self.add2errorlist(_(u'[F32]: Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         elif grammarfield[BFORMAT] == 'T':
             try:
                 lenght = len(value)
@@ -240,11 +245,14 @@ class Outmessage(message.Message):
                 else:
                     raise ValueError(u'To be catched')
             except  ValueError:
-                self.add2errorlist(_(u'[F23]: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+                self.add2errorlist(_(u'[F23]: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
             if lenght > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F33]: Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
+                self.add2errorlist(_(u'[F33]: Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
             if lenght < grammarfield[MINLENGTH]:
-                self.add2errorlist(_(u'[F34]: Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
+                self.add2errorlist(_(u'[F34]: Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
         else:   #numerics
             if value[0] == '-':
                 minussign = '-'
@@ -254,7 +262,8 @@ class Outmessage(message.Message):
                 absvalue = value
             digits,decimalsign,decimals = absvalue.partition('.')
             if not digits and not decimals:# and decimalsign:
-                self.add2errorlist(_(u'[F24]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                self.add2errorlist(_(u'[F24]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
+                                    {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
             if not digits:
                 digits = '0'
 
@@ -268,7 +277,8 @@ class Outmessage(message.Message):
                 try:
                     value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -len(decimals)))
                 except:
-                    self.add2errorlist(_(u'[F25]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                    self.add2errorlist(_(u'[F25]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
+                                        {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
                 if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
                     value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)
                 elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
@@ -285,7 +295,8 @@ class Outmessage(message.Message):
                 try:
                     value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
                 except:
-                    self.add2errorlist(_(u'[F26]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                    self.add2errorlist(_(u'[F26]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
+                                        {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
                 if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
                     value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)
                 elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
@@ -301,11 +312,13 @@ class Outmessage(message.Message):
                     dec_value = decimal.Decimal(minussign + digits + decimalsign + decimals) * 10**grammarfield[DECIMALS]
                     value = str(dec_value.quantize(NODECIMAL ))
                 except:
-                    self.add2errorlist(_(u'[F27]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%{'field':grammarfield[ID],'content':value,'record':structure_record[MPATH]})
+                    self.add2errorlist(_(u'[F27]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
+                                        {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
                 value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
 
             if len(value)-lengthcorrection > grammarfield[LENGTH]:
-                self.add2errorlist(_(u'[F28]: Record "%(record)s" field "%(field)s" too big: "%(content)s".\n')%{'record':structure_record[MPATH],'field':grammarfield[ID],'content':value})
+                self.add2errorlist(_(u'[F28]: Record "%(record)s" field "%(field)s" too big: "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
         return value
 
 
@@ -454,12 +467,13 @@ class fixed(Outmessage):
 
 
 class idoc(fixed):
-    def _canonicalfields(self,noderecord,structure_record,headerrecordnumber):
+    def _canonicalfields(self,node_instance,structure_record,headerrecordnumber):
+        node_instance
         if self.ta_info['automaticcount']:
-            noderecord.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM'],'SEGNUM':str(self.recordnumber),'PSGNUM':str(headerrecordnumber),'HLEVEL':str(len(structure_record[MPATH]))})
+            node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM'],'SEGNUM':str(self.recordnumber),'PSGNUM':str(headerrecordnumber),'HLEVEL':str(len(structure_record[MPATH]))})
         else:
-            noderecord.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM']})
-        super(idoc,self)._canonicalfields(noderecord,structure_record,headerrecordnumber)
+            node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM']})
+        super(idoc,self)._canonicalfields(node_instance,structure_record,headerrecordnumber)
         self.recordnumber += 1      #tricky. EDI_DC is not counted, so I count after writing.
 
 

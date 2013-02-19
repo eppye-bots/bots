@@ -12,7 +12,7 @@ from botsconfig import *
 class Node(object):
     ''' Node class for building trees in inmessage and outmessage
     '''
-    def __init__(self,record=None,botsidnr=None):
+    def __init__(self,record=None,botsidnr=None,pos=None,line=None):
         self.record = record    #record is a dict with fields
         if self.record:
             if 'BOTSIDnr' not in self.record:
@@ -22,6 +22,14 @@ class Node(object):
                     self.record['BOTSIDnr'] = u'1'
         self.children = []
         self._queries = None
+        self.pos = pos
+        self.line = line
+
+    def linpos(self):
+        if self.line:
+            return ' line %(lin)s pos %(pos)s'%{'lin':self.line,'pos':self.pos}
+        else:
+            return ''
 
     def append(self,childnode):
         '''append child to node'''

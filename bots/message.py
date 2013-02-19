@@ -36,6 +36,12 @@ class Message(object):
                         print '    %s    (veld)'%(veld[VALUE])
                 counter += 1
 
+    @staticmethod
+    def mpathformat(mpath):
+        ''' mpath is like: [['UNH'], ['NAD']]
+        '''
+        return '-'.join([record[0] for record in mpath])
+        
     def checkmessage(self,node_instance,grammar,subtranslation=False):
         ''' The node tree is check, sorted, fields are formatted etc.
             For checking: translation & subtranslation
@@ -73,12 +79,13 @@ class Message(object):
             recursive
         '''
         deletelist = []       #list of records not in the grammar; these records are deleted at end of function
-        self._checkiffieldsingrammar(node_instance.record,structure)     #check if fields are known in grammar
+        self._checkiffieldsingrammar(node_instance,structure)     #check if fields are known in grammar
         if 'messagetype' in node_instance.queries:   #determine if SUBTRANSLATION starts; do not check (is already checked)
             return
         if node_instance.children and LEVEL not in structure:            #if record has children, but these are not in the grammar
             if self.ta_info['checkunknownentities']:
-                self.add2errorlist(_(u'[S01]: Record "%(record)s" in message has children, but these are not in grammar "%(grammar)s". Found record "%(xx)s".\n')%{'record':node_instance.record['BOTSID'],'grammar':grammarname,'xx':node_instance.children[0].record['BOTSID']})
+                self.add2errorlist(_(u'[S01]%(linpos)s: Record "%(record)s" in message has children, but these are not in grammar "%(grammar)s". Found record "%(xx)s".\n')%
+                                    {'linpos':node_instance.linpos(),'record':node_instance.record['BOTSID'],'grammar':grammarname,'xx':node_instance.children[0].record['BOTSID']})
             node_instance.children = []
             return
         for childnode in node_instance.children:          #for every record/childnode:
@@ -90,17 +97,18 @@ class Message(object):
                     break    #record/childnode is in gramar; go to check next record/childnode
             else:   #record/childnode in not in grammar
                 if self.ta_info['checkunknownentities']:
-                    self.add2errorlist(_(u'[S02]: Record "%(record)s" in message but not in grammar "%(grammar)s". Content of record: "%(content)s".\n')%{'record':childnode.record['BOTSID'],'grammar':grammarname,'content':childnode.record})
+                    self.add2errorlist(_(u'[S02]%(linpos)s: Unknown record "%(record)s" in message.\n')%
+                                        {'linpos':node_instance.linpos(),'record':childnode.record['BOTSID']})
                 deletelist.append(childnode)
         for child in deletelist:
             node_instance.children.remove(child)
 
 
-    def _checkiffieldsingrammar(self,record,structure_record):
+    def _checkiffieldsingrammar(self,node_instance,structure_record):
         ''' checks for every field in record if field exists in structure_record (from grammar).
         '''
         deletelist = []
-        for field in record.keys():     #check every field in the record
+        for field in node_instance.record.keys():     #check every field in the record
             if field == 'BOTSIDnr':     #is not in grammar, so skip check
                 continue
             for grammarfield in structure_record[FIELDS]:
@@ -116,17 +124,18 @@ class Message(object):
                     break   #break out of grammarfield-for-loop
             else:
                 if self.ta_info['checkunknownentities']:
-                    self.add2errorlist(_(u'[F01]: Record: "%(mpath)s" field "%(field)s" does not exist in grammar.\n')%{'field':field,'mpath':structure_record[MPATH]})
+                    self.add2errorlist(_(u'[F01]%(linpos)s: Record: "%(mpath)s" has unknown field "%(field)s".\n')%
+                                            {'linpos':node_instance.linpos(),'field':field,'mpath':self.mpathformat(structure_record[MPATH])})
                 deletelist.append(field)
         for field in deletelist:
-            del record[field]
+            del node_instance.record[field]
 
     def _canonicaltree(self,node_instance,structure,headerrecordnumber=0):
         ''' For nodes: check min and max occurence; sort the records conform grammar
             parameter 'headerrecordnumber' is used in subclassing this function.
         '''
         sortednodelist = []
-        self._canonicalfields(node_instance.record,structure,headerrecordnumber)    #handle fields of this record
+        self._canonicalfields(node_instance,structure,headerrecordnumber)    #handle fields of this record
         if LEVEL in structure:
             for structure_record in structure[LEVEL]:  #for every structure_record (in grammar) of this level
                 count = 0                           #count number of occurences of record
@@ -137,26 +146,30 @@ class Message(object):
                     self._canonicaltree(childnode,structure_record,self.recordnumber)         #use rest of index in deeper level
                     sortednodelist.append(childnode)
                 if structure_record[MIN] > count:
-                    self.add2errorlist(_(u'[S03]: Record "%(mpath)s" occurs %(count)d times, min is %(mincount)d.\n')%{'mpath':structure_record[MPATH],'count':count,'mincount':structure_record[MIN]})
+                    self.add2errorlist(_(u'[S03]%(linpos)s: Record "%(mpath)s" occurs %(count)d times, min is %(mincount)d.\n')%
+                                        {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'count':count,'mincount':structure_record[MIN]})
                 if structure_record[MAX] < count:
-                    self.add2errorlist(_(u'[S04]: Record "%(mpath)s" occurs %(count)d times, max is %(maxcount)d.\n')%{'mpath':structure_record[MPATH],'count':count,'maxcount':structure_record[MAX]})
+                    self.add2errorlist(_(u'[S04]%(linpos)s: Record "%(mpath)s" occurs %(count)d times, max is %(maxcount)d.\n')%
+                                        {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'count':count,'maxcount':structure_record[MAX]})
             node_instance.children = sortednodelist
         #only relevant for inmessages
         if QUERIES in structure:
             node_instance.get_queries_from_edi(structure)
 
-    def _canonicalfields(self,noderecord,structure_record,headerrecordnumber):
+    def _canonicalfields(self,node_instance,structure_record,headerrecordnumber):
         ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted).
             Fields are never added.
         '''
+        noderecord = node_instance.record
         for grammarfield in structure_record[FIELDS]:       #loop over fields in grammar
             if grammarfield[ISFIELD]:    #if field (no composite)
                 value = noderecord.get(grammarfield[ID])
                 if not value:
                     if grammarfield[MANDATORY] == 'M':
-                        self.add2errorlist(_(u'[F02]: Record "%(mpath)s" field "%(field)s" is mandatory.\n')%{'mpath':structure_record[MPATH],'field':grammarfield[ID]})
+                        self.add2errorlist(_(u'[F02]%(linpos)s: Record "%(mpath)s" field "%(field)s" is mandatory.\n')%
+                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID]})
                     continue
-                noderecord[grammarfield[ID]] = self._formatfield(value,grammarfield,structure_record)
+                noderecord[grammarfield[ID]] = self._formatfield(value,grammarfield,structure_record,node_instance)
             else:               #if composite: loop over subfields in grammar
                 #first check if there is any data att all in this composite
                 for grammarsubfield in grammarfield[SUBFIELDS]:
@@ -164,16 +177,18 @@ class Message(object):
                         break   #composite has data.
                 else:           #if composite has no data
                     if grammarfield[MANDATORY] == 'M':
-                        self.add2errorlist(_(u'[F03]: Record "%(mpath)s" composite "%(field)s" is mandatory.\n')%{'mpath':structure_record[MPATH],'field':grammarfield[ID]})
+                        self.add2errorlist(_(u'[F03]%(linpos)s: Record "%(mpath)s" composite "%(field)s" is mandatory.\n')%
+                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID]})
                     continue    #there is no data in compisite, and composite is conditional: composite is OK
                 #there is data in the composite!
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
                     value = noderecord.get(grammarsubfield[ID])
                     if not value:
                         if grammarsubfield[MANDATORY] == 'M':
-                            self.add2errorlist(_(u'[F04]: Record "%(mpath)s" subfield "%(field)s" is mandatory: "%(record)s".\n')%{'mpath':structure_record[MPATH],'field':grammarsubfield[ID],'record':noderecord})
+                            self.add2errorlist(_(u'[F04]%(linpos)s: Record "%(mpath)s" subfield "%(field)s" is mandatory.\n')%
+                                                {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'field':grammarsubfield[ID]})
                         continue
-                    noderecord[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,structure_record)
+                    noderecord[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,structure_record,node_instance)
 
     def _logmessagecontent(self,node_instance):
         botsglobal.logger.debug(u'record "%s":',node_instance.record['BOTSID'])
@@ -253,7 +268,7 @@ class Message(object):
     def putloop(self,*mpaths):
         if not self.root.record:    #no input yet, and start with a putloop(): dummy root
             if len(mpaths) == 1:
-                self.root.append(node.Node(mpaths[0]))
+                self.root.append(node.Node(record=mpaths[0]))
                 return self.root.children[-1]
             else:
                 raise botslib.MappingRootError(_(u'putloop($mpath): mpath too long???'),mpath=mpaths)

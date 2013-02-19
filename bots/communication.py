@@ -553,7 +553,7 @@ class _comsession(object):
             header.encode('utf8')
             return header
         except:
-            raise botslib.CommunicationInError(_(u'Email header valid - probably issues with characterset.'))
+            raise botslib.CommunicationInError(_(u'Email header invalid - probably issues with characterset.'))
                         
     def mailaddress2idpartner(self,mailaddress):
         ''' lookup email address to see if know in configuration. '''
