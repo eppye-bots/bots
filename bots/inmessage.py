@@ -191,7 +191,7 @@ class Inmessage(message.Message):
             Read the records one by one (self.iternextrecord, is an iterator)
             - parse the (lexed) records.
             - identify record (lookup in structure)
-            - identify fields in the record (use the structurerecord from the grammar).
+            - identify fields in the record (use the record_definition from the grammar).
             - add grammar-info to records: field-tag,mpath.
             Parameters:
             - structure_level: current grammar/segmentgroup of the grammar-structure.
@@ -385,25 +385,27 @@ class fixed(Inmessage):
                 line = line.rstrip('\r\n')
                 self.records += [ [{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line}] ]    #append record to recordlist
 
-    def _parsefields(self,record_in_edifile,structurerecord):
-        ''' Parse fields from one fixed message-record (from record_in_edifile[ID][FIXEDLINE] using positions.
+    def _parsefields(self,record_in_file,record_definition):
+        ''' Parse fields from one fixed message-record (from record_in_file[ID][FIXEDLINE] using positions.
             fields are placed in recorddict, where key=field-info from grammar and value is from fixedrecord.'''
-        recorddef = structurerecord[FIELDS]
-        recorddict = {} #start with empty dict
-        fixedrecord = record_in_edifile[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
+        list_of_fields_in_record_definition = record_definition[FIELDS]
+        record2build = {} #start with empty dict
+        fixedrecord = record_in_file[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
         lenfixed = len(fixedrecord)
-        recordlength = sum([field[LENGTH] for field in recorddef])
+        recordlength = sum([field_in_record_definition[LENGTH] for field_in_record_definition in list_of_fields_in_record_definition])
         if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-            raise botslib.InMessageError(_(u'[S52] line $line: Record "$record" too short; is $pos pos, defined is $defpos pos.'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength)
+            raise botslib.InMessageError(_(u'[S52] line $line: Record "$record" too short; is $pos pos, defined is $defpos pos.'),
+                                            line=record_in_file[ID][LIN],record=record_in_file[ID][VALUE],pos=lenfixed,defpos=recordlength)
         if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-            raise botslib.InMessageError(_(u'[S53] line $line: Record "$record" too long; is $pos pos, defined is $defpos pos.'),line=record_in_edifile[ID][LIN],record=record_in_edifile[ID][VALUE],pos=lenfixed,defpos=recordlength)
+            raise botslib.InMessageError(_(u'[S53] line $line: Record "$record" too long; is $pos pos, defined is $defpos pos.'),
+                                            line=record_in_file[ID][LIN],record=record_in_file[ID][VALUE],pos=lenfixed,defpos=recordlength)
         pos = 0
-        for field in recorddef:   #for fields in this record
-            value = fixedrecord[pos:pos+field[LENGTH]].strip()
+        for field_in_record_definition in list_of_fields_in_record_definition:
+            value = fixedrecord[pos:pos+field_in_record_definition[LENGTH]].strip()   #copy string to avoid memory problem
             if value:
-                recorddict[field[ID]] = value #copy id string to avoid memory problem ; value is already a copy
-            pos += field[LENGTH]
-        return recorddict
+                record2build[field_in_record_definition[ID]] = value
+            pos += field_in_record_definition[LENGTH]
+        return record2build
 
 
 class idoc(fixed):
@@ -533,50 +535,53 @@ class var(Inmessage):
             if leftover:
                 raise botslib.InMessageError(_(u'[A52]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover)
 
-    def _parsefields(self,record_in_edifile,structurerecord):
-        ''' Identify fields in inmessage-record using grammar
+    def _parsefields(self,record_in_file,record_definition):
+        ''' Identify the fields in inmessage-record using the record_definition from the grammar
             Build a record (dictionary; field-IDs are unique within record) and return this.
         '''
-        recorddef = structurerecord[FIELDS]
-        recordid = structurerecord[ID]
-        recorddict = {}
-        #****************** first: identify fields: assign field id to lexed fields
+        list_of_fields_in_record_definition = record_definition[FIELDS]
+        if record_definition[ID] == 'ISA' and isinstance(self,x12):    #isa is an exception: no strip()
+            is_isa = True
+        else:
+            is_isa = False
+        record2build = {}         #record that is build from record_in_file using ID's from record_definition
         tindex = -1     #elementcounter; composites count as one
-        tsubindex = 0     #sub-element counter (within composite))
-        for rfield in record_in_edifile:    #handle both fields and sub-fields
-            if rfield[SFIELD]:
-                tsubindex += 1
+        #~ tsubindex = 0     #sub-element counter within composite; for files that are OK: init when compostie is detected. This init is for error (field is lexed as subfield but is not.) 20130222: catch UnboundLocalError now
+        #********loop over all fields present in this record of edi file
+        for field_in_file in record_in_file:
+            #*********identify the lexed field: assign fieldID fro mdefintions to field in lexed record
+            if field_in_file[SFIELD]:
                 try:
-                    field = recorddef[tindex][SUBFIELDS][tsubindex]
-                except TypeError:       #field has no SUBFIELDS
+                    tsubindex += 1
+                    field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
+                except (TypeError,UnboundLocalError):       #field has no SUBFIELDS, or unexpected subfield
                     self.add2errorlist(_(u'[F17] line %(line)s pos %(pos)s: Record "%(record)s" expect field but "%(content)s" is a subfield.\n')%
-                                        {'line':rfield[LIN],'pos':rfield[POS],'record':self.mpathformat(structurerecord[MPATH]),'content':rfield[VALUE]})
+                                        {'content':field_in_file[VALUE],'line':field_in_file[LIN],'pos':field_in_file[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
                 except IndexError:      #tsubindex is not in the subfields
                     self.add2errorlist(_(u'[F18] line %(line)s pos %(pos)s: Record "%(record)s" too many subfields in composite; unknown subfield "%(content)s".\n')%
-                                          {'line':rfield[LIN],'pos':rfield[POS],'record':self.mpathformat(structurerecord[MPATH]),'content':rfield[VALUE]})
+                                          {'content':field_in_file[VALUE],'line':field_in_file[LIN],'pos':field_in_file[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
             else:
-                tindex += 1
                 try:
-                    field = recorddef[tindex]
+                    tindex += 1
+                    field_in_record_definition = list_of_fields_in_record_definition[tindex]
                 except IndexError:
                     self.add2errorlist(_(u'[F19] line %(line)s pos %(pos)s: Record "%(record)s" too many fields in record; unknown field "%(content)s".\n')%
-                                        {'line':rfield[LIN],'pos':rfield[POS],'record':self.mpathformat(structurerecord[MPATH]),'content':rfield[VALUE]})
+                                        {'content':field_in_file[VALUE],'line':field_in_file[LIN],'pos':field_in_file[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
-                if not field[ISFIELD]: #if field is subfield according to grammar
+                if not field_in_record_definition[ISFIELD]: #if this field (in the file) is a composite according to grammar: field is first sub-field in composite
                     tsubindex = 0
-                    field = recorddef[tindex][SUBFIELDS][tsubindex]
-            #*********if field has content: add to recorddictionary
-            if recordid == 'ISA' and isinstance(self,x12):    #isa is an exception: no strip()
-                value = rfield[VALUE]
+                    list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
+                    field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
+            #*********add to record2build
+            if is_isa:                                 #isa is an exception: no strip()
+                value = field_in_file[VALUE][:]         #copies string - avoid memory problems
             else:
-                value = rfield[VALUE].strip()
+                value = field_in_file[VALUE].strip()   #copies string - avoid memory problems
             if value:
-                recorddict[field[ID]] = value   #copy string to avoid memory problems
-        return recorddict
-
-
+                record2build[field_in_record_definition[ID]] = value
+        return record2build
 
 class csv(var):
     ''' class for ediobjects with Comma Separated Values'''
