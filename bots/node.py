@@ -118,12 +118,12 @@ class Node(object):
         else:
             raise botslib.MappingFormatError(_(u'must be dict, list or tuple: enhancedget($mpath)'),mpath=mpaths)
 
-    def get_queries_from_edi(self,structurerecord):
+    def get_queries_from_edi(self,record_definition):
         ''' extract information from edifile using QUERIES in grammar.structure; information will be placed in ta_info and in db-ta
         '''
         tmpdict = {}
-        #~ print 'get_queries_from_edi', structurerecord[QUERIES]
-        for key,value in structurerecord[QUERIES].items():
+        #~ print 'get_queries_from_edi', record_definition[QUERIES]
+        for key,value in record_definition[QUERIES].items():
             found = self.enhancedget(value)   #search in last added node
             if found is not None:
                 found = found.strip()         #needed to get correct ISA-fields 
