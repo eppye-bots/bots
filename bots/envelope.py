@@ -210,17 +210,12 @@ class edifact(Envelope):
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
 
         #version dependent enveloping
-        write_una = False
         if self.ta_info['version'] < '4':
             date = botslib.strftime('%y%m%d')
             reserve = ' '
-            if self.ta_info['charset'] != 'UNOA':
-                write_una = True
         else:
             date = botslib.strftime('%Y%m%d')
             reserve = self.ta_info['reserve']
-            if self.ta_info['charset'] not in ['UNOA','UNOB']:
-                write_una = True
 
         #UNB reference is counter is per sender or receiver
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
@@ -261,7 +256,7 @@ class edifact(Envelope):
 
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        if write_una or self.ta_info['forceUNA']:
+        if self.ta_info['forceUNA'] or self.ta_info['charset'] != 'UNOA':
             tofile.write('UNA'+self.ta_info['sfield_sep']+self.ta_info['field_sep']+self.ta_info['decimaal']+self.ta_info['escape']+ reserve +self.ta_info['record_sep']+self.ta_info['add_crlfafterrecord_sep'])
         tofile.write(self.out.record2string(self.out.records[0]))
         self.writefilelist(tofile)
