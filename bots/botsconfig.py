@@ -44,7 +44,7 @@ DECIMALS = 5
 MINLENGTH = 6
 BFORMAT = 7		#internal bots format; formats in grammar are convertd to bformat
 MAXREPEAT = 8
-#modules inmessage, outmessage; record in self.records:
+#modules inmessage, outmessage; record in self.lex_records:
 #already defined ID = 0
 VALUE = 1
 POS = 2

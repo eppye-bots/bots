@@ -58,11 +58,11 @@ class Outmessage(message.Message):
                 If part not as a node:
                     append new node to tree;
                     recursively append next parts to tree
-        After the mappingscript is finished, the resulting tree is converted to records (self.records).
-        These records are written to file.
-        Structure of self.records:
-            list of record;
-            record is list of field
+        After the mappingscript is finished, the resulting tree is converted to self.lex_records.
+        These lex_records are written to file.
+        Structure of self.lex_records:
+            list of lex_record;
+            lex_record is list of fields
             field is dict. Keys in field:
             -   ID       field ID (id within this record). For in-file
             -   VALUE    value, content of field
@@ -131,14 +131,14 @@ class Outmessage(message.Message):
 
     def _write(self,node_instance):
         ''' the write method for most classes.
-            tree is serialised to sequential records; records are written to file.
+            tree is serialised to lex_records; lex_records are written to file.
             Classses that write using other libraries (xml, json, template, db) use specific write methods.
         '''
         self.tree2records(node_instance)
         self._records2file()
 
     def tree2records(self,node_instance):
-        self.records = []                   #tree of nodes is flattened to these records
+        self.lex_records = []                   #tree of nodes is flattened to these records
         self._tree2recordscore(node_instance,self.defmessage.structure[0])
 
     def _tree2recordscore(self,node_instance,structure):
@@ -195,7 +195,7 @@ class Outmessage(message.Message):
                     fieldbuffer += [{VALUE:'',SFIELD:0}]
         #~ print [buildrecord]
 
-        self.records += [buildrecord]
+        self.lex_records += [buildrecord]
 
 
     def _formatfield(self,value, grammarfield,structure_record,node_instance):
@@ -347,23 +347,23 @@ class Outmessage(message.Message):
 
 
     def _records2file(self):
-        ''' convert self.records to a file.
+        ''' convert self.lex_records to a file.
             using the right editype (edifact, x12, etc) and charset.
         '''
         wrap_length = int(self.ta_info.get('wrap_length', 0))
         if wrap_length:
-            stringinizedrecords = ''.join(self.record2string(record) for record in self.records) # join all records
+            stringinizedrecords = ''.join(self.record2string(lex_record) for lex_record in self.lex_records) # join all records
             for i in range(0,len(stringinizedrecords),wrap_length): # then split in fixed lengths
                 try:
                     self._outstream.write(stringinizedrecords[i:i+wrap_length] + '\r\n')
                 except UnicodeEncodeError:
                     raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "$char": $content'),char=self.ta_info['charset'],content=stringinizedrecords[i:i+wrap_length])
         else:
-            for record in self.records:     #loop all records
+            for lex_record in self.lex_records:     #loop all records
                 try:
-                    self._outstream.write(self.record2string(record))
+                    self._outstream.write(self.record2string(lex_record))
                 except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
-                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "$char": $content'),char=self.ta_info['charset'],content=str(record))
+                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "$char": $content'),char=self.ta_info['charset'],content=str(lex_record))
                     #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
 
     def record2string(self,record):

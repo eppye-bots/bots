@@ -195,7 +195,7 @@ class csvheader(Envelope):
         headers = dict([(field[ID],field[ID]) for field in self.out.defmessage.structure[0][FIELDS]])
         self.out.put(headers)
         self.out.tree2records(self.out.root)
-        tofile.write(self.out.record2string(self.out.records[0]))
+        tofile.write(self.out.record2string(self.out.lex_records[0]))
         self.writefilelist(tofile)
         tofile.close()
 
@@ -258,9 +258,9 @@ class edifact(Envelope):
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
         if self.ta_info['forceUNA'] or self.ta_info['charset'] != 'UNOA':
             tofile.write('UNA'+self.ta_info['sfield_sep']+self.ta_info['field_sep']+self.ta_info['decimaal']+self.ta_info['escape']+ reserve +self.ta_info['record_sep']+self.ta_info['add_crlfafterrecord_sep'])
-        tofile.write(self.out.record2string(self.out.records[0]))
+        tofile.write(self.out.record2string(self.out.lex_records[0]))
         self.writefilelist(tofile)
-        tofile.write(self.out.record2string(self.out.records[-1]))
+        tofile.write(self.out.record2string(self.out.lex_records[-1]))
         tofile.close()
         if self.ta_info['messagetype'][:6] != 'CONTRL' and botslib.checkconfirmrules('ask-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
@@ -308,9 +308,9 @@ class tradacoms(Envelope):
 
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        tofile.write(self.out.record2string(self.out.records[0]))
+        tofile.write(self.out.record2string(self.out.lex_records[0]))
         self.writefilelist(tofile)
-        tofile.write(self.out.record2string(self.out.records[-1]))
+        tofile.write(self.out.record2string(self.out.lex_records[-1]))
         tofile.close()
 
 
@@ -457,16 +457,16 @@ class x12(Envelope):
         self.out.tree2records(self.out.root)
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        isa_string = self.out.record2string(self.out.records[0])
+        isa_string = self.out.record2string(self.out.lex_records[0])
         if self.ta_info['version'] < '00403':
             isa_string = isa_string[:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + isa_string[103:] #hack for strange characters at end of ISA; hardcoded
         else:
             isa_string = isa_string[:82] +self.ta_info['reserve'] + isa_string[83:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + isa_string[103:] #hack for strange characters at end of ISA; hardcoded
         tofile.write(isa_string)                                     #write ISA
-        tofile.write(self.out.record2string(self.out.records[1]))  #write GS
+        tofile.write(self.out.record2string(self.out.lex_records[1]))  #write GS
         self.writefilelist(tofile)
-        tofile.write(self.out.record2string(self.out.records[-2])) #write GE
-        tofile.write(self.out.record2string(self.out.records[-1])) #write IEA
+        tofile.write(self.out.record2string(self.out.lex_records[-2])) #write GE
+        tofile.write(self.out.record2string(self.out.lex_records[-1])) #write IEA
         tofile.close()
         if self.ta_info['functionalgroup'] != 'FA' and botslib.checkconfirmrules('ask-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],

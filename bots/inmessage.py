@@ -45,7 +45,7 @@ class Inmessage(message.Message):
     '''
     def __init__(self,ta_info):
         super(Inmessage,self).__init__()
-        self.records = []        #init list of records
+        self.lex_records = []        #init list of records
         self.ta_info = ta_info  #here ta_info is only filled with parameters from db-ta
 
     def initfromfile(self):
@@ -59,15 +59,15 @@ class Inmessage(message.Message):
         self._lex()
         if hasattr(self,'rawinput'):
             del self.rawinput
-        #~ self.display(self.records)   #show lexed records (for protocol debugging)
+        #~ self.display(self.lex_records)   #show lexed records (for protocol debugging)
         self.root = node.Node()  #make root Node None.
-        self.iternextrecord = iter(self.records)
+        self.iternextrecord = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
             raise botslib.InMessageError(_(u'[A50] line $line pos $pos: Found non-valid data at end of edi file; probably a problem with separators or message structure.'),
                                             line=leftover[0][LIN], pos=leftover[0][POS]) #not in mailbag
             #~ raise botslib.InMessageError(_(u'[A50]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover) #not in mailbag
-        del self.records
+        del self.lex_records
         #end parsing; self.root is root of a tree (of nodes).
         
         self.checkenvelope()
@@ -190,8 +190,8 @@ class Inmessage(message.Message):
 
     def _parse(self,structure_level,inode):
         ''' This is the heart of the parsing of incoming messages (but not for xml, json)
-            Read the records one by one (self.iternextrecord, is an iterator)
-            - parse the (lexed) records.
+            Read the lex_records one by one (self.iternextrecord, is an iterator)
+            - parse the lex_records.
             - identify record (lookup in structure)
             - identify fields in the record (use the record_definition from the grammar).
             - add grammar-info to records: field-tag,mpath.
@@ -377,7 +377,7 @@ class fixed(Inmessage):
         self.filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb',charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _lex(self):
-        ''' lexes file with fixed records to list of records (self.records).'''
+        ''' lexes file with fixed records to list of records (self.lex_records).'''
         linenr = 0
         startrecordid = self.ta_info['startrecordID']
         endrecordid = self.ta_info['endrecordID']
@@ -385,22 +385,22 @@ class fixed(Inmessage):
             linenr += 1
             if not line.isspace():
                 line = line.rstrip('\r\n')
-                self.records += [ [{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line}] ]    #append record to recordlist
+                self.lex_records += [ [{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line}] ]    #append record to recordlist
 
-    def _parsefields(self,record_in_file,record_definition):
-        ''' Parse fields from one fixed message-record (from record_in_file[ID][FIXEDLINE] using positions.
+    def _parsefields(self,lex_record,record_definition):
+        ''' Parse fields from one fixed message-record (from lex_record[ID][FIXEDLINE] using positions.
             fields are placed in recorddict, where key=field-info from grammar and value is from fixedrecord.'''
         list_of_fields_in_record_definition = record_definition[FIELDS]
         record2build = {} #start with empty dict
-        fixedrecord = record_in_file[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
+        fixedrecord = lex_record[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
         lenfixed = len(fixedrecord)
         recordlength = sum([field_in_record_definition[LENGTH] for field_in_record_definition in list_of_fields_in_record_definition])
         if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
             raise botslib.InMessageError(_(u'[S52] line $line: Record "$record" too short; is $pos pos, defined is $defpos pos.'),
-                                            line=record_in_file[ID][LIN],record=record_in_file[ID][VALUE],pos=lenfixed,defpos=recordlength)
+                                            line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
         if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
             raise botslib.InMessageError(_(u'[S53] line $line: Record "$record" too long; is $pos pos, defined is $defpos pos.'),
-                                            line=record_in_file[ID][LIN],record=record_in_file[ID][VALUE],pos=lenfixed,defpos=recordlength)
+                                            line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
         pos = 0
         for field_in_record_definition in list_of_fields_in_record_definition:
             value = fixedrecord[pos:pos+field_in_record_definition[LENGTH]].strip()   #copy string to avoid memory problem
@@ -431,7 +431,7 @@ class idoc(fixed):
 class var(Inmessage):
     ''' abstract class for edi-objects with records of variabele length.'''
     def _lex(self):
-        ''' lexes file with variable records to list of records, fields and subfields (self.records).'''
+        ''' lexes file with variable records to list of records, fields and subfields (build self.lex_records).'''
         record_sep  = self.ta_info['record_sep']
         mode_inrecord = 0  # 1 indicates: lexing in record, 0 is lexing 'between records'.
         field_sep   = self.ta_info['field_sep'] + self.ta_info['record_tag_sep']    #for tradacoms; field_sep and record_tag_sep have same function.
@@ -519,7 +519,7 @@ class var(Inmessage):
             #end of record
             if char in record_sep:
                 record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
-                self.records += [record]    #write record to recordlist
+                self.lex_records += [record]    #write record to recordlist
                 record = []
                 mode_inrecord = 0    #    
                 value = u''
@@ -531,13 +531,13 @@ class var(Inmessage):
         #it appears a csv record is not always closed properly, so force the closing of the last record of csv file:
         if mode_inrecord and isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
             record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
-            self.records += [record]    #write record to recordlist
+            self.lex_records += [record]    #write record to recordlist
         else:
             leftover = value.strip('\x00\x1a')
             if leftover:
                 raise botslib.InMessageError(_(u'[A51]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover)
 
-    def _parsefields(self,record_in_file,record_definition):
+    def _parsefields(self,lex_record,record_definition):
         ''' Identify the fields in inmessage-record using the record_definition from the grammar
             Build a record (dictionary; field-IDs are unique within record) and return this.
         '''
@@ -546,23 +546,23 @@ class var(Inmessage):
             is_isa = True
         else:
             is_isa = False
-        record2build = {}         #record that is build from record_in_file using ID's from record_definition
+        record2build = {}         #record that is build from lex_record using ID's from record_definition
         tindex = -1     #elementcounter; composites count as one
         #~ tsubindex = 0     #sub-element counter within composite; for files that are OK: init when compostie is detected. This init is for error (field is lexed as subfield but is not.) 20130222: catch UnboundLocalError now
         #********loop over all fields present in this record of edi file
-        for field_in_file in record_in_file:
+        for lex_field in lex_record:
             #*********identify the lexed field: assign fieldID fro mdefintions to field in lexed record
-            if field_in_file[SFIELD]:
+            if lex_field[SFIELD]:
                 try:
                     tsubindex += 1
                     field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
                 except (TypeError,UnboundLocalError):       #field has no SUBFIELDS, or unexpected subfield
                     self.add2errorlist(_(u'[F17] line %(line)s pos %(pos)s: Record "%(record)s" expect field but "%(content)s" is a subfield.\n')%
-                                        {'content':field_in_file[VALUE],'line':field_in_file[LIN],'pos':field_in_file[POS],'record':self.mpathformat(record_definition[MPATH])})
+                                        {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
                 except IndexError:      #tsubindex is not in the subfields
                     self.add2errorlist(_(u'[F18] line %(line)s pos %(pos)s: Record "%(record)s" too many subfields in composite; unknown subfield "%(content)s".\n')%
-                                          {'content':field_in_file[VALUE],'line':field_in_file[LIN],'pos':field_in_file[POS],'record':self.mpathformat(record_definition[MPATH])})
+                                          {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
             else:
                 try:
@@ -570,7 +570,7 @@ class var(Inmessage):
                     field_in_record_definition = list_of_fields_in_record_definition[tindex]
                 except IndexError:
                     self.add2errorlist(_(u'[F19] line %(line)s pos %(pos)s: Record "%(record)s" too many fields in record; unknown field "%(content)s".\n')%
-                                        {'content':field_in_file[VALUE],'line':field_in_file[LIN],'pos':field_in_file[POS],'record':self.mpathformat(record_definition[MPATH])})
+                                        {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
                 if not field_in_record_definition[ISFIELD]: #if this field (in the file) is a composite according to grammar: field is first sub-field in composite
                     tsubindex = 0
@@ -578,9 +578,9 @@ class var(Inmessage):
                     field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
             #*********add to record2build
             if is_isa:                                 #isa is an exception: no strip()
-                value = field_in_file[VALUE][:]         #copies string - avoid memory problems
+                value = lex_field[VALUE][:]         #copies string - avoid memory problems
             else:
-                value = field_in_file[VALUE].strip()   #copies string - avoid memory problems
+                value = lex_field[VALUE].strip()   #copies string - avoid memory problems
             if value:
                 record2build[field_in_record_definition[ID]] = value
         return record2build
@@ -593,13 +593,13 @@ class csv(var):
             # if it is an integer, skip that many lines
             # if True, skip just the first line
             if isinstance(self.ta_info['skip_firstline'],int):
-                del self.records[0:self.ta_info['skip_firstline']]
+                del self.lex_records[0:self.ta_info['skip_firstline']]
             else:
-                del self.records[0]
+                del self.lex_records[0]
         if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
-            for record in self.records:
-                record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: 0}]
+            for lex_record in self.lex_records:
+                lex_record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: 0}]
 
 class excel(csv):
     def initfromfile(self):
@@ -642,11 +642,11 @@ class excel(csv):
         if hasattr(self,'rawinput'):
             del self.rawinput
         self.root = node.Node()  #make root Node None.
-        self.iternextrecord = iter(self.records)
+        self.iternextrecord = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
             raise botslib.InMessageError(_(u'[A52]: Found non-valid data at end of excel file: "$leftover".'),leftover=leftover)
-        del self.records
+        del self.lex_records
         self.checkmessage(self.root,self.defmessage)
 
     def read_xls(self,infilename):
@@ -770,14 +770,14 @@ class edifact(var):
                 self.ta_info['field_sep'] = '+'
                 self.ta_info['decimaal'] = '.'
                 self.ta_info['escape'] = '?'
-                self.ta_info['reserve'] = ''
+                self.ta_info['reserve'] = '*'
                 self.ta_info['record_sep'] = "'"
             elif found_field_sep == '\x1D' and found_sfield_sep == '\x1F':     #check if UNOB separators are used
                 self.ta_info['sfield_sep'] = '\x1F'
                 self.ta_info['field_sep'] = '\x1D'
                 self.ta_info['decimaal'] = '.'
                 self.ta_info['escape'] = ''
-                self.ta_info['reserve'] = ''
+                self.ta_info['reserve'] = '*'
                 self.ta_info['record_sep'] = '\x1C'
             else:
                 raise botslib.InMessageError(_(u'[A57]: Edifact file with non-standard separators. An UNA segment should be used.'))

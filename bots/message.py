@@ -22,11 +22,11 @@ class Message(object):
             raise botslib.MessageError(_(u'At least $max_number_errors errors:\n$errorlist'),max_number_errors=len(self.errorlist), errorlist=''.join(self.errorlist))
 
     @staticmethod
-    def display(records):
+    def display(lex_records):
         '''for debugging lexed records.'''
-        for record in records:
+        for lex_record in lex_records:
             counter = 0
-            for veld in record:
+            for veld in lex_record:
                 if counter == 0:
                     print '%s    (Record-id)'%(veld[VALUE])
                 else:
