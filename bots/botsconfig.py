@@ -43,13 +43,13 @@ ISFIELD = 4
 DECIMALS = 5
 MINLENGTH = 6
 BFORMAT = 7		#internal bots format; formats in grammar are convertd to bformat
-
+MAXREPEAT = 8
 #modules inmessage, outmessage; record in self.records:
 #already defined ID = 0
 VALUE = 1
 POS = 2
 LIN = 3
-SFIELD = 4  #boolean: True: is subfield, False: field or first element composite
+SFIELD = 4  #1: is subfield, 0: field or first element composite
 #already defined MPATH = 5  #only for first field (=recordID)
 FIXEDLINE = 6   #for fixed records; tmp storage of fixed record
 FORMATFROMGRAMMAR = 7     #to store FORMAT field has in grammar
