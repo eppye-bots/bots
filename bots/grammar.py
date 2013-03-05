@@ -150,23 +150,39 @@ class Grammar(object):
 
     def _checkfield(self,field,recordid):
         #'normalise' field: make list equal length
-        if len(field) == 3:  # that is: composite
-            field +=[None,False,None,None,'A']
-        elif len(field) == 4:               # that is: field (not a composite)
-            field +=[True,0,0,'A']
-        elif len(field) == 8:               # this happens when there are errors in a table and table is read again
+        len_field = len(field)
+        if len_field == 3:  # that is: composite
+            field +=[None,False,None,None,'A',1]
+        elif len_field == 4:               # that is: field (not a composite)
+            field +=[True,0,0,'A',1]
+        #each field is now equal length list
+        elif len_field == 9:               # this happens when there are errors in a table and table is read again
             raise botslib.GrammarError(_(u'Grammar "$grammar": error in grammar; error is already reported in this run.'),grammar=self.grammarname)
         else:
             raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": list has invalid number of arguments.')    ,grammar=self.grammarname,record=recordid,field=field[ID])
         if not isinstance(field[ID],basestring) or not field[ID]:
             raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": fieldID has to be a string.'),grammar=self.grammarname,record=recordid,field=field[ID])
-        if not isinstance(field[MANDATORY],basestring):
-            raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": mandatory/conditional has to be a string.'),grammar=self.grammarname,record=recordid,field=field[ID])
-        if not field[MANDATORY] or field[MANDATORY] not in ['M','C']:
-            raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": mandatory/conditional must be "M" or "C".'),grammar=self.grammarname,record=recordid,field=field[ID])
+        if isinstance(field[MANDATORY],basestring):
+            if field[MANDATORY] not in 'MC':
+                raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": mandatory/conditional must be "M" or "C".'),grammar=self.grammarname,record=recordid,field=field[ID])
+            field[MANDATORY] = 0 if field[MANDATORY]=='C' else 1
+        elif isinstance(field[MANDATORY],tuple):
+            if not isinstance(field[MANDATORY][0],basestring):
+                raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": mandatory/conditional must be "M" or "C".'),grammar=self.grammarname,record=recordid,field=field[ID])
+            if field[MANDATORY][0] not in 'MC':
+                raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": mandatory/conditional must be "M" or "C".'),grammar=self.grammarname,record=recordid,field=field[ID])
+            if not isinstance(field[MANDATORY][1],int):
+                raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": number of repeats must be integer.'),grammar=self.grammarname,record=recordid,field=field[ID])
+            field[MAXREPEAT] = field[MANDATORY][1]
+            field[MANDATORY] = 0 if field[MANDATORY][0]=='C' else 1
+        else:
+            raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": mandatory/conditional has to be a string (or tuple in case of repeating field).'),grammar=self.grammarname,record=recordid,field=field[ID])
         if field[ISFIELD]:  # that is: field, and not a composite
             #get MINLENGTH (from tuple or if fixed
-            if isinstance(field[LENGTH],tuple):
+            if isinstance(field[LENGTH],(int,float)):
+                if isinstance(self,fixed):
+                    field[MINLENGTH] = field[LENGTH]
+            elif isinstance(field[LENGTH],tuple):
                 if not isinstance(field[LENGTH][0],(int,float)):
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": min length "$min" has to be a number.'),grammar=self.grammarname,record=recordid,field=field[ID],min=field[LENGTH])
                 if not isinstance(field[LENGTH][1],(int,float)):
@@ -175,9 +191,6 @@ class Grammar(object):
                     raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": min length "$min" must be > max length "$max".'),grammar=self.grammarname,record=recordid,field=field[ID],min=field[LENGTH][0],max=field[LENGTH][1])
                 field[MINLENGTH] = field[LENGTH][0]
                 field[LENGTH] = field[LENGTH][1]
-            elif isinstance(field[LENGTH],(int,float)):
-                if isinstance(self,fixed):
-                    field[MINLENGTH] = field[LENGTH]
             else:
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": length "$len" has to be number or (min,max).'),grammar=self.grammarname,record=recordid,field=field[ID],len=field[LENGTH])
             if field[LENGTH] < 1:
@@ -188,7 +201,7 @@ class Grammar(object):
             if not isinstance(field[FORMAT],basestring):
                 raise botslib.GrammarError(_(u'Grammar "$grammar", record "$record", field "$field": format "$format" has to be a string.'),grammar=self.grammarname,record=recordid,field=field[ID],format=field[FORMAT])
             self._manipulatefieldformat(field,recordid)
-            if field[BFORMAT] in ['N','I','R']:
+            if field[BFORMAT] in 'NIR':
                 if isinstance(field[LENGTH],float):
                     length,nrdecimals = divmod(field[LENGTH],1)     #divide by 1 to get whole number and leftover
                     field[DECIMALS] = int( round(nrdecimals*10) )   #fill DECIMALS with leftover*10. Does not work for more than 9 decimal places...
