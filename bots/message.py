@@ -68,7 +68,7 @@ class Message(object):
     def _checkonemessage(self,node_instance,grammar,subtranslation):
         structure = grammar.structure
         if node_instance.record['BOTSID'] != structure[0][ID]:
-            raise botslib.MessageError(_(u'[A58]: Grammar "$grammar" starts with record "$grammarroot"; but while reading edi-file found start-record "$root".'),root=node_instance.record['BOTSID'],grammarroot=structure[0][ID],grammar=grammar.grammarname)
+            raise botslib.MessageError(_(u'[G50]: Grammar "$grammar" starts with record "$grammarroot"; but while reading edi-file found start-record "$root".'),root=node_instance.record['BOTSID'],grammarroot=structure[0][ID],grammar=grammar.grammarname)
         self._checkifrecordsingrammar(node_instance,structure[0],grammar.grammarname)
         self._canonicaltree(node_instance,structure[0])
         if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the records read) be logged.
@@ -165,7 +165,7 @@ class Message(object):
             if grammarfield[ISFIELD]:    #if field (no composite)
                 value = noderecord.get(grammarfield[ID])
                 if not value:
-                    if grammarfield[MANDATORY] == 'M':
+                    if grammarfield[MANDATORY]:
                         self.add2errorlist(_(u'[F02]%(linpos)s: Record "%(mpath)s" field "%(field)s" is mandatory.\n')%
                                             {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID]})
                     continue
@@ -176,7 +176,7 @@ class Message(object):
                     if noderecord.get(grammarsubfield[ID]):
                         break   #composite has data.
                 else:           #if composite has no data
-                    if grammarfield[MANDATORY] == 'M':
+                    if grammarfield[MANDATORY]:
                         self.add2errorlist(_(u'[F03]%(linpos)s: Record "%(mpath)s" composite "%(field)s" is mandatory.\n')%
                                             {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID]})
                     continue    #there is no data in compisite, and composite is conditional: composite is OK
@@ -184,7 +184,7 @@ class Message(object):
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
                     value = noderecord.get(grammarsubfield[ID])
                     if not value:
-                        if grammarsubfield[MANDATORY] == 'M':
+                        if grammarsubfield[MANDATORY]:
                             self.add2errorlist(_(u'[F04]%(linpos)s: Record "%(mpath)s" subfield "%(field)s" is mandatory.\n')%
                                                 {'linpos':node_instance.linpos(),'mpath':self.mpathformat(structure_record[MPATH]),'field':grammarsubfield[ID]})
                         continue

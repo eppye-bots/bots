@@ -69,7 +69,7 @@ class Outmessage(message.Message):
             -   MPATH    mpath of record, only for first field(=recordID)
             -   LIN     linenr of field in in-file
             -   POS      positionnr within line in in-file
-            -   SFIELD   True if subfield (edifact-only)
+            -   SFIELD   1 if subfield (edifact-only)
             first field for record is recordID.
     '''
     def __init__(self,ta_info):
@@ -165,15 +165,15 @@ class Outmessage(message.Message):
                 if grammarfield[ID] in noderecord  and noderecord[grammarfield[ID]]:      #field exists in outgoing message and has data
                     buildrecord += fieldbuffer          #write the fieldbuffer to buildrecord
                     fieldbuffer = []                           #clear the fieldbuffer
-                    buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]      #append new field
+                    buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:0,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]      #append new field
                 else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        fieldbuffer += [{VALUE:'',SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]          #append new empty to fieldbuffer;
+                        fieldbuffer += [{VALUE:'',SFIELD:0,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]          #append new empty to fieldbuffer;
                     else:
                         value = self._initfield(grammarfield)                         #initialise empty field. For eg fixed and csv: all fields have to be present
-                        buildrecord += [{VALUE:value,SFIELD:False,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]  #append new field
+                        buildrecord += [{VALUE:value,SFIELD:0,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]  #append new field
             else:  #if composite
-                donefirst = False       #used because first subfield in composite is marked as a field (not a subfield).
+                donefirst = 0       #used because first subfield in composite is marked as a field (not a subfield).
                 subbuffer = []            #buffer for this composite.
                 subiswritten = False      #check if composite contains data
                 for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
@@ -190,9 +190,9 @@ class Outmessage(message.Message):
                         else:
                             value = self._initfield(grammarsubfield)  #initialise empty field. For eg fixed and csv: all fields have to be present
                             subbuffer += [{VALUE:value,SFIELD:donefirst}]                   #generate & append new field
-                    donefirst = True
+                    donefirst = 1
                 if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
-                    fieldbuffer += [{VALUE:'',SFIELD:False}]
+                    fieldbuffer += [{VALUE:'',SFIELD:0}]
         #~ print [buildrecord]
 
         self.records += [buildrecord]

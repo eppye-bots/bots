@@ -64,7 +64,9 @@ class Inmessage(message.Message):
         self.iternextrecord = iter(self.records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
-            raise botslib.InMessageError(_(u'[A51]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover)
+            raise botslib.InMessageError(_(u'[A50] line $line pos $pos: Found non-valid data at end of edi file; probably a problem with separators or message structure.'),
+                                            line=leftover[0][LIN], pos=leftover[0][POS]) #not in mailbag
+            #~ raise botslib.InMessageError(_(u'[A50]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover) #not in mailbag
         del self.records
         #end parsing; self.root is root of a tree (of nodes).
         
@@ -434,7 +436,7 @@ class var(Inmessage):
         mode_inrecord = 0  # 1 indicates: lexing in record, 0 is lexing 'between records'.
         field_sep   = self.ta_info['field_sep'] + self.ta_info['record_tag_sep']    #for tradacoms; field_sep and record_tag_sep have same function.
         sfield_sep  = self.ta_info['sfield_sep']
-        sfield      = False # True: subfield, False: not a subfield
+        sfield      = 0 # 1: subfield, 0: not a subfield
         quote_char  = self.ta_info['quote_char']  #typical fo csv. example with quote_char ":  ,"1523",TEXT,"123", 
         mode_quote  = 0    #0=not in quote, 1=in quote
         mode_2quote = 0    #status within mode_quote. 0=just another char within quote, 1=met 2nd quote char; might be end of quote OR escaping of another quote-char.
@@ -506,13 +508,13 @@ class var(Inmessage):
             if char in field_sep:
                 record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
                 value = u''
-                sfield = False      #new token is field
+                sfield = 0      #new token is field
                 continue
             #end of (sub)field. Note: first field of composite is marked as 'field'
             if char == sfield_sep:
                 record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
                 value = u''
-                sfield = True        #new token is sub-field
+                sfield = 1        #new token is sub-field
                 continue
             #end of record
             if char in record_sep:
@@ -521,7 +523,7 @@ class var(Inmessage):
                 record = []
                 mode_inrecord = 0    #    
                 value = u''
-                sfield = False      #new token is field 
+                sfield = 0      #new token is field 
                 continue
             value += char    #just a char: append char to value
         #end of for-loop. all characters have been processed.
@@ -533,7 +535,7 @@ class var(Inmessage):
         else:
             leftover = value.strip('\x00\x1a')
             if leftover:
-                raise botslib.InMessageError(_(u'[A52]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover)
+                raise botslib.InMessageError(_(u'[A51]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover)
 
     def _parsefields(self,record_in_file,record_definition):
         ''' Identify the fields in inmessage-record using the record_definition from the grammar
@@ -597,7 +599,7 @@ class csv(var):
         if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
             for record in self.records:
-                record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: False}]
+                record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: 0}]
 
 class excel(csv):
     def initfromfile(self):
@@ -643,7 +645,7 @@ class excel(csv):
         self.iternextrecord = iter(self.records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
-            raise botslib.InMessageError(_(u'[A53]: Found non-valid data at end of excel file: "$leftover".'),leftover=leftover)
+            raise botslib.InMessageError(_(u'[A52]: Found non-valid data at end of excel file: "$leftover".'),leftover=leftover)
         del self.records
         self.checkmessage(self.root,self.defmessage)
 
@@ -692,72 +694,105 @@ class edifact(var):
         return messagetype.replace('.','_')      #older edifact messages have eg 90.1 as version...does not match with python imports...so convert this
 
     def _readcontent_edifile(self):
-        ''' read content of edi file in memory.
-            For edifact: not unicode. after sniffing unicode is used to check charset (UNOA etc)
-            In sniff: determine charset; then decode according to charset
+        ''' read content of edifact file in memory.
+            is read as binary. In _sniff determine charset; then decode according to charset
         '''
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
-        self.rawinput = botslib.readdata(filename=self.ta_info['filename'],errors=self.ta_info['checkcharsetin'])
+        self.rawinput = botslib.readdata(filename=self.ta_info['filename'])     #read as binary
 
     def _sniff(self):
         ''' examine a read edifact file for syntax parameters and correctness: eg parse UNA, find UNB, get charset and version
+            problem (as UNA sets characters.):
+            1. sometimes edi files are appended, leading to multiple UNA/UNB in one file
+            2. sometimes block format is used
+            If 1 & 2 are mixed, this coudl lead to situation where UNA-string has CR/LF in it. Bots does not support this (crazy) situation.
+            Note: in real world have seen files with multiple UNA. UNA always sets for 1 UNB.
+            Bots assumes: UNA-string has NO extra CR/LF in it, never.
         '''
-        #**************look for UNA
-        count = 0
-        while True:
-            if not self.rawinput[count].isspace():
-                if self.rawinput[count:count+3] == 'UNA':
-                    unacharset = True
-                    self.ta_info['sfield_sep'] = self.rawinput[count+3]
-                    self.ta_info['field_sep'] = self.rawinput[count+4]
-                    self.ta_info['decimaal'] = self.rawinput[count+5]
-                    self.ta_info['escape'] = self.rawinput[count+6]
-                    self.ta_info['reserve'] = '' #self.rawinput[count+7]    #for now: no support of repeating dataelements
-                    self.ta_info['record_sep'] = self.rawinput[count+8]
-                    count += 9
-                    while True:         #find first non-whitespace character
-                        if not self.rawinput[count].isspace():
-                            break
-                        count += 1
-                    else:
-                        raise botslib.InMessageError(_(u'[E50]: No "UNB" at the start of edifact file.'))
-                else:
-                    unacharset = False
-                self.rawinput = self.rawinput[count:]  #self.rawinput[count] is a non-whitespace char, and it is not UNA. Look at p
-                break
-            count += 1
-        else:
-            raise botslib.InMessageError(_(u'[E51]: Edifact file contains only whitespace.'))
+        try:
+            count = 0
+            #**************find first non-whitespace character
+            while self.rawinput[count].isspace():         
+                count += 1
+            #**************check if UNA
+            if self.rawinput[count:count+3] == 'UNA':
+                has_una_string = True
+                #extra check: UNA length. So: find UNB, calculate UNA-length. But: further on the UNB is already checked; this error is not too good...
+                count += 3
+                for field in ['sfield_sep','field_sep','decimaal','escape','reserve','record_sep']:
+                    self.ta_info[field] = self.rawinput[count]
+                    count += 1
+                #UNA-string is done; loop untill next not-space char
+                while self.rawinput[count].isspace():         
+                    count += 1
+                self.rawinput = self.rawinput[count:]  #rawinput does not contains UNA anymore. have to skip this, as parser does not parse UNA
+                count = 0   #reset counter to start of new rawinput
+            else:
+                has_una_string = False
+        except IndexError:
+            raise botslib.InMessageError(_(u'[A53]: Edifact file contains only whitespace.'))   #plus some border cases; not possible if mailbag is used.
+            
+        #what if seperators are in skip_char? or is this to theoretical
         #**************expect UNB
-        if self.rawinput[:3] == 'UNB':
-            self.ta_info['charset'] = self.rawinput[4:8]
-            self.ta_info['version'] = self.rawinput[9:10]
-            if not unacharset:
-                if self.rawinput[3] == '+' and self.rawinput[8] == ':':     #assume standard separators.
-                    self.ta_info['sfield_sep'] = ':'
-                    self.ta_info['field_sep'] = '+'
-                    self.ta_info['decimaal'] = '.'
-                    self.ta_info['escape'] = '?'
-                    self.ta_info['reserve'] = ''    #for now: no support of repeating dataelements
-                    self.ta_info['record_sep'] = "'"
-                elif self.rawinput[3] == '\x1D' and self.rawinput[8] == '\x1F':     #check if UNOB separators are used
-                    self.ta_info['sfield_sep'] = '\x1F'
-                    self.ta_info['field_sep'] = '\x1D'
-                    self.ta_info['decimaal'] = '.'
-                    self.ta_info['escape'] = ''
-                    self.ta_info['reserve'] = ''    #for now: no support of repeating dataelements
-                    self.ta_info['record_sep'] = '\x1C'
-                else:
-                    raise botslib.InMessageError(_(u'[A54]: Edifact file with non-standard separators. UNA segment should be used.'))
+        #loop over rawinput to extract segmenttag, used seperators, etc. 
+        count2 = 0
+        found_tag = ''
+        found_charset = ''
+        for char in self.rawinput[count:count+20]:
+            if char in self.ta_info['skip_char']:
+                continue
+            if count2 <= 2:
+                found_tag += char
+            elif count2 == 3:
+                found_field_sep = char
+                if found_tag != 'UNB':
+                    raise botslib.InMessageError(_(u'[A54]: Found no "UNB" at the start of edifact file.'))  #also: UNA too short. not possible if mailbag is used.
+            elif count2 <= 7:
+                found_charset += char
+            elif count2 == 8:
+                found_sfield_sep = char
+            else:
+                self.ta_info['version'] = char
+                break
+            count2 += 1
         else:
-            raise botslib.InMessageError(_(u'[E52]: Edifact file has no UNB-segment.'))
+            #if arrive here: to many <cr/lf>?  
+            raise botslib.InMessageError(_(u'[A55]: Problems with UNB-segment; encountered too many <CR/LF>.'))
+        
+        #set and/or verify seperators
+        if has_una_string:
+            if found_field_sep != self.ta_info['field_sep'] or found_sfield_sep != self.ta_info['sfield_sep']:
+                #~ print found_field_sep, self.ta_info['field_sep'], found_sfield_sep == self.ta_info['sfield_sep']:
+                raise botslib.InMessageError(_(u'[A56]: Separators used in edifact file differ from values indicated in UNA-segment.'))
+        else:
+            if found_field_sep == '+' and found_sfield_sep == ':':     #assume standard/UNOA separators.
+                self.ta_info['sfield_sep'] = ':'
+                self.ta_info['field_sep'] = '+'
+                self.ta_info['decimaal'] = '.'
+                self.ta_info['escape'] = '?'
+                self.ta_info['reserve'] = ''
+                self.ta_info['record_sep'] = "'"
+            elif found_field_sep == '\x1D' and found_sfield_sep == '\x1F':     #check if UNOB separators are used
+                self.ta_info['sfield_sep'] = '\x1F'
+                self.ta_info['field_sep'] = '\x1D'
+                self.ta_info['decimaal'] = '.'
+                self.ta_info['escape'] = ''
+                self.ta_info['reserve'] = ''
+                self.ta_info['record_sep'] = '\x1C'
+            else:
+                raise botslib.InMessageError(_(u'[A57]: Edifact file with non-standard separators. An UNA segment should be used.'))
+                    
         #*********** decode the file (to unicode)
         try:
-            self.rawinput = self.rawinput.decode(self.ta_info['charset'],self.ta_info['checkcharsetin'])
+            self.rawinput = self.rawinput.decode(found_charset,self.ta_info['checkcharsetin'])
+            self.ta_info['charset'] = found_charset
         except LookupError:
-            raise botslib.InMessageError(_(u'[E53]: Edifact file has unknown characterset "$charset".'),charset=self.ta_info['charset'])
+            raise botslib.InMessageError(_(u'[A58]: Edifact file has unknown characterset "$charset".'),charset=found_charset)
         except UnicodeDecodeError, msg:
-            raise botslib.InMessageError(_(u'[E54]: Edifact file has not allowed characters at/after file-position $content.'),content=msg[2])
+            raise botslib.InMessageError(_(u'[A59]: Edifact file has not allowed characters at/after file-position $content.'),content=msg[2])
+        if self.ta_info['version'] < '4':     #repeat char only for version >= 4
+            self.ta_info['reserve'] = ''
+
 
     def checkenvelope(self):
         ''' check envelopes (UNB-UNZ counters & references, UNH-UNT counters & references etc)
@@ -895,7 +930,7 @@ class edifact(var):
             
 
 class x12(var):
-    ''' class for edifact inmessage objects.'''
+    ''' class for x12 inmessage objects.'''
     @staticmethod
     def _manipulatemessagetype(messagetype,inode):
         ''' x12 also needs field from GS record to identify correct messagetype '''
@@ -905,29 +940,41 @@ class x12(var):
         ''' examine a file for syntax parameters and correctness of protocol
             eg parse ISA, get charset and version
         '''
-        #goto char that is not whitespace
-        for count,char in enumerate(self.rawinput):
-            if not char.isspace():
-                self.rawinput = self.rawinput[count:]  #here the interchange should start
-                break
-        else:
-            raise botslib.InMessageError(_(u'[A55]: Edi file contains only whitespace.'))
-        if self.rawinput[:3] != 'ISA':
-            raise botslib.InMessageError(_(u'[E55]: Expect "ISA", found "$content". Probably no x12?'),content=self.rawinput[:7])
         count = 0
-        for char in self.rawinput[:120]:
-            if char in '\r\n' and count != 105:
+        version = ''
+        recordID = ''
+        rawinput = self.rawinput[:200].lstrip()
+        for char in rawinput:
+            if char in '\r\n' and count != 105: #pos 105: is record_sep, could be \r\n
                 continue
             count += 1
-            if count == 4:
+            if count <= 3:
+                recordID += char
+            elif count == 4:
                 self.ta_info['field_sep'] = char
+                if recordID != 'ISA':
+                    raise botslib.InMessageError(_(u'[A60]: Expect "ISA", found "$content". Probably no x12?'),content=self.rawinput[:7])   #not with mailbon
+            elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. Not when mailbag.
+                if char != self.ta_info['field_sep']:
+                    raise botslib.InMessageError(_(u'[A63]: Non-valid ISA header; position $pos_element of ISA is "$foundchar", expect here element separator "$field_sep".'),
+                                                    pos_element=str(count),foundchar=char,field_sep=self.ta_info['field_sep'])
+            elif count < 84:
+                continue
+            elif count <= 89:
+                version += char
             elif count == 105:
                 self.ta_info['sfield_sep'] = char
             elif count == 106:
                 self.ta_info['record_sep'] = char
                 break
-        # ISA-version: if <004030: SHOULD use repeating element?
-        self.ta_info['reserve'] = ''
+        else: 
+            #if arrive here: not not reach count == 106. 
+            if count == 0:
+                raise botslib.InMessageError(_(u'[A61]: Edi file contains only whitespace.'))  #not with mailbag
+            else:
+                raise botslib.InMessageError(_(u'[A62]: expect X12 file but envelope is not right.'))
+        if version < '004030':  #not used before this version
+            self.ta_info['reserve'] = ''    
         self.ta_info['skip_char'] = self.ta_info['skip_char'].replace(self.ta_info['record_sep'],'') #if <CR> is segment terminator: cannot be in the skip_char-string!
 
     def checkenvelope(self):
