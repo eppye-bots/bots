@@ -319,26 +319,28 @@ class Node(object):
         return terug
 
     def _getcore(self,*mpaths):
-        terug = 1 #if there is no 'None' in the mpath, but everything is matched, 1 is returned (like True)
-        for key,value in mpaths[0].iteritems():          #check all items in mpath;
-            if key not in self.record:
-                return None         #does not match/is not right node
-            if value is not None:   #regular value (string), so compare
-                if value != self.record[key]:
-                    return None     #does not match/is not right node
-                continue            #matches, so continue to check other items
-            #item has None-value; remember this value because this might be the right node
-            terug = self.record[key][:]    #copy to avoid memory problems
-        else:   #all parts are matched and OK.
-            if len(mpaths) == 1:    #mpath is exhausted; so we are there!!!
-                return terug        #either the remembered value is returned or 1 (as a boolean, indicated 'found)
-            else:
-                for childnode in self.children:
-                    terug =  childnode._getcore(*mpaths[1:]) #search recursive for rest of mpaths
-                    if terug:
-                        return terug
-                else:   #no child has given a valid return
+        if len(mpaths) != 1:    #node is not end-node
+            for key,value in mpaths[0].iteritems():          #check all items in mpath;
+                if key not in self.record or value != self.record[key]:  #does not match/is not right node
                     return None
+            else:   #all items in mpath are matched and OK; recursuve search
+                for childnode in self.children:
+                    terug =  childnode._getcore(*mpaths[1:]) #recursive search for rest of mpaths
+                    if terug is not None:
+                        return terug
+                else:   #nothing found in children
+                    return None
+        else:   #node is end-node
+            terug = 1 #default return value: if there is no 'None' in the mpath, but everything is matched, 1 is returned (like True)
+            for key,value in mpaths[0].iteritems():          #check all items in mpath;
+                if key not in self.record:  #does not match/is not right node
+                    return None
+                elif value is None:   #item has None-value; remember this value because this might be the right node
+                    terug = self.record[key][:]    #copy to avoid memory problems
+                elif value != self.record[key]:   #compare values
+                    return None     #does not match/is not right node
+            else:   #all keys/values in this mpathr are matched and OK.
+                return terug        #either the remembered value is returned or 1 (as a boolean, indicated 'found)
 
     def getcount(self):
         '''count the number of nodes/records under the node/in whole tree'''
@@ -402,7 +404,6 @@ class Node(object):
                 for childnode in self.children:
                     for terug in childnode._getloopcore(*mpaths[1:]): #search recursive for rest of mpaths
                         yield terug
-        return
 
     def getnozero(self,*mpaths):
         ''' like get, but either return a numerical value (as string) or None. If value to return is equal to zero, None is returned.
