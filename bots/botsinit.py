@@ -185,7 +185,7 @@ def initenginelogging(logname):
     handler.doRollover()   #each run a new log file is used; old one is rotated
     logger.addHandler(handler)
     #initialise file logging: logger for trace of mapping; tried to use filters but got this not to work.....
-    botsglobal.logmap = logging.getLogger('bots.map')
+    botsglobal.logmap = logging.getLogger('engine.map')
     if not botsglobal.ini.getboolean('settings','mappingdebug',False):
         botsglobal.logmap.setLevel(logging.CRITICAL)
     #logger for reading edifile. is now used only very limited (1 place); is done with 'if'
