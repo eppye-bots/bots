@@ -85,23 +85,23 @@ class Inmessage(message.Message):
         '''
         pass
 
-    def _formatfield(self,value,grammarfield,structure_record,node_instance):
+    def _formatfield(self,value,field_definition,structure_record,node_instance):
         ''' Format of a field is checked and converted if needed.
             Input: value (string), field definition.
             Output: the formatted value (string)
             Parameters of self.ta_info are used: triad, decimaal
             for fixed field: same handling; length is not checked.
         '''
-        if grammarfield[BFORMAT] == 'A':
+        if field_definition[BFORMAT] == 'A':
             if isinstance(self,var):  #check length fields in variable records
                 lenght = len(value)
-                if lenght > grammarfield[LENGTH]:
+                if lenght > field_definition[LENGTH]:
                     self.add2errorlist(_(u'[F05]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
-                if lenght < grammarfield[MINLENGTH]:
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+                if lenght < field_definition[MINLENGTH]:
                     self.add2errorlist(_(u'[F06]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
-        elif grammarfield[BFORMAT] == 'D':
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+        elif field_definition[BFORMAT] == 'D':
             try:
                 lenght = len(value)
                 if lenght == 6:
@@ -112,8 +112,8 @@ class Inmessage(message.Message):
                     raise ValueError(u'To be catched')
             except ValueError:
                 self.add2errorlist(_(u'[F07]%(linpos)s: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
-                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
-        elif grammarfield[BFORMAT] == 'T':
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+        elif field_definition[BFORMAT] == 'T':
             try:
                 lenght = len(value)
                 if lenght == 4:
@@ -128,14 +128,14 @@ class Inmessage(message.Message):
                     raise ValueError(u'To be catched')
             except  ValueError:
                 self.add2errorlist(_(u'[F08]%(linpos)s: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
-                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
         else:   #numerics (R, N, I)
             #~ if not value:
                 #~ if self.ta_info['acceptspaceinnumfield']:
                     #~ value='0'
                 #~ else:
                     #~ self.add2errorlist(_(u'[13]%(linpos)s: Record "%(record)s" field "%(field)s" has numeric format but contains only space.\n')%
-                                        #~ {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID]})
+                                        #~ {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID]})
                 #~ return ''   #when num field has spaces as content, spaces are stripped. Field should be numeric.
             if value[-1] == u'-':    #if minus-sign at the end, put it in front.
                 value = value[-1] + value[:-1]
@@ -143,49 +143,49 @@ class Inmessage(message.Message):
             value = value.replace(self.ta_info['decimaal'],u'.',1) #replace decimal sign by canonical decimal sign
             if 'E' in value or 'e' in value:
                 self.add2errorlist(_(u'[F09]%(linpos)s: Record "%(record)s" field "%(field)s" contains exponent: "%(content)s".\n')%
-                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
             if isinstance(self,var):  #check length num fields in variable records
                 if self.ta_info['lengthnumericbare']:
                     length = botslib.countunripchars(value,'-+.')
                 else:
                     length = len(value)
-                if length > grammarfield[LENGTH]:
+                if length > field_definition[LENGTH]:
                     self.add2errorlist(_(u'[F10]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
-                if length < grammarfield[MINLENGTH]:
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+                if length < field_definition[MINLENGTH]:
                     self.add2errorlist(_(u'[F11]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
-            if grammarfield[BFORMAT] == 'I':
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+            if field_definition[BFORMAT] == 'I':
                 if '.' in value:
                     self.add2errorlist(_(u'[F12]%(linpos)s: Record "%(record)s" field "%(field)s" has format "I" but contains decimal sign: "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
                 else:
                     try:    #convert to decimal in order to check validity
                         valuedecimal = float(value)
-                        valuedecimal = valuedecimal / 10**grammarfield[DECIMALS]
-                        value = '%.*F'%(grammarfield[DECIMALS],valuedecimal)
+                        valuedecimal = valuedecimal / 10**field_definition[DECIMALS]
+                        value = '%.*F'%(field_definition[DECIMALS],valuedecimal)
                     except:
                         self.add2errorlist(_(u'[F13]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
-                                            {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
-            elif grammarfield[BFORMAT] == 'N':
+                                            {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            elif field_definition[BFORMAT] == 'N':
                 lendecimal = len(value[value.find('.'):])-1
-                if lendecimal != grammarfield[DECIMALS]:
+                if lendecimal != field_definition[DECIMALS]:
                     self.add2errorlist(_(u'[F14]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has invalid nr of decimals: "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
                 try:    #convert to decimal in order to check validity
                     valuedecimal = float(value)
                     value = '%.*F'%(lendecimal,valuedecimal)
                 except:
                     self.add2errorlist(_(u'[F15]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
-            elif grammarfield[BFORMAT] == 'R':
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            elif field_definition[BFORMAT] == 'R':
                 lendecimal = len(value[value.find('.'):])-1
                 try:    #convert to decimal in order to check validity
                     valuedecimal = float(value)
                     value = '%.*F'%(lendecimal,valuedecimal)
                 except:
                     self.add2errorlist(_(u'[F16]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
         return value
 
     def _parse(self,structure_level,inode):
@@ -394,7 +394,7 @@ class fixed(Inmessage):
         record2build = {} #start with empty dict
         fixedrecord = lex_record[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
         lenfixed = len(fixedrecord)
-        recordlength = sum([field_in_record_definition[LENGTH] for field_in_record_definition in list_of_fields_in_record_definition])
+        recordlength = sum([field_definition[LENGTH] for field_definition in list_of_fields_in_record_definition])
         if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
             raise botslib.InMessageError(_(u'[S52] line $line: Record "$record" too short; is $pos pos, defined is $defpos pos.'),
                                             line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
@@ -402,11 +402,11 @@ class fixed(Inmessage):
             raise botslib.InMessageError(_(u'[S53] line $line: Record "$record" too long; is $pos pos, defined is $defpos pos.'),
                                             line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
         pos = 0
-        for field_in_record_definition in list_of_fields_in_record_definition:
-            value = fixedrecord[pos:pos+field_in_record_definition[LENGTH]].strip()   #copy string to avoid memory problem
+        for field_definition in list_of_fields_in_record_definition:
+            value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
             if value:
-                record2build[field_in_record_definition[ID]] = value
-            pos += field_in_record_definition[LENGTH]
+                record2build[field_definition[ID]] = value
+            pos += field_definition[LENGTH]
         return record2build
 
 
@@ -436,7 +436,8 @@ class var(Inmessage):
         mode_inrecord = 0  # 1 indicates: lexing in record, 0 is lexing 'between records'.
         field_sep   = self.ta_info['field_sep'] + self.ta_info['record_tag_sep']    #for tradacoms; field_sep and record_tag_sep have same function.
         sfield_sep  = self.ta_info['sfield_sep']
-        sfield      = 0 # 1: subfield, 0: not a subfield
+        rep_sep     = self.ta_info['reserve']
+        sfield      = 0 # 1: subfield, 0: not a subfield, 2:repeat
         quote_char  = self.ta_info['quote_char']  #typical fo csv. example with quote_char ":  ,"1523",TEXT,"123", 
         mode_quote  = 0    #0=not in quote, 1=in quote
         mode_2quote = 0    #status within mode_quote. 0=just another char within quote, 1=met 2nd quote char; might be end of quote OR escaping of another quote-char.
@@ -516,6 +517,11 @@ class var(Inmessage):
                 value = u''
                 sfield = 1        #new token is sub-field
                 continue
+            if char == rep_sep:
+                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
+                value = u''
+                sfield = 2        #new token is sub-field
+                continue
             #end of record
             if char in record_sep:
                 record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
@@ -543,19 +549,47 @@ class var(Inmessage):
         '''
         list_of_fields_in_record_definition = record_definition[FIELDS]
         if record_definition[ID] == 'ISA' and isinstance(self,x12):    #isa is an exception: no strip()
-            is_isa = True
+            is_x12_ISA = True
         else:
-            is_isa = False
+            is_x12_ISA = False
         record2build = {}         #record that is build from lex_record using ID's from record_definition
         tindex = -1     #elementcounter; composites count as one
         #~ tsubindex = 0     #sub-element counter within composite; for files that are OK: init when compostie is detected. This init is for error (field is lexed as subfield but is not.) 20130222: catch UnboundLocalError now
         #********loop over all fields present in this record of edi file
+        #********identify the lexed fields in grammar, and build a dict with (fieldID:value)
         for lex_field in lex_record:
-            #*********identify the lexed field: assign fieldID fro mdefintions to field in lexed record
-            if lex_field[SFIELD]:
+            value = lex_field[VALUE].strip() if not is_x12_ISA else lex_field[VALUE][:]                        
+            #*********use info of lexer: what is preceding separator (field, sub-field, repeat) 
+            if not lex_field[SFIELD]:       #preceded by field-separator
+                try:
+                    tindex += 1                 #use next field
+                    field_definition = list_of_fields_in_record_definition[tindex]
+                except IndexError:
+                    self.add2errorlist(_(u'[F19] line %(line)s pos %(pos)s: Record "%(record)s" too many fields in record; unknown field "%(content)s".\n')%
+                                        {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
+                    continue
+                if field_definition[MAXREPEAT] == 1: #definition says: not repeating 
+                    if field_definition[ISFIELD]:    #definition says: field       +E+
+                        if value:
+                            record2build[field_definition[ID]] = value
+                    else:                                      #definition says: subfield    +E:S+
+                        tsubindex = 0
+                        list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
+                        sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
+                        if value:
+                            record2build[sub_field_in_record_definition[ID]] = value
+                else:   #definition says: repeating 
+                    if field_definition[ISFIELD]:      #definition says: field      +E*R+
+                        record2build[field_definition[ID]] = [value]
+                    else:                                        #definition says: subfield   +E:S*R:S+
+                        tsubindex = 0
+                        list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
+                        sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
+                        record2build[field_definition[ID]] = [{sub_field_in_record_definition[ID]:value},]
+            elif lex_field[SFIELD] == 1:    #preceded by sub-field separator
                 try:
                     tsubindex += 1
-                    field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
+                    sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
                 except (TypeError,UnboundLocalError):       #field has no SUBFIELDS, or unexpected subfield
                     self.add2errorlist(_(u'[F17] line %(line)s pos %(pos)s: Record "%(record)s" expect field but "%(content)s" is a subfield.\n')%
                                         {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
@@ -564,27 +598,26 @@ class var(Inmessage):
                     self.add2errorlist(_(u'[F18] line %(line)s pos %(pos)s: Record "%(record)s" too many subfields in composite; unknown subfield "%(content)s".\n')%
                                           {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
-            else:
-                try:
-                    tindex += 1
-                    field_in_record_definition = list_of_fields_in_record_definition[tindex]
-                except IndexError:
-                    self.add2errorlist(_(u'[F19] line %(line)s pos %(pos)s: Record "%(record)s" too many fields in record; unknown field "%(content)s".\n')%
-                                        {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
+                if field_definition[MAXREPEAT] == 1: #definition says: not repeating   +E:S+
+                    if value:
+                        record2build[sub_field_in_record_definition[ID]] = value
+                else:                                          #definition says: repeating       +E:S*R:S+
+                    record2build[field_definition[ID]][-1][sub_field_in_record_definition[ID]] = value
+            else:                         #  preceded by repeat separator
+                #check if repeating!
+                if field_definition[MAXREPEAT] == 1:
+                    self.add2errorlist(_(u'[F??] line %(line)s pos %(pos)s: Record "%(record)s" expect not-repeating elemen, but "%(content)s" is repeating.\n')%
+                                          {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
-                if not field_in_record_definition[ISFIELD]: #if this field (in the file) is a composite according to grammar: field is first sub-field in composite
+                if field_definition[ISFIELD]:      #definition says: field      +E*R+
+                    record2build[field_definition[ID]].append(value)
+                else:                                        #definition says: first subfield   +E:S*R:S+
                     tsubindex = 0
                     list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
-                    field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
-            #*********add to record2build
-            if is_isa:                                 #isa is an exception: no strip()
-                value = lex_field[VALUE][:]         #copies string - avoid memory problems
-            else:
-                value = lex_field[VALUE].strip()   #copies string - avoid memory problems
-            if value:
-                record2build[field_in_record_definition[ID]] = value
+                    sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
+                    record2build[field_definition[ID]].append({sub_field_in_record_definition[ID]:value})
         return record2build
-
+        
 class csv(var):
     ''' class for ediobjects with Comma Separated Values'''
     def _lex(self):
