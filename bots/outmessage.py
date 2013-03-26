@@ -160,23 +160,23 @@ class Outmessage(message.Message):
         '''
         buildrecord = []    #the record that is going to be build; list of dicts. Each dict is a field.
         fieldbuffer = []
-        for grammarfield in structure_record[FIELDS]:       #loop all fields in grammar-definition
-            if grammarfield[ISFIELD]:    #if field (no composite)
-                if grammarfield[ID] in noderecord  and noderecord[grammarfield[ID]]:      #field exists in outgoing message and has data
+        for field_definition in structure_record[FIELDS]:       #loop all fields in grammar-definition
+            if field_definition[ISFIELD]:    #if field (no composite)
+                if field_definition[ID] in noderecord  and noderecord[field_definition[ID]]:      #field exists in outgoing message and has data
                     buildrecord += fieldbuffer          #write the fieldbuffer to buildrecord
                     fieldbuffer = []                           #clear the fieldbuffer
-                    buildrecord += [{VALUE:noderecord[grammarfield[ID]],SFIELD:0,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]      #append new field
+                    buildrecord += [{VALUE:noderecord[field_definition[ID]],SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]}]      #append new field
                 else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        fieldbuffer += [{VALUE:'',SFIELD:0,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]          #append new empty to fieldbuffer;
+                        fieldbuffer += [{VALUE:'',SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]}]          #append new empty to fieldbuffer;
                     else:
-                        value = self._initfield(grammarfield)                         #initialise empty field. For eg fixed and csv: all fields have to be present
-                        buildrecord += [{VALUE:value,SFIELD:0,FORMATFROMGRAMMAR:grammarfield[FORMAT]}]  #append new field
+                        value = self._initfield(field_definition)                         #initialise empty field. For eg fixed and csv: all fields have to be present
+                        buildrecord += [{VALUE:value,SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]}]  #append new field
             else:  #if composite
                 donefirst = 0       #used because first subfield in composite is marked as a field (not a subfield).
                 subbuffer = []            #buffer for this composite.
                 subiswritten = False      #check if composite contains data
-                for grammarsubfield in grammarfield[SUBFIELDS]:   #loop subfields
+                for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
                     if grammarsubfield[ID] in noderecord and noderecord[grammarsubfield[ID]]:       #field exists in outgoing message and has data
                         buildrecord += fieldbuffer           #write fieldbuffer
                         fieldbuffer = []                       #clear fieldbuffer
@@ -198,26 +198,26 @@ class Outmessage(message.Message):
         self.lex_records += [buildrecord]
 
 
-    def _formatfield(self,value, grammarfield,structure_record,node_instance):
+    def _formatfield(self,value, field_definition,structure_record,node_instance):
         ''' Input: value (as a string) and field definition.
             Some parameters of self.syntax are used, eg decimaal
             Format is checked and converted (if needed).
             return the formatted value
         '''
-        if grammarfield[BFORMAT] == 'A':
+        if field_definition[BFORMAT] == 'A':
             if isinstance(self,fixed):  #check length fields in variable records
-                if grammarfield[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
-                    value = value.rjust(grammarfield[MINLENGTH])
+                if field_definition[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
+                    value = value.rjust(field_definition[MINLENGTH])
                 else:
-                    value = value.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
+                    value = value.ljust(field_definition[MINLENGTH])    #add spaces (left, because A-field is right aligned)
             length = len(value)
-            if length > grammarfield[LENGTH]:
+            if length > field_definition[LENGTH]:
                 self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
-            if length < grammarfield[MINLENGTH]:
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+            if length < field_definition[MINLENGTH]:
                 self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
-        elif grammarfield[BFORMAT] == 'D':
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+        elif field_definition[BFORMAT] == 'D':
             try:
                 lenght = len(value)
                 if lenght == 6:
@@ -228,14 +228,14 @@ class Outmessage(message.Message):
                     raise ValueError(u'To be catched')
             except ValueError:
                 self.add2errorlist(_(u'[F22]: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
-            if lenght > grammarfield[LENGTH]:
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            if lenght > field_definition[LENGTH]:
                 self.add2errorlist(_(u'[F31]: Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
-            if lenght < grammarfield[MINLENGTH]:
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+            if lenght < field_definition[MINLENGTH]:
                 self.add2errorlist(_(u'[F32]: Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
-        elif grammarfield[BFORMAT] == 'T':
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+        elif field_definition[BFORMAT] == 'T':
             try:
                 lenght = len(value)
                 if lenght == 4:
@@ -246,13 +246,13 @@ class Outmessage(message.Message):
                     raise ValueError(u'To be catched')
             except  ValueError:
                 self.add2errorlist(_(u'[F23]: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
-            if lenght > grammarfield[LENGTH]:
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            if lenght > field_definition[LENGTH]:
                 self.add2errorlist(_(u'[F33]: Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'max':grammarfield[LENGTH]})
-            if lenght < grammarfield[MINLENGTH]:
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+            if lenght < field_definition[MINLENGTH]:
                 self.add2errorlist(_(u'[F34]: Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value,'min':grammarfield[MINLENGTH]})
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
         else:   #numerics
             if value[0] == '-':
                 minussign = '-'
@@ -263,12 +263,12 @@ class Outmessage(message.Message):
             digits,decimalsign,decimals = absvalue.partition('.')
             if not digits and not decimals:# and decimalsign:
                 self.add2errorlist(_(u'[F24]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
-                                    {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
+                                    {'field':field_definition[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
             if not digits:
                 digits = '0'
 
             lengthcorrection = 0        #for some formats (if self.ta_info['lengthnumericbare']=True; eg edifact) length is calculated without decimal sing and/or minus sign.
-            if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
+            if field_definition[BFORMAT] == 'R':    #floating point: use all decimals received
                 if self.ta_info['lengthnumericbare']:
                     if minussign:
                         lengthcorrection += 1
@@ -278,71 +278,71 @@ class Outmessage(message.Message):
                     value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -len(decimals)))
                 except:
                     self.add2errorlist(_(u'[F25]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
-                                        {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
-                if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
-                    value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)
-                elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
-                    value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)
+                                        {'field':field_definition[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
+                if field_definition[FORMAT] == 'RL':    #if field format is numeric right aligned
+                    value = value.ljust(field_definition[MINLENGTH] + lengthcorrection)
+                elif field_definition[FORMAT] == 'RR':    #if field format is numeric right aligned
+                    value = value.rjust(field_definition[MINLENGTH] + lengthcorrection)
                 else:
-                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                    value = value.zfill(field_definition[MINLENGTH] + lengthcorrection)
                 value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
-            elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
+            elif field_definition[BFORMAT] == 'N':  #fixed decimals; round
                 if self.ta_info['lengthnumericbare']:
                     if minussign:
                         lengthcorrection += 1
-                    if grammarfield[DECIMALS]:
+                    if field_definition[DECIMALS]:
                         lengthcorrection += 1
                 try:
-                    value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
+                    value = str(decimal.Decimal(minussign + digits + decimalsign + decimals).quantize(decimal.Decimal(10) ** -field_definition[DECIMALS]))
                 except:
                     self.add2errorlist(_(u'[F26]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
-                                        {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
-                if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
-                    value = value.ljust(grammarfield[MINLENGTH] + lengthcorrection)
-                elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
-                    value = value.rjust(grammarfield[MINLENGTH] + lengthcorrection)
+                                        {'field':field_definition[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
+                if field_definition[FORMAT] == 'NL':    #if field format is numeric right aligned
+                    value = value.ljust(field_definition[MINLENGTH] + lengthcorrection)
+                elif field_definition[FORMAT] == 'NR':    #if field format is numeric right aligned
+                    value = value.rjust(field_definition[MINLENGTH] + lengthcorrection)
                 else:
-                    value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                    value = value.zfill(field_definition[MINLENGTH] + lengthcorrection)
                 value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
-            elif grammarfield[BFORMAT] == 'I':  #implicit decimals
+            elif field_definition[BFORMAT] == 'I':  #implicit decimals
                 if self.ta_info['lengthnumericbare']:
                     if minussign:
                         lengthcorrection += 1
                 try:
-                    dec_value = decimal.Decimal(minussign + digits + decimalsign + decimals) * 10**grammarfield[DECIMALS]
+                    dec_value = decimal.Decimal(minussign + digits + decimalsign + decimals) * 10**field_definition[DECIMALS]
                     value = str(dec_value.quantize(NODECIMAL ))
                 except:
                     self.add2errorlist(_(u'[F27]: Record "%(record)s" field "%(field)s" numerical format not valid: "%(content)s".\n')%
-                                        {'field':grammarfield[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
-                value = value.zfill(grammarfield[MINLENGTH] + lengthcorrection)
+                                        {'field':field_definition[ID],'content':value,'record':self.mpathformat(structure_record[MPATH])})
+                value = value.zfill(field_definition[MINLENGTH] + lengthcorrection)
 
-            if len(value)-lengthcorrection > grammarfield[LENGTH]:
+            if len(value)-lengthcorrection > field_definition[LENGTH]:
                 self.add2errorlist(_(u'[F28]: Record "%(record)s" field "%(field)s" too big: "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':grammarfield[ID],'content':value})
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
         return value
 
 
-    def _initfield(self,grammarfield):
+    def _initfield(self,field_definition):
         ''' basically csv only.
         '''
-        if grammarfield[BFORMAT] == 'A':
+        if field_definition[BFORMAT] == 'A':
             value = ''
-        elif grammarfield[BFORMAT] == 'D':
+        elif field_definition[BFORMAT] == 'D':
             value = ''
-        elif grammarfield[BFORMAT] == 'T':
+        elif field_definition[BFORMAT] == 'T':
             value = ''
         else:   #numerics
             value = '0'
-            if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
-                value = value.zfill(grammarfield[MINLENGTH] )
-            elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
-                value = str(decimal.Decimal(value).quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
-                value = value.zfill(grammarfield[MINLENGTH])
+            if field_definition[BFORMAT] == 'R':    #floating point: use all decimals received
+                value = value.zfill(field_definition[MINLENGTH] )
+            elif field_definition[BFORMAT] == 'N':  #fixed decimals; round
+                value = str(decimal.Decimal(value).quantize(decimal.Decimal(10) ** -field_definition[DECIMALS]))
+                value = value.zfill(field_definition[MINLENGTH])
                 value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
-            elif grammarfield[BFORMAT] == 'I':  #implicit decimals
-                dec_value = decimal.Decimal(value) * 10**grammarfield[DECIMALS]
+            elif field_definition[BFORMAT] == 'I':  #implicit decimals
+                dec_value = decimal.Decimal(value) * 10**field_definition[DECIMALS]
                 value = str(dec_value.quantize(NODECIMAL ))
-                value = value.zfill(grammarfield[MINLENGTH])
+                value = value.zfill(field_definition[MINLENGTH])
         return value
 
 
@@ -432,37 +432,37 @@ class Outmessage(message.Message):
         return ''
 
 class fixed(Outmessage):
-    def _initfield(self,grammarfield):
-        if grammarfield[BFORMAT] == 'A':
-            if grammarfield[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
-                value = ''.rjust(grammarfield[MINLENGTH])
+    def _initfield(self,field_definition):
+        if field_definition[BFORMAT] == 'A':
+            if field_definition[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
+                value = ''.rjust(field_definition[MINLENGTH])
             else:
-                value = ''.ljust(grammarfield[MINLENGTH])    #add spaces (left, because A-field is right aligned)
-        elif grammarfield[BFORMAT] == 'D':
-            value = ''.ljust(grammarfield[MINLENGTH])        #add spaces
-        elif grammarfield[BFORMAT] == 'T':
-            value = ''.ljust(grammarfield[MINLENGTH])        #add spaces
+                value = ''.ljust(field_definition[MINLENGTH])    #add spaces (left, because A-field is right aligned)
+        elif field_definition[BFORMAT] == 'D':
+            value = ''.ljust(field_definition[MINLENGTH])        #add spaces
+        elif field_definition[BFORMAT] == 'T':
+            value = ''.ljust(field_definition[MINLENGTH])        #add spaces
         else:   #numerics
-            if grammarfield[BFORMAT] == 'R':    #floating point: use all decimals received
-                if grammarfield[FORMAT] == 'RL':    #if field format is numeric right aligned
-                    value = '0'.ljust(grammarfield[MINLENGTH] )
-                elif grammarfield[FORMAT] == 'RR':    #if field format is numeric right aligned
-                    value = '0'.rjust(grammarfield[MINLENGTH] )
+            if field_definition[BFORMAT] == 'R':    #floating point: use all decimals received
+                if field_definition[FORMAT] == 'RL':    #if field format is numeric right aligned
+                    value = '0'.ljust(field_definition[MINLENGTH] )
+                elif field_definition[FORMAT] == 'RR':    #if field format is numeric right aligned
+                    value = '0'.rjust(field_definition[MINLENGTH] )
                 else:
-                    value = '0'.zfill(grammarfield[MINLENGTH] )
-            elif grammarfield[BFORMAT] == 'N':  #fixed decimals; round
-                value = str(decimal.Decimal('0').quantize(decimal.Decimal(10) ** -grammarfield[DECIMALS]))
-                if grammarfield[FORMAT] == 'NL':    #if field format is numeric right aligned
-                    value = value.ljust(grammarfield[MINLENGTH])
-                elif grammarfield[FORMAT] == 'NR':    #if field format is numeric right aligned
-                    value = value.rjust(grammarfield[MINLENGTH])
+                    value = '0'.zfill(field_definition[MINLENGTH] )
+            elif field_definition[BFORMAT] == 'N':  #fixed decimals; round
+                value = str(decimal.Decimal('0').quantize(decimal.Decimal(10) ** -field_definition[DECIMALS]))
+                if field_definition[FORMAT] == 'NL':    #if field format is numeric right aligned
+                    value = value.ljust(field_definition[MINLENGTH])
+                elif field_definition[FORMAT] == 'NR':    #if field format is numeric right aligned
+                    value = value.rjust(field_definition[MINLENGTH])
                 else:
-                    value = value.zfill(grammarfield[MINLENGTH])
+                    value = value.zfill(field_definition[MINLENGTH])
                 value = value.replace('.',self.ta_info['decimaal'],1)    #replace '.' by required decimal sep.
-            elif grammarfield[BFORMAT] == 'I':  #implicit decimals
-                dec_value = decimal.Decimal('0') * 10**grammarfield[DECIMALS]
+            elif field_definition[BFORMAT] == 'I':  #implicit decimals
+                dec_value = decimal.Decimal('0') * 10**field_definition[DECIMALS]
                 value = str(dec_value.quantize(NODECIMAL ))
-                value = value.zfill(grammarfield[MINLENGTH])
+                value = value.zfill(field_definition[MINLENGTH])
         return value
 
 
