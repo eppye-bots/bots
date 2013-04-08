@@ -132,6 +132,7 @@ class Message(object):
                         if field != field_definition[ID]:   #first check compositeID
                             continue
                         break
+                        #TODO
                         #check for all fields in reperating composite the content
                         #~ for content_dict in node_instance.record[field]:    #content is a list of dicts
                             #~ for field2 in content_dict.keys():              #for every field in this dict

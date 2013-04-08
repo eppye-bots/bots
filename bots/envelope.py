@@ -487,16 +487,17 @@ class xmlnocheck(noenvelope):
 class xml(noenvelope):
     pass
 
-class myxmlenvelop(xml):
-    ''' old xml enveloping; name is kept for upward comp. & as example for xml enveloping'''
+class myxmlenvelop(noenvelope):
+    ''' xml enveloping; kept for upward comp. & as example for xml enveloping.
+        Note there is no standardised XML-envelope!
+        Writes a new XML-tree; uses places-holders for XML-files to include; real work is done by ElementTree's 'include'.
+    '''
     def run(self):
-        ''' class for (test) xml envelope. There is no standardised XML-envelope!
-            writes a new XML-tree; uses places-holders for XML-files to include; real enveloping is done by ElementTree's include'''
         include = '{http://www.w3.org/2001/XInclude}include'
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
-        #~ self.out.put({'BOTSID':'root','xmlns:xi':"http://www.w3.org/2001/XInclude"})     #works, but attribute is not removed bij ETI.include
-        self.out.put({'BOTSID':'root'})     #start filling out-tree
+        #~ self.out.put({'BOTSID':'root','xmlns:xi':"http://www.w3.org/2001/XInclude"})     #works, but attribute is not removed by ETI.include
+        self.out.put({'BOTSID':'root'})
         ta_list = self.filelist2absolutepaths()
         for filename in ta_list:
             self.out.put({'BOTSID':'root'},{'BOTSID':include,include + '__parse':'xml',include + '__href':filename})

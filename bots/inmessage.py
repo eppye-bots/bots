@@ -1138,7 +1138,7 @@ class tradacoms(var):
             botsglobal.logmap.debug(u'Parsing tradacoms envelopes is OK')
 
 
-class xml(var):
+class xml(Inmessage):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def initfromfile(self):
         botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
@@ -1266,7 +1266,7 @@ class xmlnocheck(xml):
             return True
         return False
 
-class json(var):
+class json(Inmessage):
     def initfromfile(self):
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
