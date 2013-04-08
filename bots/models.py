@@ -259,6 +259,19 @@ class partner(models.Model):
         db_table = 'partner'
     def __unicode__(self):
         return unicode(self.idpartner) + ' (' + unicode(self.name) + ')'
+    def save(self, *args, **kwargs):
+        if isinstance(self,partnergroep):
+            self.isgroup = True
+        else:
+            self.isgroup = False
+        super(partner,self).save(*args,**kwargs)
+        
+class partnergroep(partner):
+    class Meta:
+        proxy = True
+        ordering = ['idpartner']
+        db_table = 'partner'
+
 class chanpar(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idpartner = models.ForeignKey(partner,on_delete=models.CASCADE,verbose_name=_(u'partner'))

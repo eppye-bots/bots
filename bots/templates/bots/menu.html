@@ -39,7 +39,8 @@
 		{% if perms.bots.change_routes %}<li><a href="/admin/bots/routes/" >{% trans 'Routes' %}</a></li>{% endif %}
 		{% if perms.bots.change_channel %}<li><a href="/admin/bots/channel/" >{% trans 'Channels' %}</a></li>{% endif %}
 		{% if perms.bots.change_translate %}<li><a href="/admin/bots/translate/" >{% trans 'Translations' %}</a></li>{% endif %}
-		{% if perms.bots.change_partner %}<li><a href="/admin/bots/partner/" >{% trans 'Partners &amp; groups' %}</a></li>{% endif %}
+		{% if perms.bots.change_partner %}<li><a href="/admin/bots/partner/" >{% trans 'Partners' %}</a></li>{% endif %}
+		{% if perms.bots.change_partner %}<li><a href="/admin/bots/partnergroep/" >{% trans 'Partnergroups' %}</a></li>{% endif %}
 		{% if perms.bots.change_confirmrule %}<li><a href="/admin/bots/confirmrule/" >{% trans 'Confirmrules' %}</a></li>{% endif %}
         <li><hr/></li>
 		{% if perms.bots.change_ccode %}<li><a href="/admin/bots/ccode/" >{% trans 'User Codes list' %}</a></li>{% endif %}

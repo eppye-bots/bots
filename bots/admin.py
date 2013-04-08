@@ -111,28 +111,17 @@ class MailInline(admin.TabularInline):
     fields = ('idchannel','mail', 'cc')
     extra = 1
 
-class MyPartnerAdminForm(django.forms.ModelForm):
-    ''' customs form for partners to check if group has groups'''
-    class Meta:
-        model = models.partner
-    def clean(self):
-        super(MyPartnerAdminForm, self).clean()
-        if self.cleaned_data['isgroup'] and self.cleaned_data['group']:
-            raise django.forms.util.ValidationError(_(u'A group can not be part of a group.'))
-        return self.cleaned_data
-
 class PartnerAdmin(BotsAdmin):
     actions = ('activate',)
-    form = MyPartnerAdminForm
     filter_horizontal = ('group',)
     inlines = (MailInline,)
-    list_display = ('active','isgroup','idpartner', 'name','mail','cc','startdate', 'enddate','phone1','phone2','attr1','attr2','attr3','attr4','attr5')
+    list_display = ('active','idpartner', 'name','mail','cc','startdate', 'enddate','phone1','phone2','attr1','attr2','attr3','attr4','attr5')
     list_display_links = ('idpartner',)
-    list_filter = ('active','isgroup')
+    list_filter = ('active',)
     ordering = ('idpartner',)
     search_fields = ('idpartner','name','mail','cc','attr1','attr2','attr3','attr4','attr5','name1','name2','name3')
     fieldsets = (
-        (None,          {'fields': ('active', ('idpartner', 'isgroup'), 'name', ('mail','cc'),'desc',('startdate', 'enddate')),
+        (None,          {'fields': ('active', ('idpartner', 'name'), ('mail','cc'),'desc',('startdate', 'enddate')),
                          'classes': ('wide extrapretty',)
                         }),
         (_(u'Address'),{'fields': ('name1','name2','name3','address1','address2','address3',('postalcode','city'),('countrycode','countrysubdivision'),('phone1','phone2')),
@@ -145,7 +134,33 @@ class PartnerAdmin(BotsAdmin):
                          'classes': ('collapse wide extrapretty',)
                         }),
     )
+    def queryset(self, request):
+        return self.model.objects.filter(isgroup=False)
 admin.site.register(models.partner,PartnerAdmin)
+
+#~ class PartnerInline(admin.TabularInline):
+    #~ model = models.partner.group.through
+    # fields = ('idpartner','name')
+    # extra = 1
+    #~ fk_name = 'from_partner_id'
+
+class PartnerGroepAdmin(BotsAdmin):
+    actions = ('activate',)
+    #~ inlines = [PartnerInline,]
+    #~ exclude = ('group',)
+    list_display = ('active','idpartner','name','startdate','enddate')
+    list_display_links = ('idpartner',)
+    list_filter = ('active',)
+    ordering = ('idpartner',)
+    search_fields = ('idpartner','name',)
+    fieldsets = (
+        (None,          {'fields': ('active', 'idpartner', 'name','desc',('startdate', 'enddate')),
+                         'classes': ('wide extrapretty',)
+                        }),
+    )
+    def queryset(self, request):
+        return self.model.objects.filter(isgroup=True)
+admin.site.register(models.partnergroep,PartnerGroepAdmin)
 
 class MyRouteAdminForm(django.forms.ModelForm):
     ''' customs form for route for additional checks'''
