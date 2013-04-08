@@ -20,7 +20,7 @@ def botsinfo():
             (_(u'served at port'),botsglobal.ini.getint('webserver','port',8080)),
             (_(u'platform'),platform.platform()),
             (_(u'machine'),platform.machine()),
-            (_(u'python version'),platform.python_version),
+            (_(u'python version'),platform.python_version()),
             (_(u'django version'),django.VERSION),
             (_(u'bots version'),botsglobal.version),
             (_(u'bots installation path'),botsglobal.ini.get('directories','botspath')),
