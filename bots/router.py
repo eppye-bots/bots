@@ -131,11 +131,12 @@ class new(object):
 
         #merge messages & communication.run outgoing channel
         if routedict['tochannel']:   #do outgoing part of route
+            #merge messages for this route. Note this is done for all files in route...
             botslib.tryrunscript(userscript,scriptname,'premerge',routedict=routedict)
             envelope.mergemessages(idroute=routedict['idroute'])
             botslib.tryrunscript(userscript,scriptname,'postmerge',routedict=routedict)
 
-            #communication.run outgoing channel
+            #add outchannel as attribute to outgoign files
             #build for query: towhere (dict) and wherestring
             towhere = dict(status=MERGED,
                         idroute=routedict['idroute'],
@@ -158,7 +159,8 @@ class new(object):
                                                             WHERE to_partner_id=%(topartner_tochannel_id)s ))'''
             toset = {'tochannel':routedict['tochannel'],'status':FILEOUT}
             botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
-
+            
+            #actual communication: run outgoing channel (if not deffered)
             if not routedict['defer']:   #do outgoing part of route
                 botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
                 if routedict['zip_outgoing'] == 1:               #zip outgoing.
