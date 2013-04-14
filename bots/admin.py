@@ -227,11 +227,20 @@ class TranslateAdmin(BotsAdmin):
 admin.site.register(models.translate,TranslateAdmin)
 
 class UniekAdmin(BotsAdmin):     #AKA counters
+    def has_add_permission(self, request):  #no adding of counters
+        return False
+    def has_delete_permission(self, request, obj=None):  #no deleting of counters
+        return False
     actions = None
     list_display = ('domein', 'nummer')
-    list_editable = ('nummer',)
+    readonly_fields = ('domein',)   #never edit the domein field
     ordering = ('domein',)
     search_fields = ('domein',)
+    fieldsets = (
+        (None,      {'fields': ('domein', 'nummer'),
+                     'classes': ('wide extrapretty',)
+                    }),
+    )
 admin.site.register(models.uniek,UniekAdmin)
 
 #User - change the default display of user screen
