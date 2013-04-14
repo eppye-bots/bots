@@ -1203,22 +1203,19 @@ class xml(Inmessage):
         newnode = node.Node(record=self._etreenode2botstreenode(xmlnode))
         for xmlchildnode in xmlnode:   #for every node in mpathtree
             if self._isfield(xmlchildnode):    #if no child entities: treat as 'field': this misses xml where attributes are used as fields....testing for repeating is no good...
+                ## for generating grammars: empty strings should generate a field 
                 if xmlchildnode.text and not xmlchildnode.text.isspace(): #skip empty xml entity
                     newnode.record[xmlchildnode.tag] = xmlchildnode.text      #add as a field
                     hastxt = True
                 else:
                     hastxt = False
-                for key,value in xmlchildnode.items():   #convert attributes to fields.
+                for key,value in xmlchildnode.items():   #convert the xml-attributes of this 'xml-filed' to fields in dict with attributemarker.
                     if not hastxt:
                         newnode.record[xmlchildnode.tag] = ''      #add empty content
                         hastxt = True
                     newnode.record[xmlchildnode.tag + self.ta_info['attributemarker'] + key] = value      #add as a field
             else:   #xmlchildnode is a record
                 newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
-        #~ if botsglobal.ini.getboolean('settings','readrecorddebug',False):
-            #~ botsglobal.logger.debug('read record "%s":',newnode.record['BOTSID'])
-            #~ for key,value in newnode.record.items():
-                #~ botsglobal.logger.debug('    "%s" : "%s"',key,value)
         self.stack.pop()
         #~ print self.stack
         return newnode
@@ -1318,7 +1315,9 @@ class json(Inmessage):
             if value is None:
                 continue
             elif isinstance(value,basestring):  #json field; map to field in node.record
-                thisnode.record[key] = value
+                ## for generating grammars: empty strings should generate a field 
+                if value and not value.isspace():   #use only if string has a value.
+                    thisnode.record[key] = value
             elif isinstance(value,dict):
                 newnode = self._dojsonobject(value,key)
                 if newnode:
