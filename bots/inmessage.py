@@ -33,7 +33,7 @@ def parse_edi_file(**ta_info):
     try:
         classtocall = globals()[ta_info['editype']]  #get inmessage class to call (subclass of Inmessage)
     except KeyError:
-        raise botslib.InMessageError(_(u'Unknown editype for incoming message: $editype'),editype=ta_info['editype'])
+        raise botslib.InMessageError(_(u'Unknown editype for incoming message: %(editype)s'),ta_info)
     ediobject = classtocall(ta_info)
     ediobject.initfromfile()
     return ediobject
@@ -64,9 +64,8 @@ class Inmessage(message.Message):
         self.iternextrecord = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
-            raise botslib.InMessageError(_(u'[A50] line $line pos $pos: Found non-valid data at end of edi file; probably a problem with separators or message structure.'),
-                                            line=leftover[0][LIN], pos=leftover[0][POS]) #not in mailbag
-            #~ raise botslib.InMessageError(_(u'[A50]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover) #not in mailbag
+            raise botslib.InMessageError(_(u'[A50] line %(line)s pos %(pos)s: Found non-valid data at end of edi file; probably a problem with separators or message structure.'),
+                                            {'line':leftover[0][LIN], 'pos':leftover[0][POS]})
         del self.lex_records
         #end parsing; self.root is root of a tree (of nodes).
         
@@ -216,10 +215,11 @@ class Inmessage(message.Message):
                 if structure_level[structure_index][MIN] and not countnrofoccurences:   #is record is required in structure_level, and countnrofoccurences==0: error;
                                                                                         #enough check here; message is validated more accurate later
                     try:
-                        raise botslib.InMessageError(self.messagetypetxt + _(u'[S50] line $line pos $pos: Found record "$record"; message has an error in its structure; this record is not allowed here.'),
-                                                                            record=current_edi_record[ID][VALUE],line=current_edi_record[ID][LIN],pos=current_edi_record[ID][POS])
+                        raise botslib.InMessageError(self.messagetypetxt + _(u'[S50]: Line:%(line)s pos:%(pos)s record:"%(record)s": message has an error in its structure; this record is not allowed here. Scanned in message definition until mandatory record: "%(looked)s".'),
+                                                                            {'record':current_edi_record[ID][VALUE],'line':current_edi_record[ID][LIN],'pos':current_edi_record[ID][POS],'looked':structure_level[structure_index][MPATH]})
                     except TypeError:       #when no UNZ (edifact)
-                        raise botslib.InMessageError(self.messagetypetxt + _(u'[S51]: Missing mandatory record "$record".'),record=self.mpathformat(structure_level[structure_index][MPATH]))
+                        raise botslib.InMessageError(self.messagetypetxt + _(u'[S51]: Missing mandatory record "%(record)s".'),
+                                                                            {'record':self.mpathformat(structure_level[structure_index][MPATH])})
                 structure_index += 1
                 if structure_index == structure_end:  #current_edi_record is not in this level. Go level up
                     return current_edi_record    #return either None (no more data-records to parse) or the last record2parse (the last record2parse is not found in this level)
@@ -236,7 +236,8 @@ class Inmessage(message.Message):
                 # start a SUBTRANSLATION; find the right messagetype, etc
                 messagetype = newnode.enhancedget(structure_level[structure_index][SUBTRANSLATION])
                 if not messagetype:
-                    raise botslib.TranslationNotFoundError(_(u'Could not find SUBTRANSLATION "$sub" in (sub)message.'),sub=structure_level[structure_index][SUBTRANSLATION])
+                    raise botslib.TranslationNotFoundError(_(u'Could not find SUBTRANSLATION "%(sub)s" in (sub)message.'),
+                                                            {'sub':structure_level[structure_index][SUBTRANSLATION]})
                 messagetype = self._manipulatemessagetype(messagetype,inode)
                 try:
                     defmessage = grammar.grammarread(self.__class__.__name__,messagetype)
@@ -251,7 +252,8 @@ class Inmessage(message.Message):
                             except ImportError:
                                 pass
                     if raisenovalidmapping_error:
-                        raise botslib.TranslationNotFoundError(_(u'No (valid) grammar for editype "$editype" messagetype "$messagetype".'),editype=self.__class__.__name__,messagetype=messagetype)
+                        raise botslib.TranslationNotFoundError(_(u'No (valid) grammar for editype "%(editype)s" messagetype "%(messagetype)s".'),
+                                                                {'editype':self.__class__.__name__,'messagetype':messagetype})
                 self.messagecount += 1
                 self.messagetypetxt = _(u'Message nr %(count)s, type %(type)s, '%{'count':self.messagecount,'type':messagetype})
                 current_edi_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
@@ -284,7 +286,7 @@ class Inmessage(message.Message):
     def _readcontent_edifile(self):
         ''' read content of edi file to memory.
         '''
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
         self.rawinput = botslib.readdata(filename=self.ta_info['filename'],charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _sniff(self):
@@ -373,7 +375,7 @@ class fixed(Inmessage):
     def _readcontent_edifile(self):
         ''' read content of edi file to memory.
         '''
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
         self.filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb',charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _lex(self):
@@ -396,10 +398,10 @@ class fixed(Inmessage):
         lenfixed = len(fixedrecord)
         recordlength = sum([field_definition[LENGTH] for field_definition in list_of_fields_in_record_definition])
         if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-            raise botslib.InMessageError(_(u'[S52] line $line: Record "$record" too short; is $pos pos, defined is $defpos pos.'),
+            raise botslib.InMessageError(_(u'[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
                                             line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
         if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-            raise botslib.InMessageError(_(u'[S53] line $line: Record "$record" too long; is $pos pos, defined is $defpos pos.'),
+            raise botslib.InMessageError(_(u'[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
                                             line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
         pos = 0
         for field_definition in list_of_fields_in_record_definition:
@@ -416,17 +418,7 @@ class idoc(fixed):
         SAP does strip all empty fields for record; is catered for in grammar.defaultsyntax
     '''
     pass
-    #~ def _sniff(self):
-        #~ #goto char that is not whitespace
-        #~ for count,char in enumerate(self.rawinput):
-            #~ if not char.isspace():
-                #~ self.rawinput = self.rawinput[count:]  #here the interchange should start
-                #~ break
-        #~ else:
-            #~ raise botslib.InMessageError(_(u'edi file only contains whitespace.'))
-        #~ if self.rawinput[:6] != 'EDI_DC':
-            #~ raise botslib.InMessageError(_(u'expect "EDI_DC", found "$content". Probably no SAP idoc.'),content=self.rawinput[:6])
-
+    
 
 class var(Inmessage):
     ''' abstract class for edi-objects with records of variabele length.'''
@@ -541,7 +533,8 @@ class var(Inmessage):
         else:
             leftover = value.strip('\x00\x1a')
             if leftover:
-                raise botslib.InMessageError(_(u'[A51]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "$leftover".'),leftover=leftover)
+                raise botslib.InMessageError(_(u'[A51]: Found non-valid data at end of edi file; probably a problem with separators or message structure: "%(leftover)s".'),
+                                                {'leftover':leftover})
 
     def _parsefields(self,lex_record,record_definition):
         ''' Identify the fields in inmessage-record using the record_definition from the grammar
@@ -654,15 +647,17 @@ class excel(csv):
         else:
             doublequote = True
         
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
         #xlrd reads excel file; python's csv modules write this to file-like StringIO (as utf-8); read StringIO as self.rawinput; decode this (utf-8->unicode)
         infilename = botslib.abspathdata(self.ta_info['filename'])
         try:
             xlsdata = self.read_xls(infilename)
         except:
             txt = botslib.txtexc()
-            botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error:\n%s'),txt)
-            raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error:\n$error'),error=txt)
+            botsglobal.logger.error(_(u'Excel extraction failed, may not be an Excel file? Error:\n%(txt)s'),
+                                            {'txt':txt})
+            raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error:\n%(txt)s'),
+                                            {'txt':txt})
         rawinputfile = StringIO.StringIO()
         csvout = csv.writer(rawinputfile, quotechar=self.ta_info['quote_char'], delimiter=self.ta_info['field_sep'], doublequote=doublequote, escapechar=self.ta_info['escape'])
         csvout.writerows( map(self.utf8ize, xlsdata) )
@@ -678,7 +673,8 @@ class excel(csv):
         self.iternextrecord = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
-            raise botslib.InMessageError(_(u'[A52]: Found non-valid data at end of excel file: "$leftover".'),leftover=leftover)
+            raise botslib.InMessageError(_(u'[A52]: Found non-valid data at end of excel file: "%(leftover)s".'),
+                                            {'leftover':leftover})
         del self.lex_records
         self.checkmessage(self.root,self.defmessage)
 
@@ -730,7 +726,7 @@ class edifact(var):
         ''' read content of edifact file in memory.
             is read as binary. In _sniff determine charset; then decode according to charset
         '''
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
         self.rawinput = botslib.readdata(filename=self.ta_info['filename'])     #read as binary
 
     def _sniff(self):
@@ -820,9 +816,11 @@ class edifact(var):
             self.rawinput = self.rawinput.decode(found_charset,self.ta_info['checkcharsetin'])
             self.ta_info['charset'] = found_charset
         except LookupError:
-            raise botslib.InMessageError(_(u'[A58]: Edifact file has unknown characterset "$charset".'),charset=found_charset)
+            raise botslib.InMessageError(_(u'[A58]: Edifact file has unknown characterset "%(charset)s".'),
+                                            {'charset':found_charset})
         except UnicodeDecodeError, msg:
-            raise botslib.InMessageError(_(u'[A59]: Edifact file has not allowed characters at/after file-position $content.'),content=msg[2])
+            raise botslib.InMessageError(_(u'[A59]: Edifact file has not allowed characters at/after file-position %(content)s.'),
+                                            {'content':msg[2]})
         if self.ta_info['version'] < '4':     #repeat char only for version >= 4
             self.ta_info['reserve'] = ''
 
@@ -956,8 +954,8 @@ class edifact(var):
                     botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out)
             #write tomessage (result of translation)
             out.writeall()
-            botsglobal.logger.debug(u'Send edifact confirmation (CONTRL) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
-                                                                                    self.ta_info['idroute'],self.ta_info['fromchannel'],receiver,sender)
+            botsglobal.logger.debug(u'Send edifact confirmation (CONTRL) route "%(route)s" fromchannel "%(fromchannel)s" frompartner "%(frompartner)s" topartner "%(topartner)s".',
+                                    {'route':self.ta_info['idroute'],'fromchannel':self.ta_info['fromchannel'],'frompartner':receiver,'topartner':sender})
             self.ta_info.update(confirmtype=confirmtype,confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
             ta_confirmation.update(**out.ta_info)    #update ta for confirmation
             
@@ -986,11 +984,12 @@ class x12(var):
             elif count == 4:
                 self.ta_info['field_sep'] = char
                 if recordID != 'ISA':
-                    raise botslib.InMessageError(_(u'[A60]: Expect "ISA", found "$content". Probably no x12?'),content=self.rawinput[:7])   #not with mailbon
+                    raise botslib.InMessageError(_(u'[A60]: Expect "ISA", found "%(content)s". Probably no x12?'),
+                                                {'content':self.rawinput[:7]})   #not with mailbon
             elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. Not when mailbag.
                 if char != self.ta_info['field_sep']:
-                    raise botslib.InMessageError(_(u'[A63]: Non-valid ISA header; position $pos_element of ISA is "$foundchar", expect here element separator "$field_sep".'),
-                                                    pos_element=str(count),foundchar=char,field_sep=self.ta_info['field_sep'])
+                    raise botslib.InMessageError(_(u'[A63]: Non-valid ISA header; position %(pos)s of ISA is "%(foundchar)s", expect here element separator "%(field_sep)s".'),
+                                                    {'pos':str(count),'foundchar':char,'field_sep':self.ta_info['field_sep']})
             elif count < 84:
                 continue
             elif count <= 89:
@@ -1106,8 +1105,8 @@ class x12(var):
                 lou.put({'BOTSID':'AK2'},{'BOTSID':'AK5','AK501':'A'})
             out.put({'BOTSID':'ST'},{'BOTSID':'SE','SE01':out.getcount()+1,'SE02':reference})  #last line (counts the segments produced in out-message)
             out.writeall()   #write tomessage (result of translation)
-            botsglobal.logger.debug(u'Send x12 confirmation (997) route "%s" fromchannel "%s" frompartner "%s" topartner "%s".',
-                self.ta_info['idroute'],self.ta_info['fromchannel'],confirmation['receiver'],confirmation['sender'])
+            botsglobal.logger.debug(u'Send x12 confirmation (997) route "%(route)s" fromchannel "%(fromchannel)s" frompartner "%(frompartner)s" topartner "%(topartner)s".',
+                    {'route':self.ta_info['idroute'],'fromchannel':self.ta_info['fromchannel'],'frompartner':confirmation['receiver'],'topartner':confirmation['sender']})
             self.ta_info.update(confirmtype='send-x12-997',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
             ta_confirmation.update(statust=OK,**out.ta_info)    #update ta for confirmation
 
@@ -1141,7 +1140,7 @@ class tradacoms(var):
 class xml(Inmessage):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def initfromfile(self):
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
         filename = botslib.abspathdata(self.ta_info['filename'])
 
         if self.ta_info['messagetype'] == 'mailbag':
@@ -1245,7 +1244,7 @@ class xml(Inmessage):
                     str_recordlist = str_record[4]
                     break
             else:
-                raise botslib.InMessageError(_(u'[X51]: Unknown XML-tag in "$record".'),record=record)
+                raise botslib.InMessageError(_(u'[X51]: Unknown XML-tag in "%(record)s".'),{'record':record})
         for str_record in str_recordlist:   #see if xmlchildnode is in structure
             #~ print '    is xmlhildnode in this level comparing',xmlchildnode.tag,str_record[0]
             if xmlchildnode.tag == str_record[0]:
@@ -1330,7 +1329,8 @@ class json(Inmessage):
                 thisnode.record[key] = str(value)
             else:
                 if self.ta_info['checkunknownentities']:
-                    raise botslib.InMessageError(_(u'[J55]: Key "$key" value "$value": is not string, list or dict.'),key=key,value=value)
+                    raise botslib.InMessageError(_(u'[J55]: Key "%(key)s" value "%(value)s": is not string, list or dict.'),
+                                                    {'key':key,'value':value})
                 thisnode.record[key] = str(value)
         if len(thisnode.record)==2 and not thisnode.children:
             return None #node is empty...
@@ -1356,7 +1356,7 @@ class db(Inmessage):
         the database-object is unpickled, and passed to the mappingscript.
     '''
     def initfromfile(self):
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
         filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
         self.root = pickle.load(filehandler)
         filehandler.close()
@@ -1369,7 +1369,7 @@ class raw(Inmessage):
     ''' the file object is just read and passed to the mappingscript.
     '''
     def initfromfile(self):
-        botsglobal.logger.debug(u'read edi file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
         filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
         self.root = filehandler.read()
         filehandler.close()

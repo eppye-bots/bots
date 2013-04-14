@@ -316,13 +316,13 @@ def start():
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
     for key,value in botslib.botsinfo():    #log info about environement, versions, etc
-        botsglobal.logger.info(u'%s: "%s".',key,value)
+        botsglobal.logger.info(u'%(key)s: "%(value)s".',{'key':key,'value':value})
 
     #**************connect to database**********************************
     try:
         botsinit.connect()
     except Exception,msg:
-        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%s".'),msg)
+        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(3)
     else:
         botsglobal.logger.info(_(u'Connected to database.'))

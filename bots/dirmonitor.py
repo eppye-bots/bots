@@ -20,7 +20,8 @@ if os.name == 'nt':
     try:
         import win32file, win32con
     except Exception, msg: 
-        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "Python Win32 Extensions" on windows. Error:\n%s'%msg)
+        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "Python Win32 Extensions" on windows. Error:\n%(msg)s',
+                            {'msg':msg})
    
     def windows_event_handler(logger,dir_watch,cond,tasks):
         ACTIONS = { 1 : "Created  ",      #tekst for printing results
@@ -60,7 +61,7 @@ if os.name == 'nt':
             if results:
                 #for each incoming event: place route to run in a set. Main thread takes action.
                 for action, filename in results:
-                    logger.debug(u'Event: %s %s',ACTIONS.get (action, "Unknown"),filename)
+                    logger.debug(u'Event: %(action)s %(filename)s',{'action':ACTIONS.get(action,"Unknown"),'filename':filename})
                 for action, filename in results:
                     if action in [1,3,5] and fnmatch.fnmatch(filename, dir_watch['filemask']):
                         #~ if dir_watch['rec'] and os.sep in filename:
@@ -77,7 +78,8 @@ else:
     try:
         import pyinotify
     except Exception, msg: 
-        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "pyinotify" on linux. Error:\n%s'%msg)
+        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "pyinotify" on linux. Error:\n%(msg)s',
+                            {'msg':msg})
     
     class LinuxEventHandler(pyinotify.ProcessEvent):
         ''' 
@@ -155,8 +157,8 @@ def start():
         sys.exit(1)
     process_name = 'dirmonitor'
     logger = botsinit.initserverlogging(process_name)
-    logger.log(25,u'Bots %s started.',process_name)
-    logger.log(25,u'Bots %s configdir: "%s".',process_name,botsglobal.ini.get('directories','config'))
+    logger.log(25,u'Bots %(process_name)s started.',process_name=process_name)
+    logger.log(25,u'Bots %(process_name)s configdir: "%(configdir)s".',{'process_name':process_name,'configdir':botsglobal.ini.get('directories','config')})
     
     botsenginepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py')        #get path to bots-engine
     cond = threading.Condition()
@@ -186,7 +188,7 @@ def start():
         dir_watch_thread.start()
 
     # this main thread get the results from the watch-thread(s).
-    logger.info(u'Bots %s started.',process_name)
+    logger.info(u'Bots %(process_name)s started.',process_name=process_name)
     active_receiving = False
     timeout = 2.0
     cond.acquire()
@@ -210,7 +212,7 @@ def start():
                             logger.info(u'Send to queue "%s %s %s".',botsenginepath,'-c' + configdir,task)
                             job2queue.send_job_to_jobqueue([sys.executable,botsenginepath,'-c' + configdir,task])
                     except Exception, msg:
-                        logger.info(u'Error in running task: "%s".',msg)
+                        logger.info(u'Error in running task: "%(msg)s".',msg=msg)
                     tasks.clear()
                     active_receiving = False
                 else:                                   #cond.wait returned probably because of a timeout

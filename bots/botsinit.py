@@ -15,7 +15,7 @@ class BotsConfig(ConfigParser.RawConfigParser):
         if self.has_option(section, option):
             return ConfigParser.RawConfigParser.get(self,section, option)
         elif default == '':
-            raise botslib.BotsError(u'No entry "%s" in section "%s" in "bots.ini".'%(option,section))
+            raise botslib.BotsError(u'No entry "%(option)s" in section "%(section)s" in "bots.ini".',{'option':option,'section':section})
         else:
             return default
     def getint(self,section, option, default):
@@ -41,7 +41,7 @@ def generalinit(configdir):
             settings = botslib.botsbaseimport(importnameforsettings)
         except ImportError:     #set pythonpath to config directory first
             if not os.path.exists(configdir):    #check if configdir exists.
-                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "%s".'%(configdir))
+                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "%(configdir)s".',{'configdir':configdir})
             addtopythonpath = os.path.abspath(os.path.dirname(configdir))
             #~ print 'add pythonpath for usersys',addtopythonpath
             moduletoimport = os.path.basename(configdir)
@@ -72,7 +72,7 @@ def generalinit(configdir):
             importedusersys = botslib.botsbaseimport(importnameforusersys)
         except ImportError:     #set pythonpath to usersys directory first
             if not os.path.exists(usersys):    #check if configdir exists.
-                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "%s".'%(usersys))
+                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "%(usersys)s".',{'usersys':usersys})
             addtopythonpath = os.path.abspath(os.path.dirname(usersys))     #????
             moduletoimport = os.path.basename(usersys)
             #~ print 'add pythonpath for usersys',addtopythonpath
@@ -100,8 +100,9 @@ def generalinit(configdir):
     #set values in settings.py**********************************************************************
     if botsglobal.ini.get('webserver','environment','development') == 'development':   #values in bots.ini are also used in setting up cherrypy
         settings.DEBUG = True
-    else:
+    else:       #production/not in developemnt
         settings.DEBUG = False
+        logging.raiseExceptions = 0     # during production: if errors occurs in writing to log: ignore error. (leads to a missing log line, better than error;-).
     settings.TEMPLATE_DEBUG = settings.DEBUG
     #set paths in settings.py:
     #~ settings.FILE_UPLOAD_TEMP_DIR = os.path.join(settings.PROJECT_PATH, 'botssys/pluginsuploaded')
@@ -166,12 +167,12 @@ def connect():
                                         connection_factory=psycopg2.extras.DictConnection)
         botsglobal.db.set_client_encoding('UNICODE')
     else:
-        raise botslib.PanicError(u'Unknown database engine "%s".'%(botsglobal.settings.DATABASES['default']['ENGINE']))
+        raise botslib.PanicError(u'Unknown database engine "%(engine)s".',{'engine':botsglobal.settings.DATABASES['default']['ENGINE']})
 
 #*******************************************************************
 #*** init logging **************************************************
 #*******************************************************************
-logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error. (leads to a missing log line, better than error;-).
+#~ logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error. (leads to a missing log line, better than error;-).
 logging.addLevelName(25, 'STARTINFO')
 convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
 

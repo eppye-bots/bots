@@ -57,14 +57,14 @@ class new(object):
                                             {'idroute':route,'active':True}):
                 routedict = dict(row)   #convert to real dictionary (as self.command is added to routedict)
                 routedict['command'] = self.command
-                botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),{'idroute':routedict['idroute'],'seq':routedict['seq']})
+                botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),routedict)
                 botslib.setrouteid(routedict['idroute'])
                 foundroute = True
                 self.router(routedict)
                 botslib.setrouteid('')
-                botsglobal.logger.debug(u'finished route %s %s',routedict['idroute'],routedict['seq'])
+                botsglobal.logger.debug(u'finished route %(idroute)s %(seq)s',routedict)
             if not foundroute:
-                botsglobal.logger.warning(_(u'there is no (active) route "%s".'),route)
+                botsglobal.logger.warning(_(u'there is no (active) route "%(route)s".'),{'route':route})
         try:
             return automaticmaintenance.evaluate(self.command,botslib.get_minta4query())
         except:
@@ -93,7 +93,7 @@ class new(object):
         if botslib.tryrunscript(userscript,scriptname,'main',routedict=routedict):
             return  #so: if function ' main' : communication.run only the routescript, nothing else.
         if not (userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']):
-            raise botslib.ScriptError(_(u'Route "$route" is empty: no routescript, not enough parameters.'),route=routedict['idroute'])
+            raise botslib.ScriptError(_(u'Route "%(route)s" is empty: no routescript, not enough parameters.'),routedict)
 
         botslib.tryrunscript(userscript,scriptname,'start',routedict=routedict)
 

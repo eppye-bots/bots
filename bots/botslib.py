@@ -370,7 +370,7 @@ def sendbotserrorreport(subject,reporttext):
         try:
             mail_managers(subject, reporttext)
         except Exception,msg:
-            botsglobal.logger.debug(u'Error in sending error report: %s',msg)
+            botsglobal.logger.debug(u'Error in sending error report: %(msg)s',{'msg':msg})
 
 def sendbotsemail(partner,subject,reporttext):
     ''' Send a simple email message to any bots partner.
@@ -384,7 +384,7 @@ def sendbotsemail(partner,subject,reporttext):
             try:
                 send_mail(subject, reporttext, botsglobal.settings.SERVER_EMAIL, recipient_list)
             except Exception,msg:
-                botsglobal.logger.warning(u'Error sending email: %s',msg)
+                botsglobal.logger.warning(u'Error sending email: %(msg)s',{'msg':msg})
 
 def log_session(func):
     ''' used as decorator.
@@ -401,7 +401,7 @@ def log_session(func):
             terug = func(*args,**argv)
         except:
             txt = txtexc()
-            botsglobal.logger.debug(u'Error in process: %s',txt)
+            botsglobal.logger.debug(u'Error in process: %(txt)s',{'txt':txt})
             ta_process.update(statust=ERROR,errortext=txt)
         else:
             ta_process.update(statust=DONE)
@@ -410,11 +410,12 @@ def log_session(func):
 
 def txtexc():
     ''' Process last exception to get (safe) errortext.
+        str().decode(): bytes->unicode
     '''
     if botsglobal.ini and botsglobal.ini.getboolean('settings','debug',False):
-        return traceback.format_exc(limit=None).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this.
+        return traceback.format_exc(limit=None).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
     else:
-        terug = traceback.format_exc(limit=0).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this.
+        terug = traceback.format_exc(limit=0).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
         return terug.replace(u'Traceback (most recent call last):\n',u'')
 
 class ErrorProcess(NewTransaction):
@@ -474,16 +475,16 @@ def botsimport(soort,modulename):
         module = botsbaseimport(modulepath)
     except ImportError: #if module not found
         if isa_direct_importerror():
-            botsglobal.logger.debug(u'no import of "%s".',modulefile)
+            botsglobal.logger.debug(u'no import of "%(modulefile)s".',{'modulefile':modulefile})
             raise
         else:
             txt = txtexc()
-            raise ScriptImportError(_(u'import error in "$module", error:\n$txt'),module=modulefile,txt=txt)
+            raise ScriptImportError(_(u'import error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
     except:             #other errors
         txt = txtexc()
-        raise ScriptImportError(_(u'Error in "$module", error:\n$txt'),module=modulefile,txt=txt)
+        raise ScriptImportError(_(u'Error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
     else:
-        botsglobal.logger.debug(u'import "%s".',modulefile)
+        botsglobal.logger.debug(u'import "%(modulefile)s".',{'modulefile':modulefile})
         return module,modulefile
 #**********************************************************/**
 #*************************File handling os.path etc***********************/**
@@ -550,13 +551,14 @@ def runscript(module,modulefile,functioninscript,**argv):
     ''' Execute userscript. Functioninscript is supposed to be there; if not AttributeError is raised.
         Often is checked in advance if Functioninscript does exist.
     '''
-    botsglobal.logger.debug(u'run userscript "%s" in "%s".',functioninscript,modulefile)
+    botsglobal.logger.debug(u'run userscript "%(functioninscript)s" in "%(modulefile)s".',
+                            {'functioninscript':functioninscript,'modulefile':modulefile})
     functiontorun = getattr(module, functioninscript)
     try:
         return functiontorun(**argv)
     except:
         txt = txtexc()
-        raise ScriptError(_(u'Userscript "$filename": "$txt".'),filename=modulefile,txt=txt)
+        raise ScriptError(_(u'Userscript "%(modulefile)s": "%(txt)s".'),{'modulefile':modulefile,'txt':txt})
 
 def tryrunscript(module,modulefile,functioninscript,**argv):
     if module and hasattr(module,functioninscript):
@@ -565,14 +567,15 @@ def tryrunscript(module,modulefile,functioninscript,**argv):
     return False
 
 def runscriptyield(module,modulefile,functioninscript,**argv):
-    botsglobal.logger.debug(u'run userscript "%s" in "%s".',functioninscript,modulefile)
+    botsglobal.logger.debug(u'run userscript "%(functioninscript)s" in "%(modulefile)s".',
+                            {'functioninscript':functioninscript,'modulefile':modulefile})
     functiontorun = getattr(module, functioninscript)
     try:
         for result in functiontorun(**argv):
             yield result
     except:
         txt = txtexc()
-        raise ScriptError(_(u'Script file "$filename": "$txt".'),filename=modulefile,txt=txt)
+        raise ScriptError(_(u'Script file "%(modulefile)s": "%(txt)s".'),{'modulefile':modulefile,'txt':txt})
 
 #**********************************************************/**
 #***************###############  misc.   #############
@@ -720,12 +723,52 @@ def updateunlessset(updatedict,fromdict):
 #**************  Exception classes ***************************
 #**********************************************************/**
 class BotsError(Exception):
-    def __init__(self, msg,**kwargs):
+    def __init__(self, msg,*args,**kwargs):
         self.msg = msg
+        self.args = args
         self.kwargs = kwargs
     def __str__(self):
-        terug = string.Template(self.msg).safe_substitute(self.kwargs)
+        # gives the output for the error
+        # under all circumstances: no errors!
+        # input (msg,*args,**kwargs) cna be anything: strings (any charset), unicode, objects. Note that these are errors, so input can be 'not valid'!
+        # note: debugging all errors handling is not easy :-(
+        # to avoid the risk of 'errors during errors' a catch-all solution is used here when in production.
+        # when developing errors are raised!
+        # .decode(): bytes->unicode
+        # .encode(): unicode -> bytes
+        if self.args:   #most of the time args[0] is a dict
+            try:
+                terug = unicode(self.msg)%self.args[0]
+            except UnicodeError,msg: 
+                if botsglobal.ini.get('webserver','environment','development') == 'development':
+                    print 'case 1',self.msg, self.args,self.kwargs,msg
+                    raise Exception('Error in bots exception handling case 1')
+                safe_dict = collections.defaultdict(unicode,self.args[0])
+                terug = unicode(self.msg,'utf-8','ignore')%(safe_dict)
+            except Exception,msg:      #case string replacemetns are not OK
+                if botsglobal.ini.get('webserver','environment','development') == 'development':
+                    print 'vase 2',self.msg, self.args,self.kwargs,msg
+                    raise Exception('Error in bots exception handling case 2')
+                safe_dict = collections.defaultdict(unicode,self.args[0])
+                terug = unicode(self.msg)%(safe_dict)
+        else:
+            try:
+                terug = unicode(self.msg)%self.kwargs
+            except UnicodeError,msg: 
+                if botsglobal.ini.get('webserver','environment','development') == 'development':
+                    print 'case 3',self.msg, self.args,self.kwargs,msg
+                    raise Exception('Error in bots exception handling case 3')
+                safe_dict = collections.defaultdict(unicode,self.kwargs)
+                terug = unicode(self.msg,'utf-8','ignore')%(safe_dict)
+            except Exception,msg:   #case string replacemetns are not OK
+                if botsglobal.ini.get('webserver','environment','development') == 'development':
+                    print 'case 4',self.msg, self.args,self.kwargs,msg
+                    raise Exception('Error in bots exception handling case 4')
+                safe_dict = collections.defaultdict(unicode,self.kwargs)
+                terug = unicode(self.msg)%(safe_dict)
+        # 'terug' is unicode. This is encoded into uft-8 (failsafe) 
         return terug.encode(u'utf-8',u'ignore')
+
 class CodeConversionError(BotsError):
     pass
 class CommunicationError(BotsError):

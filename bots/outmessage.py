@@ -43,7 +43,7 @@ def outmessage_init(**ta_info):
     try:
         classtocall = globals()[ta_info['editype']]
     except KeyError:
-        raise botslib.OutMessageError(_(u'Unknown editype for outgoing message: $editype'),editype=ta_info['editype'])
+        raise botslib.OutMessageError(_(u'Unknown editype for outgoing message: %(editype)s'),ta_info)
     return classtocall(ta_info)
 
 class Outmessage(message.Message):
@@ -122,11 +122,11 @@ class Outmessage(message.Message):
             self._closewrite()
 
     def _initwrite(self):
-        botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
         self._outstream = botslib.opendata(self.ta_info['filename'],'wb',charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetout'])
 
     def _closewrite(self):
-        botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'End writing to file "%(filename)s".',self.ta_info)
         self._outstream.close()
 
     def _write(self,node_instance):
@@ -357,13 +357,15 @@ class Outmessage(message.Message):
                 try:
                     self._outstream.write(stringinizedrecords[i:i+wrap_length] + '\r\n')
                 except UnicodeEncodeError:
-                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "$char": $content'),char=self.ta_info['charset'],content=stringinizedrecords[i:i+wrap_length])
+                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
+                                                    {'char':self.ta_info['charset'],'content':stringinizedrecords[i:i+wrap_length]})
         else:
             for lex_record in self.lex_records:     #loop all records
                 try:
                     self._outstream.write(self.record2string(lex_record))
                 except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
-                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "$char": $content'),char=self.ta_info['charset'],content=str(lex_record))
+                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
+                                                    {'char':self.ta_info['charset'],'content':str(lex_record)})
                     #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
 
     def record2string(self,record):
@@ -416,7 +418,8 @@ class Outmessage(message.Message):
                         if self.ta_info['replacechar']:
                             char = self.ta_info['replacechar']
                         else:
-                            raise botslib.OutMessageError(_(u'[F51]: Character "$char" is used as separator in this x12 file, so it can not be used in content. Field: "$data".'),char=char,data=field[VALUE])
+                            raise botslib.OutMessageError(_(u'[F51]: Character "%(char)s" is used as separator in this x12 file, so it can not be used in content. Field: "%(data)s".'),
+                                                            {'char':char,'content':field[VALUE]})
                     else:
                         value +=escape
                 elif mode_quote and char == quote_char:
@@ -639,7 +642,7 @@ class xml(Outmessage):
         return xmlrecord
 
     def _initwrite(self):
-        botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
         self._outstream = botslib.opendata(self.ta_info['filename'],"wb")
 
 
@@ -651,7 +654,7 @@ class xmlnocheck(xml):
         ''' fields in a node are written to xml fields;
         '''
         if 'BOTSID' not in noderecord:
-            raise botslib.OutMessageError(_(u'[X52]: No field "BOTSID" in xml-output in: "$record"'),record=noderecord)
+            raise botslib.OutMessageError(_(u'[X52]: No field "BOTSID" in xml-output in: "%(record)s"'),{'record':noderecord})
         #first generate the xml-'record'
         attributedict = {}
         recordtag = noderecord['BOTSID']
@@ -770,11 +773,12 @@ class template(Outmessage):
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templates',self.ta_info['template'])
         try:
-            botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+            botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
             ediprint = kid.Template(file=templatefile, data=self.data)
         except:
             txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While templating "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
+                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
         try:
             filehandler = botslib.opendata(self.ta_info['filename'],'wb')
             ediprint.write(filehandler,
@@ -783,8 +787,9 @@ class template(Outmessage):
                             fragment=self.ta_info['merge'])
         except:
             txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
-        botsglobal.logger.debug(_(u'End writing to file "%s".'),self.ta_info['filename'])
+            raise botslib.OutMessageError(_(u'While templating "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
+                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
+        botsglobal.logger.debug(_(u'End writing to file "%(filename)s".'),self.ta_info)
 
 
 class templatehtml(Outmessage):
@@ -812,20 +817,22 @@ class templatehtml(Outmessage):
         self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templateshtml',self.ta_info['template'])
         try:
-            botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+            botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
             loader = TemplateLoader(auto_reload=False)
             tmpl = loader.load(templatefile)
         except:
             txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
+            raise botslib.OutMessageError(_(u'While templating "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
+                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
         try:
             filehandler = botslib.opendata(self.ta_info['filename'],'wb')
             stream = tmpl.generate(data=self.data)
             stream.render(method='xhtml',encoding=self.ta_info['charset'],out=filehandler)
         except:
             txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "$editype.$messagetype", error:\n$txt'),editype=self.ta_info['editype'],messagetype=self.ta_info['messagetype'],txt=txt)
-        botsglobal.logger.debug(_(u'End writing to file "%s".'),self.ta_info['filename'])
+            raise botslib.OutMessageError(_(u'While templating "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
+                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
+        botsglobal.logger.debug(_(u'End writing to file "%(filename)s".'),self.ta_info)
 
 
 class database(jsonnocheck):
@@ -843,11 +850,11 @@ class db(Outmessage):
     def writeall(self):
         if self.root is None:
             raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
-        botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
         self._outstream = botslib.opendata(self.ta_info['filename'],'wb')
         pickle.dump(self.root,self._outstream)
         self._outstream.close()
-        botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'End writing to file "%(filename)s".',self.ta_info)
         self.ta_info['envelope'] = 'db'
         self.ta_info['merge'] = False
 
@@ -862,10 +869,10 @@ class raw(Outmessage):
     def writeall(self):
         if self.root is None:
             raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
-        botsglobal.logger.debug(u'Start writing to file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
         self._outstream = botslib.opendata(self.ta_info['filename'],'wb')
         self._outstream.write(self.root)
         self._outstream.close()
-        botsglobal.logger.debug(u'End writing to file "%s".',self.ta_info['filename'])
+        botsglobal.logger.debug(u'End writing to file "%(filename)s".',self.ta_info)
         self.ta_info['envelope'] = 'raw'
         self.ta_info['merge'] = False

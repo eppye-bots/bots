@@ -36,7 +36,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
     except ImportError:       #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
     #select edifiles to translate
-    for row in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,filesize
+    for rawrow in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,filesize
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
@@ -44,14 +44,14 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 AND idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
         try:
+            row = dict(rawrow)   #convert to real dictionary ()
             ta_fromfile = botslib.OldTransaction(row['idta'])
             ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
             if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
                 ta_parsed.update(filesize=row['filesize'])
-                raise botslib.InMessageError(_(u'File size of $filesize is too big; option "maxfilesizeincoming" in bots.ini is $maxfilesizeincoming.'),
-                                                filesize=row['filesize'],
-                                                maxfilesizeincoming=botsglobal.ini.getint('settings','maxfilesizeincoming',5000000))
-            botsglobal.logger.debug(_(u'start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),{'filename':row['filename'],'editype':row['editype'],'messagetype':row['messagetype']})
+                raise botslib.InMessageError(_(u'File size of %(filesize)s is too big; option "maxfilesizeincoming" in bots.ini is %(maxfilesizeincoming)s.'),
+                                                {'filesize':row['filesize'],'maxfilesizeincoming':botsglobal.ini.getint('settings','maxfilesizeincoming',5000000)})
+            botsglobal.logger.debug(_(u'start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),row)
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
                                                 topartner=row['topartner'],
@@ -86,22 +86,13 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                     #there is no post-mapping script found (in other words, default mapping script is enough).
                                     #all OK, handle the generated out-file and continue with next message
                                     botsglobal.logger.debug(_(u'Found no "post-mapping" translation for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
-                                                            {'editype':inn_splitup.ta_info['editype'],
-                                                            'messagetype':inn_splitup.ta_info['messagetype'],
-                                                            'frompartner':inn_splitup.ta_info['frompartner'],
-                                                            'topartner':inn_splitup.ta_info['topartner'],
-                                                            'alt':inn_splitup.ta_info['alt'],
-                                                            })
+                                                                inn_splitup.ta_info)
                                     handle_out_message(out_translated,ta_translated)
                                     del out_translated
                                     break   #break out of while loop
                                 else:
-                                    raise botslib.TranslationNotFoundError(_(u'Translation not found for editype "$editype", messagetype "$messagetype", frompartner "$frompartner", topartner "$topartner", alt "$alt"'),
-                                                                                editype=inn_splitup.ta_info['editype'],
-                                                                                messagetype=inn_splitup.ta_info['messagetype'],
-                                                                                frompartner=inn_splitup.ta_info['frompartner'],
-                                                                                topartner=inn_splitup.ta_info['topartner'],
-                                                                                alt=inn_splitup.ta_info['alt'])
+                                    raise botslib.TranslationNotFoundError(_(u'Translation not found for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
+                                                                                inn_splitup.ta_info)
 
                         inn_splitup.ta_info['divtext'] = tscript     #in case of errors this leads to beter reporting in GUI.
                         if not post_mapping_mode:
@@ -111,10 +102,11 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                             out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                             
                         #run mapping script************************
-                        botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),{'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
+                        botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
+                                                {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mappingscript
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
-                        botsglobal.logger.debug(_(u'Mappingscript "%s" finished.'),tscript)
+                        botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
                         
                         #manipulate for some attributes after mapping script
                         if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
@@ -155,7 +147,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
                                 inn_splitup.ta_info.pop('statust')
                             else:   #there is nothing else
-                                raise botslib.BotsError(_(u'Mappingscript returned dict with an unkown "type": "$doalttranslation".',doalttranslation=doalttranslation))
+                                raise botslib.BotsError(_(u'Mappingscript returned dict with an unkown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
                         else:  #note: this includes alt '' (empty string)
                             #do normal chained translation: same inn-object, new out-object
                             handle_out_message(out_translated,ta_translated)
@@ -179,11 +171,11 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             txt = botslib.txtexc()
             ta_parsed.update(statust=ERROR,errortext=txt)
             ta_parsed.deletechildren()
-            botsglobal.logger.debug(u'error in translating input file "%s":\n%s',row['filename'],txt)
+            botsglobal.logger.debug(u'error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
             ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)
-            botsglobal.logger.debug(_(u'translated input file "%s".'),row['filename'])
+            botsglobal.logger.debug(_(u'translated input file "%(filename)s".'),row)
         finally:
             ta_fromfile.update(statust=DONE)
 
@@ -194,7 +186,7 @@ def handle_out_message(out_translated,ta_translated):
         out_translated.ta_info['filename'] = ''
         out_translated.ta_info['status'] = DISCARD
     else:
-        botsglobal.logger.debug(_(u'Start writing output file editype "%(editype)s" messagetype "%(messagetype)s".'),{'editype':out_translated.ta_info['editype'],'messagetype':out_translated.ta_info['messagetype']})
+        botsglobal.logger.debug(_(u'Start writing output file editype "%(editype)s" messagetype "%(messagetype)s".'),out_translated.ta_info)
         out_translated.writeall()   #write result of translation.
         out_translated.ta_info['filesize'] = os.path.getsize(botslib.abspathdata(out_translated.ta_info['filename']))  #get filesize
     ta_translated.update(**out_translated.ta_info)  #update outmessage transaction with ta_info; statust = OK
@@ -212,7 +204,8 @@ def persist_add(domein,botskey,value):
                             VALUES   (%(domein)s,%(botskey)s,%(content)s)''',
                             {'domein':domein,'botskey':botskey,'content':content})
     except:
-        raise botslib.PersistError(_(u'Failed to add for domein "$domein", botskey "$botskey", value "$value".'),domein=domein,botskey=botskey,value=value)
+        raise botslib.PersistError(_(u'Failed to add for domein "%(domein)s", botskey "%(botskey)s", value "%(value)s".'),
+                                    {'domein':domein,'botskey':botskey,'value':value})
 
 def persist_update(domein,botskey,value):
     ''' store persistent values in db.
@@ -269,7 +262,8 @@ def ccode(ccodeid,leftcode,field='rightcode',safe=False):
     if safe:
         return leftcode
     else:
-        raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=leftcode,table=ccodeid)
+        raise botslib.CodeConversionError(_(u'Value "%(value)s" not in code-conversion, user table "%(table)s".'),
+                                            {'value':leftcode,'table':ccodeid})
 codetconversion = ccode
 
 def safe_ccode(ccodeid,leftcode,field='rightcode'):   #depreciated, use ccode with safe=True
@@ -293,7 +287,8 @@ def reverse_ccode(ccodeid,rightcode,field='leftcode',safe=False):
     if safe:
         return rightcode
     else:
-        raise botslib.CodeConversionError(_(u'Value "$value" not in code-conversion, user table "$table".'),value=rightcode,table=ccodeid)
+        raise botslib.CodeConversionError(_(u'Value "%(value)s" not in code-conversion, user table "%(table)s".'),
+                                            {'value':rightcode,'table':ccodeid})
 rcodetconversion = reverse_ccode
 
 def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):   #depreciated, use reverse_ccode with safe=True
@@ -337,7 +332,8 @@ def codeconversion(modulename,value):
     try:
         return module.codeconversions[value]
     except KeyError:
-        raise botslib.CodeConversionError(_(u'Value "$value" not in file for codeconversion "$filename".'),value=value,filename=filename)
+        raise botslib.CodeConversionError(_(u'Value "%(value)s" not in file for codeconversion "%(filename)s".'),
+                                            {'value':value,'filename':filename})
 
 def safercodeconversion(modulename,value):
     ''' as codeconversion but reverses the dictionary first'''
@@ -359,7 +355,8 @@ def rcodeconversion(modulename,value):
     try:
         return module.botsreversedcodeconversions[value]
     except KeyError:
-        raise botslib.CodeConversionError(_(u'Value "$value" not in file for reversed codeconversion "$filename".'),value=value,filename=filename)
+        raise botslib.CodeConversionError(_(u'Value "%(value)s" not in file for reversed codeconversion "%(filename)s".'),
+                                            {'value':value,'filename':filename})
 
 #*********************************************************************
 #*** utily functions for calculating/generating/checking EAN/GTIN/GLN
@@ -368,9 +365,9 @@ def calceancheckdigit(ean):
     ''' input: EAN without checkdigit; returns the checkdigit'''
     try:
         if not ean.isdigit():
-            raise botslib.EanError(_(u'GTIN "$ean" should be string with only numericals'),ean=ean)
+            raise botslib.EanError(_(u'GTIN "%(ean)s" should be string with only numericals.'),{'ean':ean})
     except AttributeError:
-        raise botslib.EanError(_(u'GTIN "$ean" should be string, but is a "$type"'),ean=ean,type=type(ean))
+        raise botslib.EanError(_(u'GTIN "%(ean)s" should be string, but is a "%(type)s".'),{'ean':ean,'type':type(ean)})
     sum1 = sum([int(x)*3 for x in ean[-1::-2]]) + sum([int(x) for x in ean[-2::-2]])
     return str((1000-sum1)%10)
 
@@ -450,7 +447,8 @@ def datemask(value,frommask,tomask):
         for char in tomask:
             terug += convdict.get(char,[char]).pop(0)     #for this character, lookup value in convdict (a list). pop(0) this list: get first member of list, and drop it. If char not in convdict as key, use char itself.
     except:
-        raise botslib.BotsError(_(u'Error in function datamask("$value", "$frommask", "$tomask").'),value=value,frommask=frommask,tomask=tomask)
+        raise botslib.BotsError(_(u'Error in function datamask("%(value)s", "%(frommask)s", "%(tomask)s").'),
+                                    {'value':value,'frommask':frommask,'tomask':tomask})
     return terug
 
 def truncate(maxpos,value):
@@ -485,4 +483,5 @@ def partnerlookup(idpartner,field,safe=False):
     if safe:
         return idpartner
     else:
-        raise botslib.CodeConversionError(_(u'No result found for partner lookup; either partner "$idpartner" does not exist or field "$field" has no value.'),idpartner=idpartner,field=field)
+        raise botslib.CodeConversionError(_(u'No result found for partner lookup; either partner "%(idpartner)s" does not exist or field "%(field)s" has no value.'),
+                                            {'idpartner':idpartner,'field':field})

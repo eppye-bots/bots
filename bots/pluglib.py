@@ -29,9 +29,9 @@ def writetodatabase(orgpluglist):
             raise botslib.PluginError(_(u'plugins should be list of dicts. Nothing is written.'))
         for key in plug.keys():
             if not isinstance(key,basestring):
-                raise botslib.PluginError(_(u'key of dict is not a string: "%s". Nothing is written.')%(plug))
+                raise botslib.PluginError(_(u'key of dict is not a string: "%(plug)s". Nothing is written.'),{'plug':plug})
         if 'plugintype' not in plug:
-            raise botslib.PluginError(_(u'"plugintype" missing in: "%s". Nothing is written.')%(plug))
+            raise botslib.PluginError(_(u'"plugintype" missing in: "%(plug)s". Nothing is written.'),{'plug':plug})
 
     #special case: compatibility with bots 1.* plugins.
     #in bots 1.*, partnergroup was in separate tabel; in bots 2.* partnergroup is in partner
@@ -77,7 +77,7 @@ def writetodatabase(orgpluglist):
     pluglist.sort(key=lambda k: PLUGINCOMPARELIST.index(k['plugintype']))   #sort all plugs on plugintype; are partners/partenrgroups are already sorted, this will still be true in this new sort (python guarantees!)
 
     for plug in pluglist:
-        botsglobal.logger.info(u'    Start write to database for: "%s".'%plug)
+        botsglobal.logger.info(u'    Start write to database for: "%(plug)s".',{'plug':plug})
         #remember the plugintype
         plugintype = plug['plugintype']
         table = django.db.models.get_model('bots',plugintype)
@@ -117,7 +117,7 @@ def writetodatabase(orgpluglist):
                     plug[fieldobject.column] = plug[fieldname]  #add new key in plug
                     del plug[fieldname]                         #delete old key in plug
             except:
-                raise botslib.PluginError(_(u'no field column for: "%s".')%(fieldname))
+                raise botslib.PluginError(_(u'no field column for: "%(fieldname)s".'),{'fieldname':fieldname})
         #get real column names for fields in sleutel; basically the same loop but now for sleutel
         loopdictionary = sleutel.keys()
         for fieldname in loopdictionary:
@@ -127,7 +127,7 @@ def writetodatabase(orgpluglist):
                     sleutel[fieldobject.column] = sleutel[fieldname]
                     del sleutel[fieldname]
             except:
-                raise botslib.PluginError(_(u'no field column for: "%s".')%(fieldname))
+                raise botslib.PluginError(_(u'no field column for: "%(fieldname)s".'),{'fieldname':fieldname})
 
         #find existing entry (if exists)
         if sleutelorg:  #note that translate and confirmrule have an empty 'sleutel'
@@ -169,7 +169,7 @@ def load_index(filename):
             del sys.modules['botsindex']
     except:
         txt = botslib.txtexc()
-        raise botslib.PluginError(_(u'Error in configuration index file. Nothing is written. Error:\n%s')%(txt))
+        raise botslib.PluginError(_(u'Error in configuration index file. Nothing is written. Error:\n%(txt)s'),{'txt':txt})
     else:
         botsglobal.logger.info(_(u'Configuration index file is OK.'))
         botsglobal.logger.info(_(u'Start writing to database.'))
@@ -179,9 +179,9 @@ def load_index(filename):
         writetodatabase(pluglist)
     except:
         txt = botslib.txtexc()
-        raise botslib.PluginError(_(u'Error writing configuration index to database. Nothing is written. Error:\n%s'%(txt)))
+        raise botslib.PluginError(_(u'Error writing configuration index to database. Nothing is written. Error:\n%(txt)s'),{'txt':txt})
     else:
-        botsglobal.logger.info(u'Writing to database is OK.')
+        botsglobal.logger.info(_(u'Writing to database is OK.'))
 
 
 @django.db.transaction.commit_on_success  #if no exception raised: commit, else rollback.
@@ -200,7 +200,7 @@ def load(pathzipfile):
             del sys.modules['botsindex']
     except:
         txt = botslib.txtexc()
-        raise botslib.PluginError(_(u'Error in plugin. Nothing is written. Error:\n%s')%(txt))
+        raise botslib.PluginError(_(u'Error in plugin. Nothing is written. Error:\n%(txt)s'),{'txt':txt})
     else:
         botsglobal.logger.info(_(u'Plugin is OK.'))
         botsglobal.logger.info(_(u'Start writing to database.'))
@@ -210,10 +210,10 @@ def load(pathzipfile):
         writetodatabase(pluglist)
     except:
         txt = botslib.txtexc()
-        raise botslib.PluginError(_(u'Error writing plugin to database. Nothing is written. Error:\n%s'%(txt)))
+        raise botslib.PluginError(_(u'Error writing plugin to database. Nothing is written. Error:\n%(txt)s'),{'txt':txt})
     else:
-        botsglobal.logger.info(u'Writing to database is OK.')
-        botsglobal.logger.info(u'Start writing to files')
+        botsglobal.logger.info(_(u'Writing to database is OK.'))
+        botsglobal.logger.info(_(u'Start writing to files'))
 
     #write files to the file system.
     try:
@@ -233,28 +233,29 @@ def load(pathzipfile):
                 targetpath = targetpath.replace('botssys',botsglobal.ini.get('directories','botssys'),1)
                 targetpath = botslib.join(orgtargetpath, targetpath)
                 #targetpath is OK now.
-                botsglobal.logger.info(_(u'    Start writing file: "%s".'),targetpath)
+                botsglobal.logger.info(_(u'    Start writing file: "%(targetpath)s".'),{'targetpath':targetpath})
 
                 if botslib.dirshouldbethere(os.path.dirname(targetpath)):
-                    botsglobal.logger.info(_(u'        Create directory "%s".'),os.path.dirname(targetpath))
+                    botsglobal.logger.info(_(u'        Create directory "%(directory)s".'),{'directory':os.path.dirname(targetpath)})
                 if zipfileobject.filename[-1] == '/':    #check if this is a dir; if so continue
                     continue
                 if os.path.isfile(targetpath):  #check if file already exists
                     try:    #this ***sometimes*** fails. (python25, for static/help/home.html...only there...)
                         #~ os.rename(targetpath,targetpath+'.'+time.strftime('%Y%m%d%H%M%S'))
                         warnrenamed = True
-                        #~ botsglobal.logger.info(_(u'        Renamed existing file "%(from)s" to "%(to)s".'),{'from':targetpath,'to':targetpath+time.strftime('%Y%m%d%H%M%S')})
+                        #~ botsglobal.logger.info(_(u'        Renamed existing file "%(from)s" to "%(to)s".'),
+                        #~                            {'from':targetpath,'to':targetpath+time.strftime('%Y%m%d%H%M%S')})
                     except:
                         pass
                 source = myzip.read(zipfileobject.filename)
                 target = open(targetpath, "wb")
                 target.write(source)
                 target.close()
-                botsglobal.logger.info(_(u'        File written: "%s".'),targetpath)
+                botsglobal.logger.info(_(u'        File written: "%(targetpath)s".'),{'targetpath':targetpath})
     except:
         txt = botslib.txtexc()
         myzip.close()
-        raise botslib.PluginError(_(u'Error writing files to system. Nothing is written to database. Error:\n%s')%(txt))
+        raise botslib.PluginError(_(u'Error writing files to system. Nothing is written to database. Error:\n%(txt)s'),{'txt':txt})
     else:
         myzip.close()
         botsglobal.logger.info(_(u'Writing files to filesystem is OK.'))
@@ -292,13 +293,13 @@ def plugoutcore(cleaned_data,filename):
     pluginzipfilehandler = zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED)
 
     tmpbotsindex = plugout_database(cleaned_data)
-    botsglobal.logger.debug(u'    write in index:\n %s',tmpbotsindex)
+    botsglobal.logger.debug(u'    write in index:\n %(index)s',{'index':tmpbotsindex})
     pluginzipfilehandler.writestr('botsindex.py',tmpbotsindex)      #write index file to pluginfile
 
     files4plugin = plugout_files(cleaned_data)
     for dirname, defaultdirname in files4plugin:
         pluginzipfilehandler.write(dirname,defaultdirname)
-        botsglobal.logger.debug(u'    write file "%s".'%defaultdirname)
+        botsglobal.logger.debug(u'    write file "%(file)s".',{'file':defaultdirname})
 
     pluginzipfilehandler.close()
 

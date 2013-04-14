@@ -112,7 +112,7 @@ class Trace(object):
         try:
             self.statust = self._getstatusfortreeoftransactions(self.rootofinfile)
         except Exception,msg:
-            botsglobal.logger.exception(_(u'Error in automatic maintenance: "%s".'),msg)
+            botsglobal.logger.exception(_(u'Error in automatic maintenance: "%(msg)s".'),{'msg':msg})
             self.statust = OPEN
         self._collectdataforfilereport()
 
@@ -169,16 +169,16 @@ class Trace(object):
                 return DONE
         elif tacurrent['statust'] == OK:   #file is stucked. There should be no children
             if tacurrent['talijst']:
-                raise botslib.TraceError(_(u'Statust OK (stuck) but has child(ren) (idta: $idta).'),idta=tacurrent['idta'])
+                raise botslib.TraceError(_(u'Statust OK (stuck) but has child(ren) (idta: %(idta)s).'),tacurrent)
             else:
                 return OK
         elif tacurrent['statust'] == ERROR:    #should be no children. 
             if tacurrent['talijst']:
-                raise botslib.TraceError(_(u'Statust ERROR but has child(ren) (idta: $idta).'),idta=tacurrent['idta'])
+                raise botslib.TraceError(_(u'Statust ERROR but has child(ren) (idta: %(idta)s).'),tacurrent)
             else:
                 return ERROR
         else:   #tacurrent.statust==OPEN: something is very wrong. Raise exception.
-            raise botslib.TraceError(_(u'Severe error: found statust (idta: $idta).'),idta=tacurrent['idta'])
+            raise botslib.TraceError(_(u'Severe error: found statust (idta: %(idta)s).'),tacurrent)
 
 
     def _collectdataforfilereport(self):

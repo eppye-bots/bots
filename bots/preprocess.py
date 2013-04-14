@@ -29,7 +29,8 @@ def preprocess(routedict,function, status=FILEIN,**argv):
                                 ''',
                                 {'status':status,'statust':OK,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel'],'rootidta':botslib.get_minta4query()}):
         try:
-            botsglobal.logger.debug(u'Start preprocessing "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'Start preprocessing "%(name)s" for file "%(filename)s".',
+                                    {'name':function.__name__,'filename':row['filename']})
             ta_from = botslib.OldTransaction(row['idta'])
             ta_from.filename = row['filename']
             function(ta_from=ta_from,endstatus=status,routedict=routedict,**argv)
@@ -38,7 +39,8 @@ def preprocess(routedict,function, status=FILEIN,**argv):
             ta_from.update(statust=ERROR,errortext=txt)
             ta_from.deletechildren()
         else:
-            botsglobal.logger.debug(u'OK preprocessing  "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'OK preprocessing "%(name)s" for file "%(filename)s".',
+                                    {'name':function.__name__,'filename':row['filename']})
             ta_from.update(statust=DONE)
             nr_files += 1
     return nr_files
@@ -62,7 +64,8 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
                                 ''',
                                 {'status':status,'statust':OK,'idroute':routedict['idroute'],'tochannel':routedict['tochannel'],'rootidta':botslib.get_minta4query()}):
         try:
-            botsglobal.logger.debug(u'Start postprocessing "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'Start postprocessing "%(name)s" for file "%(filename)s".',
+                                    {'name':function.__name__,'filename':row['filename']})
             ta_from = botslib.OldTransaction(row['idta'])
             ta_from.filename = row['filename']
             function(ta_from=ta_from,endstatus=status,routedict=routedict,**argv)
@@ -71,7 +74,8 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
             ta_from.update(statust=ERROR,errortext=txt)
             ta_from.deletechildren()
         else:
-            botsglobal.logger.debug(u'OK postprocessing  "%s" for file "%s".',function.__name__,row['filename'])
+            botsglobal.logger.debug(u'OK postprocessing "%(name)s" for file "%(filename)s".',
+                                    {'name':function.__name__,'filename':row['filename']})
             ta_from.update(statust=DONE)
             nr_files += 1
     return nr_files
@@ -124,7 +128,7 @@ def mailbag(ta_from,endstatus,**argv):
         if found is None:
             if edifile[startpos:].strip(string.whitespace+'\x1A\x00'):  #there is content...but not valid
                 if nr_interchanges:    #found interchanges, but remainder is not valid
-                    raise botslib.InMessageError(_(u'[M50]: Found data not in a valid interchange at position $pos.'),pos=startpos)                
+                    raise botslib.InMessageError(_(u'[M50]: Found data not in a valid interchange at position %(pos)s.'),{'pos':startpos})                
                 else:   #no interchanges found, content is not a valid edifact/x12/tradacoms interchange
                     #guess if this is an xml file.....
                     sniffxml = edifile[:25]
@@ -154,8 +158,8 @@ def mailbag(ta_from,endstatus,**argv):
                     field_sep = char
                 elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. 
                     if char != field_sep:
-                        raise botslib.InMessageError(_(u'[M53]: Non-valid ISA header at position $pos; position $pos_element of ISA is "$foundchar", expect here element separator "$field_sep".'),
-                                                        pos=headpos,pos_element=str(count),foundchar=char,field_sep=field_sep)
+                        raise botslib.InMessageError(_(u'[M53]: Non-valid ISA header at position %(pos)s; position %(pos_element)s of ISA is "%(foundchar)s", expect here element separator "%(field_sep)s".'),
+                                                        {'pos':headpos,'pos_element':str(count),'foundchar':char,'field_sep':field_sep})
                 elif count == 106:
                     record_sep = char
                     break
@@ -173,9 +177,9 @@ def mailbag(ta_from,endstatus,**argv):
                                             '''%{'record_sep':re.escape(record_sep)},
                                             edifile[headpos:],re.DOTALL|re.VERBOSE)
                 if foundtrailer2:
-                    raise botslib.InMessageError(_(u'[M60]: Found no segment terminator for IEA trailer at position $pos.'),pos=foundtrailer2.start())
+                    raise botslib.InMessageError(_(u'[M60]: Found no segment terminator for IEA trailer at position %(pos)s.'),{'pos':foundtrailer2.start()})
                 else:
-                    raise botslib.InMessageError(_(u'[M54]: Found no valid IEA trailer for the ISA header at position $pos.'),pos=headpos)
+                    raise botslib.InMessageError(_(u'[M54]: Found no valid IEA trailer for the ISA header at position %(pos)s.'),{'pos':headpos})
         elif found.group('edifact'):
             editype = 'edifact'
             headpos = startpos + found.start('edifact')
@@ -193,7 +197,7 @@ def mailbag(ta_from,endstatus,**argv):
                     elif count == 6:
                         record_sep = char
                 if count != 6:
-                    raise botslib.InMessageError(_(u'[M55]: Non-valid UNA-segment at position $pos. UNA-segment should be 6 positions.'),pos=headpos)
+                    raise botslib.InMessageError(_(u'[M55]: Non-valid UNA-segment at position %(pos)s. UNA-segment should be 6 positions.'),{'pos':headpos})
                 if found.group('field_sep') != field_sep:
                     raise botslib.InMessageError(_(u'[M56]: data element separator used in edifact file differs from value indicated in UNA-segment.'))
             else:   #no UNA, interpret UNB
@@ -218,7 +222,7 @@ def mailbag(ta_from,endstatus,**argv):
                                         '''%{'escape':escape,'record_sep':re.escape(record_sep)},
                                         edifile[headpos:],re.DOTALL|re.VERBOSE)
             if not foundtrailer:
-                raise botslib.InMessageError(_(u'[M58]: Found no valid UNZ trailer for the UNB header at position $pos.'),pos=headpos)
+                raise botslib.InMessageError(_(u'[M58]: Found no valid UNZ trailer for the UNB header at position %(pos)s.'),{'pos':headpos})
         elif found.group('tradacoms'):
             editype = 'tradacoms'
             #~ field_sep = '='     #the tradacoms 'after-segment-tag-separator'
@@ -237,7 +241,7 @@ def mailbag(ta_from,endstatus,**argv):
                                         '''%{'escape':escape,'record_sep':re.escape(record_sep)},
                                         edifile[headpos:],re.DOTALL|re.VERBOSE)
             if not foundtrailer:
-                raise botslib.InMessageError(_(u'[M59]: Found no valid END trailer for the STX header at position $pos.'), pos=headpos)
+                raise botslib.InMessageError(_(u'[M59]: Found no valid END trailer for the STX header at position %(pos)s.'),{'pos':headpos})
         #so: found an interchange (from headerpos until endpos)
         endpos = headpos + foundtrailer.end()
         ta_to = ta_from.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
@@ -249,7 +253,7 @@ def mailbag(ta_from,endstatus,**argv):
         ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype,filesize=filesize) #update outmessage transaction with ta_info;
         startpos = endpos
         nr_interchanges += 1
-        botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
+        botsglobal.logger.debug(_(u'        File written: "%(tofilename)s".'),{'tofilename':tofilename})
 
 
 def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
@@ -279,7 +283,7 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         tofile.write(content)
         tofile.close()
         ta_to.update(statust=OK,filename=tofilename,filesize=filesize) #update outmessage transaction with ta_info;
-        botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
+        botsglobal.logger.debug(_(u'        File written: "%(tofilename)s".'),{'tofilename':tofilename})
     myzipfile.close()
 
 def botszip(ta_from,endstatus,**argv):
@@ -391,10 +395,10 @@ def extractpdf(ta_from,endstatus,**argv):
         csv_stream.close()
         filesize = os.path.getsize(botslib.abspathdata(tofilename))
         ta_to.update(statust=OK,filename=tofilename,filesize=filesize) #update outmessage transaction with ta_info;
-        botsglobal.logger.debug(_(u'        File written: "%s".'),tofilename)
+        botsglobal.logger.debug(_(u'        File written: "%(tofilename)s".'),{'tofilename':tofilename})
     except:
         txt = botslib.txtexc()
-        botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error:\n%s'),txt)
-        raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error:\n$error'),error=txt)
+        botsglobal.logger.error(_(u'PDF extraction failed, may not be a PDF file? Error:\n%(txt)s'),{'txt':txt})
+        raise botslib.InMessageError(_(u'PDF extraction failed, may not be a PDF file? Error:\n%(txt)s'),{'txt':txt})
 
 

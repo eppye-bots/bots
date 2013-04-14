@@ -86,13 +86,13 @@ def start():
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
     for key,value in botslib.botsinfo():    #log info about environement, versions, etc
-        botsglobal.logger.info(u'%s: "%s".',key,value)
+        botsglobal.logger.info(u'%(key)s: "%(value)s".',{'key':key,'value':value})
 
     #**************connect to database**********************************
     try:
         botsinit.connect()
     except Exception,msg:
-        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%s".'),msg)
+        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(1)
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
@@ -146,11 +146,11 @@ def start():
                 
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
         for command in commandstorun:
-            botsglobal.logger.info('Run %s.'%command)
+            botsglobal.logger.info(_(u'Run "%(command)s".'),{'command':command})
             #get list of routes to run
             if routestorun:
                 use_routestorun = routestorun[:]
-                botsglobal.logger.info(u'Run routes from command line: "%s".',str(use_routestorun))
+                botsglobal.logger.info(_(u'Run routes from command line: "%(routes)s".'),{'routes':str(use_routestorun)})
             elif command == 'new':  #fetch all active routes from database unless 'not in default run' or not active.
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
@@ -160,7 +160,7 @@ def start():
                                             ORDER BY idroute ''',
                                             {'active':True,'notindefaultrun':False}):
                     use_routestorun.append(row['idroute'])
-                botsglobal.logger.info(_(u'Run active routes from database that are in default run: "%s".'),str(use_routestorun))
+                botsglobal.logger.info(_(u'Run active routes from database that are in default run: "%(routes)s".'),{'routes':str(use_routestorun)})
             else:   #for command other than 'new': use all active routes.
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
@@ -169,7 +169,7 @@ def start():
                                             ORDER BY idroute ''',
                                             {'active':True}):
                     use_routestorun.append(row['idroute'])
-                botsglobal.logger.info(_(u'Run all active routes from database: "%s".'),str(use_routestorun))
+                botsglobal.logger.info(_(u'Run all active routes from database: "%(routes)s".'),{'routes':str(use_routestorun)})
             errorinrun += router.rundispatcher(command,use_routestorun)
             if userscript and hasattr(userscript,'post' + command):
                 botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
@@ -185,7 +185,7 @@ def start():
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception,msg:
-        botsglobal.logger.exception(_(u'Severe error in bots system:\n%s')%(msg))    #of course this 'should' not happen.
+        botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':str(msg)})    #of course this 'should' not happen.
         sys.exit(1)
     else:
         if errorinrun:

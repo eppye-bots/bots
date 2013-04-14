@@ -19,7 +19,8 @@ class Message(object):
     def add2errorlist(self,errortxt):
         self.errorlist.append(self.messagetypetxt + errortxt)
         if len(self.errorlist) >= botsglobal.ini.getint('settings','max_number_errors',10) :
-            raise botslib.MessageError(_(u'At least $max_number_errors errors:\n$errorlist'),max_number_errors=len(self.errorlist), errorlist=''.join(self.errorlist))
+            raise botslib.MessageError(_(u'At least %(max_number_errors)s errors:\n%(errorlist)s'),
+                                        {'max_number_errors':len(self.errorlist), 'errorlist':''.join(self.errorlist)})
 
     @staticmethod
     def display(lex_records):
@@ -67,12 +68,13 @@ class Message(object):
                 self._checkonemessage(childnode,grammar,subtranslation)
 
         if self.errorlist and not subtranslation:
-            raise botslib.MessageError(_(u'$errorlist'),errorlist=''.join(self.errorlist))
+            raise botslib.MessageError(_(u'%(errorlist)s'),{'errorlist':''.join(self.errorlist)})
 
     def _checkonemessage(self,node_instance,grammar,subtranslation):
         structure = grammar.structure
         if node_instance.record['BOTSID'] != structure[0][ID]:
-            raise botslib.MessageError(_(u'[G50]: Grammar "$grammar" starts with record "$grammarroot"; but while reading edi-file found start-record "$root".'),root=node_instance.record['BOTSID'],grammarroot=structure[0][ID],grammar=grammar.grammarname)
+            raise botslib.MessageError(_(u'[G50]: Grammar "%(grammar)s" starts with record "%(grammarroot)s"; but while reading edi-file found start-record "%(root)s".'),
+                                        {'root':node_instance.record['BOTSID'],'grammarroot':structure[0][ID],'grammar':grammar.grammarname})
         self._checkifrecordsingrammar(node_instance,structure[0],grammar.grammarname)
         self._canonicaltree(node_instance,structure[0])
         if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the records read) be logged.
@@ -269,7 +271,7 @@ class Message(object):
 
 
     def _logmessagecontent(self,node_instance):
-        botsglobal.logger.debug(u'record "%s":',node_instance.record['BOTSID'])
+        botsglobal.logger.debug(u'record "%(BOTSID)s":',node_instance.record)
         self._logfieldcontent(node_instance.record)    #handle fields of this record
         for child in node_instance.children:
             self._logmessagecontent(child)
@@ -278,39 +280,44 @@ class Message(object):
     def _logfieldcontent(noderecord):
         for key,value in noderecord.items():
             if key not in ['BOTSID','BOTSIDnr']:
-                botsglobal.logger.debug(u'    "%s" : "%s"',key,value)
+                botsglobal.logger.debug(u'    "%(key)s" : "%(value)s"',{'key':key,'value':value})
 
     #***************************************************************************
     #* methods below pass call to node.Node ************************************
     #***************************************************************************
     def getrecord(self,*mpaths):
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'getrecord($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
+            raise botslib.MappingRootError(_(u'getrecord(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+                                            {'mpath':mpaths})
         return self.root.getrecord(*mpaths)
 
     def change(self,where,change):
         ''' query tree (self.root) with where; if found replace with change; return True if change, return False if not changed.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'change($where,$change): "root" of incoming message is empty; either split messages or use inn.getloop'),where=where,change=change)
+            raise botslib.MappingRootError(_(u'change(%(where)s,%(change)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+                                            {'where':where,'change':change})
         return self.root.change(where,change)
 
     def delete(self,*mpaths):
         ''' query tree (self.root) with mpath; delete if found. return True if deleted, return False if not deleted.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'delete($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
+            raise botslib.MappingRootError(_(u'delete(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+                                            {'mpath':mpaths})
         return self.root.delete(*mpaths)
 
     def get(self,*mpaths):
         ''' query tree (self.root) with mpath; get value (string); get None if not found.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+                                            {'mpath':mpaths})
         return self.root.get(*mpaths)
 
     def getnozero(self,*mpaths):
         ''' like get, returns None is value is zero (0) or not numeric.
             Is sometimes usefull in mapping.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+                                            {'mpath':mpaths})
         return self.root.getnozero(*mpaths)
 
     def getcount(self):
@@ -324,7 +331,8 @@ class Message(object):
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'get($mpath): "root" of incoming message is empty; either split messages or use inn.getloop'),mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+                                                {'mpath':mpaths})
         return self.root.getcountsum(*mpaths)
 
     def getloop(self,*mpaths):
@@ -340,7 +348,8 @@ class Message(object):
 
     def put(self,*mpaths,**kwargs):
         if self.root.record is None and self.root.children:
-            raise botslib.MappingRootError(_(u'put($mpath): "root" of outgoing message is empty; use out.putloop'),mpath=mpaths)
+            raise botslib.MappingRootError(_(u'put(%(mpath)s): "root" of outgoing message is empty; use out.putloop'),
+                                            {'mpath':mpaths})
         return self.root.put(*mpaths,**kwargs)
 
     def putloop(self,*mpaths):
@@ -349,10 +358,12 @@ class Message(object):
                 self.root.append(node.Node(record=mpaths[0]))
                 return self.root.children[-1]
             else:
-                raise botslib.MappingRootError(_(u'putloop($mpath): mpath too long???'),mpath=mpaths)
+                raise botslib.MappingRootError(_(u'putloop(%(mpath)s): mpath too long???'),
+                                                {'mpath':mpaths})
         return self.root.putloop(*mpaths)
 
     def sort(self,*mpaths):
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'get($mpath): "root" of message is empty; either split messages or use inn.getloop'),mpath=mpaths)
+            raise botslib.MappingRootError(_(u'get(%(mpath)s): "root" of message is empty; either split messages or use inn.getloop'),
+                                            {'mpath':mpaths})
         self.root.sort(*mpaths)

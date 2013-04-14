@@ -43,7 +43,7 @@ def run(idchannel,command,idroute=''):
                                 WHERE idchannel=%(idchannel)s''',
                                 {'idchannel':idchannel}):
         channeldict = dict(row)   #convert to real dictionary ()
-        botsglobal.logger.debug(u'start communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
+        botsglobal.logger.debug(u'start communication channel "%(idchannel)s" type %(type)s %(inorout)s.',channeldict)
         #for acceptance testing bots has an option to turn of external communication in channels
         if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
             #override values in channels for acceptance testing.
@@ -57,7 +57,7 @@ def run(idchannel,command,idroute=''):
                     channeldict['type'] = 'mimefile'
                 else:   #channeldict['type'] in ['ftp','ftps','ftpis','sftp','xmlrpc','ftp','ftp','communicationscript','db',]
                     channeldict['type'] = 'file'
-            botsglobal.logger.debug(u'Channel "%s" adapted for acceptance test: type "%s", testpath "%s".',channeldict['idchannel'],channeldict['testpath'],channeldict['type'])
+            botsglobal.logger.debug(u'Channel "%(idchannel)s" adapted for acceptance test: type "%(type)s", testpath "%(testpath)s".',channeldict)
                 
         #update communication/run process with idchannel
         ta_run = botslib.OldTransaction(botslib._Transaction.processlist[-1])
@@ -80,10 +80,10 @@ def run(idchannel,command,idroute=''):
 
         comclass = classtocall(channeldict,idroute,userscript,scriptname,command) #call the class for this type of channel
         comclass.run()
-        botsglobal.logger.debug(u'finished communication channel "%s" type %s %s.',channeldict['idchannel'],channeldict['type'],channeldict['inorout'])
+        botsglobal.logger.debug(u'finished communication channel "%(idchannel)s" type %(type)s %(inorout)s.',channeldict)
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
     else:
-        raise botslib.CommunicationError(_(u'Channel "$idchannel" is unknown.'),idchannel=idchannel)
+        raise botslib.CommunicationError(_(u'Channel "%(idchannel)s" is unknown.'),{'idchannel':idchannel})
 
 
 class _comsession(object):
@@ -496,7 +496,8 @@ class _comsession(object):
                 if not self.channeldict['starttls']:    #starttls in channeldict is: 'no check on "from:" email adress'
                     frompartner = self.mailaddress2idpartner(frommail)
                     if frompartner is None:
-                        raise botslib.CommunicationInError(_(u'"From" emailaddress(es) $email not authorised/unknown for channel "$idchannel".'),email=frommail,idchannel=self.channeldict['idchannel'])
+                        raise botslib.CommunicationInError(_(u'"From" emailaddress(es) %(email)s not authorised/unknown for channel "%(idchannel)s".'),
+                                                            {'email':frommail,'idchannel':self.channeldict['idchannel']})
                 #topartner, cc (incl autorization)
                 list_to_address = [self.checkheaderforcharset(address) for name,address in email.Utils.getaddresses(msg.get_all('to', []))] 
                 list_cc_address = [self.checkheaderforcharset(address) for name,address in email.Utils.getaddresses(msg.get_all('cc', []))] 
@@ -510,7 +511,8 @@ class _comsession(object):
                         if topartner is not None:   #if topartner found: break out of loop
                             break
                     else:   #if no valid topartner: generate error
-                        raise botslib.CommunicationInError(_(u'"To" emailaddress(es) $email not authorised/unknown for channel "$idchannel".'),email=list_to_address,idchannel=self.channeldict['idchannel'])
+                        raise botslib.CommunicationInError(_(u'"To" emailaddress(es) %(email)s not authorised/unknown for channel "%(idchannel)s".'),
+                                                            {'email':list_to_address,'idchannel':self.channeldict['idchannel']})
  
                 #update transaction of mail with information found in mail
                 ta_from.update(frommail=frommail,   #why save now not later: when saving the attachments need the amil-header-info to be in ta (copyta)
@@ -595,7 +597,8 @@ class _comsession(object):
                                     {'active':True,'idpartner':idpartner}):
             if row['mail']:
                 return row['mail'],row['cc']
-        raise botslib.CommunicationOutError(_(u'No mail-address for partner "$partner" (channel "$idchannel").'),partner=idpartner,idchannel=self.channeldict['idchannel'])
+        raise botslib.CommunicationOutError(_(u'No mail-address for partner "%(partner)s" (channel "%(idchannel)s").'),
+                                                {'partner':idpartner,'idchannel':self.channeldict['idchannel']})
 
     def connect(self):
         pass
@@ -653,7 +656,8 @@ class _comsession(object):
                     return ext 
                 if format_spec == 'name':
                     return name 
-                raise botslib.CommunicationOutError(_(u'Error in format of "{filename}": unknown format: "%s".'%(format_spec)))
+                raise botslib.CommunicationOutError(_(u'Error in format of "{filename}": unknown format: "%(format)s".'),
+                                                    {'format':format_spec})
         unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
         tofilename = filename_mask.replace('*',unique)           #filename_mask is filename in channel where '*' is replaced by idta
         if '{' in tofilename and sys.version_info[1] != 5:    #only for python 2.6/7
@@ -671,7 +675,8 @@ class _comsession(object):
                 tofilename = tofilename.format(infile=infilename,datetime=datetime_object,**ta.__dict__)
             except:
                 txt = botslib.txtexc()
-                raise botslib.CommunicationOutError(_(u'Error in formatting outgoing filename "%(filename)s". Error: "%(error)s".'%{'filename':tofilename,'error':txt}))
+                raise botslib.CommunicationOutError(_(u'Error in formatting outgoing filename "%(filename)s". Error: "%(error)s".'),
+                                                        {'filename':tofilename,'error':txt})
         if self.userscript and hasattr(self.userscript,'filename'):
             return botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta)
         else:
@@ -992,7 +997,7 @@ class smtp(_comsession):
                 raise botslib.CommunicationOutError(_(u'SMTP server did not accept user/password combination.'))
             except:
                 txt = botslib.txtexc()
-                raise botslib.CommunicationOutError(_(u'SMTP login failed. Error:\n$txt'),txt=txt)
+                raise botslib.CommunicationOutError(_(u'SMTP login failed. Error:\n%(txt)s'),{'txt':txt})
 
     @botslib.log_session
     def outcommunicate(self):
@@ -1320,12 +1325,12 @@ class sftp(_comsession):
             import paramiko
         except:
             txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "paramiko". Error:\n%s'%txt))
+            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "paramiko". Error:\n%(txt)s'),{'txt':txt})
         try:
             from Crypto import Cipher
         except:
             txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "pycrypto". Error:\n%s'%txt))
+            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "pycrypto". Error:\n%(txt)s'),{'txt':txt})
         # setup logging if required
         ftpdebug = botsglobal.ini.getint('settings','ftpdebug',0)
         if ftpdebug > 0:
@@ -1541,16 +1546,21 @@ class db(_comsession):
     '''
     def connect(self):
         if self.userscript is None:
-            raise ImportError(_(u'Channel "%s" is type "db", but no communicationscript exists.'%self.channeldict['idchannel']))
+            raise ImportError(_(u'Channel "%(idchannel)s" is type "db", but no communicationscript exists.'),
+                                {'idchannel':self.channeldict})
         #check functions bots assumes to be present in userscript:
         if not hasattr(self.userscript,'connect'):
-            raise botslib.ScriptImportError(_(u'No function "connect" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "connect" in imported communicationscript "%(communicationscript)s".'),
+                                                {'communicationscript':self.scriptname})
         if self.channeldict['inorout'] == 'in' and not hasattr(self.userscript,'incommunicate'):
-            raise botslib.ScriptImportError(_(u'No function "incommunicate" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "incommunicate" in imported communicationscript "%(communicationscript)s".'),
+                                                {'communicationscript':self.scriptname})
         if self.channeldict['inorout'] == 'out' and not hasattr(self.userscript,'outcommunicate'):
-            raise botslib.ScriptImportError(_(u'No function "outcommunicate" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "outcommunicate" in imported communicationscript "%(communicationscript)s".'),
+                                                {'communicationscript':self.scriptname})
         if not hasattr(self.userscript,'disconnect'):
-            raise botslib.ScriptImportError(_(u'No function "disconnect" in imported communicationscript "$communicationscript".'),communicationscript=self.scriptname)
+            raise botslib.ScriptImportError(_(u'No function "disconnect" in imported communicationscript "%(communicationscript)s".'),
+                                            {'communicationscript':self.scriptname})
 
         self.dbconnection = botslib.runscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict)
 
@@ -1649,7 +1659,8 @@ class communicationscript(_comsession):
     ''' 
     def connect(self):
         if self.userscript is None or not botslib.tryrunscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict):
-            raise ImportError(_(u'Channel "%s" is type "communicationscript", but no communicationscript exists.'%self.channeldict['idchannel']))
+            raise ImportError(_(u'Channel "%(idchannel)s" is type "communicationscript", but no communicationscript exists.'),
+                                {'idchannel':self.channeldict})
 
 
     @botslib.log_session
