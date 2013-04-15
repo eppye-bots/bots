@@ -473,16 +473,18 @@ def botsimport(soort,modulename):
     modulefile = join(botsglobal.usersysimportpath,soort,modulename)   #assemble abs filename for errortexts
     try:
         module = botsbaseimport(modulepath)
-    except ImportError: #if module not found
+    except ImportError:
         if isa_direct_importerror():
+             #if module not found
             botsglobal.logger.debug(u'no import "%(soort)s" "%(modulefile)s".',{'soort':soort,'modulefile':modulefile})
             raise
         else:
+             #errors in importing module (module is there)
             txt = txtexc()
-            raise ScriptImportError(_(u'import error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
+            raise ScriptImportError(_(u'import error in "%(soort)s" "%(modulefile)s", error:\n%(txt)s'),{'soort':soort,'modulefile':modulefile,'txt':txt})
     except:             #other errors
         txt = txtexc()
-        raise ScriptImportError(_(u'Error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
+        raise ScriptImportError(_(u'Error in "%(soort)s" "%(modulefile)s", error:\n%(txt)s'),{'soort':soort,'modulefile':modulefile,'txt':txt})
     else:
         botsglobal.logger.debug(u'import "%(soort)s" "%(modulefile)s".',{'soort':soort,'modulefile':modulefile})
         return module,modulefile
