@@ -475,7 +475,7 @@ def botsimport(soort,modulename):
         module = botsbaseimport(modulepath)
     except ImportError: #if module not found
         if isa_direct_importerror():
-            botsglobal.logger.debug(u'no import of "%(modulefile)s".',{'modulefile':modulefile})
+            botsglobal.logger.debug(u'no import "%(soort)s" "%(modulefile)s".',{'soort':soort,'modulefile':modulefile})
             raise
         else:
             txt = txtexc()
@@ -484,7 +484,7 @@ def botsimport(soort,modulename):
         txt = txtexc()
         raise ScriptImportError(_(u'Error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
     else:
-        botsglobal.logger.debug(u'import "%(modulefile)s".',{'modulefile':modulefile})
+        botsglobal.logger.debug(u'import "%(soort)s" "%(modulefile)s".',{'soort':soort,'modulefile':modulefile})
         return module,modulefile
 #**********************************************************/**
 #*************************File handling os.path etc***********************/**
