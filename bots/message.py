@@ -3,6 +3,7 @@ from django.utils.translation import ugettext as _
 import botslib
 import node
 import botsglobal
+import grammar
 from botsconfig import *
 
 
@@ -21,6 +22,24 @@ class Message(object):
         if len(self.errorlist) >= botsglobal.ini.getint('settings','max_number_errors',10) :
             raise botslib.MessageError(_(u'At least %(max_number_errors)s errors:\n%(errorlist)s'),
                                         {'max_number_errors':len(self.errorlist), 'errorlist':''.join(self.errorlist)})
+
+
+    def messagegrammarread(self,editype,messagetype,typeofgrammarfile='grammars'):
+        ''' read the grammar for a out-message.
+            try to read the topartner dependent grammar syntax.
+        '''
+        self.defmessage = grammar.grammarread(editype,messagetype,typeofgrammarfile)
+        #syntax: defaultsyntax is first updated with envelope.syntax, than updated with messagetype.syntax
+        #write values from grammar to self.ta_info - unless these values are already set (eg by mappingscript)
+        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    
+        #read partner-syntax. Use this to always overrule values in self.ta_info
+        if self.ta_info['topartner']:   
+            try:
+                partnersyntax = grammar.grammarread(editype,self.ta_info['topartner'],typeofgrammarfile='partners')
+                self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
+            except ImportError:
+                pass        #No partner specific syntax found (is not an error).
+
 
     @staticmethod
     def display(lex_records):

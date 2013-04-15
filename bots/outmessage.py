@@ -31,7 +31,6 @@ from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsglobal
-import grammar
 import message
 import node
 from botsconfig import *
@@ -77,27 +76,11 @@ class Outmessage(message.Message):
         self.root = node.Node(record={})         #message tree; build via put()-interface in mappingscript. Initialise with empty dict
         super(Outmessage,self).__init__()
 
-    def outmessagegrammarread(self,editype,messagetype):
-        ''' read the grammar for a out-message.
-            try to read the topartner dependent grammar syntax.
-        '''
-        self.defmessage = grammar.grammarread(editype,messagetype)
-        #~ self.defmessage.display(self.defmessage.structure)
-        #~ print 'self.ta_info',self.ta_info
-        #~ print 'self.defmessage.syntax',self.defmessage.syntax
-        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by mappingscript
-        if self.ta_info['topartner']:   #read syntax-file for partner dependent syntax
-            try:
-                partnersyntax = grammar.grammarread(editype,self.ta_info['topartner'],typeofgrammarfile='partners')
-                self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
-            except ImportError:
-                pass        #No partner specific syntax found (is not an error).
-
     def writeall(self):
         ''' writeall is called for writing all 'real' outmessage objects; but not for envelopes.
             writeall is call from transform.translate()
         '''
-        self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         self.checkmessage(self.root,self.defmessage)
         self.nrmessagewritten = 0
         if self.root.record:        #root record contains information; write whole tree in one time
@@ -507,7 +490,9 @@ class tradacoms(var):
         if not self.root.children:
             raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
         for tradacomsmessage in self.root.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
-            self.outmessagegrammarread(self.ta_info['editype'],tradacomsmessage.get({'BOTSID':'MHD','TYPE.01':None}) + tradacomsmessage.get({'BOTSID':'MHD','TYPE.02':None}))
+            self.messagegrammarread(self.ta_info['editype'],
+                                        tradacomsmessage.get({'BOTSID':'MHD','TYPE.01':None}) + tradacomsmessage.get({'BOTSID':'MHD','TYPE.02':None}),
+                                        typeofgrammarfile='grammars')
             if not self.nrmessagewritten:
                 self._initwrite()
             self.checkmessage(tradacomsmessage,self.defmessage)
@@ -770,7 +755,7 @@ class template(Outmessage):
         except ImportError:
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid".'))
         #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
-        self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templates',self.ta_info['template'])
         try:
             botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
@@ -814,7 +799,7 @@ class templatehtml(Outmessage):
         except ImportError:
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi".'))
         #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
-        self.outmessagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         templatefile = botslib.abspath(u'templateshtml',self.ta_info['template'])
         try:
             botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)

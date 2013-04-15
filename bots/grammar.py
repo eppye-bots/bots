@@ -1,18 +1,43 @@
-import copy
 from django.utils.translation import ugettext as _
 import botslib
 from botsconfig import *
 
 def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
     ''' dispatch function for class Grammar and subclasses.
-        read whole grammar or only syntax (via parameter 'typeofgrammarfile'.
+        read whole grammar or only syntax (parameter 'syntaxonly').
+        directory from where grammar is via parameter 'typeofgrammarfile'.
     '''
     try:
         classtocall = globals()[editype]
     except KeyError:
         raise botslib.GrammarError(_(u'Read grammar for editype "%(editype)s" messagetype "%(messagetype)s", but editype is unknown.'), 
                                         {'editype':editype,'messagetype':grammarname})
-    return classtocall(typeofgrammarfile,editype,grammarname)
+    if typeofgrammarfile == 'grammars':
+        # read grammar for messagetype first, than syntax for envelope.
+        messagegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=False,editype=editype,grammarname=grammarname)
+        #Get right syntax: start with classtocall.defaultsyntax, update with envelope.syntax, update again with messagetype.syntax
+        syntax = classtocall.defaultsyntax.copy()
+        envelope = messagegrammar.syntax.get('envelope') or classtocall.defaultsyntax['envelope']
+        if envelope and envelope!=grammarname:
+            envelopegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=True,editype=editype,grammarname=envelope)
+            syntax.update(envelopegrammar.syntax)
+        syntax.update(messagegrammar.syntax)
+        messagegrammar.syntax = syntax
+        return messagegrammar
+    elif typeofgrammarfile == 'envelope':
+        # read syntax for messagetype first, than grammar for envelope.
+        messagegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=True,editype=editype,grammarname=grammarname)
+        #Get right syntax: start with classtocall.defaultsyntax, update with envelope.syntax, update again with messagetype.syntax
+        syntax = classtocall.defaultsyntax.copy()
+        envelope = messagegrammar.syntax.get('envelope') or classtocall.defaultsyntax['envelope']
+        if envelope and envelope!=grammarname:
+            envelopegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=False,editype=editype,grammarname=envelope)
+            syntax.update(envelopegrammar.syntax)
+        syntax.update(messagegrammar.syntax)
+        envelopegrammar.syntax = syntax
+        return envelopegrammar
+    else:   #typeofgrammarfile == 'partners':
+        return classtocall(typeofgrammarfile='partners',syntaxonly=True,editype=editype,grammarname=grammarname)
 
 
 class Grammar(object):
@@ -43,25 +68,20 @@ class Grammar(object):
     '''
     _checkstructurerequired = True
 
-    def __init__(self,typeofgrammarfile,editype,grammarname):
+    def __init__(self,typeofgrammarfile,syntaxonly,editype,grammarname):
         self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype + '.' + grammarname)
-        if typeofgrammarfile == 'grammars':
-            self.syntax = copy.deepcopy(self.__class__.defaultsyntax)  #init syntax with default syntax from class (deepcopy because some values can be dict or list)
-        else:
-            self.syntax = {}        #init with empty syntax
         #get syntax from grammar file
         try:
             syntaxfromgrammar = getattr(self.module, 'syntax')
         except AttributeError:
-            pass    #there is no syntax in the grammar, is OK.
+            self.syntax = {}        #init with empty syntax
         else:
             if not isinstance(syntaxfromgrammar,dict):
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s": syntax is not a dict{}.'),
                                             {'grammar':self.grammarname})
-            #Update syntax with syntax read from grammar.
-            self.syntax.update(syntaxfromgrammar)
+            self.syntax = syntaxfromgrammar.copy()  #copy to get independent syntax-object
         
-        if typeofgrammarfile != 'grammars':
+        if syntaxonly:
             return
         #init rest of grammar
         try:
@@ -158,7 +178,7 @@ class Grammar(object):
             if not has_botsid:   #there is no field 'BOTSID' in record
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record "%(record)s": no field BOTSID.'),
                                                 {'grammar':self.grammarname,'record':recordid})
-        if self.syntax['noBOTSID'] and len(self.recorddefs) != 1:
+        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
                                             {'grammar':self.grammarname})
         if self.nextmessageblock is not None and len(self.recorddefs) != 1:
@@ -286,7 +306,7 @@ class Grammar(object):
         elif MPATH in self.structure[0]:
             return      # grammar has been read before, with no errors. Do no checks.
         self._checkstructure(self.structure,[])
-        if self.syntax['checkcollision']:
+        if self.syntax.get('checkcollision') or self.__class__.defaultsyntax.get('checkcollision'):
             self._checkbackcollision(self.structure)
             self._checknestedcollision(self.structure)
         self._checkbotscollision(self.structure)

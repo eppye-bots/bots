@@ -4,7 +4,6 @@ from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsglobal
-import grammar
 import outmessage
 from botsconfig import *
 
@@ -111,35 +110,46 @@ def envelope(ta_info,ta_list):
 
         determine the class for enveloping:
         1. empty string: no enveloping (class noenvelope); file(s) is/are just copied. No user scripting for envelope.
-        2. if envelope is a class in this module, use it
-        3. if editype is a class in this module, use it
-        4. if user defined enveloping in usersys/envelope/<editype>/<envelope>.<envelope>, use it (user defined scripting overrides)
-
-        Always check if user envelopescript. user exits extends/replaces default enveloping.
+        2. if user defined enveloping in usersys/envelope/<editype>/<envelope>.<envelope>, use it (user defined scripting overrides)
+            user exits extends/replaces default enveloping.
+        3. if envelope is a class in this module, use it
+        4. if editype is a class in this module, use it. 20110919: depreciated.
+        
+        Complex is how enveloping and grammar/syntax work together for enveloping:
+        1.  no envelope         script: noenvelope
+                                syntax: grammar.editype.messagetype
+        2.  user scripted       script: envelopescripts.editype.envelope
+                                syntax: grammar.editype.envelope (alt could be envelopescripts.editype.envelope; but this is inline with incoming)
+                                        grammar.editype.messagetype
+        3.  class envelope      script: envelope.envelope
+                                syntax: grammar.editype.envelope
+                                        grammar.editype.messagetype
+        3.  class editype       script: envelope.editype
+                                syntax: grammar.editype.envelope
+                                        grammar.editype.messagetype
     '''
-    #determine which class to use for enveloping
     userscript = scriptname = None
     if not ta_info['envelope']:     #used when enveloping is just appending files.
         classtocall = noenvelope
     else:
-        try:    #see if the is user scripted enveloping
+        #check for user scripted enveloping
+        try:
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'] + '.' + ta_info['envelope'])
-        except ImportError:     #envelopescript is not there; other errors like syntax errors are not catched
+        except ImportError:     #no user enveloping.
             pass
-        #first: check if there is a class with name ta_info['envelope'] in the user scripting
-        #this allows complete enveloping in user scripting
+        #check if there is a user scripted class with name ta_info['envelope'].
         if userscript and hasattr(userscript,ta_info['envelope']):
             classtocall = getattr(userscript,ta_info['envelope'])
         else:
-            try:    #check if there is a envelope class with name ta_info['envelope'] in this file (envelope.py)
+            #check if there is a envelope class with name ta_info['envelope'] in this file (envelope.py)
+            try:
                 classtocall = globals()[ta_info['envelope']]
             except KeyError:
-                try:    #check if there is a envelope class with name ta_info['editype'] in this file (envelope.py).
-                        #20110919: this should disappear in the long run....use this now for orders2printenvelope and myxmlenvelop
-                        #reason to disappear: confusing when setting up.
+                # 20110919: depreciated. check if there is a envelope class with name ta_info['editype'] in this file (envelope.py).
+                try:
                     classtocall = globals()[ta_info['editype']]
                 except KeyError:
-                    raise botslib.OutMessageError(_(u'Not found envelope "%(editype)s".'),ta_info)
+                    raise botslib.OutMessageError(_(u'Not found envelope "%(envelope)s" for editype "%(editype)s".'),ta_info)
     env = classtocall(ta_info,ta_list,userscript,scriptname)
     env.run()
 
@@ -151,13 +161,12 @@ class Envelope(object):
         self.userscript = userscript
         self.scriptname = scriptname
 
-    def _openoutenvelope(self,editype, messagetype_or_envelope):
+    def _openoutenvelope(self,editype, messagetype):
         ''' make an outmessage object; read the grammar.'''
-        #self.ta_info now contains information from ta: editype, messagetype,testindicator,charset,envelope, contenttype
-        self.out = outmessage.outmessage_init(**self.ta_info)    #make outmessage object. Init with self.out.ta_info
-        #read grammar for envelopesyntax. Remark: self.ta_info is not updated now
-        self.out.outmessagegrammarread(editype, messagetype_or_envelope)
-        #self.out.ta_info can contain partner dependent parameters. the partner dependent parameters have overwritten parameters fro mmessage/envelope
+        #self.ta_info contains information from ta: editype, messagetype,testindicator,charset,envelope, contenttype
+        self.out = outmessage.outmessage_init(**self.ta_info)    #make outmessage object.
+        #read grammar for envelopesyntax. Remark: self.ta_info is not updated.
+        self.out.messagegrammarread(editype, messagetype,typeofgrammarfile='envelope')
 
     def writefilelist(self,tofile):
         for filename in self.ta_list:
@@ -187,6 +196,9 @@ class csv(noenvelope):
     pass
 
 class csvheader(Envelope):
+    ''' Adds first line to csv files with fieldnames.
+        Exception: There is no grammar for the envelope.
+    '''
     def run(self):
         self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -206,7 +218,7 @@ class edifact(Envelope):
             raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
                                             {'ta_info':self.ta_info})
 
-        self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
+        self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
 
@@ -276,7 +288,7 @@ class tradacoms(Envelope):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
             raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
                                             {'ta_info':self.ta_info})
-        self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
+        self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #prepare data for envelope
@@ -318,7 +330,7 @@ class tradacoms(Envelope):
 
 class template(Envelope):
     def run(self):
-        ''' class for (test) orderprint; delevers a valid html-file.
+        ''' class for template enveloping; delevers a valid html-file.
             Uses a kid-template for the enveloping/merging.
             use kid to write; no envelope grammar is used
             #20120101 depreciated. use class templatehtml
@@ -327,8 +339,8 @@ class template(Envelope):
             import kid
         except:
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid".'))
-        defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
-        self.ta_info.update(defmessage.syntax)
+        self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         if not self.ta_info['envelope-template']:
             raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s": syntax option "envelope-template" not filled; is required.'),
@@ -354,6 +366,7 @@ class template(Envelope):
 
 
 class orders2printenvelope(template):
+    ''' 20120101: depreciated.'''
     pass
 
 class templatehtml(Envelope):
@@ -366,8 +379,8 @@ class templatehtml(Envelope):
             from genshi.template import TemplateLoader
         except:
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi".'))
-        defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])   #needed because we do not know envelope; read syntax for editype/messagetype
-        self.ta_info.update(defmessage.syntax)
+        self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         if not self.ta_info['envelope-template']:
             raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s": syntax option "envelope-template" not filled; is required.'),
@@ -398,11 +411,8 @@ class x12(Envelope):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
             raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
                                             {'ta_info':self.ta_info})
-        self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
+        self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
         self.ta_info.update(self.out.ta_info)
-        #need to know the functionalgroup code:
-        defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
-        self.ta_info['functionalgroup'] = defmessage.syntax['functionalgroup']
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #prepare data for envelope
         isa09date = botslib.strftime('%y%m%d')
@@ -496,17 +506,18 @@ class xmlnocheck(noenvelope):
 class xml(noenvelope):
     pass
 
-class myxmlenvelop(noenvelope):
-    ''' xml enveloping; kept for upward comp. & as example for xml enveloping.
-        Note there is no standardised XML-envelope!
+class myxmlenvelop(Envelope):
+    ''' depreciated. Kept for upward comp. & as example for xml enveloping.
+        This is a very simple envelope: it has no fields in envelope. There is no standardised XML-envelope.
         Writes a new XML-tree; uses places-holders for XML-files to include; real work is done by ElementTree's 'include'.
     '''
     def run(self):
         include = '{http://www.w3.org/2001/XInclude}include'
-        self._openoutenvelope(self.ta_info['editype'],self.ta_info['envelope'])
+        self._openoutenvelope(self.ta_info['editype'],self.ta_info['messagetype'])
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #~ self.out.put({'BOTSID':'root','xmlns:xi':"http://www.w3.org/2001/XInclude"})     #works, but attribute is not removed by ETI.include
         self.out.put({'BOTSID':'root'})
+        # this is where you would write fields to root (frompartner, topartner).
         ta_list = self.filelist2absolutepaths()
         for filename in ta_list:
             self.out.put({'BOTSID':'root'},{'BOTSID':include,include + '__parse':'xml',include + '__href':filename})

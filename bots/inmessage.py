@@ -50,11 +50,10 @@ class Inmessage(message.Message):
 
     def initfromfile(self):
         ''' initialisation from a edi file '''
-        self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])  #read grammar, after sniffing. Information from sniffing can be used (eg name editype for edifact, using version info from UNB)
-        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set
+        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
         self._readcontent_edifile()
-        self._sniff()           #some hard-coded parsing of edi file; eg ta_info can be overruled by syntax-parameters in edi-file
+        self._sniff()           #some hard-coded parsing of edi file; ta_info can be overruled by syntax-parameters in edi-file
         #start lexing and parsing
         self._lex()
         if hasattr(self,'rawinput'):
@@ -639,8 +638,7 @@ class excel(csv):
         import csv
         import StringIO
         
-        self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])  #read grammar, after sniffing. Information from sniffing can be used (eg name editype for edifact, using version info from UNB)
-        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set
+        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
         if self.ta_info['escape']:
             doublequote = False
@@ -1184,11 +1182,9 @@ class xml(Inmessage):
             else:
                 raise botslib.InMessageError(_(u'Could not find right xml messagetype for mailbag.'))
 
-            self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
-            botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
+            self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         else:
-            self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
-            botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
+            self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
             parser = ET.XMLParser()
             for key,value in self.ta_info['extra_character_entity'].items():
                 parser.entity[key] = value
@@ -1264,8 +1260,7 @@ class xmlnocheck(xml):
 
 class json(Inmessage):
     def initfromfile(self):
-        self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'])
-        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    #write values from grammar to self.ta_info - unless these values are already set eg by sniffing
+        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
         self._readcontent_edifile()
 
         jsonobject = simplejson.loads(self.rawinput)
