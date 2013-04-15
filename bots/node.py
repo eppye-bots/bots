@@ -2,7 +2,6 @@ try:
     import cdecimal as decimal
 except ImportError:
     import decimal
-import copy
 from django.utils.translation import ugettext as _
 import botslib
 import botsglobal
@@ -366,7 +365,7 @@ class Node(object):
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
         count = decimal.Decimal(0)
-        mpathscopy = copy.deepcopy(mpaths)
+        mpathscopy = mpaths[:]
         for key,value in mpaths[-1].items():
             if value is None:
                 del mpathscopy[-1][key]
