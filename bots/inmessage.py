@@ -45,12 +45,12 @@ class Inmessage(message.Message):
     '''
     def __init__(self,ta_info):
         super(Inmessage,self).__init__()
-        self.lex_records = []        #init list of records
+        self.lex_records = []        #init list of lex_records
         self.ta_info = ta_info  #here ta_info is only filled with parameters from db-ta
 
     def initfromfile(self):
         ''' initialisation from a edi file '''
-        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread()
         self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
         self._readcontent_edifile()
         self._sniff()           #some hard-coded parsing of edi file; ta_info can be overruled by syntax-parameters in edi-file
@@ -58,7 +58,7 @@ class Inmessage(message.Message):
         self._lex()
         if hasattr(self,'rawinput'):
             del self.rawinput
-        #~ self.display(self.lex_records)   #show lexed records (for protocol debugging)
+        #~ self.display(self.lex_records)   #show lexed lex_records (for protocol debugging)
         self.root = node.Node()  #make root Node None.
         self.iternextrecord = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
@@ -91,7 +91,7 @@ class Inmessage(message.Message):
             for fixed field: same handling; length is not checked.
         '''
         if field_definition[BFORMAT] == 'A':
-            if isinstance(self,var):  #check length fields in variable records
+            if isinstance(self,var):  #check length fields in variable lex_records
                 lenght = len(value)
                 if lenght > field_definition[LENGTH]:
                     self.add2errorlist(_(u'[F05]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
@@ -142,7 +142,7 @@ class Inmessage(message.Message):
             if 'E' in value or 'e' in value:
                 self.add2errorlist(_(u'[F09]%(linpos)s: Record "%(record)s" field "%(field)s" contains exponent: "%(content)s".\n')%
                                     {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-            if isinstance(self,var):  #check length num fields in variable records
+            if isinstance(self,var):  #check length num fields in variable lex_records
                 if self.ta_info['lengthnumericbare']:
                     length = botslib.countunripchars(value,'-+.')
                 else:
@@ -192,17 +192,17 @@ class Inmessage(message.Message):
             - parse the lex_records.
             - identify record (lookup in structure)
             - identify fields in the record (use the record_definition from the grammar).
-            - add grammar-info to records: field-tag,mpath.
+            - add grammar-info to lex_records: field-tag,mpath.
             Parameters:
             - structure_level: current grammar/segmentgroup of the grammar-structure.
-            - inode: parent node; all parsed records are added as children of inode
+            - inode: parent node; all parsed lex_records are added as children of inode
             2x recursive: SUBTRANSLATION and segmentgroups
         '''
         structure_index = 0     #keep track of where we are in the structure_level
         countnrofoccurences = 0 #number of occurences of current record in structure
         structure_end = len(structure_level)
         get_next_edi_record = True      #indicate if the next record should be fetched, or if the current_edi_record is still being parsed.
-                                        #it might seem logical to test here 'current_edi_record is None', but this is already used to indicate 'no more records'.
+                                        #it might seem logical to test here 'current_edi_record is None', but this is already used to indicate 'no more lex_records'.
         while 1:
             if get_next_edi_record:
                 try:
@@ -221,7 +221,7 @@ class Inmessage(message.Message):
                                                                             {'record':self.mpathformat(structure_level[structure_index][MPATH])})
                 structure_index += 1
                 if structure_index == structure_end:  #current_edi_record is not in this level. Go level up
-                    return current_edi_record    #return either None (no more data-records to parse) or the last record2parse (the last record2parse is not found in this level)
+                    return current_edi_record    #return either None (no more data-lex_records to parse) or the last record2parse (the last record2parse is not found in this level)
                 countnrofoccurences = 0
                 continue  #continue while-loop: get_next_edi_record is false as no match with structure is made; go and look at next record of structure
             #record is found in grammar
@@ -378,7 +378,7 @@ class fixed(Inmessage):
         self.filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb',charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _lex(self):
-        ''' lexes file with fixed records to list of records (self.lex_records).'''
+        ''' lexes file with fixed lex_records to list of lex_records (self.lex_records).'''
         linenr = 0
         startrecordid = self.ta_info['startrecordID']
         endrecordid = self.ta_info['endrecordID']
@@ -420,11 +420,11 @@ class idoc(fixed):
     
 
 class var(Inmessage):
-    ''' abstract class for edi-objects with records of variabele length.'''
+    ''' abstract class for edi-objects with lex_records of variabele length.'''
     def _lex(self):
-        ''' lexes file with variable records to list of records, fields and subfields (build self.lex_records).'''
+        ''' lexes file with variable lex_records to list of lex_records, fields and subfields (build self.lex_records).'''
         record_sep  = self.ta_info['record_sep']
-        mode_inrecord = 0  # 1 indicates: lexing in record, 0 is lexing 'between records'.
+        mode_inrecord = 0  # 1 indicates: lexing in record, 0 is lexing 'between lex_records'.
         field_sep   = self.ta_info['field_sep'] + self.ta_info['record_tag_sep']    #for tradacoms; field_sep and record_tag_sep have same function.
         sfield_sep  = self.ta_info['sfield_sep']
         rep_sep     = self.ta_info['reserve']
@@ -472,7 +472,7 @@ class var(Inmessage):
                 else:                       #we are in quote, just append char to token
                     value += char
                     continue
-            #handle char 'between' records. 
+            #handle char 'between' lex_records. 
             if not mode_inrecord:
                 if char.isspace():  #if space: ignor char, get next char. note: whitespace = ' \t\n\r\v\f'
                     continue
@@ -621,7 +621,7 @@ class csv(var):
                 del self.lex_records[0:self.ta_info['skip_firstline']]
             else:
                 del self.lex_records[0]
-        if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
+        if self.ta_info['noBOTSID']:    #if read lex_records contain no BOTSID: add it
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
             for lex_record in self.lex_records:
                 lex_record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: 0}]
@@ -638,7 +638,7 @@ class excel(csv):
         import csv
         import StringIO
         
-        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread()
         self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
         if self.ta_info['escape']:
             doublequote = False
@@ -1182,9 +1182,9 @@ class xml(Inmessage):
             else:
                 raise botslib.InMessageError(_(u'Could not find right xml messagetype for mailbag.'))
 
-            self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+            self.messagegrammarread()
         else:
-            self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+            self.messagegrammarread()
             parser = ET.XMLParser()
             for key,value in self.ta_info['extra_character_entity'].items():
                 parser.entity[key] = value
@@ -1260,7 +1260,7 @@ class xmlnocheck(xml):
 
 class json(Inmessage):
     def initfromfile(self):
-        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread()
         self._readcontent_edifile()
 
         jsonobject = simplejson.loads(self.rawinput)

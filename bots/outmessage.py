@@ -80,7 +80,7 @@ class Outmessage(message.Message):
         ''' writeall is called for writing all 'real' outmessage objects; but not for envelopes.
             writeall is call from transform.translate()
         '''
-        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread()
         self.checkmessage(self.root,self.defmessage)
         self.nrmessagewritten = 0
         if self.root.record:        #root record contains information; write whole tree in one time
@@ -121,11 +121,11 @@ class Outmessage(message.Message):
         self._records2file()
 
     def tree2records(self,node_instance):
-        self.lex_records = []                   #tree of nodes is flattened to these records
+        self.lex_records = []                   #tree of nodes is flattened to these lex_records
         self._tree2recordscore(node_instance,self.defmessage.structure[0])
 
     def _tree2recordscore(self,node_instance,structure):
-        ''' Write tree of nodes to flat records.
+        ''' Write tree of nodes to flat lex_records.
             The nodes are already sorted
         '''
         self._tree2recordfields(node_instance.record,structure)    #write root node->first record
@@ -188,7 +188,7 @@ class Outmessage(message.Message):
             return the formatted value
         '''
         if field_definition[BFORMAT] == 'A':
-            if isinstance(self,fixed):  #check length fields in variable records
+            if isinstance(self,fixed):  #check length fields in variable lex_records
                 if field_definition[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
                     value = value.rjust(field_definition[MINLENGTH])
                 else:
@@ -335,7 +335,7 @@ class Outmessage(message.Message):
         '''
         wrap_length = int(self.ta_info.get('wrap_length', 0))
         if wrap_length:
-            stringinizedrecords = ''.join(self.record2string(lex_record) for lex_record in self.lex_records) # join all records
+            stringinizedrecords = ''.join(self.record2string(lex_record) for lex_record in self.lex_records) # join all lex_records
             for i in range(0,len(stringinizedrecords),wrap_length): # then split in fixed lengths
                 try:
                     self._outstream.write(stringinizedrecords[i:i+wrap_length] + '\r\n')
@@ -343,7 +343,7 @@ class Outmessage(message.Message):
                     raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
                                                     {'char':self.ta_info['charset'],'content':stringinizedrecords[i:i+wrap_length]})
         else:
-            for lex_record in self.lex_records:     #loop all records
+            for lex_record in self.lex_records:     #loop all lex_records
                 try:
                     self._outstream.write(self.record2string(lex_record))
                 except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
@@ -489,15 +489,16 @@ class tradacoms(var):
         self.nrmessagewritten = 0
         if not self.root.children:
             raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
+        messagetype = self.ta_info['messagetype']
         for tradacomsmessage in self.root.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
-            self.messagegrammarread(self.ta_info['editype'],
-                                        tradacomsmessage.get({'BOTSID':'MHD','TYPE.01':None}) + tradacomsmessage.get({'BOTSID':'MHD','TYPE.02':None}),
-                                        typeofgrammarfile='grammars')
+            self.ta_info['messagetype'] = tradacomsmessage.get({'BOTSID':'MHD','TYPE.01':None}) + tradacomsmessage.get({'BOTSID':'MHD','TYPE.02':None})
+            self.messagegrammarread()
             if not self.nrmessagewritten:
                 self._initwrite()
             self.checkmessage(tradacomsmessage,self.defmessage)
             self._write(tradacomsmessage)
             self.nrmessagewritten += 1
+        self.ta_info['messagetype'] = messagetype
         self._closewrite()
         self.ta_info['nrmessages'] = self.nrmessagewritten
 
@@ -510,8 +511,7 @@ class x12(var):
 
 
 class xml(Outmessage):
-    ''' 20110919: code for _write is almost the same as for envelopewrite: this could be one method.
-        Some problems with right xml prolog, standalone, DOCTYPE, processing instructons: Different ET versions give different results.
+    ''' Some problems with right xml prolog, standalone, DOCTYPE, processing instructons: Different ET versions give different results.
         Things work OK for python 2.7
         celementtree in 2.7 is version 1.0.6, but different implementation in 2.6??
         For python <2.7: do not generate standalone, DOCTYPE, processing instructions for encoding !=utf-8,ascii OR if elementtree package is installed (version 1.3.0 or bigger)
@@ -608,7 +608,7 @@ class xml(Outmessage):
         for key in attributedict.keys():  #remove used fields
             del noderecord[attributemarker+key]
         del noderecord['BOTSID']    #remove 'record' tag
-        #generate xml-'fields' in xml-'record'; sort these by looping over records definition
+        #generate xml-'fields' in xml-'record'; sort these by looping over lex_records definition
         for field_def in self.defmessage.recorddefs[recordtag]:  #loop over fields in 'record'
             if field_def[ID] not in noderecord: #if field not in outmessage: skip
                 continue
@@ -702,7 +702,7 @@ class json(Outmessage):
         '''
         #newjsonobject is the json object assembled in the function.
         newjsonobject = node_instance.record.copy()    #init newjsonobject with record fields from node
-        for childnode in node_instance.children: #fill newjsonobject with the records from childnodes.
+        for childnode in node_instance.children: #fill newjsonobject with the lex_records from childnodes.
             key = childnode.record['BOTSID']
             if key in newjsonobject:
                 newjsonobject[key].append(self._node2json(childnode))
@@ -716,7 +716,7 @@ class json(Outmessage):
         ''' recursive method.
         '''
         newdict = node_instance.record.copy()
-        if node_instance.children:   #if this node has records in it.
+        if node_instance.children:   #if this node has lex_records in it.
             sortedchildren = {}   #empty dict
             for childnode in node_instance.children:
                 botsid = childnode.record['BOTSID']
@@ -755,7 +755,7 @@ class template(Outmessage):
         except ImportError:
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid".'))
         #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
-        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread()
         templatefile = botslib.abspath(u'templates',self.ta_info['template'])
         try:
             botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
@@ -799,7 +799,7 @@ class templatehtml(Outmessage):
         except ImportError:
             raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi".'))
         #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
-        self.messagegrammarread(self.ta_info['editype'],self.ta_info['messagetype'])
+        self.messagegrammarread()
         templatefile = botslib.abspath(u'templateshtml',self.ta_info['template'])
         try:
             botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)

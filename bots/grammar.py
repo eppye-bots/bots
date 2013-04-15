@@ -1,10 +1,11 @@
 from django.utils.translation import ugettext as _
+#bots-modules
 import botslib
 from botsconfig import *
 
 def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
     ''' dispatch function for class Grammar and subclasses.
-        read whole grammar or only syntax (parameter 'syntaxonly').
+        read whole grammar or only syntax (parameter 'typeofgrammarfile').
         directory from where grammar is via parameter 'typeofgrammarfile'.
     '''
     try:
@@ -14,30 +15,37 @@ def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
                                         {'editype':editype,'messagetype':grammarname})
     if typeofgrammarfile == 'grammars':
         # read grammar for messagetype first, than syntax for envelope.
-        messagegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=False,editype=editype,grammarname=grammarname)
+        messagegrammar = classtocall(typeofgrammarfile='grammars',editype=editype,grammarname=grammarname)
         #Get right syntax: start with classtocall.defaultsyntax, update with envelope.syntax, update again with messagetype.syntax
         syntax = classtocall.defaultsyntax.copy()
         envelope = messagegrammar.syntax.get('envelope') or classtocall.defaultsyntax['envelope']
         if envelope and envelope!=grammarname:
-            envelopegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=True,editype=editype,grammarname=envelope)
-            syntax.update(envelopegrammar.syntax)
+            try:
+                envelopegrammar = classtocall(typeofgrammarfile='grammars',editype=editype,grammarname=envelope)
+                syntax.update(envelopegrammar.syntax)
+            except:
+                pass
         syntax.update(messagegrammar.syntax)
         messagegrammar.syntax = syntax
         return messagegrammar
     elif typeofgrammarfile == 'envelope':
+        #used when reading grammar for enveloping/outgoing. For 'noenvelope' this will not be done.
         # read syntax for messagetype first, than grammar for envelope.
-        messagegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=True,editype=editype,grammarname=grammarname)
+        messagegrammar = classtocall(typeofgrammarfile='grammars',editype=editype,grammarname=grammarname)
         #Get right syntax: start with classtocall.defaultsyntax, update with envelope.syntax, update again with messagetype.syntax
         syntax = classtocall.defaultsyntax.copy()
         envelope = messagegrammar.syntax.get('envelope') or classtocall.defaultsyntax['envelope']
-        if envelope and envelope!=grammarname:
-            envelopegrammar = classtocall(typeofgrammarfile='grammars',syntaxonly=False,editype=editype,grammarname=envelope)
-            syntax.update(envelopegrammar.syntax)
+        if envelope != grammarname:
+            try:
+                envelopegrammar = classtocall(typeofgrammarfile='grammars',editype=editype,grammarname=envelope)
+                syntax.update(envelopegrammar.syntax)
+            except:
+                envelopegrammar = messagegrammar
         syntax.update(messagegrammar.syntax)
         envelopegrammar.syntax = syntax
         return envelopegrammar
     else:   #typeofgrammarfile == 'partners':
-        return classtocall(typeofgrammarfile='partners',syntaxonly=True,editype=editype,grammarname=grammarname)
+        return classtocall(typeofgrammarfile='partners',editype=editype,grammarname=grammarname)
 
 
 class Grammar(object):
@@ -52,11 +60,11 @@ class Grammar(object):
             -   ID       record id
             -   MIN      min #occurences record or group
             -   MAX      max #occurences record of group
-            -   LEVEL    child-records
+            -   LEVEL    child-lex_records
             added after reading the grammar (so: not in grammar-file):
             -   MPATH    mpath of record 
             -   FIELDS   (added from recordsdefs via lookup)
-        in a grammar 'recorddefs' describes the (sub) fields for the records:
+        in a grammar 'recorddefs' describes the (sub) fields for the lex_records:
         -   'recorddefs' is a dict where key is the recordID, value is list of (sub) fields
             each (sub)field is a tuple of (field or subfield)
             field is tuple of (ID, MANDATORY, LENGTH, FORMAT)
@@ -68,7 +76,7 @@ class Grammar(object):
     '''
     _checkstructurerequired = True
 
-    def __init__(self,typeofgrammarfile,syntaxonly,editype,grammarname):
+    def __init__(self,typeofgrammarfile,editype,grammarname):
         self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype + '.' + grammarname)
         #get syntax from grammar file
         try:
@@ -81,7 +89,7 @@ class Grammar(object):
                                             {'grammar':self.grammarname})
             self.syntax = syntaxfromgrammar.copy()  #copy to get independent syntax-object
         
-        if syntaxonly:
+        if typeofgrammarfile == 'partners':
             return
         #init rest of grammar
         try:
@@ -121,7 +129,7 @@ class Grammar(object):
 
     def _dorecorddefs(self):
         ''' 1. check the recorddefinitions for validity.
-            2. adapt in field-records: normalise length lists, set bool ISFIELD, etc
+            2. adapt in field-lex_records: normalise length lists, set bool ISFIELD, etc
         '''
         try:
             self.recorddefs = getattr(self.module, 'recorddefs')
@@ -375,7 +383,7 @@ class Grammar(object):
                 if i[MIN] == i[MAX]:    #so: fixed number of occurences; can not lead to collision as  is always clear where in structure record is
                     collision = []      #NOTE: this is mainly used for MIN=1, MAX=1 
                 else:
-                    collision = [i[ID]] #previous records do not cause collision.
+                    collision = [i[ID]] #previous lex_records do not cause collision.
             else:
                 collision.append(i[ID])
             if LEVEL in i:
@@ -453,7 +461,7 @@ class Grammar(object):
     formatconvert = {
         'A':'A',        #alfanumerical
         'AN':'A',       #alfanumerical
-        #~ 'AR':'A',       #right aligned alfanumerical field, used in fixed records.
+        #~ 'AR':'A',       #right aligned alfanumerical field, used in fixed lex_records.
         'D':'D',        #date
         'DT':'D',       #date-time
         'T':'T',        #time
@@ -508,7 +516,7 @@ class csv(Grammar):
         'skip_firstline':False,
         'stripfield_sep':False, #safe choice, as csv is no real standard
         'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with crr/lf. Often seen in mainframe, as400
         }
 class excel(csv):
     pass
@@ -516,7 +524,7 @@ class fixed(Grammar):
     formatconvert = {
         'A':'A',        #alfanumerical
         'AN':'A',       #alfanumerical
-        'AR':'A',       #right aligned alfanumerical field, used in fixed records.
+        'AR':'A',       #right aligned alfanumerical field, used in fixed lex_records.
         'D':'D',        #date
         'DT':'D',       #date-time
         'T':'T',        #time
@@ -559,7 +567,7 @@ class fixed(Grammar):
         'startrecordID':0,
         'stripfield_sep':False,
         'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with crr/lf. Often seen in mainframe, as400
         }
 class idoc(fixed):
     defaultsyntax = {
@@ -593,7 +601,7 @@ class idoc(fixed):
         'startrecordID':0,
         'stripfield_sep':False,
         'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with crr/lf. Often seen in mainframe, as400
         'MANDT':'0',
         'DOCNUM':'0',
         }
@@ -766,7 +774,7 @@ class edifact(Grammar):
         'stripfield_sep':True,
         'triad':'',
         'version':'3',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with crr/lf. Often seen in mainframe, as400
         'UNB.S001.0080':'',
         'UNB.S001.0133':'',
         'UNB.S002.0007':'14',
@@ -818,7 +826,7 @@ class x12(Grammar):
         'stripfield_sep':True,
         'triad':'',
         'version':'00403',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with cr/lf.
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with cr/lf.
         'ISA01':'00',
         'ISA02':'          ',
         'ISA03':'00',
@@ -945,7 +953,7 @@ class tradacoms(Grammar):
         'skip_char':'\r\n',
         'stripfield_sep':True,
         'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with crr/lf. Often seen in mainframe, as400
         'STX.STDS1':'ANA',
         'STX.STDS2':'1',
         'STX.FROM.02':'',
