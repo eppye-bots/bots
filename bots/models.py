@@ -110,12 +110,8 @@ TRANSLATETYPES = (
 
 class StripCharField(models.CharField):
     ''' strip values before saving to database. this is not default in django #%^&*'''
-    def get_db_prep_value(self, value,*args,**kwargs):
-        ''' Returns field's value prepared for interacting with the database
-        backend.
-
-        Used by the default implementations of get_db_prep_save and
-        get_db_prep_lookup
+    def get_prep_value(self, value,*args,**kwargs):
+        ''' Convert Python objects (value) to query values (returned)
         ''' 
         if isinstance(value, basestring):
             return value.strip()
