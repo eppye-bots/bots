@@ -8,12 +8,12 @@ import outmessage
 from botsconfig import *
 
 @botslib.log_session
-def mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=''):
+def mergemessages(startstatus=MERGE,endstatus=FILEOUT,idroute=''):
     ''' Merges and/or envelopes one or more messages to one file;
         In db-ta: attribute 'merge' indicates message should be merged with similar messages; 'merge' is generated in translation from messagetype-grammar
         If merge is False: 1 message per envelope - no merging, else append all similar messages to one file
         Implementation as separate loops: one for merge&envelope, another for enveloping only
-        db-ta status TRANSLATED---->MERGED
+        db-ta status MERGE---->FILEOUT
     '''
     outerqueryparameters = {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query(),'merge':False}
     #**********for messages only to envelope (no merging)

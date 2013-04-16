@@ -125,20 +125,15 @@ class new(object):
             botslib.tryrunscript(userscript,scriptname,'pretranslation',routedict=routedict)
             transform.translate(idroute=routedict['idroute'])
             botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
-        elif routedict['translateind'] == 2:        #pass-through: pickup the incoming files and mark these as MERGED (==translation is finished)
-            botslib.addinfo(change={'status':MERGED},where={'status':FILEIN,'idroute':routedict['idroute']})
+        elif routedict['translateind'] == 2:        #pass-through: pickup the incoming files and mark these as TRANSLATED (==translation is finished)
+            botslib.addinfo(change={'status':TRANSLATED},where={'status':FILEIN,'idroute':routedict['idroute']})
         #NOTE: routedict['translateind'] == 0 than nothing will happen with the files in this route. 
 
         #merge messages & communication.run outgoing channel
         if routedict['tochannel']:   #do outgoing part of route
-            #merge messages for this route. Note this is done for all files in route...
-            botslib.tryrunscript(userscript,scriptname,'premerge',routedict=routedict)
-            envelope.mergemessages(idroute=routedict['idroute'])
-            botslib.tryrunscript(userscript,scriptname,'postmerge',routedict=routedict)
-
             #add outchannel as attribute to outgoign files
             #build for query: towhere (dict) and wherestring
-            towhere = dict(status=MERGED,
+            towhere = dict(status=TRANSLATED,
                         idroute=routedict['idroute'],
                         editype=routedict['toeditype'],
                         messagetype=routedict['tomessagetype'],
@@ -157,8 +152,13 @@ class new(object):
                                         OR topartner in (SELECT from_partner_id
                                                             FROM partnergroup
                                                             WHERE to_partner_id=%(topartner_tochannel_id)s ))'''
-            toset = {'tochannel':routedict['tochannel'],'status':FILEOUT}
+            toset = {'tochannel':routedict['tochannel'],'status':MERGE}
             botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
+            
+            #merge messages for this route. Note this is done for all files in route...
+            botslib.tryrunscript(userscript,scriptname,'premerge',routedict=routedict)
+            envelope.mergemessages(idroute=routedict['idroute'])
+            botslib.tryrunscript(userscript,scriptname,'postmerge',routedict=routedict)
             
             #actual communication: run outgoing channel (if not deffered)
             if not routedict['defer']:   #do outgoing part of route

@@ -434,7 +434,7 @@ class _comsession(object):
             message.attach(machinemessage)
 
             #write email to file;
-            ta_mdn = botslib.NewTransaction(status=MERGED)  #new transaction for group-file
+            ta_mdn = botslib.NewTransaction(status=TRANSLATED)  #new transaction for group-file
             
             if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
                 mdn_reference = '123message-ID email should be unique123'

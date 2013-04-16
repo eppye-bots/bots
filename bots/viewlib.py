@@ -158,8 +158,8 @@ def trace2delete(trace):
         for child in ta_object.talijst:
             gathermember(child)
     def gatherdelete(ta_object):
-        if ta_object.status == MERGED:
-            for includedta in models.ta.objects.filter(child=ta_object.idta,status=TRANSLATED):    #select all db-ta_object's included in MERGED ta_object
+        if ta_object.status == FILEOUT:
+            for includedta in models.ta.objects.filter(child=ta_object.idta,status=MERGE):    #select all db-ta_object's included in MERGED ta_object
                 if includedta not in memberlist:
                     #~ print 'not found idta',includedta.idta, 'not to deletelist:',ta_object.idta
                     return
@@ -182,7 +182,7 @@ def trace2detail(ta_object):
             levelindicator = (level)*'| '
             if isfirststep and level:
                 ta_object.ind = levelindicator[:-2] + '___'
-            elif ta_object.status == MERGED and ta_object.nrmessages > 1:
+            elif ta_object.status == FILEOUT and ta_object.nrmessages > 1:
                 ta_object.ind = levelindicator
             elif ta_object.status == EXTERNOUT:
                 if levelindicator:

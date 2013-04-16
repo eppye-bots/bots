@@ -377,7 +377,7 @@ def filer(request,*kw,**kwargs):
                     ta_object.has_file = False
                     ta_object.content = _(u'No file available for display.')
                 #determine has previous:
-                if ta_object.parent or ta_object.status == MERGED:
+                if ta_object.parent or ta_object.status == FILEOUT:
                     ta_object.has_previous = True
                 else:
                     ta_object.has_previous = False

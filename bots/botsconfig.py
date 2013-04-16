@@ -12,14 +12,15 @@ RESEND  = 4 #file has been resend.
 PROCESS = 1
 DISCARD = 3
 
-EXTERNIN  = 200      #transaction is OK; file is exported; out of reach
+EXTERNIN = 200      #transaction is OK; file is exported; out of reach
 FILEIN   = 220    #received edifile; ready for further use
 PARSED   = 310   #the edifile is lexed and parsed
-SPLITUP    = 320        #the edimessages in the PARSED edifile have been split up
+SPLITUP  = 320        #the edimessages in the PARSED edifile have been split up
 TRANSLATED = 330        #edimessage is result of translation
-MERGED   =   400        #is enveloped
-FILEOUT    = 500    #edifile ready to be 'send' (just the edi-file)
-EXTERNOUT  = 520      #transaction is complete; file is exported; out of reach
+MERGED   =   330        #for upward compatibility with pass-though scripts. These give files MERGED status.
+MERGE    =   400        #is enveloped
+FILEOUT  = 500    #edifile ready to be 'send' (just the edi-file)
+EXTERNOUT = 520      #transaction is complete; file is exported; out of reach
 
 #grammar.structure: keys in grammarrecords
 ID = 0
