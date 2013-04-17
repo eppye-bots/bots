@@ -52,7 +52,7 @@
                 <td>{{ row.get_statust_display}}</td>
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
                 <td class="nowrap">{{row.numberofresends}}</td>
-                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td class="nowrap">{{row.ts|date:"DATETIME_FORMAT"}}</td>
                 <td class="nowrap">{{row.idroute}}</td>
                 <td>{{row.nrmessages}}</td>
                 <td>{% if row.filename != '(several values)' %}<a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.filename}}</a>{% else %}{{row.filename}}{% endif %}</td>

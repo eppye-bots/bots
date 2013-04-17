@@ -21,7 +21,7 @@
 											{% trans 'status' %} &quot;{{ ta.get_statust_display }}&quot;;
 											{% trans 'editype' %} &quot;{{ ta.editype }}&quot;;
 											{% trans 'messagetype' %} &quot;{{ ta.messagetype }}&quot;;
-											{% trans 'date' %} &quot;{{ ta.ts|date:"Y-m-d H:i:s" }}&quot;;
+											{% trans 'date' %} &quot;{{ ta.ts|date:"DATETIME_FORMAT" }}&quot;;
 											{% trans 'file' %} &quot;{{ ta.filename }}&quot;;
 											{% trans 'confirm asked' %} &quot;{{ ta.confirmasked }}&quot;;
 											{% if ta.confirmasked %}

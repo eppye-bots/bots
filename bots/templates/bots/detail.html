@@ -4,7 +4,7 @@
 {% block content %}
     <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
     <table>
-        <tr><td>{% trans 'Date/time' %}</td><td class="nowrap">{{rootta.ts|date:"Y-m-d H:i:s"}}</td></tr>
+        <tr><td>{% trans 'Date/time' %}</td><td class="nowrap">{{rootta.ts|date:"DATETIME_FORMAT"}}</td></tr>
         <tr><td>{% trans 'State' %}</td><td>{{rootta.get_statust_display}}</td></tr>
         <tr><td>{% trans 'Route' %}</td><td>{{rootta.idroute}}</td></tr>
 </table>
@@ -49,7 +49,7 @@
                 <td>{{row.reference}}</td>
                 <td>{{row.testindicator}}</td>
                 <td>{% if row.filename != '(several values)' %}<a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink">{{row.filename}}</a>{% else %}{{row.filename}}{% endif %}</td>
-                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td class="nowrap">{{row.ts|date:"DATETIME_FORMAT"}}</td>
                 <td style="white-space: pre;">{{row.errortext}}</td>
                 <td class="nowrap">{{row.channel}}</td>
                 <td>{{row.frommail}}</td>

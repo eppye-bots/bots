@@ -53,22 +53,34 @@ DATABASES = {
         #~ }
     #~ }
 
-#*********localization*************************
+#*********setting date/time zone and formats *************************
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
+# alas this needs 3 different datetime formats: django display format, django input format, datetime picker.
 TIME_ZONE = 'Europe/Amsterdam'
-DATE_FORMAT = 'Y-m-d'
-DATETIME_FORMAT = 'Y-m-d G:i'
-TIME_FORMAT  = 'G:i'
+#*** set CCYY-MM-DD HH:MM:SS ******default bots settings/ISO 8601 *******
+#~ DATETIME_FORMAT = 'Y-m-d H:i:s' 
+#~ #DATETIME_INPUT_FORMATS (default setting)
+#~ DATE_FORMAT_PICKER = 'yy-mm-dd'
+#~ TIME_FORMAT_PICKER = 'hh:mm:ss'
+
+#*** set CCYY-MM-DD hh:MM TT (12 hours cleck, using AM/PM)
+DATETIME_FORMAT = 'Y-m-d h:i A' 
+DATETIME_INPUT_FORMATS = ('%Y-%m-%d %H:%M %p',)
+DATE_FORMAT_PICKER = 'yy-mm-dd'
+TIME_FORMAT_PICKER = 'hh:mm TT'
+
+
+
+#*********language code/internationalization*************************
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 #~ LANGUAGE_CODE = 'nl'
 USE_I18N = True
-
 
 #*************************************************************************
 #*********other django setting. please consult django docs.***************

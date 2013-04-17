@@ -13,15 +13,17 @@
 <script type="text/javascript">
     $(function() {
         $("#id_datefrom").datetimepicker({
-            dateFormat: 'yy-mm-dd',
-            timeFormat: 'hh:mm:ss',
+            dateFormat: '{{DTpicker_date}}',
+            timeFormat: '{{DTpicker_time}}',
+            ampm: {{DTpicker_ampm}},
             minDate: {{ bots_minDate }},
             maxDate: 0.1,
         });
         $("#id_dateuntil").datetimepicker({
             ampm: false,
-            dateFormat: 'yy-mm-dd',
-            timeFormat: 'hh:mm:ss',
+            dateFormat: '{{DTpicker_date}}',
+            timeFormat: '{{DTpicker_time}}',
+            ampm: {{DTpicker_ampm}},
             minDate: {{ bots_minDate }},
             maxDate: 0.1,
         });
@@ -47,6 +49,7 @@
         {{ form.as_table }}
     </table>
     <br/>&nbsp;
+    <p></p>
     <input type="submit" name="fromselect" value="{% trans 'Show selection' %}" />
 </form>
 {% endblock %}

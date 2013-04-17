@@ -47,7 +47,7 @@
                 <td>{{row.get_status_display}}</td>
                 <td><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">{{row.botskey}}</a></td>
                 <td>{{row.reference}}</td>
-                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td class="nowrap">{{row.ts|date:"DATETIME_FORMAT"}}</td>
                 <td style="white-space: pre;">{{row.confirmtext}}</td>
                 <td class="nowrap">{{row.idroute}}</td>
                 <td class="nowrap">{{row.channel}}</td>
