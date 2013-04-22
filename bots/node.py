@@ -12,8 +12,8 @@ class Node(object):
     ''' Node class for building trees in inmessage and outmessage
     '''
     #slots: python optimalisation to preserve memory. Disadv.: no dynamic attr in this class
-    #tested this: seems to make no big difference in large files (stress01)
-    #~ __slots__ = ('record','children','_queries','pos','line','comparekey', )    
+    #in tests: for normal translations less memory and faster; no effect fo one-on-one translations.
+    __slots__ = ('record','children','_queries','pos','line','comparekey', )    
     def __init__(self,record=None,botsidnr=None,pos=None,line=None):
         self.record = record    #record is a dict with fields
         if self.record:
