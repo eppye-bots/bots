@@ -470,18 +470,21 @@ def concat(*args):
         return None
 
 #***lookup via database partner
-def partnerlookup(idpartner,field,safe=False):
+def partnerlookup(value,field,field_where_value_is_searched='idpartner',safe=False):
     ''' lookup via table partner.
         lookup value is returned, exception if not there.
+        when using 'field_where_value_is_searched' with otehr values as ='idpartner',
+        partner tabel is only indexed on idpartner (uniqueness is not guaranteerd). 
+        should work OK if not too many partners.
     '''
     for row in botslib.query(u'''SELECT ''' +field+ '''
                                 FROM partner
-                                WHERE idpartner = %(idpartner)s
-                                ''',{'idpartner':idpartner}):
+                                WHERE '''+field_where_value_is_searched+ ''' = %(value)s
+                                ''',{'value':value}):
         if row[field]:
             return row[field]
     if safe:
-        return idpartner
+        return value
     else:
         raise botslib.CodeConversionError(_(u'No result found for partner lookup; either partner "%(idpartner)s" does not exist or field "%(field)s" has no value.'),
-                                            {'idpartner':idpartner,'field':field})
+                                            {'idpartner':value,'field':field})
