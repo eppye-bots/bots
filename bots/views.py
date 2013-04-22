@@ -403,7 +403,7 @@ def plugin(request,*kw,**kwargs):
                 plugout_backup_core(request,*kw,**kwargs)        
                 #read the plugin
                 try:
-                    if pluglib.load(request.FILES['file'].temporary_file_path()):
+                    if pluglib.read_plugin(request.FILES['file'].temporary_file_path()):
                         messages.add_message(request, messages.INFO, _(u'Overwritten existing files.'))
                 except Exception,msg:
                     notification = u'Error reading plugin: "%s".'%str(msg)
@@ -414,7 +414,7 @@ def plugin(request,*kw,**kwargs):
                     botsglobal.logger.info(notification)
                     messages.add_message(request, messages.INFO, notification)
                 finally:
-                    request.FILES['file'].close()
+                    request.FILES['file'].close()   #seems to be needed according to django docs.
             else:
                 messages.add_message(request, messages.INFO, _(u'No plugin read.'))
         return django.shortcuts.redirect('/home')
@@ -428,7 +428,7 @@ def plugin_index(request,*kw,**kwargs):
             plugout_backup_core(request,*kw,**kwargs)        
             #read the plugin
             try:
-                pluglib.load_index('index')
+                pluglib.read_index('index')
             except Exception,msg:
                 notification = u'Error reading configuration index file: "%s".'%str(msg)
                 botsglobal.logger.error(notification)
@@ -444,9 +444,8 @@ def plugout_index(request,*kw,**kwargs):
         filename = botslib.join(botsglobal.ini.get('directories','usersysabs'),'index.py')
         botsglobal.logger.info(_(u'Start writing configuration index file "%s".'),filename)
         try:
-            filehandler = open(filename,'w')
-            filehandler.write(pluglib.plugoutindex())
-            filehandler.close()
+            dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':True,'databasetransactions':False}
+            pluglib.make_index(dummy_for_cleaned_data,filename)
         except Exception,msg:
             notification = _(u'Error writing configuration index file: "%s".')%str(msg)
             botsglobal.logger.error(notification)
@@ -466,7 +465,18 @@ def plugout_backup_core(request,*kw,**kwargs):
     filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y%m%d%H%M%S'))
     botsglobal.logger.info(_(u'Start writing backup plugin "%s".'),filename)
     try:
-        pluglib.plugoutasbackup(filename)
+        dummy_for_cleaned_data = {'databaseconfiguration':True,
+                                    'umlists':True,
+                                    'fileconfiguration':True,
+                                    'infiles':False,
+                                    'charset':True,
+                                    'databasetransactions':False,
+                                    'data':False,
+                                    'logfiles':False,
+                                    'config':False,
+                                    'database':False,
+                                    }
+        pluglib.make_plugin(dummy_for_cleaned_data,filename)
     except Exception,msg:
         notification = u'Error writing backup plugin: "%s".'%str(msg)
         botsglobal.logger.error(notification)
@@ -487,7 +497,7 @@ def plugout(request,*kw,**kwargs):
                 filename = botslib.join(botsglobal.ini.get('directories','botssys'),'plugin_temp.zip')
                 botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
                 try:
-                    pluglib.plugoutcore(form.cleaned_data,filename)
+                    pluglib.make_plugin(form.cleaned_data,filename)
                 except botslib.PluginError, msg:
                     botsglobal.logger.error(str(msg))
                     messages.add_message(request,messages.INFO,str(msg))
