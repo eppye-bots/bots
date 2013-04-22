@@ -402,7 +402,7 @@ def plugout_files_bydir(dirname,defaultdirname):
         rootinplugin = root.replace(dirname,defaultdirname,1)
         for bestand in files:
             ext = os.path.splitext(bestand)[1]
-            if ext and (ext in ['.pyc','.pyo'] or bestand in ['__init__.py']:
+            if ext and (ext in ['.pyc','.pyo'] or bestand in ['__init__.py']):
                 continue
             files2return.append([os.path.join(root,bestand),os.path.join(rootinplugin,bestand)])
     return files2return
