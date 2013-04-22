@@ -81,12 +81,17 @@ def generalinit(configdir):
             importedusersys = botslib.botsbaseimport(importnameforusersys)
 
     #set directory settings in bots.ini************************************************************
+    # 'directories','botspath': absolute path for bots directory
     botsglobal.ini.set('directories','botspath',botsglobal.settings.PROJECT_PATH)
+    # 'directories','config': absolute path for config directory
     botsglobal.ini.set('directories','config',configdirectory)
+    # 'directories','usersysabs': absolute path for config usersysabs
     botsglobal.ini.set('directories','usersysabs',os.path.abspath(os.path.dirname(importedusersys.__file__)))    #???Find pathname usersys using imported usersys
-
+    # botsglobal.usersysimportpath: used for imports from usersys
     botsglobal.usersysimportpath = importnameforusersys
+    # 'directories','botssys': absolute path for config botssys
     botssys = botsglobal.ini.get('directories','botssys','botssys')
+    botsglobal.ini.set('directories','botssys_org',botssys)             #store original botssys setting
     botsglobal.ini.set('directories','botssys',botslib.join(botssys))
 
     botsglobal.ini.set('directories','data',botslib.join(botssys,'data'))

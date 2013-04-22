@@ -67,6 +67,12 @@ def writetodatabase(orgpluglist):
             else:
                 if plug['defer'] is None:
                     plug['defer'] = False
+        elif plug['plugintype'] == 'channel':
+            #convert for correct environement: path and mpath in channels
+            if 'path' in plug and plug['path'].startswith('botssys'):
+                plug['path'] = plug['path'].replace('botssys',botsglobal.ini.get('directories','botssys'),1)
+            if 'testpath' in plug and plug['testpath'].startswith('botssys'):
+                plug['testpath'] = plug['testpath'].replace('botssys',botsglobal.ini.get('directories','botssys'),1)
         elif plug['plugintype'] == 'confirmrule':
             plug.pop('id', None)       #id is an artificial key, delete,
         elif plug['plugintype'] not in PLUGINCOMPARELIST:   #if not in PLUGINCOMPARELIST: do not use
@@ -229,8 +235,13 @@ def load(pathzipfile):
                     targetpath = zipfileobject.filename[1:]
                 else:
                     targetpath = zipfileobject.filename
-                targetpath = targetpath.replace('usersys',botsglobal.ini.get('directories','usersysabs'),1)
-                targetpath = targetpath.replace('botssys',botsglobal.ini.get('directories','botssys'),1)
+                #convert for correct environement: repacle botssys, config, usersys in filenames 
+                if targetpath.startswith('usersys'):
+                    targetpath = targetpath.replace('usersys',botsglobal.ini.get('directories','usersysabs'),1)
+                elif targetpath.startswith('botssys'):
+                    targetpath = targetpath.replace('botssys',botsglobal.ini.get('directories','botssys'),1)
+                elif targetpath.startswith('config'):
+                    targetpath = targetpath.replace('config',botsglobal.ini.get('directories','config'),1)
                 targetpath = botslib.join(orgtargetpath, targetpath)
                 #targetpath is OK now.
                 botsglobal.logger.info(_(u'    Start writing file: "%(targetpath)s".'),{'targetpath':targetpath})
@@ -304,7 +315,7 @@ def plugoutcore(cleaned_data,filename):
     pluginzipfilehandler.close()
 
 def plugout_database(cleaned_data):
-    #collect all database objects
+    ''' get all database objects, serialize these (to dict), do some cleanups '''
     db_objects = []
     if cleaned_data['databaseconfiguration']:
         db_objects += \
@@ -337,6 +348,12 @@ def plugout_database(cleaned_data):
         pk = table._meta.pk.name
         if pk != 'id':
             plug['fields'][pk] = plug['pk']
+        #convert for correct environement: replace botssys in channels[path, mpath]
+        if plug['fields']['plugintype'] == 'channel':
+            if 'path' in plug['fields'] and plug['fields']['path'].startswith(botsglobal.ini.get('directories','botssys_org')):
+                plug['fields']['path'] = plug['fields']['path'].replace(botsglobal.ini.get('directories','botssys_org'),'botssys',1)
+            if 'testpath' in plug['fields'] and plug['fields']['testpath'].startswith(botsglobal.ini.get('directories','botssys_org')):
+                plug['fields']['testpath'] = plug['fields']['testpath'].replace(botsglobal.ini.get('directories','botssys_org'),'botssys',1)
         tmpbotsindex.append(plugout_database_entry_as_string(plug['fields']))
         #check confirmrule: id is non-artifical key?
     tmpbotsindex.append(u']\n')
@@ -355,7 +372,8 @@ def plugout_database_entry_as_string(plugdict):
     return terug
 
 def plugout_files(cleaned_data):
-    ''' gather list of files for the plugin that is generated '''
+    ''' gather list of files for the plugin that is generated.
+    '''
     files2return = []
     usersys = botsglobal.ini.get('directories','usersysabs')
     botssys = botsglobal.ini.get('directories','botssys')
@@ -392,6 +410,7 @@ def plugout_files_bydir(dirname,defaultdirname):
         if tail in ['.svn']:    #skip .svn directries
             del dirs[:]     #os.walk will not look in subdirectories
             continue
+        #convert for correct environement: replace dirname with the default directory name
         rootinplugin = root.replace(dirname,defaultdirname,1)
         for bestand in files:
             ext = os.path.splitext(bestand)[1]
