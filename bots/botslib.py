@@ -370,7 +370,7 @@ def sendbotserrorreport(subject,reporttext):
         try:
             mail_managers(subject, reporttext)
         except Exception,msg:
-            botsglobal.logger.debug(u'Error in sending error report: %(msg)s',{'msg':msg})
+            botsglobal.logger.warning(u'Error in sending error report: %(msg)s',{'msg':msg})
 
 def sendbotsemail(partner,subject,reporttext):
     ''' Send a simple email message to any bots partner.
