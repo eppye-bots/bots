@@ -304,12 +304,8 @@ def unique_runcounter(domain):
         unh_reference = unique_runcounter(<messagetype>_<topartner>)
     '''
     domain += 'bots_1_8_4_9_6'  #avoid using/mixing other values in botsglobal
-    try:
-        terug = 1 + getattr(botsglobal,domain)
-    except AttributeError:
-        terug = 1
-    finally:
-        setattr(botsglobal,domain,terug)
+    terug = 1 + getattr(botsglobal,domain,0)
+    setattr(botsglobal,domain,terug)
     return terug
 
 def unique(domein):

@@ -124,19 +124,18 @@ def envelope(ta_info,ta_list):
                                 syntax: grammar.editype.envelope
                                         grammar.editype.messagetype
     '''
-    userscript = scriptname = None
+    classtocall = userscript = scriptname = None
     if not ta_info['envelope']:     #used when enveloping is just appending files.
         classtocall = noenvelope
     else:
         #check for user scripted enveloping
         try:
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'] + '.' + ta_info['envelope'])
+            #check if there is a user scripted class with name ta_info['envelope'].
+            classtocall = getattr(userscript,ta_info['envelope'],None)
         except ImportError:     #no user enveloping.
             pass
-        #check if there is a user scripted class with name ta_info['envelope'].
-        if userscript and hasattr(userscript,ta_info['envelope']):
-            classtocall = getattr(userscript,ta_info['envelope'])
-        else:
+        if classtocall is None:
             try:
                 classtocall = globals()[ta_info['editype']]
             except KeyError:

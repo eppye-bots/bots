@@ -79,37 +79,26 @@ class Grammar(object):
     def __init__(self,typeofgrammarfile,editype,grammarname):
         self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype + '.' + grammarname)
         #get syntax from grammar file
-        try:
-            syntaxfromgrammar = getattr(self.module, 'syntax')
-        except AttributeError:
-            self.syntax = {}        #init with empty syntax
-        else:
-            if not isinstance(syntaxfromgrammar,dict):
-                raise botslib.GrammarError(_(u'Grammar "%(grammar)s": syntax is not a dict{}.'),
-                                            {'grammar':self.grammarname})
-            self.syntax = syntaxfromgrammar.copy()  #copy to get independent syntax-object
+        syntaxfromgrammar = getattr(self.module, 'syntax',{})
+        self.syntax = syntaxfromgrammar.copy()  #copy to get independent syntax-object
+        if not isinstance(syntaxfromgrammar,dict):
+            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": syntax is not a dict{}.'),
+                                        {'grammar':self.grammarname})
 
         if typeofgrammarfile == 'partners':
             return
         #init rest of grammar
-        try:
-            self.nextmessage = getattr(self.module, 'nextmessage')
-        except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
-            self.nextmessage = None
-        try:
-            self.nextmessage2 = getattr(self.module, 'nextmessage2')
-            if self.nextmessage is None:
+        self.nextmessage = getattr(self.module, 'nextmessage',None)
+        self.nextmessage2 = getattr(self.module, 'nextmessage2',None)
+        self.nextmessageblock = getattr(self.module, 'nextmessageblock',None)
+        if self.nextmessage is None:
+            if self.nextmessage2 is not None:
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessage2: nextmessage has to be used.'),
                                             {'grammar':self.grammarname})
-        except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
-            self.nextmessage2 = None
-        try:
-            self.nextmessageblock = getattr(self.module, 'nextmessageblock')
-            if self.nextmessage:
+        else:
+            if self.nextmessageblock is not None:
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s": nextmessageblock and nextmessage not both allowed.'),
                                             {'grammar':self.grammarname})
-        except AttributeError:  #if grammarpart does not exist set to None; test required grammarpart elsewhere
-            self.nextmessageblock = None
         if self._checkstructurerequired:
             try:
                 self._dorecorddefs()
@@ -588,7 +577,7 @@ class fixed(Grammar):
                         self.is_first_record = False
                         startrecordID = position_in_record
                         endrecordID = position_in_record + field[LENGTH]
-                        syntaxfromgrammar = getattr(self.module, 'syntax')      #original grammar systax has to be changed, so get it.
+                        syntaxfromgrammar = getattr(self.module, 'syntax',{})      #original grammar systax has to be changed, so get it.
                         self.syntax['startrecordID'] = startrecordID            #also change in the copy made.
                         self.syntax['endrecordID'] = endrecordID
                         syntaxfromgrammar['startrecordID'] = startrecordID
