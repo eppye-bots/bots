@@ -80,10 +80,10 @@ class Grammar(object):
         self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype + '.' + grammarname)
         #get syntax from grammar file
         syntaxfromgrammar = getattr(self.module, 'syntax',{})
-        self.syntax = syntaxfromgrammar.copy()  #copy to get independent syntax-object
         if not isinstance(syntaxfromgrammar,dict):
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": syntax is not a dict{}.'),
                                         {'grammar':self.grammarname})
+        self.syntax = syntaxfromgrammar.copy()  #copy to get independent syntax-object
 
         if typeofgrammarfile == 'partners':
             return
@@ -115,6 +115,7 @@ class Grammar(object):
             except:
                 self.structure[0]['error'] = True                #mark the structure as having errors
                 raise
+        self.extrachecks()
 
     def _dorecorddefs(self):
         ''' 1. check the recorddefinitions for validity.
@@ -175,12 +176,6 @@ class Grammar(object):
             if not has_botsid:   #there is no field 'BOTSID' in record
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record "%(record)s": no field BOTSID.'),
                                                 {'grammar':self.grammarname,'record':recordid})
-        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
-            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
-                                            {'grammar':self.grammarname})
-        if self.nextmessageblock is not None and len(self.recorddefs) != 1:
-            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessageblock: there can be only one record in recorddefs.'),
-                                            {'grammar':self.grammarname})
 
     def _checkfield(self,field,recordid):
         #'normalise' field: make list equal length
@@ -430,7 +425,9 @@ class Grammar(object):
                 levelcollision = []   #empty uppercollision
         return not bool(levelcollision)
 
-
+    def extrachecks(self):
+        ''' default function, some subclasses have the actual checks.'''
+        pass
 
     def display(self,structure,level=0):
         ''' Draw grammar, with indentation for levels.
@@ -476,6 +473,13 @@ class test(Grammar):
         'noBOTSID':False,
         }
 class csv(Grammar):
+    def extracheck(self):
+        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
+            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
+                                            {'grammar':self.grammarname})
+        if self.nextmessageblock is not None and len(self.recorddefs) != 1:
+            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessageblock: there can be only one record in recorddefs.'),
+                                            {'grammar':self.grammarname})
     defaultsyntax = {
         'acceptspaceinnumfield':True,   #only really used in fixed formats
         'add_crlfafterrecord_sep':'',
@@ -509,6 +513,13 @@ class csv(Grammar):
 class excel(csv):
     pass
 class fixed(Grammar):
+    def extracheck(self):
+        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
+            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
+                                            {'grammar':self.grammarname})
+        if self.nextmessageblock is not None and len(self.recorddefs) != 1:
+            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessageblock: there can be only one record in recorddefs.'),
+                                            {'grammar':self.grammarname})
     formatconvert = {
         'A':'A',        #alfanumerical
         'AN':'A',       #alfanumerical
@@ -632,6 +643,10 @@ class idoc(fixed):
         'DOCNUM':'0',
         }
 class xml(Grammar):
+    def extracheck(self):
+        if not (self.syntax.get('envelope') or self.__class__.defaultsyntax.get('envelope')) and (self.syntax.get('merge') or self.__class__.defaultsyntax.get('merge')):
+            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": in this xml grammar merge is "True" but no (user) enveloping is specified. This will lead to invalid xml files'),
+                                            {'grammar':self.grammarname})
     defaultsyntax = {
         'add_crlfafterrecord_sep':'',
         'acceptspaceinnumfield':True,   #only really used in fixed formats
