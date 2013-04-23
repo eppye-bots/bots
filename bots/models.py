@@ -224,7 +224,7 @@ class partner(models.Model):
     active = models.BooleanField(default=False)
     isgroup = models.BooleanField(default=False,help_text=_(u'Indicate if normal partner or a partner group. Partners can be assigned to partner groups.'))
     name = StripCharField(max_length=256) #only used for user information
-    mail = StripCharField(max_length=256,blank=True)
+    mail = multiple_email_validator(max_length=256,blank=True)
     cc = MultipleEmailField(max_length=256,blank=True,help_text=_(u'Multiple CC-addresses supported (comma-separated).'))
     mail2 = models.ManyToManyField(channel, through='chanpar',blank=True)
     group = models.ManyToManyField("self",db_table='partnergroup',blank=True,symmetrical=False,limit_choices_to = {'isgroup': True})
@@ -272,7 +272,7 @@ class chanpar(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idpartner = models.ForeignKey(partner,on_delete=models.CASCADE,verbose_name=_(u'partner'))
     idchannel = models.ForeignKey(channel,on_delete=models.CASCADE,verbose_name=_(u'channel'))
-    mail = StripCharField(max_length=256)
+    mail = multiple_email_validator(max_length=256)
     cc = MultipleEmailField(max_length=256,blank=True)           #added 20091111
     askmdn = models.BooleanField(default=False)     #not used anymore 20091019
     sendmdn = models.BooleanField(default=False)    #not used anymore 20091019
