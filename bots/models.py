@@ -187,7 +187,7 @@ class channel(models.Model):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_(u'in/out'))
     type = StripCharField(max_length=35,choices=CHANNELTYPE)        #protocol type: ftp, smtp, file, etc
-    charset = StripCharField(max_length=35,blank=True,null=True)     #20120828: not used anymore
+    charset = StripCharField(max_length=35,default=u'us-ascii')     #20120828: not used anymore; in database is NOT NULL
     host = StripCharField(max_length=256,blank=True)
     port = models.PositiveIntegerField(default=0,blank=True,null=True)
     username = StripCharField(max_length=35,blank=True)
