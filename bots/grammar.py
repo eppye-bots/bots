@@ -11,7 +11,7 @@ def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
     try:
         classtocall = globals()[editype]
     except KeyError:
-        raise botslib.GrammarError(_(u'Read grammar for editype "%(editype)s" messagetype "%(messagetype)s", but editype is unknown.'), 
+        raise botslib.GrammarError(_(u'Read grammar for editype "%(editype)s" messagetype "%(messagetype)s", but editype is unknown.'),
                                         {'editype':editype,'messagetype':grammarname})
     if typeofgrammarfile == 'grammars':
         # read grammar for messagetype first, than syntax for envelope.
@@ -62,7 +62,7 @@ class Grammar(object):
             -   MAX      max #occurences record of group
             -   LEVEL    child-lex_records
             added after reading the grammar (so: not in grammar-file):
-            -   MPATH    mpath of record 
+            -   MPATH    mpath of record
             -   FIELDS   (added from recordsdefs via lookup)
         in a grammar 'recorddefs' describes the (sub) fields for the lex_records:
         -   'recorddefs' is a dict where key is the recordID, value is list of (sub) fields
@@ -88,7 +88,7 @@ class Grammar(object):
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s": syntax is not a dict{}.'),
                                             {'grammar':self.grammarname})
             self.syntax = syntaxfromgrammar.copy()  #copy to get independent syntax-object
-        
+
         if typeofgrammarfile == 'partners':
             return
         #init rest of grammar
@@ -192,7 +192,6 @@ class Grammar(object):
         if self.nextmessageblock is not None and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessageblock: there can be only one record in recorddefs.'),
                                             {'grammar':self.grammarname})
-
 
     def _checkfield(self,field,recordid):
         #'normalise' field: make list equal length
@@ -381,7 +380,7 @@ class Grammar(object):
             if i[MIN]:
                 headerissave = True
                 if i[MIN] == i[MAX]:    #so: fixed number of occurences; can not lead to collision as  is always clear where in structure record is
-                    collision = []      #NOTE: this is mainly used for MIN=1, MAX=1 
+                    collision = []      #NOTE: this is mainly used for MIN=1, MAX=1
                 else:
                     collision = [i[ID]] #previous lex_records do not cause collision.
             else:
@@ -549,7 +548,7 @@ class fixed(Grammar):
         'checkunknownentities': True,
         'contenttype':'text/plain',
         'decimaal':'.',
-        'endrecordID':3,
+        #~ 'endrecordID':3,
         'envelope':'',
         'escape':'',
         'field_sep':'',
@@ -564,11 +563,49 @@ class fixed(Grammar):
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        'startrecordID':0,
+        #~ 'startrecordID':0,
         'stripfield_sep':False,
         'triad':'',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with crr/lf. Often seen in mainframe, as400
         }
+    is_first_record = True
+    def _linkrecorddefs2structure(self,structure):
+        ''' for class fixed: more checking etc is done.
+            recursive
+            for each record in structure: add the pointer to the right recorddefinition.
+        '''
+        for i in structure:
+            try:
+                i[FIELDS] = self.recorddefs[i[ID]]
+            except KeyError:
+                raise botslib.GrammarError(_(u'Grammar "%(grammar)s": in recorddef no record "%(record)s".'),
+                                            {'grammar':self.grammarname,'record':i[ID]})
+            #determine start/end of BOTSID; check if pos and length BOTSID is the same for all records.
+            position_in_record = 0
+            for field in i[FIELDS]:
+                if field[ID] == 'BOTSID':
+                    if self.is_first_record:     #set startrecordID, endrecordID
+                        self.is_first_record = False
+                        startrecordID = position_in_record
+                        endrecordID = position_in_record + field[LENGTH]
+                        syntaxfromgrammar = getattr(self.module, 'syntax')      #original grammar systax has to be changed, so get it.
+                        self.syntax['startrecordID'] = startrecordID            #also change in the copy made.
+                        self.syntax['endrecordID'] = endrecordID
+                        syntaxfromgrammar['startrecordID'] = startrecordID
+                        syntaxfromgrammar['endrecordID'] = endrecordID
+                    else:        #check startrecordID, endrecordID
+                        if self.syntax['startrecordID'] != position_in_record or self.syntax['endrecordID'] != position_in_record + field[LENGTH]:
+                            raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record %(key)s: position and length of BOTSID should be equal in all records.'),
+                                                    {'grammar':self.grammarname,'key':i[ID]})
+                    break
+                position_in_record += field[LENGTH]
+            #calculate recordlength
+            i[F_LENGTH] = sum([field[LENGTH] for field in i[FIELDS]])
+            #go recursive
+            if LEVEL in i:
+                self._linkrecorddefs2structure(i[LEVEL])
+
+
 class idoc(fixed):
     defaultsyntax = {
         'acceptspaceinnumfield':True,   #only really used in fixed formats
@@ -583,7 +620,7 @@ class idoc(fixed):
         'checkunknownentities': True,
         'contenttype':'text/plain',
         'decimaal':'.',
-        'endrecordID':10,
+        #~ 'endrecordID':10,
         'envelope':'',
         'escape':'',
         'field_sep':'',
@@ -598,7 +635,7 @@ class idoc(fixed):
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        'startrecordID':0,
+        #~ 'startrecordID':0,
         'stripfield_sep':False,
         'triad':'',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length lex_records ending with crr/lf. Often seen in mainframe, as400

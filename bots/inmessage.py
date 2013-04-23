@@ -389,21 +389,21 @@ class fixed(Inmessage):
                 self.lex_records += [ [{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line}] ]    #append record to recordlist
 
     def _parsefields(self,lex_record,record_definition):
-        ''' Parse fields from one fixed message-record (from lex_record[ID][FIXEDLINE] using positions.
-            fields are placed in recorddict, where key=field-info from grammar and value is from fixedrecord.'''
-        list_of_fields_in_record_definition = record_definition[FIELDS]
+        ''' Parse fields from one fixed message-record and check length of the fixed record.
+        '''
         record2build = {} #start with empty dict
-        fixedrecord = lex_record[ID][FIXEDLINE]  #shortcut to fixed record we are parsing
+        fixedrecord = lex_record[ID][FIXEDLINE]  #shortcut to fixed incoming record
         lenfixed = len(fixedrecord)
-        recordlength = sum([field_definition[LENGTH] for field_definition in list_of_fields_in_record_definition])
-        if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-            raise botslib.InMessageError(_(u'[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                            line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
-        if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-            raise botslib.InMessageError(_(u'[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                            line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
+        recordlength = record_definition[F_LENGTH]
+        if recordlength != lenfixed:
+            if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
+                raise botslib.InMessageError(_(u'[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
+            if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
+                raise botslib.InMessageError(_(u'[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
         pos = 0
-        for field_definition in list_of_fields_in_record_definition:
+        for field_definition in record_definition[FIELDS]:
             value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
             if value:
                 record2build[field_definition[ID]] = value

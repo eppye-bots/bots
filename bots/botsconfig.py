@@ -22,7 +22,7 @@ MERGE    =   400        #is enveloped
 FILEOUT  = 500    #edifile ready to be 'send' (just the edi-file)
 EXTERNOUT = 520      #transaction is complete; file is exported; out of reach
 
-#grammar.structure: keys in grammarrecords
+#grammar.structure: keys in grammarrecords (dicts)
 ID = 0
 MIN = 1
 MAX = 2
@@ -33,6 +33,7 @@ FIELDS = 6
 QUERIES = 7
 SUBTRANSLATION = 8
 BOTSIDNR = 9
+F_LENGTH = 10         #for fixed records
 
 #grammar.recorddefs: dict keys for fields of record er: record[FIELDS][ID] == 'C124.0034'
 #already definedID = 0
