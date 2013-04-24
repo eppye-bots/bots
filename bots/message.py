@@ -33,7 +33,7 @@ class Message(object):
         #write values from grammar to self.ta_info - unless these values are already set (eg by mappingscript)
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    
         #read partner-syntax. Use this to always overrule values in self.ta_info
-        if self.ta_info['topartner']:   
+        if 'topartner' in self.ta_info and self.ta_info['topartner']:   
             try:
                 partnersyntax = grammar.grammarread(self.ta_info['editype'],self.ta_info['topartner'],typeofgrammarfile='partners')
                 self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!

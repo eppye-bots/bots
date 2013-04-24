@@ -1190,7 +1190,7 @@ class xml(Inmessage):
             etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
         self._handle_empty(etreeroot)
-        self.stack = [self.defmessage.structure[0],]     #stack to track where we are in stucture of grammar
+        self.stackinit()
         self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
 
@@ -1244,6 +1244,9 @@ class xml(Inmessage):
         if len(xmlchildnode):
             return 2
         return 0
+        
+    def stackinit(self):
+        self.stack = [self.defmessage.structure[0],]     #stack to track where we are in stucture of grammar
 
 class xmlnocheck(xml):
     ''' class for ediobjects in XML. Uses ElementTree'''
@@ -1252,9 +1255,12 @@ class xmlnocheck(xml):
 
     def _entitytype(self,xmlchildnode):
         if len(xmlchildnode):
-            self.stack.append(xmlchildnode.tag)
+            self.stack.append(0)
             return 1
         return 0
+
+    def stackinit(self):
+        self.stack = [0,]     #stack to track where we are in stucture of grammar
 
 class json(Inmessage):
     def initfromfile(self):
