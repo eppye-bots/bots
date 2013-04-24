@@ -190,8 +190,12 @@ def read_index2database(orgpluglist):
 
     for plug in pluglist:
         botsglobal.logger.info(u'    Start write to database for: "%(plug)s".',{'plug':plug})
+        #correction for reading partnergroups
+        if plug['plugintype'] == 'partner' and plug['isgroup']:
+            plug['plugintype'] = 'partnergroep'
         #remember the plugintype
         plugintype = plug['plugintype']
+            
         table = django.db.models.get_model('bots',plugintype)
 
         #delete fields not in model for compatibility; note that 'plugintype' is also removed.
