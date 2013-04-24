@@ -47,9 +47,9 @@ class TestInmessage_xml(unittest.TestCase):
         self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110402.xml')
             
         #root tag different from grammar
-        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
-        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110406.xml')
-        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True, filename='botssys/infile/unitinmessagexml/xml/110406.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxmlflatten',filename='botssys/infile/unitinmessagexml/xml/110406.xml')
         #root tag is double
         self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xmlnocheck',messagetype='xmlnocheck',filename='botssys/infile/unitinmessagexml/xml/110407.xml')
         #invalid: no closing tag
@@ -72,7 +72,7 @@ class TestInmessage_xml(unittest.TestCase):
        
         #unknown xml element
         self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110413.xml')
-        self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110414.xml')
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110414.xml')
             
         #2x the same xml attribute
         self.assertRaises(SyntaxError,inmessage.parse_edi_file, editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110415.xml')
@@ -86,7 +86,7 @@ class TestInmessage_xml(unittest.TestCase):
         in2 = inmessage.parse_edi_file(editype='xml',messagetype='testxml',filename='botssys/infile/unitinmessagexml/xml/110418.xml') 
         self.failUnless(utilsunit.comparenode(in2.root,in1.root),'compare')
 
-        #??what is tested here??
+        #??what is tested here
         inn7= inmessage.parse_edi_file(editype='xml',messagetype='testxml',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #with <?xml version="1.0" encoding="utf-8"?>
         inn8= inmessage.parse_edi_file(editype='xml',messagetype='testxmlflatten',checkunknownentities=True,filename='botssys/infile/unitinmessagexml/xml/110405.xml')  #with <?xml version="1.0" encoding="utf-8"?>
         self.failUnless(utilsunit.comparenode(inn7.root,inn8.root),'compare')
