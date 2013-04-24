@@ -158,17 +158,19 @@ def start():
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
     
+    #the xml file is parsed as an xmlnocheck message
     editype = 'xmlnocheck'
     messagetype = 'xmlnocheckxxxtemporaryforxml2grammar'
     mpath = []
-    #the xml file is parsed as an xmlnocheck message....so a (temp) xmlnocheck grammar is needed....without content... this file is not removed....
+    #a (temp) xmlnocheck grammar is needed (but needs not actual content. This file is not removed.
     tmpgrammarfile = botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars',editype,messagetype+'.py')
     filehandler = open(tmpgrammarfile,'w')
     filehandler.close()
-
+    
+    #make inmessage object
     inn = inmessage.parse_edi_file(editype=editype,messagetype=messagetype,filename=edifile)
-    #~ inn.root.display()
-    out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    #make outmessage object
+    #make outmessage object
+    out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    
 
     #handle root
     rootmpath = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
@@ -184,7 +186,7 @@ def start():
 
     #~ out.root.display()
 
-    #out-tree is finished; represents ' normalised' tree suited for writing as a grammar
+    #out-tree is finished; represents 'normalised' tree suited for writing as a grammar
     structure = []
     recorddefs = {}
     tree2grammar(out.root,structure,recorddefs)
