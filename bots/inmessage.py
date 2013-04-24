@@ -1142,12 +1142,12 @@ class xml(Inmessage):
         filename = botslib.abspathdata(self.ta_info['filename'])
 
         if self.ta_info['messagetype'] == 'mailbag':
-                #~ the messagetype is not know.
-                #~ bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
-                #~ mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
-                #~ 'xpath' is a xpath to use on xml-file (using elementtree xpath functionality)
-                #~ if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
-                #~ if found, and no 'content' in the dict; set messagetype.
+            #~ the messagetype is not know.
+            #~ bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
+            #~ mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
+            #~ 'xpath' is a xpath to use on xml-file (using elementtree xpath functionality)
+            #~ if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
+            #~ if found, and no 'content' in the dict; set messagetype.
             try:
                 module,grammarname = botslib.botsimport('grammars','xml.mailbag')
                 mailbagsearch = getattr(module, 'mailbagsearch')
@@ -1177,7 +1177,6 @@ class xml(Inmessage):
                         continue
                     self.ta_info['messagetype'] = item['messagetype']
                     #~ print '    found right messagedefinition'
-                    #~ continue
                     break
             else:
                 raise botslib.InMessageError(_(u'Could not find right xml messagetype for mailbag.'))
@@ -1190,73 +1189,72 @@ class xml(Inmessage):
                 parser.entity[key] = value
             etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
-        self.stack = []
+        self._handle_empty(etreeroot)
+        self.stack = [self.defmessage.structure[0],]     #stack to track where we are in stucture of grammar
         self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
 
+    def _handle_empty(self,xmlnode):
+        if xmlnode.text:
+            xmlnode.text = xmlnode.text.strip()
+        for key,value in xmlnode.items():
+            xmlnode.attrib[key] = value.strip()
+        for xmlchildnode in xmlnode:   #for every node in mpathtree
+            self._handle_empty(xmlchildnode)
+            
     def _etree2botstree(self,xmlnode):
-        self.stack.append(xmlnode.tag)
+        ''' recursive. '''
         newnode = node.Node(record=self._etreenode2botstreenode(xmlnode))
         for xmlchildnode in xmlnode:   #for every node in mpathtree
-            if self._isfield(xmlchildnode):    #if no child entities: treat as 'field': this misses xml where attributes are used as fields....testing for repeating is no good...
-                ## for generating grammars: empty strings should generate a field 
-                if xmlchildnode.text and not xmlchildnode.text.isspace(): #skip empty xml entity
+            entitytype = self._entitytype(xmlchildnode)
+            if not entitytype:  #is a field, or unknown that looks like a field
+                ## remark for generating grammars: empty strings should generate a field here
+                if xmlchildnode.text:
                     newnode.record[xmlchildnode.tag] = xmlchildnode.text      #add as a field
-                    hastxt = True
-                else:
-                    hastxt = False
                 for key,value in xmlchildnode.items():   #convert the xml-attributes of this 'xml-filed' to fields in dict with attributemarker.
-                    if not hastxt:
-                        newnode.record[xmlchildnode.tag] = ''      #add empty content
-                        hastxt = True
-                    newnode.record[xmlchildnode.tag + self.ta_info['attributemarker'] + key] = value      #add as a field
-            else:   #xmlchildnode is a record
+                    if value:
+                        newnode.record[xmlchildnode.tag + self.ta_info['attributemarker'] + key] = value      #add as a field
+            elif entitytype==1:  #is a record according to grammar
                 newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
-        self.stack.pop()
-        #~ print self.stack
+                self.stack.pop()    #handled the xmlnode, so remove it from the stack
+            else:   #is a record, but not in grammar
+                if self.ta_info['checkunknownentities']:
+                    self.add2errorlist(_(u'[S02]%(linpos)s: Unknown xml-tag "%(recordunkown)s" (within "%(record)s") in message.\n')%
+                                        {'linpos':newnode.linpos(),'recordunkown':xmlchildnode.tag,'record':newnode.record['BOTSID']})
+                continue
         return newnode
 
     def _etreenode2botstreenode(self,xmlnode):
-        ''' build a dict from xml-node'''
-        build = dict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.items())   #convert attributes to fields.
-        build['BOTSID'] = xmlnode.tag     #'record' tag
-        if xmlnode.text and not xmlnode.text.isspace():
+        ''' build a basic dict from xml-node. Add BOTSID, xml-attributes (of 'record'), xmlnode.text as BOTSCONTENT.'''
+        build = dict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.items() if value)   #convert xml attributes to fields.
+        build['BOTSID'] = xmlnode.tag
+        if xmlnode.text:
             build['BOTSCONTENT'] = xmlnode.text
         return build
 
-    def _isfield(self,xmlchildnode):
+    def _entitytype(self,xmlchildnode):
         ''' check if xmlchildnode is field (or record)'''
-        #~ print 'examine record in stack',xmlchildnode.tag,self.stack
-        str_recordlist = self.defmessage.structure
-        for record in self.stack:   #find right level in structure
-            for str_record in str_recordlist:
-                #~ print '    find right level comparing',record,str_record[0]
-                if record == str_record[0]:
-                    if 4 not in str_record: #structure record contains no level: must be an attribute
-                        return True
-                    str_recordlist = str_record[4]
-                    break
-            else:
-                raise botslib.InMessageError(_(u'[X51]: Unknown XML-tag in "%(record)s".'),{'record':record})
-        for str_record in str_recordlist:   #see if xmlchildnode is in structure
-            #~ print '    is xmlhildnode in this level comparing',xmlchildnode.tag,str_record[0]
-            if xmlchildnode.tag == str_record[0]:
-                #~ print 'found'
-                return False
-        #xml tag not found in structure: so must be field; validity is check later on with grammar
-        if len(xmlchildnode)==0:
-            return True
-        return False
+        structure_level = self.stack[-1]
+        if LEVEL in structure_level:
+            for structure_record in structure_level[LEVEL]:   #find xmlchildnode in structure
+                if xmlchildnode.tag == structure_record[ID]:
+                    self.stack.append(structure_record)
+                    return 1
+        #tag not in structure. Check for children; Return 2 if has children
+        if len(xmlchildnode):
+            return 2
+        return 0
 
 class xmlnocheck(xml):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def checkmessage(self,node_instance,defmessage,subtranslation=False):
         pass
 
-    def _isfield(self,xmlchildnode):
-        if len(xmlchildnode) == 0:
-            return True
-        return False
+    def _entitytype(self,xmlchildnode):
+        if len(xmlchildnode):
+            self.stack.append(xmlchildnode.tag)
+            return 1
+        return 0
 
 class json(Inmessage):
     def initfromfile(self):

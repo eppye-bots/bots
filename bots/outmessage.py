@@ -590,40 +590,39 @@ class xml(Outmessage):
         return newnode
 
     def _node2xmlfields(self,noderecord):
-        ''' fields in a node are written to xml fields; output is sorted according to grammar
+        ''' write record as xml-record-entity plus xml-field-entities within the xml-record-entity.
+            output is sorted according to grammar, attributes alfabetically.
         '''
-        #first generate the xml-'record'
-        #~ print 'record',noderecord['BOTSID']
-        attributedict = {}
+        #***generate the xml-record-entity***************************
         recordtag = noderecord['BOTSID']
-        attributemarker = recordtag + self.ta_info['attributemarker']       #attributemarker is a marker in the fieldname used to find out if field is an attribute of either xml-'record' or xml-element
-        #if fieldnames start with attribute-marker these are xml-attribute for the xml-'record'; store these in attributedict
+        del noderecord['BOTSID']
+        del noderecord['BOTSIDnr']
+        #pick out the attributes for the xml-record-entity (if fieldnames start with attribute-marker these are xml-attribute for the xml-'record'; store these in attributedict)
+        keyattributemarker = recordtag + self.ta_info['attributemarker']       #attributemarker is a marker in the fieldname used to find out if field is an attribute of either record or field
+        attributedict = {}
         for key,value in noderecord.items():
-            if key.startswith(attributemarker):
-                attributedict[key[len(attributemarker):]] = value
-        xmlrecord = ET.Element(recordtag,attributedict) #make the xml ET node
-        if 'BOTSCONTENT' in noderecord:     #BOTSCONTENT is used to store the value/text of the xml-record itself.
+            if key.startswith(keyattributemarker):
+                attributedict[key[len(keyattributemarker):]] = value
+                del noderecord[key]
+        xmlrecord = ET.Element(recordtag,attributedict) #make the xml-record-entity
+        #add the content/text xml-record-entity (in BOTSCONTENT)
+        if 'BOTSCONTENT' in noderecord:                 
             xmlrecord.text = noderecord['BOTSCONTENT']
             del noderecord['BOTSCONTENT']
-        for key in attributedict.keys():  #remove used fields
-            del noderecord[attributemarker+key]
-        del noderecord['BOTSID']    #remove 'record' tag
-        #generate xml-'fields' in xml-'record'; sort these by looping over lex_records definition
-        for field_def in self.defmessage.recorddefs[recordtag]:  #loop over fields in 'record'
-            if field_def[ID] not in noderecord: #if field not in outmessage: skip
+        #***generate the xml-field-entities within the xml-record-entity***************************
+        for field_def in self.defmessage.recorddefs[recordtag]:  #loop over remaining fields in 'record': write these as subelements
+            if self.ta_info['attributemarker'] in field_def[ID][1:-1]:  #skip fields that are marked as xml attributes
                 continue
-            #~ print '    field',field_def
+            text = noderecord.get(field_def[ID],None)
+            keyattributemarker = field_def[ID] + self.ta_info['attributemarker']
             attributedict = {}
-            attributemarker = field_def[ID] + self.ta_info['attributemarker']
-            #~ print '    field_att_mark',attributemarker
             for key,value in noderecord.items():
-                if key.startswith(attributemarker):
-                    #~ print '        field attribute',key,value
-                    attributedict[key[len(attributemarker):]] = value
-            ET.SubElement(xmlrecord, field_def[ID],attributedict).text=noderecord[field_def[ID]]    #add xml element to xml record
-            for key in attributedict.keys():  #remove used fields
-                del noderecord[attributemarker+key]
-            del noderecord[field_def[ID]]    #remove xml entity tag
+                if key.startswith(keyattributemarker):
+                    attributedict[key[len(keyattributemarker):]] = value
+                    del noderecord[key]
+            if text or attributedict:
+                ET.SubElement(xmlrecord, field_def[ID],attributedict).text=text    #add xml element to xml record
+            #~ del noderecord[field_def[ID]]    #remove xml entity tag
         return xmlrecord
 
     def _initwrite(self):
@@ -636,40 +635,50 @@ class xmlnocheck(xml):
         pass
 
     def _node2xmlfields(self,noderecord):
-        ''' fields in a node are written to xml fields;
+        ''' write record as xml-record-entity plus xml-field-entities within the xml-record-entity.
+            output is sorted alfabetically, attributes alfabetically. Empty xml-entities comes as last.
         '''
         if 'BOTSID' not in noderecord:
             raise botslib.OutMessageError(_(u'[X52]: No field "BOTSID" in xml-output in: "%(record)s"'),{'record':noderecord})
-        #first generate the xml-'record'
-        attributedict = {}
+        #***generate the xml-record-entity***************************
         recordtag = noderecord['BOTSID']
-        attributemarker = recordtag + self.ta_info['attributemarker']
+        del noderecord['BOTSID']    #remove 'record' tag
+        if 'BOTSIDnr' in noderecord:     #BOTSIDnr does never go to the output; only internally used
+            del noderecord['BOTSIDnr']
+        #first generate the xml-'record'
+        attributemarker = self.ta_info['attributemarker']
+        keyattributemarker = recordtag + attributemarker
+        attributedict = {}
         for key,value in noderecord.items():    #find the attributes for the xml-record, put these in attributedict
-            if key.startswith(attributemarker):
-                attributedict[key[len(attributemarker):]] = value
+            if key.startswith(keyattributemarker):
+                attributedict[key[len(keyattributemarker):]] = value
+                del noderecord[key]
         xmlrecord = ET.Element(recordtag,attributedict) #make the xml ET node
         if 'BOTSCONTENT' in noderecord:
             xmlrecord.text = noderecord['BOTSCONTENT']
             del noderecord['BOTSCONTENT']
-        if 'BOTSIDnr' in noderecord:     #BOTSIDnr does never go to the output; only internally used
-            del noderecord['BOTSIDnr']
-        for key in attributedict.keys():  #remove used fields
-            del noderecord[attributemarker+key]
-        del noderecord['BOTSID']    #remove 'record' tag
-        #generate xml-'fields' in xml-'record'; not sorted
-        noderecordcopy = noderecord.copy()
-        for key,value in noderecordcopy.items():
-            if key not in noderecord or self.ta_info['attributemarker'] in key: #if field not in outmessage: skip
+        #***generate the xml-field-entities within the xml-record-entity***************************
+        for key in sorted(noderecord.keys()):
+            if key not in noderecord or attributemarker in key[1:-1]: #if field not in outmessage: skip
                 continue
+            keyattributemarker = key + attributemarker
             attributedict = {}
-            attributemarker = key + self.ta_info['attributemarker']
             for key2,value2 in noderecord.items():
-                if key2.startswith(attributemarker):
-                    attributedict[key2[len(attributemarker):]] = value2
-            ET.SubElement(xmlrecord, key,attributedict).text=value    #add xml element to xml record
-            for key2 in attributedict.keys():  #remove used fields
-                del noderecord[attributemarker+key2]
+                if key2.startswith(keyattributemarker):
+                    attributedict[key2[len(keyattributemarker):]] = value2
+                    del noderecord[key2]
+            ET.SubElement(xmlrecord, key,attributedict).text=noderecord[key]    #add xml element to xml record
             del noderecord[key]    #remove xml entity tag
+        #***problem: empty xml-fields-entities with attribute are not written*************************
+        if noderecord:
+            fielddict = {}
+            for key,value in noderecord.items():
+                field,nep,attribute = key.partition(attributemarker)
+                if not field in fielddict:
+                    fielddict[field] = {}
+                fielddict[field][attribute] = value
+            for key,attributedict in fielddict.items():
+                ET.SubElement(xmlrecord, key,attributedict).text=None    #add xml element to xml record
         return xmlrecord
 
 
