@@ -260,11 +260,10 @@ if __name__=='__main__':
     for filename in glob.glob(os.path.join(botssys,outfilepath)):
         if not filecmp.cmp(os.path.join(botssys,cmpfile),filename):
             raise Exception('error in file compare')
-    
     #****************************************************************************************************************************************
     #mailbag **********************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','maxsizeinfile'],
-                                    {'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0,'filesize':6702823})
+                                    {'status':1,'lastreceived':1,'lasterror':1,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0,'filesize':6702825})
     #****************************************************************************************************************************************
     #****************************************************************************************************************************************
     logging.shutdown()
