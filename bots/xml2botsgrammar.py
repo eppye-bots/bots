@@ -167,11 +167,12 @@ def start():
     filehandler = open(tmpgrammarfile,'w')
     filehandler.close()
     
-    #make inmessage object
+    #make inmessage object: read the xml file
     inn = inmessage.parse_edi_file(editype=editype,messagetype=messagetype,filename=edifile)
-    #make outmessage object
+    #make outmessage object; nothing is 'filled'yet.
     out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    
-
+    
+    #***do the mapping***************************************************
     #handle root
     rootmpath = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
     out.put(*rootmpath)
@@ -186,7 +187,7 @@ def start():
 
     #~ out.root.display()
 
-    #out-tree is finished; represents 'normalised' tree suited for writing as a grammar
+    #***out-tree is finished; represents 'normalised' tree suited for writing as a grammar
     structure = []
     recorddefs = {}
     tree2grammar(out.root,structure,recorddefs)
