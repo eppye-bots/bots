@@ -57,14 +57,14 @@ class new(object):
                                             {'idroute':route,'active':True}):
                 routedict = dict(row)   #convert to real dictionary (as self.command is added to routedict)
                 routedict['command'] = self.command
-                botsglobal.logger.info(_(u'running route %(idroute)s %(seq)s'),routedict)
+                botsglobal.logger.info(_(u'Running route %(idroute)s %(seq)s'),routedict)
                 botslib.setrouteid(routedict['idroute'])
                 foundroute = True
                 self.router(routedict)
                 botslib.setrouteid('')
-                botsglobal.logger.debug(u'finished route %(idroute)s %(seq)s',routedict)
+                botsglobal.logger.debug(u'Finished route %(idroute)s %(seq)s',routedict)
             if not foundroute:
-                botsglobal.logger.warning(_(u'there is no (active) route "%(route)s".'),{'route':route})
+                botsglobal.logger.warning(_(u'There is no (active) route "%(route)s".'),{'route':route})
         try:
             return automaticmaintenance.evaluate(self.command,botslib.get_minta4query())
         except:

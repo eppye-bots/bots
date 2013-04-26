@@ -285,7 +285,7 @@ class Inmessage(message.Message):
     def _readcontent_edifile(self):
         ''' read content of edi file to memory.
         '''
-        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
+        botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         self.rawinput = botslib.readdata(filename=self.ta_info['filename'],charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _sniff(self):
@@ -374,7 +374,7 @@ class fixed(Inmessage):
     def _readcontent_edifile(self):
         ''' read content of edi file to memory.
         '''
-        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
+        botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         self.filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb',charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _lex(self):
@@ -645,7 +645,7 @@ class excel(csv):
         else:
             doublequote = True
         
-        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
+        botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         #xlrd reads excel file; python's csv modules write this to file-like StringIO (as utf-8); read StringIO as self.rawinput; decode this (utf-8->unicode)
         infilename = botslib.abspathdata(self.ta_info['filename'])
         try:
@@ -724,7 +724,7 @@ class edifact(var):
         ''' read content of edifact file in memory.
             is read as binary. In _sniff determine charset; then decode according to charset
         '''
-        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
+        botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         self.rawinput = botslib.readdata(filename=self.ta_info['filename'])     #read as binary
 
     def _sniff(self):
@@ -1002,7 +1002,7 @@ class x12(var):
             if count == 0:
                 raise botslib.InMessageError(_(u'[A61]: Edi file contains only whitespace.'))  #not with mailbag
             else:
-                raise botslib.InMessageError(_(u'[A62]: expect X12 file but envelope is not right.'))
+                raise botslib.InMessageError(_(u'[A62]: Expect X12 file but envelope is not right.'))
         if version < '004030':  #not used before this version
             self.ta_info['reserve'] = ''    
         self.ta_info['skip_char'] = self.ta_info['skip_char'].replace(self.ta_info['record_sep'],'') #if <CR> is segment terminator: cannot be in the skip_char-string!
@@ -1138,7 +1138,7 @@ class tradacoms(var):
 class xml(Inmessage):
     ''' class for ediobjects in XML. Uses ElementTree'''
     def initfromfile(self):
-        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
+        botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         filename = botslib.abspathdata(self.ta_info['filename'])
 
         if self.ta_info['messagetype'] == 'mailbag':
@@ -1152,10 +1152,10 @@ class xml(Inmessage):
                 module,grammarname = botslib.botsimport('grammars','xml.mailbag')
                 mailbagsearch = getattr(module, 'mailbagsearch')
             except AttributeError:
-                botsglobal.logger.error(u'missing mailbagsearch in mailbag definitions for xml.')
+                botsglobal.logger.error(u'Missing mailbagsearch in mailbag definitions for xml.')
                 raise
             except ImportError:
-                botsglobal.logger.error(u'missing mailbag definitions for xml, should be there.')
+                botsglobal.logger.error(u'Missing mailbag definitions for xml, should be there.')
                 raise
             parser = ET.XMLParser()
             try:
@@ -1354,7 +1354,7 @@ class db(Inmessage):
         the database-object is unpickled, and passed to the mappingscript.
     '''
     def initfromfile(self):
-        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
+        botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
         self.root = pickle.load(filehandler)
         filehandler.close()
@@ -1367,7 +1367,7 @@ class raw(Inmessage):
     ''' the file object is just read and passed to the mappingscript.
     '''
     def initfromfile(self):
-        botsglobal.logger.debug(u'read edi file "%(filename)s".',self.ta_info)
+        botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb')
         self.root = filehandler.read()
         filehandler.close()

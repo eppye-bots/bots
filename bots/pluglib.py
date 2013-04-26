@@ -82,7 +82,7 @@ def read_plugin(pathzipfile):
             orgtargetpath = orgtargetpath[:-1]
         for zipfileobject in myzip.infolist():
             if zipfileobject.filename not in ['botsindex.py','README','botssys/sqlitedb/botsdb','config/bots.ini'] and os.path.splitext(zipfileobject.filename)[1] not in ['.pyo','.pyc']:
-                #~ botsglobal.logger.info(u'filename in zip "%s".',zipfileobject.filename)
+                #~ botsglobal.logger.info(u'Filename in zip "%s".',zipfileobject.filename)
                 if zipfileobject.filename[0] == '/':
                     targetpath = zipfileobject.filename[1:]
                 else:
@@ -129,15 +129,15 @@ def read_index2database(orgpluglist):
     if not orgpluglist:  #list of plugins is empty: is OK. DO nothing
         return
     if not isinstance(orgpluglist,list):   #has to be a list!!
-        raise botslib.PluginError(_(u'plugins should be list of dicts. Nothing is written.'))
+        raise botslib.PluginError(_(u'Plugins should be list of dicts. Nothing is written.'))
     for plug in orgpluglist:
         if not isinstance(plug,dict):
-            raise botslib.PluginError(_(u'plugins should be list of dicts. Nothing is written.'))
+            raise botslib.PluginError(_(u'Plugins should be list of dicts. Nothing is written.'))
         for key in plug.keys():
             if not isinstance(key,basestring):
-                raise botslib.PluginError(_(u'key of dict is not a string: "%(plug)s". Nothing is written.'),{'plug':plug})
+                raise botslib.PluginError(_(u'Key of dict is not a string: "%(plug)s". Nothing is written.'),{'plug':plug})
         if 'plugintype' not in plug:
-            raise botslib.PluginError(_(u'"plugintype" missing in: "%(plug)s". Nothing is written.'),{'plug':plug})
+            raise botslib.PluginError(_(u'"Plugintype" missing in: "%(plug)s". Nothing is written.'),{'plug':plug})
 
     #special case: compatibility with bots 1.* plugins.
     #in bots 1.*, partnergroup was in separate tabel; in bots 2.* partnergroup is in partner
@@ -233,7 +233,7 @@ def read_index2database(orgpluglist):
                     plug[fieldobject.column] = plug[fieldname]  #add new key in plug
                     del plug[fieldname]                         #delete old key in plug
             except:
-                raise botslib.PluginError(_(u'no field column for: "%(fieldname)s".'),{'fieldname':fieldname})
+                raise botslib.PluginError(_(u'No field column for: "%(fieldname)s".'),{'fieldname':fieldname})
         #get real column names for fields in sleutel; basically the same loop but now for sleutel
         loopdictionary = sleutel.keys()
         for fieldname in loopdictionary:
@@ -243,7 +243,7 @@ def read_index2database(orgpluglist):
                     sleutel[fieldobject.column] = sleutel[fieldname]
                     del sleutel[fieldname]
             except:
-                raise botslib.PluginError(_(u'no field column for: "%(fieldname)s".'),{'fieldname':fieldname})
+                raise botslib.PluginError(_(u'No field column for: "%(fieldname)s".'),{'fieldname':fieldname})
 
         #find existing entry (if exists)
         if sleutelorg:  #note that translate and confirmrule have an empty 'sleutel'
@@ -294,12 +294,12 @@ def make_plugin(cleaned_data,filename):
     plugs = make_database2plug(cleaned_data)
     plugsasstring = make_plugs2string(plugs)
     pluginzipfilehandler.writestr('botsindex.py',plugsasstring.encode('utf-8'))      #write index file to pluginfile
-    botsglobal.logger.debug(u'    write in index:\n %(index)s',{'index':plugsasstring})
+    botsglobal.logger.debug(u'    Write in index:\n %(index)s',{'index':plugsasstring})
 
     files4plugin = plugout_files(cleaned_data)
     for dirname, defaultdirname in files4plugin:
         pluginzipfilehandler.write(dirname,defaultdirname)
-        botsglobal.logger.debug(u'    write file "%(file)s".',{'file':defaultdirname})
+        botsglobal.logger.debug(u'    Write file "%(file)s".',{'file':defaultdirname})
 
     pluginzipfilehandler.close()
 

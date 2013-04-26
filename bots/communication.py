@@ -43,7 +43,7 @@ def run(idchannel,command,idroute=''):
                                 WHERE idchannel=%(idchannel)s''',
                                 {'idchannel':idchannel}):
         channeldict = dict(row)   #convert to real dictionary ()
-        botsglobal.logger.debug(u'start communication channel "%(idchannel)s" type %(type)s %(inorout)s.',channeldict)
+        botsglobal.logger.debug(u'Start communication channel "%(idchannel)s" type %(type)s %(inorout)s.',channeldict)
         #for acceptance testing bots has an option to turn of external communication in channels
         if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
             #override values in channels for acceptance testing.
@@ -80,7 +80,7 @@ def run(idchannel,command,idroute=''):
 
         comclass = classtocall(channeldict,idroute,userscript,scriptname,command) #call the class for this type of channel
         comclass.run()
-        botsglobal.logger.debug(u'finished communication channel "%(idchannel)s" type %(type)s %(inorout)s.',channeldict)
+        botsglobal.logger.debug(u'Finished communication channel "%(idchannel)s" type %(type)s %(inorout)s.',channeldict)
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
     else:
         raise botslib.CommunicationError(_(u'Channel "%(idchannel)s" is unknown.'),{'idchannel':idchannel})

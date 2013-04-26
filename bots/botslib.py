@@ -469,18 +469,18 @@ def botsimport(*args):
     except ImportError:
         if isa_direct_importerror():
             #the module is not found
-            botsglobal.logger.debug(u'no import of module "%(modulefile)s".',{'modulefile':modulefile})
+            botsglobal.logger.debug(u'No import of module "%(modulefile)s".',{'modulefile':modulefile})
             raise
         else:
             #the module is found, but has errors (eg python syntax errors)
             txt = txtexc()
-            raise ScriptImportError(_(u'import error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
+            raise ScriptImportError(_(u'Import error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
     except:
         #other errors
         txt = txtexc()
-        raise ScriptImportError(_(u'error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
+        raise ScriptImportError(_(u'Error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
     else:
-        botsglobal.logger.debug(u'imported "%(modulefile)s".',{'modulefile':modulefile})
+        botsglobal.logger.debug(u'Imported "%(modulefile)s".',{'modulefile':modulefile})
         return module,modulefile
 #**********************************************************/**
 #*************************File handling os.path etc***********************/**
@@ -547,7 +547,7 @@ def runscript(module,modulefile,functioninscript,**argv):
     ''' Execute userscript. Functioninscript is supposed to be there; if not AttributeError is raised.
         Often is checked in advance if Functioninscript does exist.
     '''
-    botsglobal.logger.debug(u'run userscript "%(functioninscript)s" in "%(modulefile)s".',
+    botsglobal.logger.debug(u'Run userscript "%(functioninscript)s" in "%(modulefile)s".',
                             {'functioninscript':functioninscript,'modulefile':modulefile})
     functiontorun = getattr(module, functioninscript)
     try:
@@ -563,7 +563,7 @@ def tryrunscript(module,modulefile,functioninscript,**argv):
     return False
 
 def runscriptyield(module,modulefile,functioninscript,**argv):
-    botsglobal.logger.debug(u'run userscript "%(functioninscript)s" in "%(modulefile)s".',
+    botsglobal.logger.debug(u'Run userscript "%(functioninscript)s" in "%(modulefile)s".',
                             {'functioninscript':functioninscript,'modulefile':modulefile})
     functiontorun = getattr(module, functioninscript)
     try:

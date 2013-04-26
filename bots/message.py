@@ -290,7 +290,7 @@ class Message(object):
 
 
     def _logmessagecontent(self,node_instance):
-        botsglobal.logger.debug(u'record "%(BOTSID)s":',node_instance.record)
+        botsglobal.logger.debug(u'Record "%(BOTSID)s":',node_instance.record)
         self._logfieldcontent(node_instance.record)    #handle fields of this record
         for child in node_instance.children:
             self._logmessagecontent(child)

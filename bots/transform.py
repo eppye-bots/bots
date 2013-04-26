@@ -51,7 +51,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                 ta_parsed.update(filesize=row['filesize'])
                 raise botslib.InMessageError(_(u'File size of %(filesize)s is too big; option "maxfilesizeincoming" in bots.ini is %(maxfilesizeincoming)s.'),
                                                 {'filesize':row['filesize'],'maxfilesizeincoming':botsglobal.ini.getint('settings','maxfilesizeincoming',5000000)})
-            botsglobal.logger.debug(_(u'start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),row)
+            botsglobal.logger.debug(_(u'Start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),row)
             #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
             edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
                                                 topartner=row['topartner'],
@@ -171,11 +171,11 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
             txt = botslib.txtexc()
             ta_parsed.update(statust=ERROR,errortext=txt)
             ta_parsed.deletechildren()
-            botsglobal.logger.debug(u'error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
+            botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
         else:
             edifile.handleconfirm(ta_fromfile,error=False)
             ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)
-            botsglobal.logger.debug(_(u'translated input file "%(filename)s".'),row)
+            botsglobal.logger.debug(_(u'Translated input file "%(filename)s".'),row)
         finally:
             ta_fromfile.update(statust=DONE)
 
