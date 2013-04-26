@@ -43,7 +43,7 @@ class Message(object):
 
     @staticmethod
     def display(lex_records):
-        '''for debugging lexed lex_records.'''
+        ''' for debugging: display lexed records.'''
         for lex_record in lex_records:
             counter = 0
             for veld in lex_record:
@@ -76,7 +76,7 @@ class Message(object):
         #some different cases:
         #- empy root.record, root.children filled:
         #  - edifact, x12, tradacoms: each child is an envelope. Check each envelope. (use mailbag to have one UNB per node-tree here)
-        #  - csv nobotsid: each child is a record. Check all lex_records in one check
+        #  - csv nobotsid: each child is a record. Check all records in one check
         #  - xml, json:
         # root.record filled, root.children filled: outgoing messages.
         #~ self.root.display() #show tree of nodes (for protocol debugging)
@@ -96,14 +96,14 @@ class Message(object):
                                         {'root':node_instance.record['BOTSID'],'grammarroot':structure[0][ID],'grammar':grammar.grammarname})
         self._checkifrecordsingrammar(node_instance,structure[0],grammar.grammarname)
         self._canonicaltree(node_instance,structure[0])
-        if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the lex_records read) be logged.
+        if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the records read) be logged.
             self._logmessagecontent(node_instance)
 
     def _checkifrecordsingrammar(self,node_instance,structure,grammarname):
         ''' check for every node if in grammar
             recursive
         '''
-        deletelist = []       #list of lex_records not in the grammar; these lex_records are deleted at end of function
+        deletelist = []       #list of records not in the grammar; these records are deleted at end of function
         self._checkiffieldsingrammar(node_instance,structure)     #check if fields are known in grammar
         if 'messagetype' in node_instance.queries:   #determine if SUBTRANSLATION starts; do not check (is already checked)
             return
@@ -114,7 +114,7 @@ class Message(object):
             node_instance.children = []
             return
         for childnode in node_instance.children:          #for every record/childnode:
-            for record_definition in structure[LEVEL]:                   #search in grammar-lex_records
+            for record_definition in structure[LEVEL]:                   #search in grammar-records
                 if childnode.record['BOTSID'] == record_definition[ID]:
                     #found record in grammar
                     #check recursive:
@@ -170,7 +170,7 @@ class Message(object):
             del node_instance.record[field]
 
     def _canonicaltree(self,node_instance,structure,headerrecordnumber=0):
-        ''' For nodes: check min and max occurence; sort the lex_records conform grammar
+        ''' For nodes: check min and max occurence; sort the records conform grammar
             parameter 'headerrecordnumber' is used in subclassing this function.
         '''
         sortednodelist = []
@@ -340,11 +340,11 @@ class Message(object):
         return self.root.getnozero(*mpaths)
 
     def getcount(self):
-        ''' count number of nodes in self.root. Number of nodes is number of lex_records.'''
+        ''' count number of nodes in self.root. Number of nodes is number of records.'''
         return self.root.getcount()
 
     def getcountoccurrences(self,*mpaths):
-        ''' count number of nodes in self.root. Number of nodes is number of lex_records.'''
+        ''' count number of nodes in self.root. Number of nodes is number of records.'''
         return len(list(self.getloop(*mpaths)))
 
     def getcountsum(self,*mpaths):

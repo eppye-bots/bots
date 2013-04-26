@@ -1,6 +1,6 @@
 ''' Declare database tabels. 
     Django is not always perfect in generating db - but improving ;-)). 
-    But they have provided a way to customize the generated database using SQL. see bots/sql/*.
+    The generated database can be manipulated SQL. see bots/sql/*.
 '''
 from django.db import models
 from django.utils.translation import ugettext as _
@@ -110,7 +110,6 @@ TRANSLATETYPES = (
     (1,_(u'Translate')),
     (2,_(u'Pass-through')),
     )
-EDITYPELIST = [DEFAULT_ENTRY] + EDITYPES
 CONFIRMTYPELIST = [DEFAULT_ENTRY] + CONFIRMTYPE
 
 #***Functions that produced codelists.**********************************************
@@ -163,7 +162,6 @@ class confirmrule(models.Model):
     negativerule = models.BooleanField(default=False,help_text=_(u'Use to exclude. Bots first checks positive rules, than negative rules. Eg include certain channel, exclude partner XXX.'))
     frompartner = models.ForeignKey('partner',related_name='cfrompartner',null=True,on_delete=models.CASCADE,blank=True,limit_choices_to = {'isgroup': False})
     topartner = models.ForeignKey('partner',related_name='ctopartner',null=True,on_delete=models.CASCADE,blank=True,limit_choices_to = {'isgroup': False})
-    #~ idroute = models.ForeignKey('routes',null=True,blank=True,verbose_name='route')
     idroute = StripCharField(max_length=35,null=True,blank=True,verbose_name=_(u'route'))
     idchannel = models.ForeignKey('channel',null=True,on_delete=models.CASCADE,blank=True,verbose_name=_(u'channel'))
     editype = StripCharField(max_length=35,choices=EDITYPES,blank=True)         #20121229"is not used anymore.....editype is always clear from context.

@@ -188,7 +188,7 @@ class Outmessage(message.Message):
             return the formatted value
         '''
         if field_definition[BFORMAT] == 'A':
-            if isinstance(self,fixed):  #check length fields in variable lex_records
+            if isinstance(self,fixed):  #check length fields in variable records
                 if field_definition[FORMAT] == 'AR':    #if field format is alfanumeric right aligned
                     value = value.rjust(field_definition[MINLENGTH])
                 else:
@@ -343,7 +343,7 @@ class Outmessage(message.Message):
                     raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
                                                     {'char':self.ta_info['charset'],'content':stringinizedrecords[i:i+wrap_length]})
         else:
-            for lex_record in self.lex_records:     #loop all lex_records
+            for lex_record in self.lex_records:
                 try:
                     self._outstream.write(self.record2string(lex_record))
                 except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
@@ -725,7 +725,7 @@ class json(Outmessage):
         ''' recursive method.
         '''
         newdict = node_instance.record.copy()
-        if node_instance.children:   #if this node has lex_records in it.
+        if node_instance.children:   #if this node has records in it.
             sortedchildren = {}   #empty dict
             for childnode in node_instance.children:
                 botsid = childnode.record['BOTSID']
