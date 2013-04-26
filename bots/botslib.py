@@ -452,37 +452,35 @@ def botsbaseimport(modulename):
         module = getattr(module, comp)
     return module
 
-def botsimport(soort,modulename):
+def botsimport(*args):
     ''' import modules from usersys.
         return: imported module, filename imported module;
         if could not be found or error in module: raise
     '''
-    try:    #__import__ is picky on the charset used. Might be different for different OS'es. So: test if charset is us-ascii
-        modulename.encode('ascii')
-    except UnicodeEncodeError:  #if not us-ascii, convert to punycode
-        modulename = modulename.encode('punycode')
-    if soort:
-        lijst = (botsglobal.usersysimportpath,soort,modulename)
-    else:
-        lijst = (botsglobal.usersysimportpath,modulename)
-    modulepath = '.'.join(lijst)  #assemble import string
-    modulefile = join(botsglobal.usersysimportpath,soort,modulename)   #assemble abs filename for errortexts
+    for count,arg in enumerate(args):
+        try:    #__import__ is picky on the charset used. Might be different for different OS'es. So: test if charset is us-ascii
+            arg.encode('ascii')
+        except UnicodeEncodeError:  #if not us-ascii, convert to punycode
+            args[count] = arg.encode('punycode')
+    modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
+    modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
     try:
         module = botsbaseimport(modulepath)
     except ImportError:
         if isa_direct_importerror():
-             #if module not found
-            botsglobal.logger.debug(u'no import "%(soort)s" "%(modulefile)s".',{'soort':soort,'modulefile':modulefile})
+            #the module is not found
+            botsglobal.logger.debug(u'no import of module "%(modulefile)s".',{'modulefile':modulefile})
             raise
         else:
-             #errors in importing module (module is there)
+            #the module is found, but has errors (eg python syntax errors)
             txt = txtexc()
-            raise ScriptImportError(_(u'import error in "%(soort)s" "%(modulefile)s", error:\n%(txt)s'),{'soort':soort,'modulefile':modulefile,'txt':txt})
-    except:             #other errors
+            raise ScriptImportError(_(u'import error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
+    except:
+        #other errors
         txt = txtexc()
-        raise ScriptImportError(_(u'Error in "%(soort)s" "%(modulefile)s", error:\n%(txt)s'),{'soort':soort,'modulefile':modulefile,'txt':txt})
+        raise ScriptImportError(_(u'error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
     else:
-        botsglobal.logger.debug(u'import "%(soort)s" "%(modulefile)s".',{'soort':soort,'modulefile':modulefile})
+        botsglobal.logger.debug(u'imported "%(modulefile)s".',{'modulefile':modulefile})
         return module,modulefile
 #**********************************************************/**
 #*************************File handling os.path etc***********************/**

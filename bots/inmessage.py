@@ -915,7 +915,7 @@ class edifact(var):
                 tomessagetype = 'CONTRL22UNEAN002'  #default messagetype for CONTRL
                 translationscript = None
             else:
-                translationscript,scriptfilename = botslib.botsimport('mappings',editype + '.' + tscript)  #import the mappingscript
+                translationscript,scriptfilename = botslib.botsimport('mappings',editype,tscript)  #import the mappingscript
             #generate CONTRL-message. One received interchange->one CONTRL-message
             reference = str(botslib.unique('messagecounter'))
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED)

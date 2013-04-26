@@ -21,7 +21,7 @@ import botsglobal
 def read_index(filename):
     ''' process index file in default location. '''
     try:
-        importedbotsindex,scriptname = botslib.botsimport('','index')
+        importedbotsindex,scriptname = botslib.botsimport('index')
         pluglist = importedbotsindex.plugins[:]
         if 'botsindex' in sys.modules:
             del sys.modules['botsindex']

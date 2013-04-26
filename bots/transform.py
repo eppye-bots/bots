@@ -104,7 +104,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         #run mapping script************************
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
                                                 {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
-                        translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'] + '.' + tscript) #get the mappingscript
+                        translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'],tscript) #get the mappingscript
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
                         

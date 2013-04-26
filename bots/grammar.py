@@ -77,7 +77,7 @@ class Grammar(object):
     _checkstructurerequired = True
 
     def __init__(self,typeofgrammarfile,editype,grammarname):
-        self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype + '.' + grammarname)
+        self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype,grammarname)
         #get syntax from grammar file
         syntaxfromgrammar = getattr(self.module, 'syntax',{})
         if not isinstance(syntaxfromgrammar,dict):
