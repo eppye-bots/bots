@@ -1,32 +1,11 @@
-#~ import time
 import django
 from django.conf import settings
+#***********
 import models
 import viewlib
-#~ import botslib
 import botsglobal
 
-#~ django.contrib.admin.widgets.AdminSplitDateTime
 HIDDENINPUT = django.forms.widgets.HiddenInput
-DEFAULT_ENTRY = ('',"---------")
-EDITYPELIST = [DEFAULT_ENTRY] + sorted(models.EDITYPES)
-CONFIRMTYPELIST = [DEFAULT_ENTRY] + models.CONFIRMTYPE
-
-def getroutelist():     #needed because the routeid is needed (and this is not theprimary key
-    return [DEFAULT_ENTRY]+[(l,l) for l in models.routes.objects.values_list('idroute', flat=True).order_by('idroute').distinct() ]
-def getinmessagetypes():
-    return [DEFAULT_ENTRY]+[(l,l) for l in models.translate.objects.values_list('frommessagetype', flat=True).order_by('frommessagetype').distinct() ]
-def getoutmessagetypes():
-    return [DEFAULT_ENTRY]+[(l,l) for l in models.translate.objects.values_list('tomessagetype', flat=True).order_by('tomessagetype').distinct() ]
-def getallmessagetypes():
-    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(list(models.translate.objects.values_list('tomessagetype', flat=True).all()) + list(models.translate.objects.values_list('frommessagetype', flat=True).all()) )) ]
-def getpartners():
-    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,n)) for (l,n) in models.partner.objects.values_list('idpartner','name').filter(active=True).order_by('idpartner') ]
-def getfromchannels():
-    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,t)) for (l,t) in models.channel.objects.values_list('idchannel','type').filter(inorout='in').order_by('idchannel') ]
-def gettochannels():
-    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,t)) for (l,t) in models.channel.objects.values_list('idchannel','type').filter(inorout='out').order_by('idchannel') ]
-
 
 class Select(django.forms.Form):
     datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom,input_formats=settings.DATETIME_INPUT_FORMATS)
@@ -45,7 +24,7 @@ class View(django.forms.Form):
 class SelectReports(Select):
     template = 'bots/selectform.html'
     action = '/reports/'
-    status = django.forms.ChoiceField([DEFAULT_ENTRY,('1',"Error"),('0',"Done")],required=False,initial='')
+    status = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1',"Error"),('0',"Done")],required=False,initial='')
 
 class ViewReports(View):
     template = 'bots/reports.html'
@@ -55,24 +34,24 @@ class ViewReports(View):
 class SelectIncoming(Select):
     template = 'bots/selectform.html'
     action = '/incoming/'
-    statust = django.forms.ChoiceField([DEFAULT_ENTRY,('1',"Error"),('3',"Done")],required=False,initial='')
+    statust = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1',"Error"),('3',"Done")],required=False,initial='')
     idroute = django.forms.ChoiceField([],required=False,initial='')
     fromchannel = django.forms.ChoiceField([],required=False)
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
-    ineditype = django.forms.ChoiceField(EDITYPELIST,required=False)
+    ineditype = django.forms.ChoiceField(models.DEFAULT_ENTRY,required=False)
     inmessagetype = django.forms.ChoiceField([],required=False)
-    outeditype = django.forms.ChoiceField(EDITYPELIST,required=False)
+    outeditype = django.forms.ChoiceField(models.DEFAULT_ENTRY,required=False)
     outmessagetype = django.forms.ChoiceField([],required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
     def __init__(self, *args, **kwargs):
         super(SelectIncoming, self).__init__(*args, **kwargs)
-        self.fields['idroute'].choices = getroutelist()
-        self.fields['inmessagetype'].choices = getinmessagetypes()
-        self.fields['outmessagetype'].choices = getoutmessagetypes()
-        self.fields['frompartner'].choices = getpartners()
-        self.fields['topartner'].choices = getpartners()
-        self.fields['fromchannel'].choices = getfromchannels()
+        self.fields['idroute'].choices = models.getroutelist()
+        self.fields['inmessagetype'].choices = models.getinmessagetypes()
+        self.fields['outmessagetype'].choices = models.getoutmessagetypes()
+        self.fields['frompartner'].choices = models.getpartners()
+        self.fields['topartner'].choices = models.getpartners()
+        self.fields['fromchannel'].choices = models.getfromchannels()
 
 class ViewIncoming(View):
     template = 'bots/incoming.html'
@@ -95,16 +74,16 @@ class SelectDocument(Select):
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
-    editype = django.forms.ChoiceField(EDITYPELIST,required=False)
+    editype = django.forms.ChoiceField(models.DEFAULT_ENTRY,required=False)
     messagetype = django.forms.ChoiceField(required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
     botskey = django.forms.CharField(required=False,label='Document number',max_length=35)
     def __init__(self, *args, **kwargs):
         super(SelectDocument, self).__init__(*args, **kwargs)
-        self.fields['idroute'].choices = getroutelist()
-        self.fields['messagetype'].choices = getoutmessagetypes()
-        self.fields['frompartner'].choices = getpartners()
-        self.fields['topartner'].choices = getpartners()
+        self.fields['idroute'].choices = models.getroutelist()
+        self.fields['messagetype'].choices = models.getoutmessagetypes()
+        self.fields['frompartner'].choices = models.getpartners()
+        self.fields['topartner'].choices = models.getpartners()
 
 class ViewDocument(View):
     template = 'bots/document.html'
@@ -120,21 +99,21 @@ class ViewDocument(View):
 class SelectOutgoing(Select):
     template = 'bots/selectform.html'
     action = '/outgoing/'
-    statust = django.forms.ChoiceField([DEFAULT_ENTRY,('1',"Error"),('3',"Done"),('4',"Resend")],required=False,initial='')
+    statust = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1',"Error"),('3',"Done"),('4',"Resend")],required=False,initial='')
     idroute = django.forms.ChoiceField([],required=False,initial='')
     tochannel = django.forms.ChoiceField([],required=False)
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
-    editype = django.forms.ChoiceField(EDITYPELIST,required=False)
+    editype = django.forms.ChoiceField(models.DEFAULT_ENTRY,required=False)
     messagetype = django.forms.ChoiceField(required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
     def __init__(self, *args, **kwargs):
         super(SelectOutgoing, self).__init__(*args, **kwargs)
-        self.fields['idroute'].choices = getroutelist()
-        self.fields['messagetype'].choices = getoutmessagetypes()
-        self.fields['frompartner'].choices = getpartners()
-        self.fields['topartner'].choices = getpartners()
-        self.fields['tochannel'].choices = gettochannels()
+        self.fields['idroute'].choices = models.getroutelist()
+        self.fields['messagetype'].choices = models.getoutmessagetypes()
+        self.fields['frompartner'].choices = models.getpartners()
+        self.fields['topartner'].choices = models.getpartners()
+        self.fields['tochannel'].choices = models.gettochannels()
 
 class ViewOutgoing(View):
     template = 'bots/outgoing.html'
@@ -155,7 +134,7 @@ class SelectProcess(Select):
     lastrun = django.forms.BooleanField(required=False,initial=False)
     def __init__(self, *args, **kwargs):
         super(SelectProcess, self).__init__(*args, **kwargs)
-        self.fields['idroute'].choices = getroutelist()
+        self.fields['idroute'].choices = models.getroutelist()
 
 class ViewProcess(View):
     template = 'bots/process.html'
@@ -166,10 +145,10 @@ class ViewProcess(View):
 class SelectConfirm(Select):
     template = 'bots/selectform.html'
     action = '/confirm/'
-    confirmtype = django.forms.ChoiceField(CONFIRMTYPELIST,required=False,initial='0')
+    confirmtype = django.forms.ChoiceField(models.CONFIRMTYPELIST,required=False,initial='0')
     confirmed = django.forms.ChoiceField([('0',"All runs"),('1',"Current run"),('2',"Last run")],required=False,initial='0')
     idroute = django.forms.ChoiceField([],required=False,initial='')
-    editype = django.forms.ChoiceField(EDITYPELIST,required=False)
+    editype = django.forms.ChoiceField(models.DEFAULT_ENTRY,required=False)
     messagetype = django.forms.ChoiceField([],required=False)
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
@@ -177,12 +156,12 @@ class SelectConfirm(Select):
     tochannel = django.forms.ChoiceField([],required=False)
     def __init__(self, *args, **kwargs):
         super(SelectConfirm, self).__init__(*args, **kwargs)
-        self.fields['idroute'].choices = getroutelist()
-        self.fields['messagetype'].choices = getallmessagetypes()
-        self.fields['frompartner'].choices = getpartners()
-        self.fields['topartner'].choices = getpartners()
-        self.fields['fromchannel'].choices = getfromchannels()
-        self.fields['tochannel'].choices = gettochannels()
+        self.fields['idroute'].choices = models.getroutelist()
+        self.fields['messagetype'].choices = models.getallmessagetypes()
+        self.fields['frompartner'].choices = models.getpartners()
+        self.fields['topartner'].choices = models.getpartners()
+        self.fields['fromchannel'].choices = models.getfromchannels()
+        self.fields['tochannel'].choices = models.gettochannels()
 
 class ViewConfirm(View):
     template = 'bots/confirm.html'

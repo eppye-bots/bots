@@ -1,10 +1,14 @@
-#~ from datetime import datetime
+''' Declare database tabels. 
+    Django is not always perfect in generating db - but improving ;-)). 
+    But they have provided a way to customize the generated database using SQL. see bots/sql/*.
+'''
 from django.db import models
 from django.utils.translation import ugettext as _
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-#django is not always perfect in generating db. But they have provided a way to customize the generated database using SQL. see bots/sql/*.
 
+#***Declare constants, mostly codelists.**********************************************
+DEFAULT_ENTRY = ('',"---------")
 STATUST = [
     (0, _(u'Open')),
     (1, _(u'Error')),
@@ -106,8 +110,26 @@ TRANSLATETYPES = (
     (1,_(u'Translate')),
     (2,_(u'Pass-through')),
     )
+EDITYPELIST = [DEFAULT_ENTRY] + EDITYPES
+CONFIRMTYPELIST = [DEFAULT_ENTRY] + CONFIRMTYPE
 
+#***Functions that produced codelists.**********************************************
+def getroutelist():     #needed because the routeid is needed (and this is not theprimary key
+    return [DEFAULT_ENTRY]+[(l,l) for l in routes.objects.values_list('idroute', flat=True).distinct() ]
+def getinmessagetypes():
+    return [DEFAULT_ENTRY]+[(l,l) for l in translate.objects.values_list('frommessagetype', flat=True).order_by('frommessagetype').distinct() ]
+def getoutmessagetypes():
+    return [DEFAULT_ENTRY]+[(l,l) for l in translate.objects.values_list('tomessagetype', flat=True).order_by('tomessagetype').distinct() ]
+def getallmessagetypes():
+    return [DEFAULT_ENTRY]+[(l,l) for l in sorted(set(list(translate.objects.values_list('tomessagetype', flat=True).all()) + list(translate.objects.values_list('frommessagetype', flat=True).all()) )) ]
+def getpartners():
+    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,n)) for (l,n) in partner.objects.values_list('idpartner','name').filter(active=True)]
+def getfromchannels():
+    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,t)) for (l,t) in channel.objects.values_list('idchannel','type').filter(inorout='in')]
+def gettochannels():
+    return [DEFAULT_ENTRY]+[(l,'%s (%s)'%(l,t)) for (l,t) in channel.objects.values_list('idchannel','type').filter(inorout='out')]
 
+#***Database tables that produced codelists.**********************************************
 class StripCharField(models.CharField):
     ''' strip values before saving to database. this is not default in django #%^&*'''
     def get_prep_value(self, value,*args,**kwargs):
