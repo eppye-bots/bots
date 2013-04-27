@@ -60,7 +60,7 @@ class Inmessage(message.Message):
             del self.rawinput
         #~ self.display(self.lex_records)   #show lex_records (for protocol debugging)
         self.root = node.Node()  #make root Node None.
-        self.iternextrecord = iter(self.lex_records)
+        self.iternext_lex_record = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
             raise botslib.InMessageError(_(u'[A50] line %(line)s pos %(pos)s: Found non-valid data at end of edi file; probably a problem with separators or message structure.'),
@@ -188,7 +188,7 @@ class Inmessage(message.Message):
 
     def _parse(self,structure_level,inode):
         ''' This is the heart of the parsing of incoming messages (but not for xml, json)
-            Read the lex_records one by one (self.iternextrecord, is an iterator)
+            Read the lex_records one by one (self.iternext_lex_record, is an iterator)
             - parse the records.
             - identify record (lookup in structure)
             - identify fields in the record (use the record_definition from the grammar).
@@ -201,35 +201,35 @@ class Inmessage(message.Message):
         structure_index = 0     #keep track of where we are in the structure_level
         countnrofoccurences = 0 #number of occurences of current record in structure
         structure_end = len(structure_level)
-        get_next_edi_record = True      #indicate if the next record should be fetched, or if the current_edi_record is still being parsed.
-                                        #it might seem logical to test here 'current_edi_record is None', but this is already used to indicate 'no more records'.
+        get_next_lex_record = True      #indicate if the next record should be fetched, or if the current_lex_record is still being parsed.
+                                        #it might seem logical to test here 'current_lex_record is None', but this is already used to indicate 'no more records'.
         while 1:
-            if get_next_edi_record:
+            if get_next_lex_record:
                 try:
-                    current_edi_record = self.iternextrecord.next()
-                except StopIteration:   #catch when no more current_edi_record.
-                    current_edi_record = None
-                get_next_edi_record = False
-            if current_edi_record is None or structure_level[structure_index][ID] != current_edi_record[ID][VALUE]:
+                    current_lex_record = self.iternext_lex_record.next()
+                except StopIteration:   #catch when no more lex_record.
+                    current_lex_record = None
+                get_next_lex_record = False
+            if current_lex_record is None or structure_level[structure_index][ID] != current_lex_record[ID][VALUE]:
                 if structure_level[structure_index][MIN] and not countnrofoccurences:   #is record is required in structure_level, and countnrofoccurences==0: error;
                                                                                         #enough check here; message is validated more accurate later
                     try:
                         raise botslib.InMessageError(self.messagetypetxt + _(u'[S50]: Line:%(line)s pos:%(pos)s record:"%(record)s": message has an error in its structure; this record is not allowed here. Scanned in message definition until mandatory record: "%(looked)s".'),
-                                                                            {'record':current_edi_record[ID][VALUE],'line':current_edi_record[ID][LIN],'pos':current_edi_record[ID][POS],'looked':structure_level[structure_index][MPATH]})
+                                                                            {'record':current_lex_record[ID][VALUE],'line':current_lex_record[ID][LIN],'pos':current_lex_record[ID][POS],'looked':structure_level[structure_index][MPATH]})
                     except TypeError:       #when no UNZ (edifact)
                         raise botslib.InMessageError(self.messagetypetxt + _(u'[S51]: Missing mandatory record "%(record)s".'),
                                                                             {'record':self.mpathformat(structure_level[structure_index][MPATH])})
                 structure_index += 1
-                if structure_index == structure_end:  #current_edi_record is not in this level. Go level up
-                    return current_edi_record    #return either None (no more records to parse) or the last record2parse (the last record2parse is not found in this level)
+                if structure_index == structure_end:  #current_lex_record is not in this level. Go level up
+                    return current_lex_record    #return either None (no more lex_records to parse) or the last current_lex_record (the last current_lex_record is not found in this level)
                 countnrofoccurences = 0
-                continue  #continue while-loop: get_next_edi_record is false as no match with structure is made; go and look at next record of structure
+                continue  #continue while-loop: get_next_lex_record is false as no match with structure is made; go and look at next record of structure
             #record is found in grammar
             countnrofoccurences += 1
-            newnode = node.Node(record=self._parsefields(current_edi_record,structure_level[structure_index]),
+            newnode = node.Node(record=self._parsefields(current_lex_record,structure_level[structure_index]),
                                 botsidnr=structure_level[structure_index][BOTSIDNR],
-                                pos=current_edi_record[0][POS],
-                                line=current_edi_record[0][LIN])  #make new node
+                                pos=current_lex_record[0][POS],
+                                line=current_lex_record[0][LIN])  #make new node
             inode.append(newnode)   #succes! append new node as a child to current (parent)node
             if SUBTRANSLATION in structure_level[structure_index]:
                 # start a SUBTRANSLATION; find the right messagetype, etc
@@ -255,21 +255,21 @@ class Inmessage(message.Message):
                                                                 {'editype':self.__class__.__name__,'messagetype':messagetype})
                 self.messagecount += 1
                 self.messagetypetxt = _(u'Message nr %(count)s, type %(type)s, '%{'count':self.messagecount,'type':messagetype})
-                current_edi_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
+                current_lex_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
                 newnode.queries = {'messagetype':messagetype}       #copy messagetype into 1st segment of subtranslation (eg UNH, ST)
                 self.checkmessage(newnode,defmessage,subtranslation=True)      #check the results of the subtranslation
                 #~ end SUBTRANSLATION
                 self.messagetypetxt = ''
-                # get_next_edi_record is still False; we are trying to match the last (not matched) record from the SUBTRANSLATION (named 'current_edi_record').
+                # get_next_lex_record is still False; we are trying to match the last (not matched) record from the SUBTRANSLATION (named 'current_lex_record').
             else:
                 if LEVEL in structure_level[structure_index]:        #if header, go parse segmentgroup (recursive)
-                    current_edi_record = self._parse(structure_level=structure_level[structure_index][LEVEL],inode=newnode)
-                    # get_next_edi_record is still False; the current_edi_record that was not matched in lower segmentgroups is still being parsed.
+                    current_lex_record = self._parse(structure_level=structure_level[structure_index][LEVEL],inode=newnode)
+                    # get_next_lex_record is still False; the current_lex_record that was not matched in lower segmentgroups is still being parsed.
                 else:
-                    get_next_edi_record = True
+                    get_next_lex_record = True
                 #accomodate for UNS = UNS construction
                 if structure_level[structure_index][MIN]==structure_level[structure_index][MAX]==countnrofoccurences:
-                    #~ print 'tabel',structure_level[structure_index][ID],'message',current_edi_record[ID][VALUE],structure_index,structure_end
+                    #~ print 'tabel',structure_level[structure_index][ID],'message',current_lex_record[ID][VALUE],structure_index,structure_end
                     if structure_index +1 == structure_end:
                         pass
                     else:
@@ -386,7 +386,7 @@ class fixed(Inmessage):
             linenr += 1
             if not line.isspace():
                 line = line.rstrip('\r\n')
-                self.lex_records += [ [{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line}] ]    #append record to recordlist
+                self.lex_records += [ [[line[startrecordid:endrecordid].strip(),0,linenr,0,line]] ]    #append record to recordlist
 
     def _parsefields(self,lex_record,record_definition):
         ''' Parse fields from one fixed message-record and check length of the fixed record.
@@ -435,7 +435,7 @@ class var(Inmessage):
         escape      = self.ta_info['escape']      #char after escape-char is not interpreted as separator
         mode_escape = 0    #0=not escaping, 1=escaping
         skip_char   = self.ta_info['skip_char']   #chars to ignore/skip/discard. eg edifact: if wrapped to 80pos lines and <CR/LF> at end of segment
-        record      = []   #gather the content of a record
+        lex_record  = []   #gather the content of a record
         value       = u''  #gather the content of (sub)field; the current token
         valueline   = 1    #record line of token
         valuepos    = 1    #record position of token in line
@@ -498,26 +498,25 @@ class var(Inmessage):
                 continue
             #end of (sub)field. Note: first field of composite is marked as 'field'
             if char in field_sep:
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
+                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
                 value = u''
                 sfield = 0      #new token is field
                 continue
             #end of (sub)field. Note: first field of composite is marked as 'field'
             if char == sfield_sep:
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
+                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
                 value = u''
                 sfield = 1        #new token is sub-field
                 continue
             if char == rep_sep:
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
+                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
                 value = u''
                 sfield = 2        #new token is sub-field
                 continue
-            #end of record
-            if char in record_sep:
-                record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #write current token to record
-                self.lex_records += [record]    #write record to recordlist
-                record = []
+            if char in record_sep:      #end of record
+                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
+                self.lex_records += [lex_record]    #write record to recordlist
+                lex_record = []
                 mode_inrecord = 0    #    
                 value = u''
                 sfield = 0      #new token is field 
@@ -527,8 +526,8 @@ class var(Inmessage):
         #in a perfect world, value should always be empty now, but:
         #it appears a csv record is not always closed properly, so force the closing of the last record of csv file:
         if mode_inrecord and isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
-            record += [{VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos}]    #append element in record
-            self.lex_records += [record]    #write record to recordlist
+            lex_record += [[value,sfield,valueline,valuepos]]    #append element in record
+            self.lex_records += [lex_record]    #write record to recordlist
         else:
             leftover = value.strip('\x00\x1a')
             if leftover:
@@ -624,7 +623,7 @@ class csv(var):
         if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
             for lex_record in self.lex_records:
-                lex_record[0:0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: 0}]
+                lex_record[0:0] = [[botsid,0,0,0]]
 
 class excel(csv):
     def initfromfile(self):
@@ -668,7 +667,7 @@ class excel(csv):
         if hasattr(self,'rawinput'):
             del self.rawinput
         self.root = node.Node()  #make root Node None.
-        self.iternextrecord = iter(self.lex_records)
+        self.iternext_lex_record = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
             raise botslib.InMessageError(_(u'[A52]: Found non-valid data at end of excel file: "%(leftover)s".'),

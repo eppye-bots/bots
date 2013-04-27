@@ -141,44 +141,44 @@ class Outmessage(message.Message):
         ''' appends fields in noderecord to (raw)record; use structure_record as guide.
             complex because is is used for: editypes that have compression rules (edifact), var editypes without compression, fixed protocols
         '''
-        buildrecord = []    #the record that is going to be build; list of dicts. Each dict is a field.
+        lex_record = []    #the record that is going to be build; list of list. Each list is a field.
         fieldbuffer = []
         for field_definition in structure_record[FIELDS]:       #loop all fields in grammar-definition
             if field_definition[ISFIELD]:    #if field (no composite)
                 if field_definition[ID] in noderecord  and noderecord[field_definition[ID]]:      #field exists in outgoing message and has data
-                    buildrecord += fieldbuffer          #write the fieldbuffer to buildrecord
+                    lex_record += fieldbuffer          #write the fieldbuffer to lex_record
                     fieldbuffer = []                           #clear the fieldbuffer
-                    buildrecord += [{VALUE:noderecord[field_definition[ID]],SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]}]      #append new field
+                    lex_record += [[noderecord[field_definition[ID]],0,field_definition[FORMAT]]]      #append new field
                 else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        fieldbuffer += [{VALUE:'',SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]}]          #append new empty to fieldbuffer;
+                        fieldbuffer += [['',0,field_definition[FORMAT]]]          #append new empty to fieldbuffer;
                     else:
                         value = self._initfield(field_definition)                         #initialise empty field. For eg fixed and csv: all fields have to be present
-                        buildrecord += [{VALUE:value,SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]}]  #append new field
+                        lex_record += [[value,0,field_definition[FORMAT]]]  #append new field
             else:  #if composite
                 donefirst = 0       #used because first subfield in composite is marked as a field (not a subfield).
                 subbuffer = []            #buffer for this composite.
                 subiswritten = False      #check if composite contains data
                 for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
                     if grammarsubfield[ID] in noderecord and noderecord[grammarsubfield[ID]]:       #field exists in outgoing message and has data
-                        buildrecord += fieldbuffer           #write fieldbuffer
+                        lex_record += fieldbuffer           #write fieldbuffer
                         fieldbuffer = []                       #clear fieldbuffer
-                        buildrecord += subbuffer        #write subbuffer
+                        lex_record += subbuffer        #write subbuffer
                         subbuffer = []                    #clear subbuffer
-                        buildrecord += [{VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst}]   #append field
+                        lex_record += [[noderecord[grammarsubfield[ID]],donefirst]]   #append field
                         subiswritten = True
                     else:
                         if self.ta_info['stripfield_sep']:
-                            subbuffer += [{VALUE:'',SFIELD:donefirst}]                      #append new empty to buffer;
+                            subbuffer += [['',donefirst]]                      #append new empty to buffer;
                         else:
                             value = self._initfield(grammarsubfield)  #initialise empty field. For eg fixed and csv: all fields have to be present
-                            subbuffer += [{VALUE:value,SFIELD:donefirst}]                   #generate & append new field
+                            subbuffer += [[value,donefirst]]                   #generate & append new field
                     donefirst = 1
                 if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
-                    fieldbuffer += [{VALUE:'',SFIELD:0}]
-        #~ print [buildrecord]
+                    fieldbuffer += [['',0]]
+        #~ print [lex_record]
 
-        self.lex_records += [buildrecord]
+        self.lex_records += [lex_record]
 
 
     def _formatfield(self,value, field_definition,structure_record,node_instance):
