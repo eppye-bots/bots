@@ -48,11 +48,11 @@ MINLENGTH = 6
 BFORMAT = 7		#internal bots format; formats in grammar are converted to bformat
 MAXREPEAT = 8
 
-#***lex_record in self.lex_records: is a list
+#***lex_record in self.lex_records: is a dict
 VALUE = 0
 SFIELD = 1  #1: is subfield, 0: field or first element composite
 LIN = 2
 POS = 3
 FIXEDLINE = 4           #for fixed records; tmp storage of fixed record
-FORMATFROMGRAMMAR = 2   #to store FORMAT field has in grammar
+FORMATFROMGRAMMAR = 5   #to store FORMAT field has in grammar
 

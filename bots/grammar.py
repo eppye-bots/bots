@@ -181,9 +181,9 @@ class Grammar(object):
         #'normalise' field: make list equal length
         len_field = len(field)
         if len_field == 3:  # that is: composite
-            field +=[None,False,None,None,'A',1]
+            field += [None,False,None,None,'A',1]
         elif len_field == 4:               # that is: field (not a composite)
-            field +=[True,0,0,'A',1]
+            field += [True,0,0,'A',1]
         #each field is now equal length list
         elif len_field == 9:               # this happens when there are errors in a table and table is read again
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": error in grammar; error is already reported in this run.'),
@@ -374,7 +374,7 @@ class Grammar(object):
                     returncollision,returnheaderissave = self._checkbackcollision(i[LEVEL])
                 else:
                     returncollision,returnheaderissave = self._checkbackcollision(i[LEVEL],[i[ID]])
-                collision += returncollision
+                collision.extend(returncollision)
                 if returnheaderissave and i[ID] in collision:  #if one of segment(groups) is required, there is always a segment after the header segment; so remove header from nowcollision:
                     collision.remove(i[ID])
         return collision,headerissave    #collision is used to update on higher level; cleared indicates the header segment can not collide anymore

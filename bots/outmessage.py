@@ -148,13 +148,13 @@ class Outmessage(message.Message):
                 if field_definition[ID] in noderecord  and noderecord[field_definition[ID]]:      #field exists in outgoing message and has data
                     lex_record += fieldbuffer          #write the fieldbuffer to lex_record
                     fieldbuffer = []                           #clear the fieldbuffer
-                    lex_record += [[noderecord[field_definition[ID]],0,field_definition[FORMAT]]]      #append new field
+                    lex_record.append({VALUE:noderecord[field_definition[ID]],SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})      #append new field
                 else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        fieldbuffer += [['',0,field_definition[FORMAT]]]          #append new empty to fieldbuffer;
+                        fieldbuffer.append({VALUE:'',SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})          #append new empty to fieldbuffer;
                     else:
                         value = self._initfield(field_definition)                         #initialise empty field. For eg fixed and csv: all fields have to be present
-                        lex_record += [[value,0,field_definition[FORMAT]]]  #append new field
+                        lex_record.append({VALUE:value,SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})  #append new field
             else:  #if composite
                 donefirst = 0       #used because first subfield in composite is marked as a field (not a subfield).
                 subbuffer = []            #buffer for this composite.
@@ -165,20 +165,20 @@ class Outmessage(message.Message):
                         fieldbuffer = []                       #clear fieldbuffer
                         lex_record += subbuffer        #write subbuffer
                         subbuffer = []                    #clear subbuffer
-                        lex_record += [[noderecord[grammarsubfield[ID]],donefirst]]   #append field
+                        lex_record.append({VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst})   #append field
                         subiswritten = True
                     else:
                         if self.ta_info['stripfield_sep']:
-                            subbuffer += [['',donefirst]]                      #append new empty to buffer;
+                            subbuffer.append({VALUE:'',SFIELD:donefirst})                      #append new empty to buffer;
                         else:
                             value = self._initfield(grammarsubfield)  #initialise empty field. For eg fixed and csv: all fields have to be present
-                            subbuffer += [[value,donefirst]]                   #generate & append new field
+                            subbuffer.append({VALUE:value,SFIELD:donefirst})                   #generate & append new field
                     donefirst = 1
                 if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
-                    fieldbuffer += [['',0]]
+                    fieldbuffer.append({VALUE:'',SFIELD:0})
         #~ print [lex_record]
 
-        self.lex_records += [lex_record]
+        self.lex_records.append(lex_record)
 
 
     def _formatfield(self,value, field_definition,structure_record,node_instance):

@@ -386,7 +386,7 @@ class fixed(Inmessage):
             linenr += 1
             if not line.isspace():
                 line = line.rstrip('\r\n')
-                self.lex_records += [ [[line[startrecordid:endrecordid].strip(),0,linenr,0,line]] ]    #append record to recordlist
+                self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
 
     def _parsefields(self,lex_record,record_definition):
         ''' Parse fields from one fixed message-record and check length of the fixed record.
@@ -498,24 +498,24 @@ class var(Inmessage):
                 continue
             #end of (sub)field. Note: first field of composite is marked as 'field'
             if char in field_sep:
-                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
                 value = u''
                 sfield = 0      #new token is field
                 continue
             #end of (sub)field. Note: first field of composite is marked as 'field'
             if char == sfield_sep:
-                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
                 value = u''
                 sfield = 1        #new token is sub-field
                 continue
             if char == rep_sep:
-                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
                 value = u''
                 sfield = 2        #new token is sub-field
                 continue
             if char in record_sep:      #end of record
-                lex_record += [[value,sfield,valueline,valuepos]]    #write current token to record
-                self.lex_records += [lex_record]    #write record to recordlist
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
+                self.lex_records.append(lex_record)                 #write record to recordlist
                 lex_record = []
                 mode_inrecord = 0    #    
                 value = u''
@@ -526,8 +526,8 @@ class var(Inmessage):
         #in a perfect world, value should always be empty now, but:
         #it appears a csv record is not always closed properly, so force the closing of the last record of csv file:
         if mode_inrecord and isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
-            lex_record += [[value,sfield,valueline,valuepos]]    #append element in record
-            self.lex_records += [lex_record]    #write record to recordlist
+            lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #append element in record
+            self.lex_records.append(lex_record)    #write record to recordlist
         else:
             leftover = value.strip('\x00\x1a')
             if leftover:
@@ -623,7 +623,7 @@ class csv(var):
         if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
             for lex_record in self.lex_records:
-                lex_record[0:0] = [[botsid,0,0,0]]
+                lex_record[0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: 0}]
 
 class excel(csv):
     def initfromfile(self):

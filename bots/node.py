@@ -35,7 +35,7 @@ class Node(object):
 
     def append(self,childnode):
         '''append child to node'''
-        self.children += [childnode]
+        self.children.append(childnode)
 
     def display(self,level=0):
         '''for debugging
