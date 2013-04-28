@@ -506,7 +506,7 @@ class Node(object):
         ''' checks if all items that appear in both node and mpath have the same value. If so, all new items in mpath are added to node
         '''
         for key,value in self.record.iteritems():
-            if key in mpath and mpath[key] != value:
+            if mpath.get(key,value) != value:
                 return False
         else:    #all equal keys have same values, thus both are 'equal'.
             self.record.update(mpath)   #add items to self.record that are new

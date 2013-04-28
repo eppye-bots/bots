@@ -32,6 +32,7 @@ from django.utils.translation import ugettext as _
 import botslib
 import botsglobal
 import message
+import grammar
 import node
 from botsconfig import *
 

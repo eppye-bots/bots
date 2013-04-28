@@ -444,8 +444,6 @@ def botsbaseimport(modulename):
     ''' Do a dynamic import.
         Errors/exceptions are handled in calling functions.
     '''
-    if modulename.startswith('.'):
-        modulename = modulename[1:]
     module = __import__(modulename)
     components = modulename.split('.')
     for comp in components[1:]:
