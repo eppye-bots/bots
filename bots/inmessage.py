@@ -441,6 +441,7 @@ class var(Inmessage):
         valuepos    = 1    #record position of token in line
         countline   = 1    #count number of lines; start with 1
         countpos    = 0    #count position/number of chars within line
+        sep = field_sep + sfield_sep + record_sep + rep_sep
 
         for char in self.rawinput:    #get next char
             #just count number lines/position; no action.
@@ -496,6 +497,9 @@ class var(Inmessage):
             if char == escape:
                 mode_escape = 1
                 continue
+            if char not in sep:
+                value += char    #just a char: append char to value
+                continue
             #end of (sub)field. Note: first field of composite is marked as 'field'
             if char in field_sep:
                 lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
@@ -521,7 +525,6 @@ class var(Inmessage):
                 value = u''
                 sfield = 0      #new token is field 
                 continue
-            value += char    #just a char: append char to value
         #end of for-loop. all characters have been processed.
         #in a perfect world, value should always be empty now, but:
         #it appears a csv record is not always closed properly, so force the closing of the last record of csv file:
