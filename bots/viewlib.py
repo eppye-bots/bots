@@ -75,7 +75,7 @@ def django_trace_origin(idta,where):
         '''
         for parent in get_parent(ta_object):
             donelijst.append(parent.idta)
-            for key,value in where.items():
+            for key,value in where.iteritems():
                 if getattr(parent,key) != value:
                     break
             else:   #all where-criteria are true; check if we already have this ta_object

@@ -172,7 +172,7 @@ def trace_origin(ta,where=None):
             donelijst.append(idta)
             taparent = OldTransaction(idta=idta)
             taparent.synall()
-            for key,value in where.items():
+            for key,value in where.iteritems():
                 if getattr(taparent,key) != value:
                     break
             else:   #all where-criteria are true; check if we already have this ta
@@ -709,9 +709,10 @@ def countunripchars(value,delchars):
     return len([c for c in value if c not in delchars])
 
 def updateunlessset(updatedict,fromdict):
-    for key, value in fromdict.items():
-        if key not in updatedict:
-            updatedict[key] = value
+    updatedict.update((key,value) for key, value in fromdict.items() if key not in updatedict)
+    #~ for key, value in fromdict.items():
+        #~ if key not in updatedict:
+            #~ updatedict[key] = value
 
 #**********************************************************/**
 #**************  Exception classes ***************************
