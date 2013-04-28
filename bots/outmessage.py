@@ -76,6 +76,19 @@ class Outmessage(message.Message):
         self.root = node.Node(record={})         #message tree; build via put()-interface in mappingscript. Initialise with empty dict
         super(Outmessage,self).__init__()
 
+    def messagegrammarread(self,typeofgrammarfile='grammars'):
+        ''' read grammar for a message/envelope.
+            (try to) read the topartner dependent grammar syntax.
+        '''
+        super(Outmessage,self).messagegrammarread(typeofgrammarfile)
+        #read partner-syntax. Use this to always overrule values in self.ta_info
+        if self.ta_info.get('topartner'):   
+            try:
+                partnersyntax = grammar.grammarread(self.ta_info['editype'],self.ta_info['topartner'],typeofgrammarfile='partners')
+                self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
+            except ImportError:
+                pass        #No partner specific syntax found (is not an error).
+
     def writeall(self):
         ''' writeall is called for writing all 'real' outmessage objects; but not for envelopes.
             writeall is call from transform.translate()
@@ -148,13 +161,13 @@ class Outmessage(message.Message):
                 if field_definition[ID] in noderecord  and noderecord[field_definition[ID]]:      #field exists in outgoing message and has data
                     lex_record += fieldbuffer          #write the fieldbuffer to lex_record
                     fieldbuffer = []                           #clear the fieldbuffer
-                    lex_record.append({VALUE:noderecord[field_definition[ID]],SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})      #append new field
+                    lex_record += [[noderecord[field_definition[ID]],0,field_definition[FORMAT]]]      #append new field
                 else:                                   #there is no data for this field
                     if self.ta_info['stripfield_sep']:
-                        fieldbuffer.append({VALUE:'',SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})          #append new empty to fieldbuffer;
+                        fieldbuffer += [['',0,field_definition[FORMAT]]]          #append new empty to fieldbuffer;
                     else:
                         value = self._initfield(field_definition)                         #initialise empty field. For eg fixed and csv: all fields have to be present
-                        lex_record.append({VALUE:value,SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})  #append new field
+                        lex_record += [[value,0,field_definition[FORMAT]]]  #append new field
             else:  #if composite
                 donefirst = 0       #used because first subfield in composite is marked as a field (not a subfield).
                 subbuffer = []            #buffer for this composite.
@@ -165,20 +178,20 @@ class Outmessage(message.Message):
                         fieldbuffer = []                       #clear fieldbuffer
                         lex_record += subbuffer        #write subbuffer
                         subbuffer = []                    #clear subbuffer
-                        lex_record.append({VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst})   #append field
+                        lex_record += [[noderecord[grammarsubfield[ID]],donefirst]]   #append field
                         subiswritten = True
                     else:
                         if self.ta_info['stripfield_sep']:
-                            subbuffer.append({VALUE:'',SFIELD:donefirst})                      #append new empty to buffer;
+                            subbuffer += [['',donefirst]]                      #append new empty to buffer;
                         else:
                             value = self._initfield(grammarsubfield)  #initialise empty field. For eg fixed and csv: all fields have to be present
-                            subbuffer.append({VALUE:value,SFIELD:donefirst})                   #generate & append new field
+                            subbuffer += [[value,donefirst]]                   #generate & append new field
                     donefirst = 1
                 if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
-                    fieldbuffer.append({VALUE:'',SFIELD:0})
+                    fieldbuffer += [['',0]]
         #~ print [lex_record]
 
-        self.lex_records.append(lex_record)
+        self.lex_records += [lex_record]
 
 
     def _formatfield(self,value, field_definition,structure_record,node_instance):

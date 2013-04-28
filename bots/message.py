@@ -25,21 +25,11 @@ class Message(object):
 
 
     def messagegrammarread(self,typeofgrammarfile='grammars'):
-        ''' read the grammar for a out-message.
-            try to read the topartner dependent grammar syntax.
+        ''' read grammar for a message/envelope.
         '''
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'],typeofgrammarfile)
-        #syntax: defaultsyntax is first updated with envelope.syntax, than updated with messagetype.syntax
         #write values from grammar to self.ta_info - unless these values are already set (eg by mappingscript)
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    
-        #read partner-syntax. Use this to always overrule values in self.ta_info
-        if 'topartner' in self.ta_info and self.ta_info['topartner']:   
-            try:
-                partnersyntax = grammar.grammarread(self.ta_info['editype'],self.ta_info['topartner'],typeofgrammarfile='partners')
-                self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
-            except ImportError:
-                pass        #No partner specific syntax found (is not an error).
-
 
     @staticmethod
     def display(lex_records):
