@@ -339,7 +339,7 @@ def safercodeconversion(modulename,value):
     ''' as codeconversion but reverses the dictionary first'''
     module,filename = botslib.botsimport('codeconversions',modulename)
     if not hasattr(module,'botsreversed'+'codeconversions'):
-        reversedict = dict((value,key) for key,value in module.codeconversions.items())
+        reversedict = dict((value,key) for key,value in module.codeconversions.iteritems())
         setattr(module,'botsreversed'+'codeconversions',reversedict)
     try:
         return module.botsreversedcodeconversions[value]
@@ -350,7 +350,7 @@ def rcodeconversion(modulename,value):
     ''' as codeconversion but reverses the dictionary first'''
     module,filename = botslib.botsimport('codeconversions',modulename)
     if not hasattr(module,'botsreversed'+'codeconversions'):
-        reversedict = dict((value,key) for key,value in module.codeconversions.items())
+        reversedict = dict((value,key) for key,value in module.codeconversions.iteritems())
         setattr(module,'botsreversed'+'codeconversions',reversedict)
     try:
         return module.botsreversedcodeconversions[value]

@@ -269,7 +269,7 @@ def read_index2database(orgpluglist):
             dbobject = table(**sleutel)         #create db-object
             if plugintype == 'partner':        #for partners, first the partner needs to be saved before groups can be made
                 dbobject.save()
-        for key,value in plug.items():      #update object with attributes from plugin
+        for key,value in plug.iteritems():      #update object with attributes from plugin
             setattr(dbobject,key,value)
         dbobject.save()                     #and save the updated object.
         botsglobal.logger.info(_(u'        Write to database is OK.'))

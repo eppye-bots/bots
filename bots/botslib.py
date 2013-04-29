@@ -132,7 +132,7 @@ class OldTransaction(_Transaction):
 class NewTransaction(_Transaction):
     ''' Generate new transaction. '''
     def __init__(self,**ta_info):
-        updatedict = dict([(key,value) for key,value in ta_info.items() if key in self.filterlist])     #filter ta_info
+        updatedict = dict([(key,value) for key,value in ta_info.iteritems() if key in self.filterlist])     #filter ta_info
         updatedict['script'] = self.processlist[-1]
         namesstring = ','.join([key for key in updatedict])
         varsstring = ','.join(['%('+key+')s' for key in updatedict])
@@ -237,7 +237,7 @@ def updateinfo(change,where):
     where['rootidta'] = get_minta4query()
     wherestring = ' idta > %(rootidta)s AND ' + wherestring
     #change-dict: discard empty values. Change keys: this is needed because same keys can be in where-dict
-    change = [(key,value) for key,value in change.items() if value]
+    change = [(key,value) for key,value in change.iteritems() if value]
     changestring = ','.join([key+'=%(change_'+key+')s' for key,value in change])
     if not changestring:
         return
@@ -709,8 +709,8 @@ def countunripchars(value,delchars):
     return len([c for c in value if c not in delchars])
 
 def updateunlessset(updatedict,fromdict):
-    updatedict.update((key,value) for key, value in fromdict.items() if key not in updatedict)
-    #~ for key, value in fromdict.items():
+    updatedict.update((key,value) for key, value in fromdict.iteritems() if key not in updatedict)
+    #~ for key, value in fromdict.iteritems():
         #~ if key not in updatedict:
             #~ updatedict[key] = value
 

@@ -686,12 +686,12 @@ class xmlnocheck(xml):
         #***problem: empty xml-fields-entities with attribute are not written*************************
         if noderecord:
             fielddict = {}
-            for key,value in noderecord.items():
+            for key,value in noderecord.iteritems():
                 field,nep,attribute = key.partition(attributemarker)
                 if not field in fielddict:
                     fielddict[field] = {}
                 fielddict[field][attribute] = value
-            for key,attributedict in fielddict.items():
+            for key,attributedict in fielddict.iteritems():
                 ET.SubElement(xmlrecord, key,attributedict).text=None    #add xml element to xml record
         return xmlrecord
 
@@ -747,7 +747,7 @@ class json(Outmessage):
                     sortedchildren[botsid].append(self._node2json(childnode))
                 else:
                     sortedchildren[botsid] = [self._node2json(childnode)]
-            for key,value in sortedchildren.items():
+            for key,value in sortedchildren.iteritems():
                 if len(value) == 1:
                     newdict[key] = value[0]
                 else:

@@ -287,7 +287,7 @@ class Message(object):
 
     @staticmethod
     def _logfieldcontent(noderecord):
-        for key,value in noderecord.items():
+        for key,value in noderecord.iteritems():
             if key not in ['BOTSID','BOTSIDnr']:
                 botsglobal.logger.debug(u'    "%(key)s" : "%(value)s"',{'key':key,'value':value})
 

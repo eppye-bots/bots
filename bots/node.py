@@ -125,7 +125,7 @@ class Node(object):
         '''
         tmpdict = {}
         #~ print 'get_queries_from_edi', record_definition[QUERIES]
-        for key,value in record_definition[QUERIES].items():
+        for key,value in record_definition[QUERIES].iteritems():
             found = self.enhancedget(value)   #search in last added node
             if found is not None:
                 found = found.strip()         #needed to get correct ISA-fields 
@@ -288,38 +288,38 @@ class Node(object):
             if more than one value can be found: first one is returned
             starts searching in current node, then deeper
         '''
-        #sanity check of mpaths. None only allowed in last section of Mpath; first checks all parts except last one
-        if not mpaths or not isinstance(mpaths,tuple):
-            raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
-        for part in mpaths[:-1]:
-            if not isinstance(part,dict):
+        if False:
+            #sanity check of mpaths. None only allowed in last section of Mpath; first checks all parts except last one
+            if not mpaths or not isinstance(mpaths,tuple):
                 raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
-            if 'BOTSID' not in part:
-                raise botslib.MappingFormatError(_(u'Section without "BOTSID": get(%(mpath)s)'),{'mpath':mpaths})
-            for key,value in part.iteritems():
+            for part in mpaths[:-1]:
+                if not isinstance(part,dict):
+                    raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
+                if 'BOTSID' not in part:
+                    raise botslib.MappingFormatError(_(u'Section without "BOTSID": get(%(mpath)s)'),{'mpath':mpaths})
+                for key,value in part.iteritems():
+                    if not isinstance(key,basestring):
+                        raise botslib.MappingFormatError(_(u'Keys must be strings: get(%(mpath)s)'),{'mpath':mpaths})
+                    if not isinstance(value,basestring):
+                        raise botslib.MappingFormatError(_(u'Values must be strings: get(%(mpath)s)'),{'mpath':mpaths})
+            #sanity check of mpaths: None only allowed in last section of Mpath; check last part
+            if not isinstance(mpaths[-1],dict):
+                raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
+            if 'BOTSID' not in mpaths[-1]:
+                raise botslib.MappingFormatError(_(u'Last section without "BOTSID": get(%(mpath)s)'),{'mpath':mpaths})
+            count = 0
+            for key,value in mpaths[-1].iteritems():
                 if not isinstance(key,basestring):
-                    raise botslib.MappingFormatError(_(u'Keys must be strings: get(%(mpath)s)'),{'mpath':mpaths})
-                if not isinstance(value,basestring):
-                    raise botslib.MappingFormatError(_(u'Values must be strings: get(%(mpath)s)'),{'mpath':mpaths})
+                    raise botslib.MappingFormatError(_(u'Keys must be strings in last section: get(%(mpath)s)'),{'mpath':mpaths})
+                if value is None:
+                    count += 1
+                elif not isinstance(value,basestring):
+                    raise botslib.MappingFormatError(_(u'Values must be strings (or none) in last section: get(%(mpath)s)'),{'mpath':mpaths})
+            if count > 1:
+                raise botslib.MappingFormatError(_(u'Max one "None" in last section: get(%(mpath)s)'),{'mpath':mpaths})
+        for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        #sanity check of mpaths: None only allowed in last section of Mpath; check last part
-        if not isinstance(mpaths[-1],dict):
-            raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
-        if 'BOTSID' not in mpaths[-1]:
-            raise botslib.MappingFormatError(_(u'Last section without "BOTSID": get(%(mpath)s)'),{'mpath':mpaths})
-        count = 0
-        for key,value in mpaths[-1].iteritems():
-            if not isinstance(key,basestring):
-                raise botslib.MappingFormatError(_(u'Keys must be strings in last section: get(%(mpath)s)'),{'mpath':mpaths})
-            if value is None:
-                count += 1
-            elif not isinstance(value,basestring):
-                raise botslib.MappingFormatError(_(u'Values must be strings (or none) in last section: get(%(mpath)s)'),{'mpath':mpaths})
-        if count > 1:
-            raise botslib.MappingFormatError(_(u'Max one "None" in last section: get(%(mpath)s)'),{'mpath':mpaths})
-        if 'BOTSIDnr' not in mpaths[-1]:
-            mpaths[-1]['BOTSIDnr'] = u'1'
         #go get it!
         terug =  self._getcore(*mpaths)
         botsglobal.logmap.debug(u'"%(terug)s" for get%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
@@ -365,12 +365,12 @@ class Node(object):
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
         count = decimal.Decimal(0)
-        mpathscopy = mpaths[:]
+        mpath_for_found_nod = mpaths[-1].copy
         for key,value in mpaths[-1].items():
             if value is None:
-                del mpathscopy[-1][key]
-        for i in self.getloop(*mpathscopy):
-            value = i.get(mpaths[-1])
+                del mpaths[-1][key]
+        for i in self.getloop(*mpaths):
+            value = i.get(mpath_for_found_nod)
             if value:
                 count += decimal.Decimal(value)
         return unicode(count)

@@ -441,17 +441,17 @@ class var(Inmessage):
         valuepos    = 1    #record position of token in line
         countline   = 1    #count number of lines; start with 1
         countpos    = 0    #count position/number of chars within line
-        sep = field_sep + sfield_sep + record_sep + rep_sep
+        sep = field_sep + sfield_sep + record_sep + escape + rep_sep
 
         for char in self.rawinput:    #get next char
-            #just count number lines/position; no action.
             if char == u'\n':
+                #count number lines/position; no action.
                 countline += 1      #count line
                 countpos = 0        #position back to 0
             else:
                 countpos += 1       #position within line
-            #lexing within a quote; note that quote-char works as escape-char within a quote
             if mode_quote:
+                #lexing within a quote; note that quote-char works as escape-char within a quote
                 if mode_2quote:
                     mode_2quote = 0
                     if char == quote_char: #after quote-char another quote-char: used to escape quote_char:
@@ -473,57 +473,57 @@ class var(Inmessage):
                 else:                       #we are in quote, just append char to token
                     value += char
                     continue
-            #handle char 'between' records. 
             if not mode_inrecord:
+                #handle char 'between' records. 
                 if char.isspace():  #if space: ignor char, get next char. note: whitespace = ' \t\n\r\v\f'
                     continue
                 mode_inrecord = 1   #not whitespace so a new record is started
-            #check if char needs to be skipped. In csv these chars could be in a quote; in eg edifact chars will be skipped, even if after escape sign.
             if char in skip_char:
+                #char is skipped. In csv these chars could be in a quote; in eg edifact chars will be skipped, even if after escape sign.
                 continue
-            #in escaped_mode: char after escape sign is appended to token 
             if mode_escape:
+                #in escaped_mode: char after escape sign is appended to token 
                 mode_escape = 0
                 value += char
                 continue
-            #if no char in token: this is a new token, get line and pos for (new) token
             if not value:        
+                #if no char in token: this is a new token, get line and pos for (new) token
                 valueline = countline
                 valuepos = countpos
-            #for csv: handle new quote value. New quote value only makes sense for new field (value is empty) or field contains only whitespace 
             if char == quote_char and (not value or value.isspace()):
+                #for csv: handle new quote value. New quote value only makes sense for new field (value is empty) or field contains only whitespace 
                 mode_quote = 1
-                continue
-            if char == escape:
-                mode_escape = 1
                 continue
             if char not in sep:
                 value += char    #just a char: append char to value
                 continue
-            #end of (sub)field. Note: first field of composite is marked as 'field'
             if char in field_sep:
-                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
+                #end of (sub)field. Note: first field of composite is marked as 'field'
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current value to lex_record
                 value = u''
                 sfield = 0      #new token is field
                 continue
-            #end of (sub)field. Note: first field of composite is marked as 'field'
             if char == sfield_sep:
-                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
+                #end of (sub)field. Note: first field of composite is marked as 'field'
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current value to lex_record
                 value = u''
                 sfield = 1        #new token is sub-field
                 continue
-            if char == rep_sep:
-                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
-                value = u''
-                sfield = 2        #new token is sub-field
-                continue
             if char in record_sep:      #end of record
-                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current token to record
-                self.lex_records.append(lex_record)                 #write record to recordlist
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current value to lex_record
+                self.lex_records.append(lex_record)                 #write lex_record to self.lex_records
                 lex_record = []
                 mode_inrecord = 0    #    
                 value = u''
                 sfield = 0      #new token is field 
+                continue
+            if char == escape:
+                mode_escape = 1
+                continue
+            if char == rep_sep:
+                lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current value to lex_record
+                value = u''
+                sfield = 2        #new token is sub-field
                 continue
         #end of for-loop. all characters have been processed.
         #in a perfect world, value should always be empty now, but:
@@ -1162,7 +1162,7 @@ class xml(Inmessage):
             parser = ET.XMLParser()
             try:
                 extra_character_entity = getattr(module, 'extra_character_entity')
-                for key,value in extra_character_entity.items():
+                for key,value in extra_character_entity.iteritems():
                     parser.entity[key] = value
             except AttributeError:
                 pass    #there is no extra_character_entity in the mailbag definitions, is OK.
@@ -1187,7 +1187,7 @@ class xml(Inmessage):
         else:
             self.messagegrammarread()
             parser = ET.XMLParser()
-            for key,value in self.ta_info['extra_character_entity'].items():
+            for key,value in self.ta_info['extra_character_entity'].iteritems():
                 parser.entity[key] = value
             etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
@@ -1199,7 +1199,7 @@ class xml(Inmessage):
     def _handle_empty(self,xmlnode):
         if xmlnode.text:
             xmlnode.text = xmlnode.text.strip()
-        for key,value in xmlnode.items():
+        for key,value in xmlnode.iteritems():
             xmlnode.attrib[key] = value.strip()
         for xmlchildnode in xmlnode:   #for every node in mpathtree
             self._handle_empty(xmlchildnode)
@@ -1213,9 +1213,8 @@ class xml(Inmessage):
                 ## remark for generating grammars: empty strings should generate a field here
                 if xmlchildnode.text:
                     newnode.record[xmlchildnode.tag] = xmlchildnode.text      #add as a field
-                for key,value in xmlchildnode.items():   #convert the xml-attributes of this 'xml-filed' to fields in dict with attributemarker.
-                    if value:
-                        newnode.record[xmlchildnode.tag + self.ta_info['attributemarker'] + key] = value      #add as a field
+                #convert the xml-attributes of this 'xml-filed' to fields in dict with attributemarker.
+                newnode.record.update((xmlchildnode.tag + self.ta_info['attributemarker'] + key, value) for key,value in xmlchildnode.iteritems() if value)
             elif entitytype==1:  #is a record according to grammar
                 newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
                 self.stack.pop()    #handled the xmlnode, so remove it from the stack
@@ -1228,7 +1227,7 @@ class xml(Inmessage):
 
     def _etreenode2botstreenode(self,xmlnode):
         ''' build a basic dict from xml-node. Add BOTSID, xml-attributes (of 'record'), xmlnode.text as BOTSCONTENT.'''
-        build = dict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.items() if value)   #convert xml attributes to fields.
+        build = dict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.iteritems() if value)   #convert xml attributes to fields.
         build['BOTSID'] = xmlnode.tag
         if xmlnode.text:
             build['BOTSCONTENT'] = xmlnode.text
@@ -1312,7 +1311,7 @@ class json(Inmessage):
 
     def _dojsonobject(self,jsonobject,name):
         thisnode = node.Node(record={'BOTSID':name})  #initialise empty node.
-        for key,value in jsonobject.items():
+        for key,value in jsonobject.iteritems():
             if value is None:
                 continue
             elif isinstance(value,basestring):  #json field; map to field in node.record
