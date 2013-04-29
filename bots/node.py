@@ -440,10 +440,10 @@ class Node(object):
                     return False
                 if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'Keys must be strings: put(%(mpath)s)'),{'mpath':mpaths})
-                if kwargs and 'strip' in kwargs and kwargs['strip'] == False:
-                    part[key] = unicode(value)          #used for fixed ISA header of x12
-                else:
+                if kwargs.get('strip',True):
                     part[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
+                else:
+                    part[key] = unicode(value)          #used for fixed ISA header of x12
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
 
@@ -456,7 +456,7 @@ class Node(object):
 
     def _putcore(self,*mpaths):
         if not mpaths:  #newmpath is exhausted, stop searching.
-            return True
+            return
         for childnode in self.children:
             if childnode.record['BOTSID'] == mpaths[0]['BOTSID'] and childnode._sameoccurence(mpaths[0]):    #checking of BOTSID is also done in sameoccurance!->performance!
                 childnode._putcore(*mpaths[1:])
@@ -479,8 +479,6 @@ class Node(object):
                     raise botslib.MappingFormatError(_(u'Keys must be strings: putloop(%(mpath)s)'),{'mpath':mpaths})
                 if value is None:
                     return False
-                #~ if not isinstance(value,basestring):
-                    #~ raise botslib.MappingFormatError(_(u'Values must be strings in putloop%(mpaths)s'),mpaths=str(mpaths))
                 part[key] = unicode(value).strip()
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'

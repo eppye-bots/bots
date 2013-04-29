@@ -91,50 +91,57 @@ class Inmessage(message.Message):
             for fixed field: same handling; length is not checked.
         '''
         if field_definition[BFORMAT] == 'A':
-            if isinstance(self,var):  #check length fields in variable records
-                lenght = len(value)
-                if lenght > field_definition[LENGTH]:
+            if field_definition[MINLENGTH] > len(value) > field_definition[LENGTH]:
+                if len(value) > field_definition[LENGTH]:
                     self.add2errorlist(_(u'[F05]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
                                         {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-                if lenght < field_definition[MINLENGTH]:
+                if len(value) < field_definition[MINLENGTH]:
                     self.add2errorlist(_(u'[F06]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
                                         {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
-        elif field_definition[BFORMAT] == 'D':
-            try:
-                lenght = len(value)
-                if lenght == 6:
-                    time.strptime(value,'%y%m%d')
-                elif lenght == 8:
-                    time.strptime(value,'%Y%m%d')
-                else:
-                    raise ValueError(u'To be catched')
-            except ValueError:
-                self.add2errorlist(_(u'[F07]%(linpos)s: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
-                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-        elif field_definition[BFORMAT] == 'T':
-            try:
-                lenght = len(value)
-                if lenght == 4:
-                    time.strptime(value,'%H%M')
-                elif lenght == 6:
-                    time.strptime(value,'%H%M%S')
-                elif lenght == 7 or lenght == 8:
-                    time.strptime(value[0:6],'%H%M%S')
-                    if not value[6:].isdigit():
+        elif field_definition[BFORMAT] in 'DT':
+            lenght = len(value)
+            if field_definition[BFORMAT] == 'D':
+                try:
+                    if lenght == 6:
+                        time.strptime(value,'%y%m%d')
+                    elif lenght == 8:
+                        time.strptime(value,'%Y%m%d')
+                    else:
                         raise ValueError(u'To be catched')
-                else:
-                    raise ValueError(u'To be catched')
-            except  ValueError:
-                self.add2errorlist(_(u'[F08]%(linpos)s: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
-                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-        else:   #numerics (R, N, I)
-            #~ if not value:
-                #~ if self.ta_info['acceptspaceinnumfield']:
-                    #~ value='0'
-                #~ else:
-                    #~ self.add2errorlist(_(u'[13]%(linpos)s: Record "%(record)s" field "%(field)s" has numeric format but contains only space.\n')%
-                                        #~ {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID]})
-                #~ return ''   #when num field has spaces as content, spaces are stripped. Field should be numeric.
+                except ValueError:
+                    self.add2errorlist(_(u'[F07]%(linpos)s: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            else:   #field_definition[BFORMAT] == 'T':
+                try:
+                    if lenght == 4:
+                        time.strptime(value,'%H%M')
+                    elif lenght == 6:
+                        time.strptime(value,'%H%M%S')
+                    elif lenght == 7 or lenght == 8:
+                        time.strptime(value[0:6],'%H%M%S')
+                        if not value[6:].isdigit():
+                            raise ValueError(u'To be catched')
+                    else:
+                        raise ValueError(u'To be catched')
+                except  ValueError:
+                    self.add2errorlist(_(u'[F08]%(linpos)s: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+        else:   #elif field_definition[BFORMAT] in 'RNI':   #numerics (R, N, I)
+            if self.ta_info['lengthnumericbare']:
+                chars_not_counted = '-+' + self.ta_info['decimaal']
+                length = 0
+                for c in value:
+                    if c not in chars_not_counted:
+                        length += 1
+            else:
+                length = len(value)
+            if field_definition[MINLENGTH] > length > field_definition[LENGTH]:
+                if length > field_definition[LENGTH]:
+                    self.add2errorlist(_(u'[F10]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+                if length < field_definition[MINLENGTH]:
+                    self.add2errorlist(_(u'[F11]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
             if value[-1] == u'-':    #if minus-sign at the end, put it in front.
                 value = value[-1] + value[:-1]
             value = value.replace(self.ta_info['triad'],u'')     #strip triad-separators
@@ -142,18 +149,26 @@ class Inmessage(message.Message):
             if 'E' in value or 'e' in value:
                 self.add2errorlist(_(u'[F09]%(linpos)s: Record "%(record)s" field "%(field)s" contains exponent: "%(content)s".\n')%
                                     {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-            if isinstance(self,var):  #check length num fields in variable records
-                if self.ta_info['lengthnumericbare']:
-                    length = botslib.countunripchars(value,'-+.')
-                else:
-                    length = len(value)
-                if length > field_definition[LENGTH]:
-                    self.add2errorlist(_(u'[F10]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-                if length < field_definition[MINLENGTH]:
-                    self.add2errorlist(_(u'[F11]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
-            if field_definition[BFORMAT] == 'I':
+            if field_definition[BFORMAT] == 'R':
+                lendecimal = lendecimal = len(value.partition('.')[2])
+                try:    #convert to decimal in order to check validity
+                    valuedecimal = float(value)
+                    value = '%.*F'%(lendecimal,valuedecimal)
+                except:
+                    self.add2errorlist(_(u'[F16]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            elif field_definition[BFORMAT] == 'N':
+                lendecimal = len(value.partition('.')[2])
+                if lendecimal != field_definition[DECIMALS]:
+                    self.add2errorlist(_(u'[F14]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has invalid nr of decimals: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+                try:    #convert to decimal in order to check validity
+                    valuedecimal = float(value)
+                    value = '%.*F'%(lendecimal,valuedecimal)
+                except:
+                    self.add2errorlist(_(u'[F15]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            elif field_definition[BFORMAT] == 'I':
                 if '.' in value:
                     self.add2errorlist(_(u'[F12]%(linpos)s: Record "%(record)s" field "%(field)s" has format "I" but contains decimal sign: "%(content)s".\n')%
                                         {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
@@ -165,25 +180,6 @@ class Inmessage(message.Message):
                     except:
                         self.add2errorlist(_(u'[F13]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
                                             {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-            elif field_definition[BFORMAT] == 'N':
-                lendecimal = len(value[value.find('.'):])-1
-                if lendecimal != field_definition[DECIMALS]:
-                    self.add2errorlist(_(u'[F14]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has invalid nr of decimals: "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-                try:    #convert to decimal in order to check validity
-                    valuedecimal = float(value)
-                    value = '%.*F'%(lendecimal,valuedecimal)
-                except:
-                    self.add2errorlist(_(u'[F15]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-            elif field_definition[BFORMAT] == 'R':
-                lendecimal = len(value[value.find('.'):])-1
-                try:    #convert to decimal in order to check validity
-                    valuedecimal = float(value)
-                    value = '%.*F'%(lendecimal,valuedecimal)
-                except:
-                    self.add2errorlist(_(u'[F16]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
         return value
 
     def _parse(self,structure_level,inode):
@@ -409,6 +405,84 @@ class fixed(Inmessage):
                 record2build[field_definition[ID]] = value
             pos += field_definition[LENGTH]
         return record2build
+
+    def _formatfield(self,value,field_definition,structure_record,node_instance):
+        ''' Format of a field is checked and converted if needed.
+            Input: value (string), field definition.
+            Output: the formatted value (string)
+            Parameters of self.ta_info are used: triad, decimaal
+            for fixed field: same handling; length is not checked.
+        '''
+        if field_definition[BFORMAT] == 'A':
+            pass
+        elif field_definition[BFORMAT] in 'DT':
+            lenght = len(value)
+            if field_definition[BFORMAT] == 'D':
+                try:
+                    if lenght == 6:
+                        time.strptime(value,'%y%m%d')
+                    elif lenght == 8:
+                        time.strptime(value,'%Y%m%d')
+                    else:
+                        raise ValueError(u'To be catched')
+                except ValueError:
+                    self.add2errorlist(_(u'[F07]%(linpos)s: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            else:   #if field_definition[BFORMAT] == 'T':
+                try:
+                    if lenght == 4:
+                        time.strptime(value,'%H%M')
+                    elif lenght == 6:
+                        time.strptime(value,'%H%M%S')
+                    elif lenght == 7 or lenght == 8:
+                        time.strptime(value[0:6],'%H%M%S')
+                        if not value[6:].isdigit():
+                            raise ValueError(u'To be catched')
+                    else:
+                        raise ValueError(u'To be catched')
+                except  ValueError:
+                    self.add2errorlist(_(u'[F08]%(linpos)s: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+        else:   #elif field_definition[BFORMAT] in 'RNI':   #numerics (R, N, I)
+            if value[-1] == u'-':    #if minus-sign at the end, put it in front.
+                value = value[-1] + value[:-1]
+            value = value.replace(self.ta_info['triad'],u'')     #strip triad-separators
+            value = value.replace(self.ta_info['decimaal'],u'.',1) #replace decimal sign by canonical decimal sign
+            if 'E' in value or 'e' in value:
+                self.add2errorlist(_(u'[F09]%(linpos)s: Record "%(record)s" field "%(field)s" contains exponent: "%(content)s".\n')%
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            if field_definition[BFORMAT] == 'R':
+                lendecimal = len(value.partition('.')[2])
+                try:    #convert to decimal in order to check validity
+                    valuedecimal = float(value)
+                    value = '%.*F'%(lendecimal,valuedecimal)
+                except:
+                    self.add2errorlist(_(u'[F16]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            elif field_definition[BFORMAT] == 'N':
+                lendecimal = len(value.partition('.')[2])
+                if lendecimal != field_definition[DECIMALS]:
+                    self.add2errorlist(_(u'[F14]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has invalid nr of decimals: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+                try:    #convert to decimal in order to check validity
+                    valuedecimal = float(value)
+                    value = '%.*F'%(lendecimal,valuedecimal)
+                except:
+                    self.add2errorlist(_(u'[F15]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+            elif field_definition[BFORMAT] == 'I':
+                if '.' in value:
+                    self.add2errorlist(_(u'[F12]%(linpos)s: Record "%(record)s" field "%(field)s" has format "I" but contains decimal sign: "%(content)s".\n')%
+                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+                else:
+                    try:    #convert to decimal in order to check validity
+                        valuedecimal = float(value)
+                        valuedecimal = valuedecimal / 10**field_definition[DECIMALS]
+                        value = '%.*F'%(field_definition[DECIMALS],valuedecimal)
+                    except:
+                        self.add2errorlist(_(u'[F13]%(linpos)s: Record "%(record)s" numeric field "%(field)s" has non-numerical content: "%(content)s".\n')%
+                                            {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+        return value
 
 
 class idoc(fixed):

@@ -132,7 +132,12 @@ class Outmessage(message.Message):
             Classses that write using other libraries (xml, json, template, db) use specific write methods.
         '''
         self.tree2records(node_instance)
-        self._records2file()
+        value = self.record2string(self.lex_records)
+        try:
+            self._outstream.write(value)
+        except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
+            raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
+                                            {'char':self.ta_info['charset'],'content':str(lex_record)})
 
     def tree2records(self,node_instance):
         self.lex_records = []                   #tree of nodes is flattened to these lex_records
@@ -207,49 +212,49 @@ class Outmessage(message.Message):
                     value = value.rjust(field_definition[MINLENGTH])
                 else:
                     value = value.ljust(field_definition[MINLENGTH])    #add spaces (left, because A-field is right aligned)
-            length = len(value)
-            if length > field_definition[LENGTH]:
-                self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-            if length < field_definition[MINLENGTH]:
-                self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
-        elif field_definition[BFORMAT] == 'D':
-            try:
-                lenght = len(value)
-                if lenght == 6:
-                    time.strptime(value,'%y%m%d')
-                elif lenght == 8:
-                    time.strptime(value,'%Y%m%d')
-                else:
-                    raise ValueError(u'To be catched')
-            except ValueError:
-                self.add2errorlist(_(u'[F22]: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-            if lenght > field_definition[LENGTH]:
-                self.add2errorlist(_(u'[F31]: Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-            if lenght < field_definition[MINLENGTH]:
-                self.add2errorlist(_(u'[F32]: Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
-        elif field_definition[BFORMAT] == 'T':
-            try:
-                lenght = len(value)
-                if lenght == 4:
-                    time.strptime(value,'%H%M')
-                elif lenght == 6:
-                    time.strptime(value,'%H%M%S')
-                else:
-                    raise ValueError(u'To be catched')
-            except  ValueError:
-                self.add2errorlist(_(u'[F23]: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-            if lenght > field_definition[LENGTH]:
-                self.add2errorlist(_(u'[F33]: Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-            if lenght < field_definition[MINLENGTH]:
-                self.add2errorlist(_(u'[F34]: Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+            if field_definition[MINLENGTH] > len(value) > field_definition[LENGTH]:
+                if len(value) > field_definition[LENGTH]:
+                    self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+                if len(value) < field_definition[MINLENGTH]:
+                    self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+        elif field_definition[BFORMAT] in 'DT':
+            lenght = len(value)
+            if field_definition[BFORMAT] == 'D':
+                try:
+                    if lenght == 6:
+                        time.strptime(value,'%y%m%d')
+                    elif lenght == 8:
+                        time.strptime(value,'%Y%m%d')
+                    else:
+                        raise ValueError(u'To be catched')
+                except ValueError:
+                    self.add2errorlist(_(u'[F22]: Record "%(record)s" date field "%(field)s" not a valid date: "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+                if lenght > field_definition[LENGTH]:
+                    self.add2errorlist(_(u'[F31]: Record "%(record)s" date field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+                if lenght < field_definition[MINLENGTH]:
+                    self.add2errorlist(_(u'[F32]: Record "%(record)s" date field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+            else:   #if field_definition[BFORMAT] == 'T':
+                try:
+                    if lenght == 4:
+                        time.strptime(value,'%H%M')
+                    elif lenght == 6:
+                        time.strptime(value,'%H%M%S')
+                    else:
+                        raise ValueError(u'To be catched')
+                except ValueError:
+                    self.add2errorlist(_(u'[F23]: Record "%(record)s" time field "%(field)s" not a valid time: "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
+                if lenght > field_definition[LENGTH]:
+                    self.add2errorlist(_(u'[F33]: Record "%(record)s" time field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+                if lenght < field_definition[MINLENGTH]:
+                    self.add2errorlist(_(u'[F34]: Record "%(record)s" time field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
         else:   #numerics
             if value[0] == '-':
                 minussign = '-'
@@ -322,11 +327,7 @@ class Outmessage(message.Message):
     def _initfield(self,field_definition):
         ''' basically csv only.
         '''
-        if field_definition[BFORMAT] == 'A':
-            value = ''
-        elif field_definition[BFORMAT] == 'D':
-            value = ''
-        elif field_definition[BFORMAT] == 'T':
+        if field_definition[BFORMAT] in 'ADT':
             value = ''
         else:   #numerics
             value = '0'
@@ -342,31 +343,10 @@ class Outmessage(message.Message):
                 value = value.zfill(field_definition[MINLENGTH])
         return value
 
-
-    def _records2file(self):
-        ''' convert self.lex_records to a file.
+    def record2string(self,lex_records):
+        ''' write lex_records to a file.
             using the right editype (edifact, x12, etc) and charset.
-        '''
-        wrap_length = int(self.ta_info.get('wrap_length', 0))
-        if wrap_length:
-            stringinizedrecords = ''.join(self.record2string(lex_record) for lex_record in self.lex_records) # join all lex_records
-            for i in range(0,len(stringinizedrecords),wrap_length): # then split in fixed lengths
-                try:
-                    self._outstream.write(stringinizedrecords[i:i+wrap_length] + '\r\n')
-                except UnicodeEncodeError:
-                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
-                                                    {'char':self.ta_info['charset'],'content':stringinizedrecords[i:i+wrap_length]})
-        else:
-            for lex_record in self.lex_records:
-                try:
-                    self._outstream.write(self.record2string(lex_record))
-                except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
-                    raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
-                                                    {'char':self.ta_info['charset'],'content':str(lex_record)})
-                    #code before 7 aug 2007 had other handling for flup. May have changed because python2.4->2.5?
-
-    def record2string(self,record):
-        ''' write (all fields of) a record using the right separators, escape etc
+            write (all fields of) each record using the right separators, escape etc
         '''
         sfield_sep = self.ta_info['sfield_sep']
         if self.ta_info['record_tag_sep']:
@@ -379,53 +359,55 @@ class Outmessage(message.Message):
         record_sep = self.ta_info['record_sep'] + self.ta_info['add_crlfafterrecord_sep']
         forcequote = self.ta_info['forcequote']
         escapechars = self._getescapechars()
+        
         value = u''     #to collect separator/escape plus field content
-        fieldcount = 0
-        mode_quote = False
-        if self.ta_info['noBOTSID']:  #for some csv-files: do not write BOTSID so remove it
-            del record[0]
-        for field in record:        #loop all fields in record
-            if field[SFIELD]:
-                value += sfield_sep
-            else:   #is a field:
-                if fieldcount == 0:  #do nothing because first field in record is not preceded by a separator
-                    fieldcount = 1
-                elif fieldcount == 1:
-                    value += record_tag_sep
-                    fieldcount = 2
-                else:
-                    value += field_sep
-            if quote_char:      #quote char only used for csv
-                start_to__quote = False
-                if forcequote == 2:
-                    if field[FORMATFROMGRAMMAR] in ['AN','A','AR']:
-                        start_to__quote = True
-                elif forcequote:    #always quote; this catches values 1, '1', '0'
-                    start_to__quote = True
-                else:
-                    if field_sep in field[VALUE] or quote_char in field[VALUE] or record_sep in field[VALUE]:
-                        start_to__quote = True
-                #TO DO test. if quote_char='' this works OK. Alt: check first if quote_char
-                if start_to__quote:
-                    value += quote_char
-                    mode_quote = True
-            for char in field[VALUE]:   #use escape (edifact, tradacom). For x12 is warned if content contains separator
-                if char in escapechars:
-                    if isinstance(self,x12):
-                        if self.ta_info['replacechar']:
-                            char = self.ta_info['replacechar']
-                        else:
-                            raise botslib.OutMessageError(_(u'[F51]: Character "%(char)s" is used as separator in this x12 file, so it can not be used in content. Field: "%(data)s".'),
-                                                            {'char':char,'content':field[VALUE]})
+        for lex_record in lex_records:
+            if self.ta_info['noBOTSID']:  #for some csv-files: do not write BOTSID so remove it
+                del lex_record[0]
+            fieldcount = 0
+            mode_quote = False
+            for field in lex_record:        #loop all fields in lex_record
+                if field[SFIELD]:
+                    value += sfield_sep
+                else:   #is a field:
+                    if fieldcount == 0:  #do nothing because first field in lex_record is not preceded by a separator
+                        fieldcount = 1
+                    elif fieldcount == 1:
+                        value += record_tag_sep
+                        fieldcount = 2
                     else:
-                        value +=escape
-                elif mode_quote and char == quote_char:
+                        value += field_sep
+                if quote_char:      #quote char only used for csv
+                    start_to__quote = False
+                    if forcequote == 2:
+                        if field[FORMATFROMGRAMMAR] in ['AN','A','AR']:
+                            start_to__quote = True
+                    elif forcequote:    #always quote; this catches values 1, '1', '0'
+                        start_to__quote = True
+                    else:
+                        if field_sep in field[VALUE] or quote_char in field[VALUE] or record_sep in field[VALUE]:
+                            start_to__quote = True
+                    #TO DO test. if quote_char='' this works OK. Alt: check first if quote_char
+                    if start_to__quote:
+                        value += quote_char
+                        mode_quote = True
+                for char in field[VALUE]:   #use escape (edifact, tradacom). For x12 is warned if content contains separator
+                    if char in escapechars:
+                        if isinstance(self,x12):
+                            if self.ta_info['replacechar']:
+                                char = self.ta_info['replacechar']
+                            else:
+                                raise botslib.OutMessageError(_(u'[F51]: Character "%(char)s" is used as separator in this x12 file, so it can not be used in content. Field: "%(data)s".'),
+                                                                {'char':char,'content':field[VALUE]})
+                        else:
+                            value +=escape
+                    elif mode_quote and char == quote_char:
+                        value += quote_char
+                    value += char
+                if mode_quote:
                     value += quote_char
-                value += char
-            if mode_quote:
-                value += quote_char
-                mode_quote = False
-        value += record_sep
+                    mode_quote = False
+            value += record_sep
         return value
 
     def _getescapechars(self):
