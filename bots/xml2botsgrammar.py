@@ -1,3 +1,8 @@
+''' converts xml file to a bots grammar.
+    Note: in usersys/grammars/xmlnocheck should be a file xmlnocheck
+    Usage: c:\python25\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
+    Try to have a 'completely filled' xml file.
+'''
 import os
 import sys
 import atexit
@@ -10,20 +15,17 @@ import botsinit
 import botsglobal
 from botsconfig import *
 
-#in usersys/grammars/xmlnocheck should be a file xmlnocheck
-#usage: c:\python25\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
-
-
-def treewalker(node_instance,mpath):
+#***functions for mapping******************************************
+def map_treewalker(node_instance,mpath):
     mpath.append({'BOTSID':node_instance.record['BOTSID']})
     for childnode in node_instance.children:
         yield childnode,mpath[:]
-        for terugnode,terugmpath in treewalker(childnode,mpath):
+        for terugnode,terugmpath in map_treewalker(childnode,mpath):
             yield terugnode,terugmpath
     mpath.pop()
 
 
-def writefields(tree,node_instance,mpath):
+def map_writefields(tree,node_instance,mpath):
     putmpath = copy.deepcopy(mpath)
     #~ print mpath
     #~ print node_instance.record
@@ -32,11 +34,9 @@ def writefields(tree,node_instance,mpath):
         if key not in ['BOTSID','BOTSIDnr']:
             putmpath[-1][key] = u'dummy'
             #~ print 'mpath used',mpath
-            #~ putmpath = copy.deepcopy(mpath)
     tree.put(*putmpath)
-            #~ del mpath[-1][key]
-    #~ print '\n'
 
+#***functions for generating grammar from tree******************************************
 def tree2grammar(node_instance,structure,recorddefs):
     structure.append({ID:node_instance.record['BOTSID'],MIN:0,MAX:99999,LEVEL:[]})
     recordlist = []
@@ -60,10 +60,10 @@ def recorddefs2string(recorddefs,sortedstructurelist):
                 recorddefsstring += "        %s,\n"%field
                 break
         for field in recorddefs[i]:
-            if i + '__' in field[0]:
+            if field[0].startswith(i + '__'):
                 recorddefsstring += "        %s,\n"%field
         for field in sorted(recorddefs[i]):
-            if field[0] not in ['BOTSID','BOTSIDnr'] and i + '__' not in field[0]:
+            if field[0] not in ['BOTSID','BOTSIDnr','BOTSCONTENT'] and not field[0].startswith(i + '__'):
                 recorddefsstring += "        %s,\n"%field
         recorddefsstring += "        ],\n"
     recorddefsstring += "    }\n"
@@ -149,25 +149,22 @@ def start():
     
     #make inmessage object: read the xml file
     inn = inmessage.parse_edi_file(editype=editype,messagetype=messagetype,filename=edifile,remove_empties_from_xml=False)
-    #make outmessage object; nothing is 'filled'yet.
+    #make outmessage object; nothing is 'filled' yet.
     out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    
     
     #***do the mapping***************************************************
     #handle root
     rootmpath = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
     out.put(*rootmpath)
-    #~ out.root.display()
-    writefields(out,inn.root,rootmpath)
+    map_writefields(out,inn.root,rootmpath)
     #walk tree; write results to out-tree
-    for node_instance,mpath in treewalker(inn.root,mpath):
+    for node_instance,mpath in map_treewalker(inn.root,mpath):
         mpath.append({'BOTSID':node_instance.record['BOTSID']})
         if out.get(*mpath) is None:
             out.put(*mpath)
-        writefields(out,node_instance,mpath)
+        map_writefields(out,node_instance,mpath)
 
-    #~ out.root.display()
-
-    #***out-tree is finished; represents 'normalised' tree suited for writing as a grammar
+    #***mapping is done; out-tree is finished; represents 'normalised' tree suited for writing as a grammar
     structure = []
     recorddefs = {}
     tree2grammar(out.root,structure,recorddefs)

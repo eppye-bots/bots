@@ -1265,22 +1265,30 @@ class xml(Inmessage):
                 parser.entity[key] = value
             etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
-        self._handle_empty(etreeroot,self.ta_info.get('remove_empties_from_xml',True))  #remove_empties_from_xml: special handling for xml2botsgrammar
+        if self.ta_info.get('remove_empties_from_xml',True):
+            self._handle_empty(etreeroot)
+        else:
+            self._handle_empty_no_remove(etreeroot)  #remove_empties_from_xml: special handling for xml2botsgrammar
         self.stackinit()
         self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
 
-    def _handle_empty(self,xmlnode,remove_empties_from_xml):
+    def _handle_empty(self,xmlnode):
         if xmlnode.text:
             xmlnode.text = xmlnode.text.strip()
-        else:
-            if not remove_empties_from_xml: #remove_empties_from_xml: special handling for xml2botsgrammar
-                xmlnode.text = ' '
-        if remove_empties_from_xml:         #remove_empties_from_xml: special handling for xml2botsgrammar
-            for key,value in xmlnode.items():
-                xmlnode.attrib[key] = value.strip()
+        for key,value in xmlnode.items():
+            xmlnode.attrib[key] = value.strip()
         for xmlchildnode in xmlnode:   #for every node in mpathtree
-            self._handle_empty(xmlchildnode,remove_empties_from_xml)
+            self._handle_empty(xmlchildnode)
+            
+    def _handle_empty_no_remove(self,xmlnode):
+        if not xmlnode.text:
+            xmlnode.text = 'x'
+        for key,value in xmlnode.items():
+            if not value:
+                xmlnode.attrib[key] = 'x'
+        for xmlchildnode in xmlnode:   #for every node in mpathtree
+            self._handle_empty_no_remove(xmlchildnode)
             
     def _etree2botstree(self,xmlnode):
         ''' recursive. '''
