@@ -329,3 +329,26 @@ def topartnerquery(query,idpartner):
     else:
         return query.filter(topartner=idpartner)
 
+
+def indent_x12(content):
+    if content.count('\n') > 6:
+        return content
+    count = 0
+    for char in content[:200].lstrip():
+        if char in '\r\n' and count != 105: #pos 105: is record_sep, could be \r\n
+            continue
+        count += 1
+        if count == 106:
+            sep = char
+            break
+    else:
+        return content
+    if sep.isalnum() or sep.isspace():
+        return content
+    return content.replace(sep,sep + '\n')
+        
+def indent_edifact(content):
+    if content.count('\n') > 4:
+        return content
+        #parse file for segment terminator
+    return content.replace("'","'\n")

@@ -368,11 +368,13 @@ def filer(request,*kw,**kwargs):
                 if ta_object.filename and ta_object.filename.isdigit():
                     if ta_object.charset:  
                         ta_object.content = botslib.readdata(ta_object.filename,charset=ta_object.charset,errors='ignore')
-                    else:   #guess charset if not available; uft-8 is reasonable
-                        #20130212: if not utf-8: changes are VERY big an error will occur, in that case use iso-8859-1   
+                    else:   #guess safe choice for charset. alt1: get charset by looking forward (until translation). alt2:try with utf-8, if error iso-8859-1   
                         ta_object.content = botslib.readdata(ta_object.filename,charset='us-ascii',errors='ignore')
                     ta_object.has_file = True
-                    #for edifact, x12: if not CR or LF: add after each segment.
+                    if ta_object.editype == 'x12':
+                        ta_object.content = viewlib.indent_x12(ta_object.content)
+                    elif ta_object.editype == 'edifact':
+                        ta_object.content = viewlib.indent_edifact(ta_object.content)
                 else:
                     ta_object.has_file = False
                     ta_object.content = _(u'No file available for display.')
