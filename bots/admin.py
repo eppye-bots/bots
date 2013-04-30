@@ -181,13 +181,14 @@ class MyRouteAdminForm(forms.ModelForm):
 class RoutesAdmin(BotsAdmin):
     actions = ('activate',)
     form = MyRouteAdminForm
-    list_display = ('active','idroute','seq','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','testindicator','notindefaultrun','zip_incoming','zip_outgoing')
+    list_display = ('active','idroute','seq','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','testindicator','notindefaultrun','zip_incoming','zip_outgoing','display_if_userscript',)
     list_display_links = ('idroute',)
     list_filter = ('idroute','active','fromeditype')
     ordering = ('idroute','seq')
+    readonly_fields = ('display_if_userscript',)
     search_fields = ('idroute', 'fromchannel__idchannel','fromeditype', 'frommessagetype', 'alt', 'tochannel__idchannel','toeditype', 'tomessagetype')
     fieldsets = (
-        (None,      {'fields':  ('active',('idroute', 'seq'),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc'),
+        (None,      {'fields':  ('active','display_if_userscript',('idroute', 'seq',),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc'),
                      'classes': ('wide extrapretty',)
                     }),
         (_(u'Filtering for outchannel'),{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),

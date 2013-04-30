@@ -2,10 +2,12 @@
     Django is not always perfect in generating db - but improving ;-)). 
     The generated database can be manipulated SQL. see bots/sql/*.
 '''
+import os
 from django.db import models
 from django.utils.translation import ugettext as _
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+import botsglobal
 
 #***Declare constants, mostly codelists.**********************************************
 DEFAULT_ENTRY = ('',"---------")
@@ -349,6 +351,12 @@ class routes(models.Model):
     defer = models.BooleanField(default=False,blank=True,help_text=_(u'Set ready for communication, defer actual communication. Communication is done later in another route(-part).'))                        #added 20100601
     zip_incoming = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Unzip received files.'))  #added 20100501 #20120828: use for zip-options
     zip_outgoing = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Send files as zip-files.'))                        #added 20100501
+    
+    def display_if_userscript(self):
+        return os.path.exists(os.path.join(botsglobal.ini.get('directories','usersysabs'),'routescripts', self.idroute + '.py'))
+    display_if_userscript.boolean = True
+    display_if_userscript.short_description = 'Route-script'
+    
     class Meta:
         db_table = 'routes'
         verbose_name = _(u'route')
