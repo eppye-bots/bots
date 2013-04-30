@@ -359,13 +359,14 @@ class Outmessage(message.Message):
         record_sep = self.ta_info['record_sep'] + self.ta_info['add_crlfafterrecord_sep']
         forcequote = self.ta_info['forcequote']
         escapechars = self._getescapechars()
-        
-        value = u''     #to collect separator/escape plus field content
+
+        lijst = []
         for lex_record in lex_records:
             if self.ta_info['noBOTSID']:  #for some csv-files: do not write BOTSID so remove it
                 del lex_record[0]
             fieldcount = 0
             mode_quote = False
+            value = u''     #to collect separator/escape plus field content
             for field in lex_record:        #loop all fields in lex_record
                 if field[SFIELD]:
                     value += sfield_sep
@@ -408,7 +409,8 @@ class Outmessage(message.Message):
                     value += quote_char
                     mode_quote = False
             value += record_sep
-        return value
+            lijst.append(value)
+        return ''.join(lijst)
 
     def _getescapechars(self):
         return ''
