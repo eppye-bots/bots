@@ -39,7 +39,7 @@ def set_context(request):
     #in bots.ini it is possible to add custom menu's
     if botsglobal.ini.has_section('custommenus'):
         custom_menuname = botsglobal.ini.get('custommenus','menuname','Custom')
-        custom_menus = [(key.title(),value) for key,value in botsglobal.ini.iteritems('custommenus') if key != 'menuname']
+        custom_menus = [(key.title(),value) for key,value in botsglobal.ini.items('custommenus') if key != 'menuname']
     else:
         custom_menuname = None
         custom_menus = None
