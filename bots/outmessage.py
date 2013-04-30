@@ -604,7 +604,7 @@ class xml(Outmessage):
                 del noderecord[key]
         xmlrecord = ET.Element(recordtag,attributedict) #make the xml-record-entity
         #add the content/text xml-record-entity (in BOTSCONTENT)
-        if 'BOTSCONTENT' in noderecord:                 
+        if 'BOTSCONTENT' in noderecord:  
             xmlrecord.text = noderecord['BOTSCONTENT']
             del noderecord['BOTSCONTENT']
         #***generate the xml-field-entities within the xml-record-entity***************************

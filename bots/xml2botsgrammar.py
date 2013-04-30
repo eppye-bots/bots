@@ -60,34 +60,14 @@ def recorddefs2string(recorddefs,sortedstructurelist):
                 recorddefsstring += "        %s,\n"%field
                 break
         for field in recorddefs[i]:
-            if '__' in field[0]:
+            if i + '__' in field[0]:
                 recorddefsstring += "        %s,\n"%field
-        for field in recorddefs[i]:
-            if field[0] not in ['BOTSID','BOTSIDnr'] and '__' not in field[0]:
-                recorddefsstring += "        %s,\n"%field
-        recorddefsstring += "        ],\n"
-    recorddefsstring += "    }\n"
-    return recorddefsstring
-    '''
-    recorddefsstring = "{\n"
-    for i in sortedstructurelist:
-    #~ for key, value in recorddefs.items():
-        recorddefsstring += "    '%s':\n        [\n"%i
-        for field in recorddefs[i]:
-            if field[0] == 'BOTSID':
-                field[1] = 'M'
-                recorddefsstring += "        %s,\n"%field
-                break
-        for field in recorddefs[i]:
-            if '__' in field[0]:
-                recorddefsstring += "        %s,\n"%field
-        for field in recorddefs[i]:
-            if field[0] not in ['BOTSID','BOTSIDnr'] and '__' not in field[0]:
+        for field in sorted(recorddefs[i]):
+            if field[0] not in ['BOTSID','BOTSIDnr'] and i + '__' not in field[0]:
                 recorddefsstring += "        %s,\n"%field
         recorddefsstring += "        ],\n"
     recorddefsstring += "    }\n"
     return recorddefsstring
-    '''
 
 def structure2string(structure,level=0):
     structurestring = ''
@@ -168,7 +148,7 @@ def start():
     filehandler.close()
     
     #make inmessage object: read the xml file
-    inn = inmessage.parse_edi_file(editype=editype,messagetype=messagetype,filename=edifile)
+    inn = inmessage.parse_edi_file(editype=editype,messagetype=messagetype,filename=edifile,remove_empties_from_xml=False)
     #make outmessage object; nothing is 'filled'yet.
     out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    
     
@@ -211,7 +191,7 @@ def start():
     grammar.write('recorddefs = %s'%(recorddefsstring))
     grammar.write('\n\n')
     grammar.close()
-    print 'grammar file is written',grammarfile
+    print 'grammar file is written:',grammarfile
 
 if __name__ == '__main__':
     start()

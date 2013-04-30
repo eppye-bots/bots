@@ -1265,18 +1265,22 @@ class xml(Inmessage):
                 parser.entity[key] = value
             etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
-        self._handle_empty(etreeroot)
+        self._handle_empty(etreeroot,self.ta_info.get('remove_empties_from_xml',True))  #remove_empties_from_xml: special handling for xml2botsgrammar
         self.stackinit()
         self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
 
-    def _handle_empty(self,xmlnode):
+    def _handle_empty(self,xmlnode,remove_empties_from_xml):
         if xmlnode.text:
             xmlnode.text = xmlnode.text.strip()
-        for key,value in xmlnode.iteritems():
-            xmlnode.attrib[key] = value.strip()
+        else:
+            if not remove_empties_from_xml: #remove_empties_from_xml: special handling for xml2botsgrammar
+                xmlnode.text = ' '
+        if remove_empties_from_xml:         #remove_empties_from_xml: special handling for xml2botsgrammar
+            for key,value in xmlnode.items():
+                xmlnode.attrib[key] = value.strip()
         for xmlchildnode in xmlnode:   #for every node in mpathtree
-            self._handle_empty(xmlchildnode)
+            self._handle_empty(xmlchildnode,remove_empties_from_xml)
             
     def _etree2botstree(self,xmlnode):
         ''' recursive. '''
@@ -1288,7 +1292,7 @@ class xml(Inmessage):
                 if xmlchildnode.text:
                     newnode.record[xmlchildnode.tag] = xmlchildnode.text      #add as a field
                 #convert the xml-attributes of this 'xml-filed' to fields in dict with attributemarker.
-                newnode.record.update((xmlchildnode.tag + self.ta_info['attributemarker'] + key, value) for key,value in xmlchildnode.iteritems() if value)
+                newnode.record.update((xmlchildnode.tag + self.ta_info['attributemarker'] + key, value) for key,value in xmlchildnode.items() if value)
             elif entitytype==1:  #is a record according to grammar
                 newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
                 self.stack.pop()    #handled the xmlnode, so remove it from the stack
@@ -1301,7 +1305,7 @@ class xml(Inmessage):
 
     def _etreenode2botstreenode(self,xmlnode):
         ''' build a basic dict from xml-node. Add BOTSID, xml-attributes (of 'record'), xmlnode.text as BOTSCONTENT.'''
-        build = dict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.iteritems() if value)   #convert xml attributes to fields.
+        build = dict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.items() if value)   #convert xml attributes to fields.
         build['BOTSID'] = xmlnode.tag
         if xmlnode.text:
             build['BOTSCONTENT'] = xmlnode.text
