@@ -455,11 +455,6 @@ def botsimport(*args):
         return: imported module, filename imported module;
         if could not be found or error in module: raise
     '''
-    for count,arg in enumerate(args):
-        try:    #__import__ is picky on the charset used. Might be different for different OS'es. So: test if charset is us-ascii
-            arg.encode('ascii')
-        except UnicodeEncodeError:  #if not us-ascii, convert to punycode
-            args[count] = arg.encode('punycode')
     modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
     modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
     try:
@@ -704,9 +699,6 @@ class Uri(object):
 
 def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
-
-def countunripchars(value,delchars):
-    return len([c for c in value if c not in delchars])
 
 def updateunlessset(updatedict,fromdict):
     updatedict.update((key,value) for key, value in fromdict.iteritems() if key not in updatedict)
