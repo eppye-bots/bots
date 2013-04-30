@@ -23,10 +23,7 @@
 											{% trans 'messagetype' %} &quot;{{ ta.messagetype }}&quot;;
 											{% trans 'date' %} &quot;{{ ta.ts|date:"DATETIME_FORMAT" }}&quot;;
 											{% trans 'file' %} &quot;{{ ta.filename }}&quot;;
-											{% trans 'confirm asked' %} &quot;{{ ta.confirmasked }}&quot;;
-											{% if ta.confirmasked %}
-											{% trans 'confirmed' %} &quot;{{ ta.confirmed }}&quot;;
-											{% trans 'confirmtype' %} &quot;{{ ta.confirmtype }}&quot;;
+											{% trans 'charset' %} &quot;{{ ta.charset }}&quot;
 											{% endif %}</td>
 				</tr>
 				</table>
