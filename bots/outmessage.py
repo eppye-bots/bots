@@ -133,11 +133,20 @@ class Outmessage(message.Message):
         '''
         self.tree2records(node_instance)
         value = self.record2string(self.lex_records)
-        try:
-            self._outstream.write(value)
-        except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
-            raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
-                                            {'char':self.ta_info['charset'],'content':str(lex_record)})
+        wrap_length = int(self.ta_info.get('wrap_length', 0))
+        if wrap_length:
+            try:
+                for i in range(0,len(value),wrap_length): # then split in fixed lengths
+                    self._outstream.write(value[i:i+wrap_length] + '\r\n')
+            except UnicodeEncodeError:
+                raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
+                                                {'char':self.ta_info['charset'],'content':value[i:i+wrap_length]})
+        else:
+            try:
+                self._outstream.write(value)
+            except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
+                raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
+                                                {'char':self.ta_info['charset'],'content':str(lex_record)})
 
     def tree2records(self,node_instance):
         self.lex_records = []                   #tree of nodes is flattened to these lex_records
