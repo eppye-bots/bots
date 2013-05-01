@@ -488,12 +488,12 @@ class csv(Grammar):
         'field_sep':':',
         'forcequote': 1,            #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:quote if alfanumeric
         'merge':True,
-        'noBOTSID':False,
-        'pass_all':True,
+        'noBOTSID':False,           #allow csv records without record ID.
+        'pass_all':True,            #(csv only) if only one recordtype and no nextmessageblock: would pass record for record to mapping. this fixes that.
         'quote_char':"'",
         'record_sep':"\r\n",
         'skip_char':'',
-        'skip_firstline':False,
+        'skip_firstline':False,     #often first line in CSV is 
         'triad':'',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         #settings needed as defaults, but not useful for this editype 
@@ -510,9 +510,6 @@ class excel(csv):
     pass
 class fixed(Grammar):
     def extracheck(self):
-        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
-            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
-                                            {'grammar':self.grammarname})
         if self.nextmessageblock is not None and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessageblock: there can be only one record in recorddefs.'),
                                             {'grammar':self.grammarname})
@@ -543,7 +540,6 @@ class fixed(Grammar):
         'decimaal':'.',
         'envelope':'',
         'merge':True,
-        'noBOTSID':False,
         'record_sep':"\r\n",
         'triad':'',
         #settings needed as defaults, but not useful for this editype 
@@ -612,7 +608,6 @@ class idoc(fixed):
         'decimaal':'.',
         'envelope':'',
         'merge':False,
-        'noBOTSID':False,
         'record_sep':"\r\n",
         'triad':'',
         'MANDT':'0',
@@ -663,7 +658,6 @@ class xml(Grammar):
         'escape':'',
         'field_sep':'',
         'forcequote':0,                 #csv only
-        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
@@ -703,7 +697,6 @@ class xmlnocheck(xml):
         'escape':'',
         'field_sep':'',
         'forcequote':0,                 #csv only
-        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
@@ -734,7 +727,6 @@ class template(Grammar):
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
@@ -765,7 +757,6 @@ class templatehtml(Grammar):
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
@@ -814,7 +805,6 @@ class edifact(Grammar):
         #settings needed as defaults, but not useful for this editype 
         'checkunknownentities': True,
         'forcequote':0, #csv only
-        'noBOTSID':False,
         'quote_char':'',
         'record_tag_sep':"",    #Tradacoms/GTDI
         'triad':'',
@@ -860,7 +850,6 @@ class x12(Grammar):
         #settings needed as defaults, but not useful for this editype 
         'checkunknownentities': True,
         'forcequote':0, #csv only
-        'noBOTSID':False,
         'quote_char':'',
         'record_tag_sep':"",    #Tradacoms/GTDI
         'triad':'',
@@ -913,7 +902,6 @@ class json(Grammar):
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
@@ -944,7 +932,6 @@ class jsonnocheck(json):
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
@@ -981,7 +968,6 @@ class tradacoms(Grammar):
         'checkunknownentities': True,
         'forcequote':0, #csv only
         'indented':False,               #False:  output is one string (no cr/lf); True:  output is indented/human readable
-        'noBOTSID':False,
         'quote_char':'',
         'reserve':'',
         'skip_char':'\r\n',
