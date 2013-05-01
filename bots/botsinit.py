@@ -50,7 +50,7 @@ def generalinit(configdir):
             settings = botslib.botsbaseimport(importnameforsettings)
     #settings are accessed using botsglobal
     botsglobal.settings = settings
-    if hasattr(botsglobal.settings,'DATABASE_ENGINE'):      #check for old django settings.py
+    if hasattr(settings,'DATABASE_ENGINE'):      #check for old django settings.py
         print u'You use an old settings.py. Please change settings.py first. See migration instructions in wiki: http://code.google.com/p/bots/wiki/Migrate'
         sys.exit(0)
     #Find pathname configdir using imported settings.py.
@@ -82,7 +82,7 @@ def generalinit(configdir):
 
     #set directory settings in bots.ini************************************************************
     # 'directories','botspath': absolute path for bots directory
-    botsglobal.ini.set('directories','botspath',botsglobal.settings.PROJECT_PATH)
+    botsglobal.ini.set('directories','botspath',settings.PROJECT_PATH)
     # 'directories','config': absolute path for config directory
     botsglobal.ini.set('directories','config',configdirectory)
     # 'directories','usersysabs': absolute path for config usersysabs
@@ -102,15 +102,8 @@ def generalinit(configdir):
     botsglobal.ini.set('directories','templates',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/template/templates'))
     botsglobal.ini.set('directories','templateshtml',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/templatehtml/templates'))
 
-    #set values in settings.py**********************************************************************
-    if botsglobal.ini.get('webserver','environment','development') == 'development':   #values in bots.ini are also used in setting up cherrypy
-        settings.DEBUG = True
-    else:       #production/not in developemnt
-        settings.DEBUG = False
+    if botsglobal.ini.get('webserver','environment','development') != 'development':   #values in bots.ini are also used in setting up cherrypy
         logging.raiseExceptions = 0     # during production: if errors occurs in writing to log: ignore error. (leads to a missing log line, better than error;-).
-    settings.TEMPLATE_DEBUG = settings.DEBUG
-    #set paths in settings.py:
-    #~ settings.FILE_UPLOAD_TEMP_DIR = os.path.join(settings.PROJECT_PATH, 'botssys/pluginsuploaded')
 
     #initialise bots charsets
     initbotscharsets()
