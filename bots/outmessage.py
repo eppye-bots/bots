@@ -156,8 +156,8 @@ class Outmessage(message.Message):
         ''' Write tree of nodes to flat lex_records.
             The nodes are already sorted
         '''
-        self._tree2recordfields(node_instance.record,structure)    #write root node->first record
-        for childnode in node_instance.children:            #for every node in mpathtree, these are already sorted #SPEED: node.children is already sorted!
+        self._tree2recordfields(node_instance.record,structure)    #write node->lex_record
+        for childnode in node_instance.children:
             botsid_childnode = childnode.record['BOTSID'].strip()   #speed up: use local var
             botsidnr_childnode = childnode.record['BOTSIDnr']       #speed up: use local var
             for structure_record in structure[LEVEL]:  #for structure_record of this level in grammar
@@ -166,47 +166,47 @@ class Outmessage(message.Message):
                     break       #childnode was found and used; break to go to next child node
 
     def _tree2recordfields(self,noderecord,structure_record):
-        ''' appends fields in noderecord to (raw)record; use structure_record as guide.
+        ''' from noderecord->lex_record; use structure_record as guide.
             complex because is is used for: editypes that have compression rules (edifact), var editypes without compression, fixed protocols
         '''
-        lex_record = []    #the record that is going to be build; list of list. Each list is a field.
+        lex_record = []    #the record build; list (=record) of dicts (=fields).
         fieldbuffer = []
+        field_has_data = False
         for field_definition in structure_record[FIELDS]:       #loop all fields in grammar-definition
             if field_definition[ISFIELD]:    #if field (no composite)
-                if field_definition[ID] in noderecord  and noderecord[field_definition[ID]]:      #field exists in outgoing message and has data
-                    lex_record += fieldbuffer          #write the fieldbuffer to lex_record
-                    fieldbuffer = []                           #clear the fieldbuffer
-                    lex_record += [[noderecord[field_definition[ID]],0,field_definition[FORMAT]]]      #append new field
-                else:                                   #there is no data for this field
-                    if self.ta_info['stripfield_sep']:
-                        fieldbuffer += [['',0,field_definition[FORMAT]]]          #append new empty to fieldbuffer;
-                    else:
-                        value = self._initfield(field_definition)                         #initialise empty field. For eg fixed and csv: all fields have to be present
-                        lex_record += [[value,0,field_definition[FORMAT]]]  #append new field
+                if field_definition[ID] in noderecord  and noderecord[field_definition[ID]]:
+                    #field exists in outgoing message and has data
+                    field_has_data = True
+                    fieldbuffer.append({VALUE:noderecord[field_definition[ID]],SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})
+                elif self.ta_info['stripfield_sep']:
+                    #no data and field not needed: write new empty field to fieldbuffer;
+                    fieldbuffer.append({VALUE:'',SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})
+                else:
+                    #no data but field is needed: initialise empty field. For eg fixed and csv: all fields have to be present
+                    field_has_data = True
+                    value = self._initfield(field_definition)
+                    fieldbuffer.append({VALUE:value,SFIELD:0,FORMATFROMGRAMMAR:field_definition[FORMAT]})
             else:  #if composite
-                donefirst = 0       #used because first subfield in composite is marked as a field (not a subfield).
-                subbuffer = []            #buffer for this composite.
-                subiswritten = False      #check if composite contains data
+                donefirst = 0       #first subfield in composite is marked as a field (not a subfield).
+                compositebuffer = []            #buffer for this composite.
                 for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
                     if grammarsubfield[ID] in noderecord and noderecord[grammarsubfield[ID]]:       #field exists in outgoing message and has data
-                        lex_record += fieldbuffer           #write fieldbuffer
-                        fieldbuffer = []                       #clear fieldbuffer
-                        lex_record += subbuffer        #write subbuffer
-                        subbuffer = []                    #clear subbuffer
-                        lex_record += [[noderecord[grammarsubfield[ID]],donefirst]]   #append field
-                        subiswritten = True
+                        field_has_data = True
+                        compositebuffer.append({VALUE:noderecord[grammarsubfield[ID]],SFIELD:donefirst})   #append field
+                        fieldbuffer += compositebuffer
+                        compositebuffer = []
                     else:
-                        if self.ta_info['stripfield_sep']:
-                            subbuffer += [['',donefirst]]                      #append new empty to buffer;
-                        else:
-                            value = self._initfield(grammarsubfield)  #initialise empty field. For eg fixed and csv: all fields have to be present
-                            subbuffer += [[value,donefirst]]                   #generate & append new field
+                        compositebuffer.append({VALUE:'',SFIELD:donefirst})                      #append new empty to buffer;
                     donefirst = 1
-                if not subiswritten:    #if composite has no data: write placeholder for composite (stripping is done later)
-                    fieldbuffer += [['',0]]
-        #~ print [lex_record]
+                if not field_has_data:
+                    #composite has no data: write empty field
+                    fieldbuffer.append({VALUE:'',SFIELD:0})
+            if field_has_data:
+                lex_record += fieldbuffer          #write fieldbuffer to lex_record
+                fieldbuffer = []                   #clear fieldbuffer
+                field_has_data = False
 
-        self.lex_records += [lex_record]
+        self.lex_records.append(lex_record)
 
 
     def _formatfield(self,value, field_definition,structure_record,node_instance):
@@ -368,14 +368,15 @@ class Outmessage(message.Message):
         record_sep = self.ta_info['record_sep'] + self.ta_info['add_crlfafterrecord_sep']
         forcequote = self.ta_info['forcequote']
         escapechars = self._getescapechars()
+        noBOTSID = self.ta_info.get('noBOTSID',False)
 
         lijst = []
         for lex_record in lex_records:
-            if self.ta_info['noBOTSID']:  #for some csv-files: do not write BOTSID so remove it
+            if noBOTSID:  #for some csv-files: do not write BOTSID so remove it
                 del lex_record[0]
             fieldcount = 0
             mode_quote = False
-            value = u''     #to collect separator/escape plus field content
+            value = u''     #to collect the fromatted record-string.
             for field in lex_record:        #loop all fields in lex_record
                 if field[SFIELD]:
                     value += sfield_sep
@@ -397,7 +398,6 @@ class Outmessage(message.Message):
                     else:
                         if field_sep in field[VALUE] or quote_char in field[VALUE] or record_sep in field[VALUE]:
                             start_to__quote = True
-                    #TO DO test. if quote_char='' this works OK. Alt: check first if quote_char
                     if start_to__quote:
                         value += quote_char
                         mode_quote = True
