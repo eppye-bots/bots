@@ -467,11 +467,6 @@ class Grammar(object):
                                         {'grammar':self.grammarname,'record':recordid,'field':field[ID],'format':field[FORMAT],'keys':self.formatconvert.keys()})
 
 #grammar subclasses. contain the defaultsyntax
-class test(Grammar):
-    defaultsyntax = {
-        'checkcollision':True,
-        'noBOTSID':False,
-        }
 class csv(Grammar):
     def extracheck(self):
         if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
@@ -481,34 +476,35 @@ class csv(Grammar):
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessageblock: there can be only one record in recorddefs.'),
                                             {'grammar':self.grammarname})
     defaultsyntax = {
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'add_crlfafterrecord_sep':'',
         'allow_lastrecordnotclosedproperly':False,  #in csv sometimes the last record is no closed correctly. This is related to communciation over email. Beware: when using this, other checks will not be enforced!
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':True,
-        'checkunknownentities': True,
         'contenttype':'text/csv',
         'decimaal':'.',
         'envelope':'',
         'escape':"",
         'field_sep':':',
         'forcequote': 1,            #(if quote_char is set) 0:no force: only quote if necessary:1:always force: 2:quote if alfanumeric
-        'lengthnumericbare':False,
         'merge':True,
         'noBOTSID':False,
         'pass_all':True,
         'quote_char':"'",
         'record_sep':"\r\n",
+        'skip_char':'',
+        'skip_firstline':False,
+        'triad':'',
+        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        #settings needed as defaults, but not useful for this editype 
+        'checkunknownentities': True,
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
-        'skip_char':'',
-        'skip_firstline':False,
-        'stripfield_sep':False, #safe choice, as csv is no real standard
-        'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
+        #bots internal, never change/overwrite
+        'checkcollision':True,
+        'lengthnumericbare':False,
+        'stripfield_sep':False,
         }
 class excel(csv):
     pass
@@ -537,36 +533,33 @@ class fixed(Grammar):
         'I':'I',        #numercial, implicit decimal
         }
     defaultsyntax = {
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'add_crlfafterrecord_sep':'',
         'charset':'us-ascii',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':True,
         'checkfixedrecordtoolong':True,
         'checkfixedrecordtooshort':False,
-        'checkunknownentities': True,
         'contenttype':'text/plain',
         'decimaal':'.',
-        #~ 'endrecordID':3,
         'envelope':'',
+        'merge':True,
+        'noBOTSID':False,
+        'record_sep':"\r\n",
+        'triad':'',
+        #settings needed as defaults, but not useful for this editype 
+        'checkunknownentities': True,
         'escape':'',
         'field_sep':'',
         'forcequote':0,         #csv only
-        'lengthnumericbare':False,
-        'merge':True,
-        'noBOTSID':False,
-        'pass_all':False,
         'quote_char':"",
-        'record_sep':"\r\n",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        #~ 'startrecordID':0,
+        #bots internal, never change/overwrite
+        'checkcollision':True,
+        'lengthnumericbare':False,
         'stripfield_sep':False,
-        'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         }
     is_first_record = True
     def _linkrecorddefs2structure(self,structure):
@@ -608,39 +601,36 @@ class fixed(Grammar):
 
 class idoc(fixed):
     defaultsyntax = {
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'add_crlfafterrecord_sep':'',
         'automaticcount':True,
         'charset':'us-ascii',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':True,
         'checkfixedrecordtoolong':False,
         'checkfixedrecordtooshort':False,
-        'checkunknownentities': True,
         'contenttype':'text/plain',
         'decimaal':'.',
-        #~ 'endrecordID':10,
         'envelope':'',
+        'merge':False,
+        'noBOTSID':False,
+        'record_sep':"\r\n",
+        'triad':'',
+        'MANDT':'0',
+        'DOCNUM':'0',
+        #settings needed as defaults, but not useful for this editype 
+        'checkunknownentities': True,
         'escape':'',
         'field_sep':'',
         'forcequote':0,         #csv only
-        'lengthnumericbare':False,
-        'merge':False,
-        'noBOTSID':False,
-        'pass_all':False,
         'quote_char':"",
-        'record_sep':"\r\n",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        #~ 'startrecordID':0,
+        #bots internal, never change/overwrite
+        'checkcollision':True,
+        'lengthnumericbare':False,
         'stripfield_sep':False,
-        'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
-        'MANDT':'0',
-        'DOCNUM':'0',
         }
 class xml(Grammar):
     def extracheck(self):
@@ -648,174 +638,164 @@ class xml(Grammar):
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": in this xml grammar merge is "True" but no (user) enveloping is specified. This will lead to invalid xml files'),
                                             {'grammar':self.grammarname})
     defaultsyntax = {
-        'add_crlfafterrecord_sep':'',
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'attributemarker':'__',
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':False,
         'checkunknownentities': True,
         'contenttype':'text/xml ',
         'decimaal':'.',
         'DOCTYPE':'',                   #doctype declaration to use in xml header. 'DOCTYPE': 'mydoctype SYSTEM "mydoctype.dtd"'  will lead to: <!DOCTYPE mydoctype SYSTEM "mydoctype.dtd">
         'envelope':'',
-        'extra_character_entity':{},    #additional character entities to resolve when parsing XML; mostly html character entities. Not in python 2.4. Example: {'euro':u'','nbsp':unichr(160),'apos':u'\u0027'}
-        'escape':'',
-        'field_sep':'',
-        'forcequote':0,                 #csv only
+        'extra_character_entity':{},    #additional character entities to resolve when parsing XML; mostly html character entities. Example: {'euro':u'','nbsp':unichr(160),'apos':u'\u0027'}
         'indented':False,               #False: xml output is one string (no cr/lf); True: xml output is indented/human readable
-        'lengthnumericbare':False,
         'merge':False,
         'namespace_prefixes':None,  #to over-ride default namespace prefixes (ns0, ns1 etc) for outgoing xml. is a list, consisting of tuples, each tuple consists of prefix and uri.
                                     #Example: 'namespace_prefixes':[('orders','http://www.company.com/EDIOrders'),]
-        'noBOTSID':False,
-        'pass_all':False,
         'processing_instructions': None,    #to generate processing instruction in xml prolog. is a list, consisting of tuples, each tuple consists of type of instruction and text for instruction.
                                             #Example: 'processing_instructions': [('xml-stylesheet' ,'href="mystylesheet.xsl" type="text/xml"'),('type-of-ppi' ,'attr1="value1" attr2="value2"')]
                                             #leads to this output in xml-file:  <?xml-stylesheet href="mystylesheet.xsl" type="text/xml"?><?type-of-ppi attr1="value1" attr2="value2"?>
+        'standalone':None,      #as used in xml prolog; values: 'yes' , 'no' or None (not used)
+        'triad':'',
+        'version':'1.0',        #as used in xml prolog
+        #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
+        'escape':'',
+        'field_sep':'',
+        'forcequote':0,                 #csv only
+        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        'standalone':None,      #as used in xml prolog; values: 'yes' , 'no' or None (not used)
+        #bots internal, never change/overwrite
+        'checkcollision':False,
+        'lengthnumericbare':False,
         'stripfield_sep':False,
-        'triad':'',
-        'version':'1.0',        #as used in xml prolog
         }
 class xmlnocheck(xml):
     _checkstructurerequired = False
     defaultsyntax = {
-        'add_crlfafterrecord_sep':'',
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'attributemarker':'__',
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':False,
         'checkunknownentities': False,
         'contenttype':'text/xml ',
         'decimaal':'.',
         'DOCTYPE':'',                   #doctype declaration to use in xml header. DOCTYPE = 'mydoctype SYSTEM "mydoctype.dtd"'  will lead to: <!DOCTYPE mydoctype SYSTEM "mydoctype.dtd">
         'envelope':'',
-        'escape':'',
-        'extra_character_entity':{},    #additional character entities to resolve when parsing XML; mostly html character entities. Not in python 2.4. Example: {'euro':u'','nbsp':unichr(160),'apos':u'\u0027'}
-        'field_sep':'',
-        'forcequote':0,                 #csv only
+        'extra_character_entity':{},    #additional character entities to resolve when parsing XML; mostly html character entities. Example: {'euro':u'','nbsp':unichr(160),'apos':u'\u0027'}
         'indented':False,               #False: xml output is one string (no cr/lf); True: xml output is indented/human readable
-        'lengthnumericbare':False,
         'merge':False,
         'namespace_prefixes':None,  #to over-ride default namespace prefixes (ns0, ns1 etc) for outgoing xml. is a list, consisting of tuples, each tuple consists of prefix and uri.
                                     #Example: 'namespace_prefixes':[('orders','http://www.company.com/EDIOrders'),]
-        'noBOTSID':False,
-        'pass_all':False,
         'processing_instructions': None,    #to generate processing instruction in xml prolog. is a list, consisting of tuples, each tuple consists of type of instruction and text for instruction.
                                             #Example: processing_instructions': [('xml-stylesheet' ,'href="mystylesheet.xsl" type="text/xml"'),('type-of-ppi' ,'attr1="value1" attr2="value2"')]
                                             #leads to this output in xml-file:  <?xml-stylesheet href="mystylesheet.xsl" type="text/xml"?><?type-of-ppi attr1="value1" attr2="value2"?>
+        'standalone':None,      #as used in xml prolog; values: 'yes' , 'no' or None (not used)
+        'triad':'',
+        'version':'1.0',        #as used in xml prolog
+        #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
+        'escape':'',
+        'field_sep':'',
+        'forcequote':0,                 #csv only
+        'noBOTSID':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        'standalone':None,      #as used in xml prolog; values: 'yes' , 'no' or None (not used)
+        #bots internal, never change/overwrite
+        'checkcollision':False,
+        'lengthnumericbare':False,
         'stripfield_sep':False,
-        'triad':'',
-        'version':'1.0',        #as used in xml prolog
         }
 class template(Grammar):
     #20120101 depreciated. use class templatehtml
     _checkstructurerequired = False
     defaultsyntax = { \
-        'add_crlfafterrecord_sep':'',
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':False,
         'contenttype':'text/xml',
-        'checkunknownentities': True,
         'decimaal':'.',
         'envelope':'template',
         'envelope-template':'',
+        'merge':True,
+        'output':'xhtml-strict',
+        #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
+        'checkunknownentities': True,
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'lengthnumericbare':False,
-        'merge':True,
         'noBOTSID':False,
-        'output':'xhtml-strict',
         'quote_char':"",
-        'pass_all':False,
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        'stripfield_sep':False,
         'triad':'',
+        #bots internal, never change/overwrite
+        'checkcollision':False,
+        'lengthnumericbare':False,
+        'stripfield_sep':False,
         }
 class templatehtml(Grammar):
     _checkstructurerequired = False
     defaultsyntax = { \
-        'add_crlfafterrecord_sep':'',
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':False,
         'contenttype':'text/xml',
-        'checkunknownentities': True,
         'decimaal':'.',
         'envelope':'templatehtml',
         'envelope-template':'',
+        'merge':True,
+        'output':'xhtml-strict',
+        #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
+        'checkunknownentities': True,
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'lengthnumericbare':False,
-        'merge':True,
         'noBOTSID':False,
-        'output':'xhtml-strict',
         'quote_char':"",
-        'pass_all':False,
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
-        'stripfield_sep':False,
         'triad':'',
+        #bots internal, never change/overwrite
+        'checkcollision':False,
+        'lengthnumericbare':False,
+        'stripfield_sep':False,
         }
 class edifact(Grammar):
     defaultsyntax = {
         'add_crlfafterrecord_sep':'\r\n',
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'charset':'UNOA',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':True,
-        'checkunknownentities': True,
         'contenttype':'application/EDIFACT',
         'decimaal':'.',
         'envelope':'edifact',
         'escape':'?',
         'field_sep':'+',
-        'forcequote':0, #csv only
         'forceUNA' : False,
-        'lengthnumericbare':True,
         'merge':True,
-        'noBOTSID':False,
-        'pass_all':False,
-        'quote_char':'',
         'record_sep':"'",
-        'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'*',
         'sfield_sep':':',
         'skip_char':'\r\n',
-        'stripfield_sep':True,
-        'triad':'',
         'version':'3',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         'UNB.S001.0080':'',
         'UNB.S001.0133':'',
         'UNB.S002.0007':'14',
@@ -831,6 +811,17 @@ class edifact(Grammar):
         'UNB.0031':'',
         'UNB.0032':'',
         'UNB.0035':'0',
+        #settings needed as defaults, but not useful for this editype 
+        'checkunknownentities': True,
+        'forcequote':0, #csv only
+        'noBOTSID':False,
+        'quote_char':'',
+        'record_tag_sep':"",    #Tradacoms/GTDI
+        'triad':'',
+        #bots internal, never change/overwrite
+        'checkcollision':True,
+        'lengthnumericbare':True,
+        'stripfield_sep':True,
         }
     formatconvert = {
         'A':'A',
@@ -840,34 +831,22 @@ class edifact(Grammar):
 class x12(Grammar):
     defaultsyntax = {
         'add_crlfafterrecord_sep':'\r\n',
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'charset':'us-ascii',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':True,
-        'checkunknownentities': True,
         'contenttype':'application/X12',
         'decimaal':'.',
         'envelope':'x12',
         'escape':'',
         'field_sep':'*',
-        'forcequote':0, #csv only
         'functionalgroup'    :  'XX',
-        'lengthnumericbare':True,
         'merge':True,
-        'noBOTSID':False,
-        'pass_all':False,
-        'quote_char':'',
         'record_sep':"~",
-        'record_tag_sep':"",    #Tradacoms/GTDI
         'replacechar':'',       #if separator found, replace by this character; if replacechar is an empty string: raise error
         'reserve':'^',
         'sfield_sep':'>',    #advised '\'?
         'skip_char':'\r\n',
-        'stripfield_sep':True,
-        'triad':'',
         'version':'00403',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with cr/lf.
         'ISA01':'00',
         'ISA02':'          ',
         'ISA03':'00',
@@ -878,6 +857,17 @@ class x12(Grammar):
         'ISA14':'1',
         'ISA15':'P',
         'GS07':'X',
+        #settings needed as defaults, but not useful for this editype 
+        'checkunknownentities': True,
+        'forcequote':0, #csv only
+        'noBOTSID':False,
+        'quote_char':'',
+        'record_tag_sep':"",    #Tradacoms/GTDI
+        'triad':'',
+        #bots internal, never change/overwrite
+        'checkcollision':True,
+        'lengthnumericbare':True,
+        'stripfield_sep':True,
         }
     formatconvert = {
         'AN':'A',
@@ -907,106 +897,102 @@ class x12(Grammar):
                 field[DECIMALS] = 0
 class json(Grammar):
     defaultsyntax = {
-        'add_crlfafterrecord_sep':'',
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':False,
         'checkunknownentities': True,
-        'contenttype':'text/xml ',
+        'contenttype':'application/json',
         'decimaal':'.',
         'defaultBOTSIDroot':'ROOT',
         'envelope':'',
+        'indented':False,               #False:  output is one string (no cr/lf); True:  output is indented/human readable
+        'merge':False,
+        'triad':'',
+        #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'indented':False,               #False:  output is one string (no cr/lf); True:  output is indented/human readable
-        'lengthnumericbare':False,
-        'merge':False,
         'noBOTSID':False,
-        'pass_all':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
+        #bots internal, never change/overwrite
+        'checkcollision':False,
+        'lengthnumericbare':False,
         'stripfield_sep':False,
-        'triad':'',
         }
 class jsonnocheck(json):
     _checkstructurerequired = False
     defaultsyntax = {
-        'add_crlfafterrecord_sep':'',
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':False,
         'checkunknownentities': False,
-        'contenttype':'text/xml ',
+        'contenttype':'application/json',
         'decimaal':'.',
         'defaultBOTSIDroot':'ROOT',
         'envelope':'',
+        'indented':False,               #False:  output is one string (no cr/lf); True: output is indented/human readable
+        'merge':False,
+        'triad':'',
+        #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
         'escape':'',
         'field_sep':'',
         'forcequote':0, #csv only
-        'indented':False,               #False:  output is one string (no cr/lf); True: output is indented/human readable
-        'lengthnumericbare':False,
-        'merge':False,
         'noBOTSID':False,
-        'pass_all':False,
         'quote_char':"",
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
+        #bots internal, never change/overwrite
+        'checkcollision':False,
+        'lengthnumericbare':False,
         'stripfield_sep':False,
-        'triad':'',
-        }
+       }
 class tradacoms(Grammar):
     defaultsyntax = {
-        'add_crlfafterrecord_sep':'\n',
-        'acceptspaceinnumfield':True,   #only really used in fixed formats
+        'add_crlfafterrecord_sep':'\r\n',
         'charset':'us-ascii',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcollision':True,
-        'checkunknownentities': True,
         'contenttype':'application/text',
         'decimaal':'.',
         'envelope':'tradacoms',
         'escape':'?',
         'field_sep':'+',
-        'forcequote':0, #csv only
-        'indented':False,               #False:  output is one string (no cr/lf); True:  output is indented/human readable
-        'lengthnumericbare':True,
         'merge':False,
-        'noBOTSID':False,
-        'pass_all':False,
-        'quote_char':'',
         'record_sep':"'",
         'record_tag_sep':"=",    #Tradacoms/GTDI
-        'reserve':'',
         'sfield_sep':':',
-        'skip_char':'\r\n',
-        'stripfield_sep':True,
-        'triad':'',
-        'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         'STX.STDS1':'ANA',
         'STX.STDS2':'1',
         'STX.FROM.02':'',
         'STX.UNTO.02':'',
         'STX.APRF':'',
         'STX.PRCD':'',
+        #settings needed as defaults, but not useful for this editype 
+        'checkunknownentities': True,
+        'forcequote':0, #csv only
+        'indented':False,               #False:  output is one string (no cr/lf); True:  output is indented/human readable
+        'noBOTSID':False,
+        'quote_char':'',
+        'reserve':'',
+        'skip_char':'\r\n',
+        'triad':'',
+        #bots internal, never change/overwrite
+        'checkcollision':True,
+        'lengthnumericbare':True,
+        'stripfield_sep':True,
         }
     formatconvert = {
         'X':'A',
         '9':'R',
         '9V9':'I',
         }
-class database(jsonnocheck):
-    #20120101 depreciated. use 'db'
-    pass

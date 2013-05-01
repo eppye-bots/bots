@@ -344,7 +344,7 @@ class Inmessage(message.Message):
                     ta_info['bots_accessenvelope']=self.root       #give mappingscript access to envelope
                     yield self._getmessagefromenvelope(newroot,ta_info)
         else:   #no split up indicated in grammar;
-            if self.root.record or self.ta_info['pass_all']:    #if contains root-record or explicitly indicated (csv): pass whole tree
+            if self.root.record or self.ta_info.get('pass_all',False):    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
                 ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelop
@@ -602,7 +602,7 @@ class var(Inmessage):
         #end of for-loop. all characters have been processed.
         #in a perfect world, value should always be empty now, but:
         #it appears a csv record is not always closed properly, so force the closing of the last record of csv file:
-        if mode_inrecord and isinstance(self,csv) and self.ta_info['allow_lastrecordnotclosedproperly']:
+        if mode_inrecord and self.ta_info.get('allow_lastrecordnotclosedproperly',False):
             lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #append element in record
             self.lex_records.append(lex_record)    #write record to recordlist
         else:
