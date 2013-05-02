@@ -71,6 +71,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                     #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
                     post_mapping_mode = False       #if post_mapping: reuse out-object, if no translation is found no error
+                    number_of_loops_with_same_alt = 0
                     while 1:    #continue as long as there are (alt-)translations
                         #lookup the translation************************
                         tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=inn_splitup.ta_info['editype'],
@@ -94,7 +95,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                     raise botslib.TranslationNotFoundError(_(u'Translation not found for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
                                                                                 inn_splitup.ta_info)
 
-                        inn_splitup.ta_info['divtext'] = tscript     #in case of errors this leads to beter reporting in GUI.
+                        inn_splitup.ta_info['divtext'] = tscript     #ifor reporting used mapping script to database (for display in GUI).
                         if not post_mapping_mode:
                             #initialize new out-object*************************
                             ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
@@ -105,6 +106,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
                                                 {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'],tscript) #get the mappingscript
+                        alt_from_previous_run = inn_splitup.ta_info['alt']      #needed to check for infinite loop
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
                         
@@ -124,35 +126,53 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                             break   #break out of while loop
                         elif isinstance(doalttranslation,dict):
                             #some extended cases; a dict is returned that contains 'instructions' for some type of chained translations
-                            if 'type' not in doalttranslation:
-                                raise botslib.BotsError(_(u"Mappingscript returned dict. This dict does not have a 'type', like in eg: {'type:'out_as_inn', 'alt':'alt-value'}."))
-                            elif doalttranslation['type'] == u'post_mapping':
-                                #do chained  (post)translation: same inn and out-objects.
-                                #in other words, the post-translation continue where is 'default' mapping ended.
-                                #use case: default mapping (for all partners), partner-specific post-translation
-                                if 'alt' not in doalttranslation:
-                                    raise botslib.BotsError(_("Mappingscript returned dict, type 'post_mapping'. This dict does not have a 'alt'-value, like in eg: {'type:'post_mapping', 'alt':'alt-value'}."))
-                                post_mapping_mode = True       #translation is done; reset post_mapping_mode
-                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
-                                #~ inn_splitup.ta_info.pop('statust')
-                            elif doalttranslation['type'] == u'out_as_inn':
+                            if 'type' not in doalttranslation or 'alt' not in doalttranslation:
+                                raise botslib.BotsError(_(u"Mappingscript returned '%(alt)s'. This dict should not have 'type' and 'alt'."),{'alt':doalttranslation})
+                            if alt_from_previous_run == doalttranslation['alt']:
+                                number_of_loops_with_same_alt += 1
+                            else:
+                                number_of_loops_with_same_alt = 0
+                            if doalttranslation['type'] == u'out_as_inn':
                                 #do chained translation: use the out-object as inn-object, new out-object
                                 #use case: detected error in incoming file; use out-object to generate warning email
                                 handle_out_message(out_translated,ta_translated)
-                                if 'alt' not in doalttranslation:
-                                    raise botslib.BotsError(_("Mappingscript returned dict, type 'out_as_inn'. This dict does not have a 'alt'-value, like in eg: {'type:'out_as_inn', 'alt':'alt-value'}."))
                                 inn_splitup = out_translated    #out-object is now inn-object
                                 if isinstance(inn_splitup,outmessage.fixed):    #for fixed: strip all values in node
                                     inn_splitup.root.stripnode()
                                 inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
+                                if not 'frompartner' in inn_splitup.ta_info:
+                                    inn_splitup.ta_info['frompartner'] = ''
+                                if not 'topartner' in inn_splitup.ta_info:
+                                    inn_splitup.ta_info['topartner'] = ''
                                 inn_splitup.ta_info.pop('statust')
+                            elif doalttranslation['type'] == u'no_check_on_infinite_loop':
+                                #do chained translation: allow many loops wit hsame alt-value.
+                                #mapping script will have to handle this correctly.
+                                number_of_loops_with_same_alt = 0
+                                handle_out_message(out_translated,ta_translated)
+                                del out_translated
+                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
+                            elif doalttranslation['type'] == u'post_mapping':
+                                #do chained  (post)translation: same inn and out-objects.
+                                #in other words, the post-translation continue where is 'default' mapping ended.
+                                #use case: default mapping (for all partners), partner-specific post-translation
+                                #note: this is easier via import defaultmapping in a partner specific mapping. Please use that method!
+                                post_mapping_mode = True       #translation is done; reset post_mapping_mode
+                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
+                                #~ inn_splitup.ta_info.pop('statust')
                             else:   #there is nothing else
                                 raise botslib.BotsError(_(u'Mappingscript returned dict with an unkown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
                         else:  #note: this includes alt '' (empty string)
+                            if alt_from_previous_run == doalttranslation:
+                                number_of_loops_with_same_alt += 1
+                            else:
+                                number_of_loops_with_same_alt = 0
                             #do normal chained translation: same inn-object, new out-object
                             handle_out_message(out_translated,ta_translated)
                             del out_translated
                             inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chained translation
+                        if number_of_loops_with_same_alt > 10:
+                            raise botslib.BotsError(_(u'Mappingscript returns same alt value over and over again (infinite loop?). Alt: "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
                     #end of while-loop (trans**********************************************************************************
                 #exceptions file_out-level: exception in mappingscript or writing of out-file
                 except:
