@@ -321,18 +321,11 @@ class Node(object):
             if count > 1:
                 raise botslib.MappingFormatError(_(u'Max one "None" in last section: get(%(mpath)s)'),{'mpath':mpaths})
             if checklevel_mappingscript == 2:
-                if not hasattr(botsglobal.defmessage,'structure'):
-                    print 'no structure!!'
-                    raise botslib.MappingFormatError(_(u'No structure'))
-                else:
-                    #~ f = botsglobal.inmessage.root.get_full_mpath(self)
-                    #~ print 'full_mpath:',f,mpaths
+                if hasattr(botsglobal.defmessage,'structure'):
                     full_mpath = botsglobal.inmessage.root.get_full_mpath(self) + mpaths
                     #~ print 'full_mpath',full_mpath
                     if not checkmpath(botsglobal.defmessage.structure,full_mpath):
                         print 'Error in mpath',mpaths
-                    #~ else:
-                        #~ print '    Correct:',mpaths
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
