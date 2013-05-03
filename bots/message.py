@@ -11,11 +11,12 @@ class Message(object):
     ''' abstract class; represents a edi message.
         is subclassed as outmessage or inmessage object.
     '''
-    def __init__(self):
-        self.recordnumber = 0                #segment counter. Is not used for UNT of SE record; some editypes want sequential recordnumbering
-        self.errorlist = []                #to gather all (non-fatal) errors in the edi file.
-        self.messagetypetxt = ''
-        self.messagecount = 0
+    def __init__(self,ta_info):
+        self.ta_info = ta_info      #here ta_info is only filled with parameters from db-ta
+        self.recordnumber = 0       #segment counter. Not for UNT/UNZ/SE/IEA but some editypes want sequential recordnumbering (idoc)
+        self.errorlist = []         #collect all (non-fatal) errors in the edi file; used in reporting errors.
+        self.messagetypetxt = ''    #used in reporting errors.
+        self.messagecount = 0       #count messages in edi file; used in reporting errors.
 
     def add2errorlist(self,errortxt):
         self.errorlist.append(self.messagetypetxt + errortxt)
@@ -57,19 +58,16 @@ class Message(object):
         return '-'.join([record[0] for record in mpath])
         
     def checkmessage(self,node_instance,grammar,subtranslation=False):
-        ''' The node tree is check, sorted, fields are formatted etc.
-            For checking: translation & subtranslation
-            parameter subtranslation only used for reporting
+        ''' The node tree is check, sorted, fields are formatted etc against grammar. (so far only minimal tests have been done during processing)
+            For checking translation & subtranslation
+            parameter 'subtranslation' only used for reporting
+            some different cases:
+            - empy root.record, root.children filled:
+            - edifact, x12, tradacoms: each child is an envelope. Check each envelope. (use mailbag to have one UNB per node-tree here)
+            - csv nobotsid: each child is a record. Check all records in one check
+            - xml, json:
+            root.record filled, root.children filled: outgoing messages.
         '''
-        #checks the root of grammar-structure with root of node tree:
-        #check message against grammar (so far only minimal tests have been done during processing)
-        #some different cases:
-        #- empy root.record, root.children filled:
-        #  - edifact, x12, tradacoms: each child is an envelope. Check each envelope. (use mailbag to have one UNB per node-tree here)
-        #  - csv nobotsid: each child is a record. Check all records in one check
-        #  - xml, json:
-        # root.record filled, root.children filled: outgoing messages.
-        #~ self.root.display() #show tree of nodes (for protocol debugging)
         if node_instance.record:        #root record contains information; write whole tree in one time
             self._checkonemessage(node_instance,grammar,subtranslation)
         else:
@@ -123,7 +121,6 @@ class Message(object):
         ''' checks for every field in record if field exists in record_definition (from grammar).
             for inmessage of type (var,fixed,??) this is not needed 
         '''
-        deletelist = []
         for field in node_instance.record.keys():     #check every field in the record
             if field == 'BOTSIDnr':     #BOTSIDnr is not in grammar, so skip check
                 continue
@@ -155,9 +152,7 @@ class Message(object):
                 if self.ta_info['checkunknownentities']:
                     self.add2errorlist(_(u'[F01]%(linpos)s: Record: "%(mpath)s" has unknown field "%(field)s".\n')%
                                             {'linpos':node_instance.linpos(),'field':field,'mpath':self.mpathformat(record_definition[MPATH])})
-                deletelist.append(field)
-        for field in deletelist:
-            del node_instance.record[field]
+                del node_instance.record[field]
 
     def _canonicaltree(self,node_instance,structure,headerrecordnumber=0):
         ''' For nodes: check min and max occurence; sort the records conform grammar

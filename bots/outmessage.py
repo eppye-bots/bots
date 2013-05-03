@@ -60,22 +60,10 @@ class Outmessage(message.Message):
                     recursively append next parts to tree
         After the mappingscript is finished, the resulting tree is converted to self.lex_records.
         These lex_records are written to file.
-        Structure of self.lex_records:
-            list of lex_record;
-            lex_record is list of fields
-            field is dict. Keys in field:
-            -   ID       field ID (id within this record). For in-file
-            -   VALUE    value, content of field
-            -   MPATH    mpath of record, only for first field(=recordID)
-            -   LIN     linenr of field in in-file
-            -   POS      positionnr within line in in-file
-            -   SFIELD   1 if subfield (edifact-only)
-            first field for record is recordID.
     '''
     def __init__(self,ta_info):
-        self.ta_info = ta_info
+        super(Outmessage,self).__init__(ta_info)
         self.root = node.Node(record={})         #message tree; build via put()-interface in mappingscript. Initialise with empty dict
-        super(Outmessage,self).__init__()
 
     def messagegrammarread(self,typeofgrammarfile='grammars'):
         ''' read grammar for a message/envelope.
@@ -759,8 +747,8 @@ class template(Outmessage):
     class TemplateData(object):
         pass
     def __init__(self,ta_info):
-        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
         super(template,self).__init__(ta_info)
+        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
 
     def writeall(self):
         ''' Very different writeall:
@@ -803,8 +791,8 @@ class templatehtml(Outmessage):
     class TemplateData(object):
         pass
     def __init__(self,ta_info):
-        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
         super(templatehtml,self).__init__(ta_info)
+        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
 
     def writeall(self):
         ''' Very different writeall:

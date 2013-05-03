@@ -44,9 +44,8 @@ class Inmessage(message.Message):
         Can be initialised from a file or a tree.
     '''
     def __init__(self,ta_info):
-        super(Inmessage,self).__init__()
+        super(Inmessage,self).__init__(ta_info)
         self.lex_records = []        #init list of lex_records
-        self.ta_info = ta_info  #here ta_info is only filled with parameters from db-ta
 
     def initfromfile(self):
         ''' initialisation from a edi file '''
@@ -306,7 +305,7 @@ class Inmessage(message.Message):
                 ta_info = self.ta_info.copy()
                 ta_info.update(eachmessage.queries)
                 ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
-                yield self._getmessagefromenvelope(eachmessage,ta_info)
+                yield self._initmessagefromnode(eachmessage,ta_info)
             if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
                 first = True
                 for eachmessage in self.getloop(*self.defmessage.nextmessage2):
@@ -316,7 +315,7 @@ class Inmessage(message.Message):
                     ta_info = self.ta_info.copy()
                     ta_info.update(eachmessage.queries)
                     ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
-                    yield self._getmessagefromenvelope(eachmessage,ta_info)
+                    yield self._initmessagefromnode(eachmessage,ta_info)
         elif self.defmessage.nextmessageblock is not None:          #for csv/fixed: nextmessageblock indicates which field determines a message (as long as the field is the same, it is one message)
             #there is only one recordtype (this is checked in grammar.py).
             first = True
@@ -330,7 +329,7 @@ class Inmessage(message.Message):
                     ta_info = self.ta_info.copy()
                     ta_info.update(oldline.queries)        #update ta_info with information (from previous line) 20100905
                     ta_info['bots_accessenvelope']=self.root      #give mappingscript access to envelope
-                    yield self._getmessagefromenvelope(newroot,ta_info)
+                    yield self._initmessagefromnode(newroot,ta_info)
                     newroot = node.Node()  #make new empty root node.
                     oldkriterium = kriterium
                 else:
@@ -342,44 +341,42 @@ class Inmessage(message.Message):
                     ta_info = self.ta_info.copy()
                     ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
                     ta_info['bots_accessenvelope']=self.root       #give mappingscript access to envelope
-                    yield self._getmessagefromenvelope(newroot,ta_info)
+                    yield self._initmessagefromnode(newroot,ta_info)
         else:   #no split up indicated in grammar;
             if self.root.record or self.ta_info.get('pass_all',False):    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
                 ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelop
-                yield self._getmessagefromenvelope(self.root,ta_info)
+                yield self._initmessagefromnode(self.root,ta_info)
             else:   #pass nodes under root one by one
                 for child in self.root.children:
                     ta_info = self.ta_info.copy()
                     ta_info.update(child.queries)
                     ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
-                    yield self._getmessagefromenvelope(child,ta_info)
+                    yield self._initmessagefromnode(child,ta_info)
                     
-    def _getmessagefromenvelope(self,inode,ta_info):
-        ''' Get a edi-message (inmessage-object) from node in tree.
-            is used in splitting edi-messages.'''
-        classtocall = globals()[self.__class__.__name__]
-        messagefromenvelope = classtocall(ta_info)
-        messagefromenvelope.root = inode
-        return messagefromenvelope
+    @classmethod
+    def _initmessagefromnode(cls,inode,ta_info):
+        ''' initialize a inmessage-object from node in tree.
+            used in nextmessage.'''
+        messagefromnode = cls(ta_info)
+        messagefromnode.root = inode
+        return messagefromnode
 
 
 class fixed(Inmessage):
     ''' class for record of fixed length.'''
     def _readcontent_edifile(self):
-        ''' read content of edi file to memory.
+        ''' open the edi file.
         '''
         botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
         self.filehandler = botslib.opendata(filename=self.ta_info['filename'],mode='rb',charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _lex(self):
-        ''' lexes file with fixed records to list (self.lex_records).'''
-        linenr = 0
+        ''' edi file->self.lex_records.'''
         startrecordid = self.ta_info['startrecordID']
         endrecordid = self.ta_info['endrecordID']
-        for line in self.filehandler:
-            linenr += 1
+        for linenr,line in enumerate(self.filehandler):
             if not line.isspace():
                 line = line.rstrip('\r\n')
                 self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
