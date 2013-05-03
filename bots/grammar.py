@@ -530,7 +530,6 @@ class fixed(Grammar):
         'I':'I',        #numercial, implicit decimal
         }
     defaultsyntax = {
-        'add_crlfafterrecord_sep':'',
         'charset':'us-ascii',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
@@ -540,14 +539,15 @@ class fixed(Grammar):
         'decimaal':'.',
         'envelope':'',
         'merge':True,
-        'record_sep':"\r\n",
         'triad':'',
         #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
         'checkunknownentities': True,
         'escape':'',
         'field_sep':'',
         'forcequote':0,         #csv only
         'quote_char':"",
+        'record_sep':"\r\n",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
@@ -597,7 +597,6 @@ class fixed(Grammar):
 
 class idoc(fixed):
     defaultsyntax = {
-        'add_crlfafterrecord_sep':'',
         'automaticcount':True,
         'charset':'us-ascii',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
@@ -608,20 +607,21 @@ class idoc(fixed):
         'decimaal':'.',
         'envelope':'',
         'merge':False,
-        'record_sep':"\r\n",
-        'triad':'',
         'MANDT':'0',
         'DOCNUM':'0',
         #settings needed as defaults, but not useful for this editype 
+        'add_crlfafterrecord_sep':'',
         'checkunknownentities': True,
         'escape':'',
         'field_sep':'',
         'forcequote':0,         #csv only
         'quote_char':"",
+        'record_sep':"\r\n",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
         'sfield_sep':'',
         'skip_char':'',
+        'triad':'',
         #bots internal, never change/overwrite
         'checkcollision':True,
         'lengthnumericbare':False,
