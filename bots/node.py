@@ -290,7 +290,8 @@ class Node(object):
             if more than one value can be found: first one is returned
             starts searching in current node, then deeper
         '''
-        if False:
+        checklevel_mappingscript = getattr(botsglobal,'checklevel_mappingscript',1)
+        if checklevel_mappingscript:
             #sanity check of mpaths. None only allowed in last section of Mpath; first checks all parts except last one
             if not mpaths or not isinstance(mpaths,tuple):
                 raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
@@ -319,6 +320,19 @@ class Node(object):
                     raise botslib.MappingFormatError(_(u'Values must be strings (or none) in last section: get(%(mpath)s)'),{'mpath':mpaths})
             if count > 1:
                 raise botslib.MappingFormatError(_(u'Max one "None" in last section: get(%(mpath)s)'),{'mpath':mpaths})
+            if checklevel_mappingscript == 2:
+                if not hasattr(botsglobal.defmessage,'structure'):
+                    print 'no structure!!'
+                    raise botslib.MappingFormatError(_(u'No structure'))
+                else:
+                    #~ f = botsglobal.inmessage.root.get_full_mpath(self)
+                    #~ print 'full_mpath:',f,mpaths
+                    full_mpath = botsglobal.inmessage.root.get_full_mpath(self) + mpaths
+                    #~ print 'full_mpath',full_mpath
+                    if not checkmpath(botsglobal.defmessage.structure,full_mpath):
+                        print 'Error in mpath',mpaths
+                    #~ else:
+                        #~ print '    Correct:',mpaths
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
@@ -351,6 +365,20 @@ class Node(object):
             else:   #all keys/values in this mpathr are matched and OK.
                 return terug        #either the remembered value is returned or 1 (as a boolean, indicated 'found)
 
+
+    def get_full_mpath(self,node2find):
+        if self is node2find:
+            return tuple()
+        else:
+            for child in self.children:
+                mpath = child.get_full_mpath(node2find)
+                if mpath is not None:
+                    if self.record:
+                        return ({'BOTSID':self.record['BOTSID']},) + mpath
+                    else:
+                        return mpath
+            return None
+        
     def getcount(self):
         '''count the number of nodes/records under the node/in whole tree'''
         count = 0
@@ -533,3 +561,29 @@ class Node(object):
                 self.record[key] = value.strip()
         for child in self.children:
             child.stripnode()
+
+def checkmpath(structure,mpaths):
+    ''' every part of mpaths should be in structure, at right level, have right fields.'''
+    mpath = mpaths[0]
+    for record_definition in structure:
+        if record_definition[ID] == mpath['BOTSID']:
+            for key in mpath:
+                for field_definition in record_definition[FIELDS]:
+                    if field_definition[ISFIELD]:
+                        if key == field_definition[ID]:
+                            break   #check next key
+                    else:
+                        for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
+                            if key == grammarsubfield[ID]:
+                                break   #check next key
+                        else:
+                            continue #checking field_defintions
+                        break   #check next key
+                else:   #Not found in record!
+                    return False
+            if mpaths[1:]:
+                return checkmpath(record_definition[LEVEL],mpaths[1:])
+            else:
+                return True    #no more levels, all fields found
+    else:
+        return False
