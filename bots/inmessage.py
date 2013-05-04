@@ -399,7 +399,7 @@ class fixed(Inmessage):
             if value:
                 record2build[field_definition[ID]] = value
             pos += field_definition[LENGTH]
-        record2build['botsidnr'] = record_definition[BOTSIDNR]
+        record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
         return record2build
 
     def _formatfield(self,value,field_definition,structure_record,node_instance):
@@ -680,7 +680,7 @@ class var(Inmessage):
                     list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
                     sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
                     record2build[field_definition[ID]].append({sub_field_in_record_definition[ID]:value})
-        record2build['botsidnr'] = record_definition[BOTSIDNR]
+        record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
         return record2build
         
 class csv(var):
