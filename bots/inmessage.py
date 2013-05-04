@@ -1215,14 +1215,14 @@ class xml(Inmessage):
         filename = botslib.abspathdata(self.ta_info['filename'])
 
         if self.ta_info['messagetype'] == 'mailbag':
-            #~ the messagetype is not know.
-            #~ bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
-            #~ mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
-            #~ 'xpath' is a xpath to use on xml-file (using elementtree xpath functionality)
-            #~ if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
-            #~ if found, and no 'content' in the dict; set messagetype.
+            # the messagetype is not know.
+            # bots reads file usersys/grammars/xml/mailbag.py, and uses 'mailbagsearch' to determine the messagetype
+            # mailbagsearch is a list, containing python dicts. Dict consist of 'xpath', 'messagetype' and (optionally) 'content'.
+            # 'xpath' is a xpath to use on xml-file (using elementtree xpath functionality)
+            # if found, and 'content' in the dict; if 'content' is equal to value found by xpath-search, then set messagetype.
+            # if found, and no 'content' in the dict; set messagetype.
             try:
-                module,grammarname = botslib.botsimport('grammars','xml.mailbag')
+                module,grammarname = botslib.botsimport('grammars','xml','mailbag')
                 mailbagsearch = getattr(module, 'mailbagsearch')
             except AttributeError:
                 botsglobal.logger.error(u'Missing mailbagsearch in mailbag definitions for xml.')
