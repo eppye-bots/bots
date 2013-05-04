@@ -13,7 +13,7 @@ class Node(object):
     '''
     #slots: python optimalisation to preserve memory. Disadv.: no dynamic attr in this class
     #in tests: for normal translations less memory and faster; no effect fo one-on-one translations.
-    __slots__ = ('record','children','_queries','pos','line','comparekey', )    
+    __slots__ = ('record','children','_queries','pos','line')    
     def __init__(self,record=None,botsidnr=None,pos=None,line=None):
         self.record = record    #record is a dict with fields
         if self.record:
@@ -533,16 +533,12 @@ class Node(object):
             self.record.update(mpath)   #add items to self.record that are new
             return True
 
-    def _nodecompare(self,node2compare):
-        ''' helper function for sort '''
-        return node2compare.get(*self.comparekey)
-
     def sort(self,*mpaths):
         ''' sort nodes. eg in mappingscript:     inn.sort({'BOTSID':'UNH'},{'BOTSID':'LIN','C212.7140':None})
             This will sort the LIN segments by article number.
         '''
-        self.comparekey = mpaths[1:]
-        self.children.sort(key=self._nodecompare)
+        comparekey = mpaths[1:]
+        self.children.sort(key=lambda s: s.get(*comparekey))
 
     def stripnode(self):
         ''' removes spaces from all fields in tree.
