@@ -222,9 +222,7 @@ class Inmessage(message.Message):
             #record is found in grammar
             countnrofoccurences += 1
             newnode = node.Node(record=self._parsefields(current_lex_record,structure_level[structure_index]),
-                                botsidnr=structure_level[structure_index][BOTSIDNR],
-                                pos=current_lex_record[0][POS],
-                                line=current_lex_record[0][LIN])  #make new node
+                                linpos=(current_lex_record[0][POS],current_lex_record[0][LIN]) )  #make new node
             inode.append(newnode)   #succes! append new node as a child to current (parent)node
             if SUBTRANSLATION in structure_level[structure_index]:
                 # start a SUBTRANSLATION; find the right messagetype, etc
@@ -401,6 +399,7 @@ class fixed(Inmessage):
             if value:
                 record2build[field_definition[ID]] = value
             pos += field_definition[LENGTH]
+        record2build['botsidnr'] = record_definition[BOTSIDNR]
         return record2build
 
     def _formatfield(self,value,field_definition,structure_record,node_instance):
@@ -681,6 +680,7 @@ class var(Inmessage):
                     list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
                     sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
                     record2build[field_definition[ID]].append({sub_field_in_record_definition[ID]:value})
+        record2build['botsidnr'] = record_definition[BOTSIDNR]
         return record2build
         
 class csv(var):

@@ -13,23 +13,19 @@ class Node(object):
     '''
     #slots: python optimalisation to preserve memory. Disadv.: no dynamic attr in this class
     #in tests: for normal translations less memory and faster; no effect fo one-on-one translations.
-    __slots__ = ('record','children','_queries','pos','line')    
-    def __init__(self,record=None,botsidnr=None,pos=None,line=None):
+    __slots__ = ('record','children','_queries','linposarg')    
+    def __init__(self,record=None,linpos=None):
+        if record:
+            if 'BOTSIDnr' not in record:
+                record['BOTSIDnr'] = u'1'
         self.record = record    #record is a dict with fields
-        if self.record:
-            if 'BOTSIDnr' not in self.record:
-                if botsidnr:
-                    self.record['BOTSIDnr'] = botsidnr
-                else:
-                    self.record['BOTSIDnr'] = u'1'
         self.children = []
+        self.linposarg = linpos
         self._queries = None
-        self.pos = pos
-        self.line = line
 
     def linpos(self):
-        if self.line:
-            return ' line %(lin)s pos %(pos)s'%{'lin':self.line,'pos':self.pos}
+        if self.linposarg:
+            return ' line %(lin)s pos %(pos)s'%{'lin':self.linposarg[0],'pos':self.linposarg[1]}
         else:
             return ''
 
