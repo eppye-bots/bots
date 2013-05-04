@@ -101,7 +101,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                             #initialize new out-object*************************
                             ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
                             filename_translated = str(ta_translated.idta)
-                            out_translated = outmessage.outmessage_init(messagetype=tomessagetype,editype=toeditype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
+                            out_translated = outmessage.outmessage_init(editype=toeditype,messagetype=tomessagetype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                             
                         #run mapping script************************
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
