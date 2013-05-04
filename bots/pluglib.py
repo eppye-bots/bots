@@ -185,8 +185,8 @@ def read_index2database(orgpluglist):
             continue
         pluglist.append(plug)
     #sort pluglist: this is needed for relationships
-    pluglist.sort(key=lambda k: k.get('isgroup',False),reverse=True)       #sort partners on being partnergroup or not
-    pluglist.sort(key=lambda k: PLUGINCOMPARELIST.index(k['plugintype']))   #sort all plugs on plugintype; are partners/partenrgroups are already sorted, this will still be true in this new sort (python guarantees!)
+    pluglist.sort(key=lambda plug: plug.get('isgroup',False),reverse=True)       #sort partners on being partnergroup or not
+    pluglist.sort(key=lambda plug: PLUGINCOMPARELIST.index(plug['plugintype']))   #sort all plugs on plugintype; are partners/partenrgroups are already sorted, this will still be true in this new sort (python guarantees!)
 
     for plug in pluglist:
         botsglobal.logger.info(u'    Start write to database for: "%(plug)s".',{'plug':plug})
