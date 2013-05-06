@@ -13,7 +13,6 @@ class Message(object):
     '''
     def __init__(self,ta_info):
         self.ta_info = ta_info      #here ta_info is only filled with parameters from db-ta
-        self.recordnumber = 0       #segment counter. Not for UNT/UNZ/SE/IEA but some editypes want sequential recordnumbering (idoc)
         self.errorlist = []         #collect all (non-fatal) errors in the edi file; used in reporting errors.
         self.messagetypetxt = ''    #used in reporting errors.
         self.messagecount = 0       #count messages in edi file; used in reporting errors.
@@ -154,12 +153,11 @@ class Message(object):
                                             {'linpos':node_instance.linpos(),'field':field,'mpath':self.mpathformat(record_definition[MPATH])})
                 del node_instance.record[field]
 
-    def _canonicaltree(self,node_instance,structure,headerrecordnumber=0):
+    def _canonicaltree(self,node_instance,structure):
         ''' For nodes: check min and max occurence; sort the records conform grammar
-            parameter 'headerrecordnumber' is used in subclassing this function.
         '''
         sortednodelist = []
-        self._canonicalfields(node_instance,structure,headerrecordnumber)    #handle fields of this record
+        self._canonicalfields(node_instance,structure)    #handle fields of this record
         if LEVEL in structure:
             for record_definition in structure[LEVEL]:  #for every record_definition (in grammar) of this level
                 count = 0                           #count number of occurences of record
@@ -167,7 +165,7 @@ class Message(object):
                     if childnode.record['BOTSID'] != record_definition[ID] or childnode.record['BOTSIDnr'] != record_definition[BOTSIDNR]:   #if it is not the right NODE":
                         continue
                     count += 1
-                    self._canonicaltree(childnode,record_definition,self.recordnumber)         #use rest of index in deeper level
+                    self._canonicaltree(childnode,record_definition)         #use rest of index in deeper level
                     sortednodelist.append(childnode)
                 if record_definition[MIN] > count > record_definition[MAX]:
                     if record_definition[MIN] > count:
@@ -177,11 +175,8 @@ class Message(object):
                         self.add2errorlist(_(u'[S04]%(linpos)s: Record "%(mpath)s" occurs %(count)d times, max is %(maxcount)d.\n')%
                                             {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'count':count,'maxcount':record_definition[MAX]})
             node_instance.children = sortednodelist
-        #only relevant for inmessages
-        if QUERIES in structure:
-            node_instance.get_queries_from_edi(structure)
 
-    def _canonicalfields(self,node_instance,record_definition,headerrecordnumber):
+    def _canonicalfields(self,node_instance,record_definition):
         ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted).
             Fields are never added.
         '''

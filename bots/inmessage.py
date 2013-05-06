@@ -356,10 +356,18 @@ class Inmessage(message.Message):
     @classmethod
     def _initmessagefromnode(cls,inode,ta_info):
         ''' initialize a inmessage-object from node in tree.
-            used in nextmessage.'''
+            used in nextmessage.
+        '''
         messagefromnode = cls(ta_info)
         messagefromnode.root = inode
         return messagefromnode
+
+    def _canonicaltree(self,node_instance,structure):
+        ''' For nodes: check min and max occurence; sort the records conform grammar
+        '''
+        super(Inmessage,self)._canonicalfields(node_instance,structure)
+        if QUERIES in structure:
+            node_instance.get_queries_from_edi(structure)
 
 
 class fixed(Inmessage):

@@ -448,13 +448,20 @@ class fixed(Outmessage):
 
 
 class idoc(fixed):
-    def _canonicalfields(self,node_instance,structure_record,headerrecordnumber):
-        node_instance
+    def __init__(self,ta_info):
+        super(idoc,self).__init__(ta_info)
+        self.recordnumber = 0       #segment counter. For sequential recordnumbering in records.
+        
+    def _canonicaltree(self,node_instance,structure):
+        self.headerrecordnumber = self.recordnumber
+        super(idoc,self)._canonicaltree(node_instance,structure_record)
+        
+    def _canonicalfields(self,node_instance,structure_record):
         if self.ta_info['automaticcount']:
-            node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM'],'SEGNUM':str(self.recordnumber),'PSGNUM':str(headerrecordnumber),'HLEVEL':str(len(structure_record[MPATH]))})
+            node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM'],'SEGNUM':str(self.recordnumber),'PSGNUM':str(self.headerrecordnumber),'HLEVEL':str(len(structure_record[MPATH]))})
         else:
             node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM']})
-        super(idoc,self)._canonicalfields(node_instance,structure_record,headerrecordnumber)
+        super(idoc,self)._canonicalfields(node_instance,structure_record)
         self.recordnumber += 1      #tricky. EDI_DC is not counted, so I count after writing.
 
 
