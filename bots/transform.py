@@ -108,14 +108,11 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                                 {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'],tscript) #get the mappingscript
                         alt_from_previous_run = inn_splitup.ta_info['alt']      #needed to check for infinite loop
-                        botsglobal.checklevel_mappingscript = getattr(translationscript,'checklevel',1)
-                        #~ print 'botsglobal.checklevel_mappingscript',botsglobal.checklevel_mappingscript
-                        if botsglobal.checklevel_mappingscript == 2:
+                        if botsglobal.ini.getint('settings','get_checklevel',1) == 2:
                             botsglobal.defmessage = grammar.grammarread(inn_splitup.ta_info['editype'],inn_splitup.ta_info['messagetype'])
                             botsglobal.inmessage = inn_splitup
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
-                        botsglobal.checklevel_mappingscript = 1
                         
                         #manipulate for some attributes after mapping script
                         if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......

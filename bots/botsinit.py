@@ -7,6 +7,7 @@ import logging, logging.handlers
 #Bots-modules
 import botsglobal
 import botslib
+import node         #needed in initalisation
 
 class BotsConfig(ConfigParser.RawConfigParser):
     ''' As ConfigParser, but with defaults.
@@ -109,7 +110,18 @@ def generalinit(configdir):
     initbotscharsets()
     #set environment for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
-    botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))    #
+    botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
+    get_checklevel = botsglobal.ini.getint('settings','get_checklevel',1)
+    if not get_checklevel:
+        node.Node.get = node.Node.get_checklevel0
+        node.Node.getloop = node.Node.getloop_checklevel0
+    elif get_checklevel == 1:
+        node.Node.get = node.Node.get_checklevel1
+        node.Node.getloop = node.Node.getloop_checklevel1
+    else:
+        node.Node.get = node.Node.get_checklevel2
+        node.Node.getloop = node.Node.getloop_checklevel2
+    
 
 def initbotscharsets():
     '''set up right charset handling for specific charsets (UNOA, UNOB, UNOC, etc).'''

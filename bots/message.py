@@ -351,6 +351,17 @@ class Message(object):
                 for terug in childnode.getloop(*mpaths): #search recursive for rest of mpaths
                     yield terug
 
+    def getloop_checklevel1(self,*mpaths):
+        ''' query tree with mpath; generates all the nodes. Is typically used as: for record in inn.get(mpath):
+        '''
+        if self.root.record:    #self.root is a real root
+            for terug in self.root.getloop_checklevel1(*mpaths): #search recursive for rest of mpaths
+                yield terug
+        else:   #self.root is dummy root
+            for childnode in self.root.children:
+                for terug in childnode.getloop_checklevel1(*mpaths): #search recursive for rest of mpaths
+                    yield terug
+
     def put(self,*mpaths,**kwargs):
         if self.root.record is None and self.root.children:
             raise botslib.MappingRootError(_(u'put(%(mpath)s): "root" of outgoing message is empty; use out.putloop'),

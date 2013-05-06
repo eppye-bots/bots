@@ -296,7 +296,7 @@ class Inmessage(message.Message):
         #~ self.root.display()
         if self.defmessage.nextmessage is not None: #if nextmessage defined in grammar: split up messages
             first = True
-            for eachmessage in self.getloop(*self.defmessage.nextmessage):  #get node of each message
+            for eachmessage in self.getloop_checklevel1(*self.defmessage.nextmessage):  #get node of each message
                 if first:
                     self.root.processqueries({},len(self.defmessage.nextmessage))
                     first = False
@@ -306,7 +306,7 @@ class Inmessage(message.Message):
                 yield self._initmessagefromnode(eachmessage,ta_info)
             if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
                 first = True
-                for eachmessage in self.getloop(*self.defmessage.nextmessage2):
+                for eachmessage in self.getloop_checklevel1(*self.defmessage.nextmessage2):
                     if first:
                         self.root.processqueries({},len(self.defmessage.nextmessage2))
                         first = False
@@ -899,49 +899,49 @@ class edifact(var):
     def checkenvelope(self):
         ''' check envelopes (UNB-UNZ counters & references, UNH-UNT counters & references etc)
         '''
-        for nodeunb in self.getloop({'BOTSID':'UNB'}):
+        for nodeunb in self.getloop_checklevel1({'BOTSID':'UNB'}):
             botsglobal.logmap.debug(u'Start parsing edifact envelopes')
-            unbreference = nodeunb.get({'BOTSID':'UNB','0020':None})
-            unzreference = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0020':None})
+            unbreference = nodeunb.get_checklevel0({'BOTSID':'UNB','0020':None})
+            unzreference = nodeunb.get_checklevel0({'BOTSID':'UNB'},{'BOTSID':'UNZ','0020':None})
             if unbreference and unzreference and unbreference != unzreference:
                 self.add2errorlist(_(u'[E01]: UNB-reference is "%(unbreference)s"; should be equal to UNZ-reference "%(unzreference)s".\n')%{'unbreference':unbreference,'unzreference':unzreference})
-            unzcount = nodeunb.get({'BOTSID':'UNB'},{'BOTSID':'UNZ','0036':None})
+            unzcount = nodeunb.get_checklevel0({'BOTSID':'UNB'},{'BOTSID':'UNZ','0036':None})
             messagecount = len(nodeunb.children) - 1
             try:
                 if int(unzcount) != messagecount:
                     self.add2errorlist(_(u'[E02]: Count of messages in UNZ is %(unzcount)s; should be equal to number of messages %(messagecount)s.\n')%{'unzcount':unzcount,'messagecount':messagecount})
             except:
                 self.add2errorlist(_(u'[E03]: Count of messages in UNZ is invalid: "%(count)s".\n')%{'count':unzcount})
-            for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
-                unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
-                untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
+            for nodeunh in nodeunb.getloop_checklevel0({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
+                unhreference = nodeunh.get_checklevel0({'BOTSID':'UNH','0062':None})
+                untreference = nodeunh.get_checklevel0({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                 if unhreference and untreference and unhreference != untreference:
                     self.add2errorlist(_(u'[E04]: UNH-reference is "%(unhreference)s"; should be equal to UNT-reference "%(untreference)s".\n')%{'unhreference':unhreference,'untreference':untreference})
-                untcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
+                untcount = nodeunh.get_checklevel0({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
                 segmentcount = nodeunh.getcount()
                 try:
                     if int(untcount) != segmentcount:
                         self.add2errorlist(_(u'[E05]: Segmentcount in UNT is %(untcount)s; should be equal to number of segments %(segmentcount)s.\n')%{'untcount':untcount,'segmentcount':segmentcount})
                 except:
                     self.add2errorlist(_(u'[E06]: Count of segments in UNT is invalid: "%(count)s".\n')%{'count':untcount})
-            for nodeung in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNG'}):
-                ungreference = nodeung.get({'BOTSID':'UNG','0048':None})
-                unereference = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0048':None})
+            for nodeung in nodeunb.getloop_checklevel0({'BOTSID':'UNB'},{'BOTSID':'UNG'}):
+                ungreference = nodeung.get_checklevel0({'BOTSID':'UNG','0048':None})
+                unereference = nodeung.get_checklevel0({'BOTSID':'UNG'},{'BOTSID':'UNE','0048':None})
                 if ungreference and unereference and ungreference != unereference:
                     self.add2errorlist(_(u'[E07]: UNG-reference is "%(ungreference)s"; should be equal to UNE-reference "%(unereference)s".\n')%{'ungreference':ungreference,'unereference':unereference})
-                unecount = nodeung.get({'BOTSID':'UNG'},{'BOTSID':'UNE','0060':None})
+                unecount = nodeung.get_checklevel0({'BOTSID':'UNG'},{'BOTSID':'UNE','0060':None})
                 groupcount = len(nodeung.children) - 1
                 try:
                     if int(unecount) != groupcount:
                         self.add2errorlist(_(u'[E08]: Groupcount in UNE is %(unecount)s; should be equal to number of groups %(groupcount)s.\n')%{'unecount':unecount,'groupcount':groupcount})
                 except:
                     self.add2errorlist(_(u'[E09]: Groupcount in UNE is invalid: "%(count)s".\n')%{'count':unecount})
-                for nodeunh in nodeung.getloop({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
-                    unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
-                    untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
+                for nodeunh in nodeung.getloop_checklevel0({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
+                    unhreference = nodeunh.get_checklevel0({'BOTSID':'UNH','0062':None})
+                    untreference = nodeunh.get_checklevel0({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                     if unhreference and untreference and unhreference != untreference:
                         self.add2errorlist(_(u'[E10]: UNH-reference is "%(unhreference)s"; should be equal to UNT-reference "%(untreference)s".\n')%{'unhreference':unhreference,'untreference':untreference})
-                    untcount = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
+                    untcount = nodeunh.get_checklevel0({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':None})
                     segmentcount = nodeunh.getcount()
                     try:
                         if int(untcount) != segmentcount:
@@ -964,12 +964,12 @@ class edifact(var):
         if not self.__class__.send_edifact_CONTRL:
             return
         editype = self.__class__.__name__
-        for nodeunb in self.getloop({'BOTSID':'UNB'}):
-            sender = nodeunb.get({'BOTSID':'UNB','S002.0004':None})
-            receiver = nodeunb.get({'BOTSID':'UNB','S003.0010':None})
+        for nodeunb in self.getloop_checklevel1({'BOTSID':'UNB'}):
+            sender = nodeunb.get_checklevel0({'BOTSID':'UNB','S002.0004':None})
+            receiver = nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0010':None})
             nr_message_to_confirm = 0
             messages_not_confirm = []
-            for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
+            for nodeunh in nodeunb.getloop_checklevel0({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                 messagetype=nodeunh.queries['messagetype']
                 #no CONTRL for CONTRL or APERAK message; check if CONTRL should be send via confirmrules
                 if messagetype[:6] in ['CONTRL','APERAK'] or not botslib.checkconfirmrules(confirmtype,idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
@@ -1002,24 +1002,24 @@ class edifact(var):
                 #default mapping script for CONTRL
                 out.put({'BOTSID':'UNH','0062':reference,'S009.0065':'CONTRL','S009.0052':'2','S009.0054':'2','S009.0051':'UN','S009.0057':'EAN002'})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'7'})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0020':nodeunb.get({'BOTSID':'UNB','0020':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0020':nodeunb.get_checklevel0({'BOTSID':'UNB','0020':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0004':sender})     #not reverse!
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0007':nodeunb.get({'BOTSID':'UNB','S002.0007':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0014':nodeunb.get({'BOTSID':'UNB','S002.0014':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0042':nodeunb.get({'BOTSID':'UNB','S002.0042':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0007':nodeunb.get_checklevel0({'BOTSID':'UNB','S002.0007':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0014':nodeunb.get_checklevel0({'BOTSID':'UNB','S002.0014':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0042':nodeunb.get_checklevel0({'BOTSID':'UNB','S002.0042':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0010':receiver})   #not reverse!
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0007':nodeunb.get({'BOTSID':'UNB','S003.0007':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0014':nodeunb.get({'BOTSID':'UNB','S003.0014':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0042':nodeunb.get({'BOTSID':'UNB','S003.0042':None})})
-                for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0007':nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0007':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0014':nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0014':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0042':nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0042':None})})
+                for nodeunh in nodeunb.getloop_checklevel0({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                     lou = out.putloop({'BOTSID':'UNH'},{'BOTSID':'UCM'})
                     lou.put({'BOTSID':'UCM','0083':'7'})
-                    lou.put({'BOTSID':'UCM','0062':nodeunh.get({'BOTSID':'UNH','0062':None})})
-                    lou.put({'BOTSID':'UCM','S009.0065':nodeunh.get({'BOTSID':'UNH','S009.0065':None})})
-                    lou.put({'BOTSID':'UCM','S009.0052':nodeunh.get({'BOTSID':'UNH','S009.0052':None})})
-                    lou.put({'BOTSID':'UCM','S009.0054':nodeunh.get({'BOTSID':'UNH','S009.0054':None})})
-                    lou.put({'BOTSID':'UCM','S009.0051':nodeunh.get({'BOTSID':'UNH','S009.0051':None})})
-                    lou.put({'BOTSID':'UCM','S009.0057':nodeunh.get({'BOTSID':'UNH','S009.0057':None})})
+                    lou.put({'BOTSID':'UCM','0062':nodeunh.get_checklevel0({'BOTSID':'UNH','0062':None})})
+                    lou.put({'BOTSID':'UCM','S009.0065':nodeunh.get_checklevel0({'BOTSID':'UNH','S009.0065':None})})
+                    lou.put({'BOTSID':'UCM','S009.0052':nodeunh.get_checklevel0({'BOTSID':'UNH','S009.0052':None})})
+                    lou.put({'BOTSID':'UCM','S009.0054':nodeunh.get_checklevel0({'BOTSID':'UNH','S009.0054':None})})
+                    lou.put({'BOTSID':'UCM','S009.0051':nodeunh.get_checklevel0({'BOTSID':'UNH','S009.0051':None})})
+                    lou.put({'BOTSID':'UCM','S009.0057':nodeunh.get_checklevel0({'BOTSID':'UNH','S009.0057':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':out.getcount()+1,'0062':reference})  #last line (counts the segments produced in out-message)
                 if translationscript and hasattr(translationscript,'change'):       #user mapping script that only changes the default mapping
                     botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out)
@@ -1084,31 +1084,31 @@ class x12(var):
         ''' check envelopes, gather information to generate 997 '''
         self.confirmationlist = []              #information about the x12 file for confirmation/997; for x12 this is done per functional group
         #~ self.root.display()
-        for nodeisa in self.getloop({'BOTSID':'ISA'}):
+        for nodeisa in self.getloop_checklevel1({'BOTSID':'ISA'}):
             botsglobal.logmap.debug(u'Start parsing X12 envelopes')
-            #~ sender = nodeisa.get({'BOTSID':'ISA','ISA06':None})
-            #~ receiver = nodeisa.get({'BOTSID':'ISA','ISA08':None})
-            isareference = nodeisa.get({'BOTSID':'ISA','ISA13':None})
-            ieareference = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA02':None})
+            #~ sender = nodeisa.get_checklevel0({'BOTSID':'ISA','ISA06':None})
+            #~ receiver = nodeisa.get_checklevel0({'BOTSID':'ISA','ISA08':None})
+            isareference = nodeisa.get_checklevel0({'BOTSID':'ISA','ISA13':None})
+            ieareference = nodeisa.get_checklevel0({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA02':None})
             if isareference and ieareference and isareference != ieareference:
                 self.add2errorlist(_(u'[E13]: ISA-reference is "%(isareference)s"; should be equal to IEA-reference "%(ieareference)s".\n')%{'isareference':isareference,'ieareference':ieareference})
-            ieacount = nodeisa.get({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':None})
+            ieacount = nodeisa.get_checklevel0({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':None})
             groupcount = nodeisa.getcountoccurrences({'BOTSID':'ISA'},{'BOTSID':'GS'})
             try:
                 if int(ieacount) != groupcount:
                     self.add2errorlist(_(u'[E14]: Count in IEA-IEA01 is %(ieacount)s; should be equal to number of groups %(groupcount)s.\n')%{'ieacount':ieacount,'groupcount':groupcount})
             except:
                 self.add2errorlist(_(u'[E15]: Count of messages in IEA is invalid: "%(count)s".\n')%{'count':ieacount})
-            for nodegs in nodeisa.getloop({'BOTSID':'ISA'},{'BOTSID':'GS'}):
-                sender = nodegs.get({'BOTSID':'GS','GS02':None})
-                receiver = nodegs.get({'BOTSID':'GS','GS03':None})
-                gsqualifier = nodegs.get({'BOTSID':'GS','GS01':None})
-                gsreference = nodegs.get({'BOTSID':'GS','GS06':None})
-                gsversion = nodegs.get({'BOTSID':'GS','GS08':None})
-                gereference = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
+            for nodegs in nodeisa.getloop_checklevel0({'BOTSID':'ISA'},{'BOTSID':'GS'}):
+                sender = nodegs.get_checklevel0({'BOTSID':'GS','GS02':None})
+                receiver = nodegs.get_checklevel0({'BOTSID':'GS','GS03':None})
+                gsqualifier = nodegs.get_checklevel0({'BOTSID':'GS','GS01':None})
+                gsreference = nodegs.get_checklevel0({'BOTSID':'GS','GS06':None})
+                gsversion = nodegs.get_checklevel0({'BOTSID':'GS','GS08':None})
+                gereference = nodegs.get_checklevel0({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
                 if gsreference and gereference and gsreference != gereference:
                     self.add2errorlist(_(u'[E16]: GS-reference is "%(gsreference)s"; should be equal to GE-reference "%(gereference)s".\n')%{'gsreference':gsreference,'gereference':gereference})
-                gecount = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE01':None})
+                gecount = nodegs.get_checklevel0({'BOTSID':'GS'},{'BOTSID':'GE','GE01':None})
                 messagecount = len(nodegs.children) - 1
                 try:
                     if int(gecount) != messagecount:
@@ -1116,14 +1116,14 @@ class x12(var):
                 except:
                     self.add2errorlist(_(u'[E18]: Count of messages in GE is invalid: "%(count)s".\n')%{'count':gecount})
                 self.confirmationlist.append({'gsqualifier':gsqualifier,'gsreference':gsreference,'gecount':gecount,'sender':sender,'receiver':receiver,'STlist':[]})   #gather information about functional group (GS-GE)
-                for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
-                    stqualifier = nodest.get({'BOTSID':'ST','ST01':None})
-                    streference = nodest.get({'BOTSID':'ST','ST02':None})
-                    sereference = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
+                for nodest in nodegs.getloop_checklevel0({'BOTSID':'GS'},{'BOTSID':'ST'}):
+                    stqualifier = nodest.get_checklevel0({'BOTSID':'ST','ST01':None})
+                    streference = nodest.get_checklevel0({'BOTSID':'ST','ST02':None})
+                    sereference = nodest.get_checklevel0({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
                     #referencefields are numerical; should I compare values??
                     if streference and sereference and streference != sereference:
                         self.add2errorlist(_(u'[E19]: ST-reference is "%(streference)s"; should be equal to SE-reference "%(sereference)s".\n')%{'streference':streference,'sereference':sereference})
-                    secount = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE01':None})
+                    secount = nodest.get_checklevel0({'BOTSID':'ST'},{'BOTSID':'SE','SE01':None})
                     segmentcount = nodest.getcount()
                     try:
                         if int(secount) != segmentcount:
@@ -1184,9 +1184,9 @@ class x12(var):
 
 class tradacoms(var):
     def checkenvelope(self):
-        for nodestx in self.getloop({'BOTSID':'STX'}):
+        for nodestx in self.getloop_checklevel1({'BOTSID':'STX'}):
             botsglobal.logmap.debug(u'Start parsing tradacoms envelopes')
-            endcount = nodestx.get({'BOTSID':'STX'},{'BOTSID':'END','NMST':None})
+            endcount = nodestx.get_checklevel0({'BOTSID':'STX'},{'BOTSID':'END','NMST':None})
             messagecount = len(nodestx.children) - 1
             try:
                 if int(endcount) != messagecount:
@@ -1194,11 +1194,11 @@ class tradacoms(var):
             except:
                 self.add2errorlist(_(u'[E23]: Count of messages in END is invalid: "%(count)s".\n')%{'count':endcount})
             firstmessage = True
-            for nodemhd in nodestx.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
+            for nodemhd in nodestx.getloop_checklevel0({'BOTSID':'STX'},{'BOTSID':'MHD'}):
                 if firstmessage:    #
                     nodestx.queries = {'messagetype':nodemhd.queries['messagetype']}
                     firstmessage = False
-                mtrcount = nodemhd.get({'BOTSID':'MHD'},{'BOTSID':'MTR','NOSG':None})
+                mtrcount = nodemhd.get_checklevel0({'BOTSID':'MHD'},{'BOTSID':'MTR','NOSG':None})
                 segmentcount = nodemhd.getcount()
                 try:
                     if int(mtrcount) != segmentcount:
