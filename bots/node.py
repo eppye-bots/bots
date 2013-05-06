@@ -32,16 +32,6 @@ class Node(object):
         '''append child to node'''
         self.children.append(childnode)
 
-    def display(self,level=0):
-        '''for debugging
-            usage eg in mappingscript:     inn.root.display()
-        '''
-        if level == 0:
-            print 'displaying all nodes in node tree:'
-        print '    '*level,self.record
-        for childnode in self.children:
-            childnode.display(level+1)
-
     #********************************************************
     #*** queries ********************************************
     #********************************************************
@@ -89,6 +79,9 @@ class Node(object):
         for childnode in self.children:
             childnode.displayqueries(level+1)
 
+    #********************************************************
+    #*** handling of QUERIES and SUBTRANSLATION *************
+    #********************************************************
     def enhancedget(self,mpaths):
         ''' to get QUERIES or SUBTRANSLATION;
             mpath can be
@@ -137,27 +130,15 @@ class Node(object):
     def getrecord(self,*mpaths):
         ''' get whole node record
         '''
-        #sanity check of mpaths
-        if not mpaths or not isinstance(mpaths,tuple):
-            raise botslib.MappingFormatError(_(u'Parameter "where" must be tuple: getrecord(%(mpath)s)'),{'mpath':mpaths})
+        self._mpath_checklevel1(mpaths)
         for part in mpaths:
-            if not isinstance(part,dict):
-                raise botslib.MappingFormatError(_(u'Parameter "mpaths" must be dicts in a tuple: getrecord(%(mpath)s)'),{'mpath':mpaths})
-            if 'BOTSID' not in part:
-                raise botslib.MappingFormatError(_(u'Section without "BOTSID": getrecord(%(mpath)s)'),{'mpath':mpaths})
-            for key,value in part.iteritems():
-                if not isinstance(key,basestring):
-                    raise botslib.MappingFormatError(_(u'Keys must be strings: getrecord(%(mpath)s)'),{'mpath':mpaths})
-                if not isinstance(value,basestring):
-                    raise botslib.MappingFormatError(_(u'Values must be strings: getrecord(%(mpath)s)'),{'mpath':mpaths})
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        #go get it!
-        terug =  self._getrecordcore(*mpaths)
+        terug =  self._getrecordcore(mpaths)
         botsglobal.logmap.debug(u'"%(terug)s" for getrecord%(mpaths)s',{'terug':str(terug),'mpaths':str(mpaths)})
         return terug
 
-    def _getrecordcore(self,*mpaths):
+    def _getrecordcore(self,mpaths):
         for key,value in mpaths[0].iteritems():       #check all key, value for first part of where;
             if key not in self.record or value != self.record[key]:
                 return None    #no match:
@@ -166,7 +147,7 @@ class Node(object):
                 return self.record
             else:           #go recursive
                 for childnode in self.children:
-                    terug = childnode._getrecordcore(*mpaths[1:])
+                    terug = childnode._getrecordcore(mpaths[1:])
                     if terug:
                         return terug
                 else:   #no child has given a valid return
@@ -174,32 +155,16 @@ class Node(object):
 
 
     def change(self,where,change):
-        ''' where is used to find a node;
-            change is than applied to this node
-            use first matching node for 'where'.
+        ''' where: node to find.
+            change is applied to found node
+            uses first matching node for 'where'.
         '''
-        #sanity check of mpaths
-        if not where or not isinstance(where,tuple):
-            raise botslib.MappingFormatError(_(u'Parameter "where" must be tuple: change(where=%(where)s,change=%(change)s)'),
-                                                {'where':where,'change':change})
+        self._mpath_checklevel1(where)
         for part in where:
-            if not isinstance(part,dict):
-                raise botslib.MappingFormatError(_(u'Parameter "where" must be dicts in a tuple: change(where=%(where)s,change=%(change)s)'),
-                                                    {'where':where,'change':change})
-            if 'BOTSID' not in part:
-                raise botslib.MappingFormatError(_(u'Section without "BOTSID": change(where=%(where)s,change=%(change)s)'),
-                                                    {'where':where,'change':change})
-            for key,value in part.iteritems():
-                if not isinstance(key,basestring):
-                    raise botslib.MappingFormatError(_(u'Keys must be strings: change(where=%(where)s,change=%(change)s)'),
-                                                        {'where':where,'change':change})
-                if not isinstance(value,basestring):
-                    raise botslib.MappingFormatError(_(u'Values must be strings: change(where=%(where)s,change=%(change)s)'),
-                                                        {'where':where,'change':change})
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         #sanity check 'change' parameter
-        if not change or not isinstance(change,dict):
+        if not isinstance(change,dict):
             raise botslib.MappingFormatError(_(u'Parameter "change" must be dict: change(where=%(where)s,change=%(change)s)'),
                                                 {'where':where,'change':change})
         change.pop('BOTSID','nep')  #remove 'BOTSID' from change. BOTSID can not be changed
@@ -211,7 +176,6 @@ class Node(object):
             if not isinstance(value,basestring) and value is not None:     #if None, item is deleted
                 raise botslib.MappingFormatError(_(u'Values in "change" must be strings or "None": change(where=%(where)s,change=%(change)s)'),
                                                     {'where':where,'change':change})
-        #go get it!
         terug =  self._changecore(where,change)
         botsglobal.logmap.debug(u'"%(terug)s" for change(where=%(where)s,change=%(change)s)',{'terug':terug,'where':str(where),'change':str(change)})
         return terug
@@ -238,29 +202,18 @@ class Node(object):
 
     def delete(self,*mpaths):
         ''' delete the last record of mpath if found (first: find/identify, than delete.        '''
-        #sanity check of mpaths
-        if not mpaths or not isinstance(mpaths,tuple):
-            raise botslib.MappingFormatError(_(u'Must be dicts in tuple: delete(%(mpath)s)'),{'mpath':mpaths})
+        self._mpath_checklevel1(mpaths)
         if len(mpaths) == 1:
             raise botslib.MappingFormatError(_(u'Only one dict: not allowed. Use different solution: delete(%(mpath)s)'),{'mpath':mpaths})
         for part in mpaths:
-            if not isinstance(part,dict):
-                raise botslib.MappingFormatError(_(u'Must be dicts in tuple: delete(%(mpath)s)'),{'mpath':mpaths})
-            if 'BOTSID' not in part:
-                raise botslib.MappingFormatError(_(u'Section without "BOTSID": delete(%(mpath)s)'),{'mpath':mpaths})
-            for key,value in part.iteritems():
-                if not isinstance(key,basestring):
-                    raise botslib.MappingFormatError(_(u'Keys must be strings: delete(%(mpath)s)'),{'mpath':mpaths})
-                if not isinstance(value,basestring):
-                    raise botslib.MappingFormatError(_(u'Values must be strings: delete(%(mpath)s)'),{'mpath':mpaths})
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         #go get it!
-        terug =  bool(self._deletecore(*mpaths))
+        terug =  bool(self._deletecore(mpaths))
         botsglobal.logmap.debug(u'"%(terug)s" for delete%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
         return terug  #return False if not removed, return True if removed
 
-    def _deletecore(self,*mpaths):
+    def _deletecore(self,mpaths):
         for key,value in mpaths[0].iteritems():          #check all items in first part of mpaths
             if key not in self.record or value != self.record[key]:
                 return 0
@@ -269,7 +222,7 @@ class Node(object):
                 return 2  #indicates node should be removed
             else:
                 for i, childnode in enumerate(self.children):
-                    terug =  childnode._deletecore(*mpaths[1:]) #search recursive for rest of mpaths
+                    terug =  childnode._deletecore(mpaths[1:]) #search recursive for rest of mpaths
                     if terug == 2:  #indicates node should be removed
                         del self.children[i]    #remove node
                         return 1    #this indicates: deleted successfull, do not remove anymore (no removal of parents)
@@ -280,28 +233,12 @@ class Node(object):
 
     def get_checklevel2(self,*mpaths):
         terug =  self.get_checklevel1(*mpaths)
-        if hasattr(botsglobal.defmessage,'structure'):
-            full_mpath = botsglobal.inmessage.root.get_full_mpath(self) + mpaths
-            #~ print 'full_mpath',full_mpath
-            if not checkmpath(botsglobal.defmessage.structure,full_mpath):
-                print 'Error in mpath',mpaths
+        self._mpath_checklevel2(mpaths)
         return terug
 
     def get_checklevel1(self,*mpaths):
-        #sanity check of mpaths. None only allowed in last section of Mpath; first checks all parts except last one
-        if not mpaths or not isinstance(mpaths,tuple):
-            raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
-        for part in mpaths[:-1]:
-            if not isinstance(part,dict):
-                raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
-            if 'BOTSID' not in part:
-                raise botslib.MappingFormatError(_(u'Section without "BOTSID": get(%(mpath)s)'),{'mpath':mpaths})
-            for key,value in part.iteritems():
-                if not isinstance(key,basestring):
-                    raise botslib.MappingFormatError(_(u'Keys must be strings: get(%(mpath)s)'),{'mpath':mpaths})
-                if not isinstance(value,basestring):
-                    raise botslib.MappingFormatError(_(u'Values must be strings: get(%(mpath)s)'),{'mpath':mpaths})
-        #sanity check of mpaths: None only allowed in last section of Mpath; check last part
+        self._mpath_checklevel1(mpaths[:-1])
+        #sanity check of last part of mpaths: None only allowed in last section of Mpath; check last part
         if not isinstance(mpaths[-1],dict):
             raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
         if 'BOTSID' not in mpaths[-1]:
@@ -328,19 +265,18 @@ class Node(object):
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        #go get it!
-        terug =  self._getcore(*mpaths)
+        terug =  self._getcore(mpaths)
         botsglobal.logmap.debug(u'"%(terug)s" for get%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
         return terug
 
-    def _getcore(self,*mpaths):
+    def _getcore(self,mpaths):
         if len(mpaths) != 1:    #node is not end-node
             for key,value in mpaths[0].iteritems():          #check all items in mpath;
                 if key not in self.record or value != self.record[key]:  #does not match/is not right node
                     return None
             else:   #all items in mpath are matched and OK; recursuve search
                 for childnode in self.children:
-                    terug =  childnode._getcore(*mpaths[1:]) #recursive search for rest of mpaths
+                    terug =  childnode._getcore(mpaths[1:]) #recursive search for rest of mpaths
                     if terug is not None:
                         return terug
                 else:   #nothing found in children
@@ -358,19 +294,6 @@ class Node(object):
                 return terug        #either the remembered value is returned or 1 (as a boolean, indicated 'found)
 
 
-    def get_full_mpath(self,node2find):
-        if self is node2find:
-            return tuple()
-        else:
-            for child in self.children:
-                mpath = child.get_full_mpath(node2find)
-                if mpath is not None:
-                    if self.record:
-                        return ({'BOTSID':self.record['BOTSID']},) + mpath
-                    else:
-                        return mpath
-            return None
-        
     def getcount(self):
         '''count the number of nodes/records under the node/in whole tree'''
         count = 0
@@ -402,26 +325,10 @@ class Node(object):
         '''
         for terug in self.getloop_checklevel1(*mpaths):
             yield terug
-        if hasattr(botsglobal.defmessage,'structure'):
-            full_mpath = botsglobal.inmessage.root.get_full_mpath(self) + mpaths
-            #~ print 'full_mpath',full_mpath
-            if not checkmpath(botsglobal.defmessage.structure,full_mpath):
-                print 'Error in mpath',mpaths
+        self._mpath_checklevel2(mpaths)
 
     def getloop_checklevel1(self,*mpaths):
-        #sanity check of mpaths
-        if not mpaths or not isinstance(mpaths,tuple):
-            raise botslib.MappingFormatError(_(u'Must be dicts in tuple: getloop(%(mpath)s)'),{'mpath':mpaths})
-        for part in mpaths:
-            if not isinstance(part,dict):
-                raise botslib.MappingFormatError(_(u'Must be dicts in tuple: getloop(%(mpath)s)'),{'mpath':mpaths})
-            if 'BOTSID' not in part:
-                raise botslib.MappingFormatError(_(u'Section without "BOTSID": getloop(%(mpath)s)'),{'mpath':mpaths})
-            for key,value in part.iteritems():
-                if not isinstance(key,basestring):
-                    raise botslib.MappingFormatError(_(u'Keys must be strings: getloop(%(mpath)s)'),{'mpath':mpaths})
-                if not isinstance(value,basestring):
-                    raise botslib.MappingFormatError(_(u'Values must be strings: getloop(%(mpath)s)'),{'mpath':mpaths})
+        self._mpath_checklevel1(mpaths)
         for terug in self.getloop_checklevel0(*mpaths):
             yield terug
 
@@ -431,11 +338,11 @@ class Node(object):
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        for terug in self._getloopcore(*mpaths):
+        for terug in self._getloopcore(mpaths):
             botsglobal.logmap.debug(u'getloop %(mpaths)s returns "%(record)s".',{'mpaths':mpaths,'record':terug.record})
             yield terug
 
-    def _getloopcore(self,*mpaths):
+    def _getloopcore(self,mpaths):
         ''' recursive part of getloop()
         '''
         for key,value in mpaths[0].iteritems():
@@ -446,7 +353,7 @@ class Node(object):
                 yield self      #found!
             else:
                 for childnode in self.children:
-                    for terug in childnode._getloopcore(*mpaths[1:]): #search recursive for rest of mpaths
+                    for terug in childnode._getloopcore(mpaths[1:]): #search recursive for rest of mpaths
                         yield terug
 
     def getnozero(self,*mpaths):
@@ -485,22 +392,22 @@ class Node(object):
                 part['BOTSIDnr'] = u'1'
 
         if self._sameoccurence(mpaths[0]):
-            self._putcore(*mpaths[1:])
+            self._putcore(mpaths[1:])
         else:
             raise botslib.MappingRootError(_(u'Error in root put "%(mpath)s".'),{'mpath':mpaths[0]})
         botsglobal.logmap.debug(u'"True" for put %(mpaths)s',{'mpaths':str(mpaths)})
         return True
 
-    def _putcore(self,*mpaths):
+    def _putcore(self,mpaths):
         if not mpaths:  #newmpath is exhausted, stop searching.
             return
         for childnode in self.children:
             if childnode.record['BOTSID'] == mpaths[0]['BOTSID'] and childnode._sameoccurence(mpaths[0]):    #checking of BOTSID is also done in sameoccurance!->performance!
-                childnode._putcore(*mpaths[1:])
+                childnode._putcore(mpaths[1:])
                 return
         else:   #is not present in children, so append mpath as a new node
             self.append(Node(mpaths[0]))
-            self.children[-1]._putcore(*mpaths[1:])
+            self.children[-1]._putcore(mpaths[1:])
 
     def putloop(self,*mpaths):
         #sanity check of mpaths
@@ -522,20 +429,20 @@ class Node(object):
         if self._sameoccurence(mpaths[0]):
             if len(mpaths)==1:
                 return self
-            return self._putloopcore(*mpaths[1:])
+            return self._putloopcore(mpaths[1:])
         else:
             raise botslib.MappingRootError(_(u'Error in root putloop "%(mpath)s".'),{'mpath':mpaths[0]})
 
-    def _putloopcore(self,*mpaths):
+    def _putloopcore(self,mpaths):
         if len(mpaths) ==1: #end of mpath reached; always make new child-node
             self.append(Node(mpaths[0]))
             return self.children[-1]
         for childnode in self.children:  #if first part of mpaths exists already in children go recursive
             if childnode.record['BOTSID'] == mpaths[0]['BOTSID'] and childnode._sameoccurence(mpaths[0]):    #checking of BOTSID is also done in sameoccurance!->performance!
-                return childnode._putloopcore(*mpaths[1:])
+                return childnode._putloopcore(mpaths[1:])
         else:   #is not present in children, so append a child, and go recursive
             self.append(Node(mpaths[0]))
-            return self.children[-1]._putloopcore(*mpaths[1:])
+            return self.children[-1]._putloopcore(mpaths[1:])
 
     def _sameoccurence(self, mpath):
         ''' checks if all items that appear in both node and mpath have the same value. If so, all new items in mpath are added to node
@@ -553,6 +460,84 @@ class Node(object):
         '''
         comparekey = mpaths[1:]
         self.children.sort(key=lambda s: s.get(*comparekey))
+    #********************************************************
+    #*** utility functions **********************************
+    #********************************************************
+    def _mpath_checklevel1(self,mpaths):
+        ''' sanity check of mpaths.
+        '''
+        #sanity check of mpaths
+        if not isinstance(mpaths,tuple):
+            raise botslib.MappingFormatError(_(u'Parameter mpath must be tuple: %(mpaths)s'),{'mpaths':mpaths})
+        for part in mpaths:
+            if not isinstance(part,dict):
+                raise botslib.MappingFormatError(_(u'Parameter mpath must be dicts in a tuple: %(mpaths)s'),{'mpaths':mpaths})
+            if 'BOTSID' not in part:
+                raise botslib.MappingFormatError(_(u'"BOTSID" is required in mpath: %(mpaths)s'),{'mpaths':mpaths})
+            for key,value in part.iteritems():
+                if not isinstance(key,basestring):
+                    raise botslib.MappingFormatError(_(u'Keys must be strings in mpath: %(mpaths)s'),{'mpaths':mpaths})
+                if not isinstance(value,basestring):
+                    raise botslib.MappingFormatError(_(u'Values must be strings in mpath: getrecord(%(mpaths)s)'),{'mpaths':mpaths})
+                    
+    def _mpath_checklevel2(self,mpaths):
+        def _mpath_ok_with_grammar(structure,mpaths):
+            ''' inner function, recursive.
+                every part of mpaths should be in structure, at right level, have right fields.
+            '''
+            mpath = mpaths[0]
+            for record_definition in structure:
+                if record_definition[ID] == mpath['BOTSID']:
+                    for key in mpath:
+                        if key == 'BOTSIDnr':
+                            continue
+                        for field_definition in record_definition[FIELDS]:
+                            if field_definition[ISFIELD]:
+                                if key == field_definition[ID]:
+                                    break   #check next key
+                            else:
+                                for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
+                                    if key == grammarsubfield[ID]:
+                                        break   #check next key
+                                else:
+                                    continue #checking field_defintions
+                                break   #check next key
+                        else:   #Not found in record!
+                            print 'jaja1',key
+                            return False
+                    if mpaths[1:]:
+                        return _mpath_ok_with_grammar(record_definition[LEVEL],mpaths[1:])
+                    else:
+                        return True    #no more levels, all fields found
+            else:
+                return False
+        if hasattr(botsglobal.defmessage,'structure'):
+            full_mpath = botsglobal.inmessage.root._get_full_mpath(self) + mpaths
+            if not _mpath_ok_with_grammar(botsglobal.defmessage.structure,full_mpath):
+                raise botslib.MappingFormatError(_(u'Parameter mpath is not valid according to grammar: %(mpaths)s'),{'mpaths':mpaths})
+                
+    def _get_full_mpath(self,node2find):
+        if self is node2find:
+            return tuple()
+        else:
+            for child in self.children:
+                mpath = child._get_full_mpath(node2find)
+                if mpath is not None:
+                    if self.record:
+                        return ({'BOTSID':self.record['BOTSID']},) + mpath
+                    else:
+                        return mpath
+            return None
+        
+    def display(self,level=0):
+        '''for debugging
+            usage eg in mappingscript:     inn.root.display()
+        '''
+        if level == 0:
+            print 'displaying all nodes in node tree:'
+        print '    '*level,self.record
+        for childnode in self.children:
+            childnode.display(level+1)
 
     def stripnode(self):
         ''' removes spaces from all fields in tree.
@@ -565,28 +550,5 @@ class Node(object):
         for child in self.children:
             child.stripnode()
 
-def checkmpath(structure,mpaths):
-    ''' every part of mpaths should be in structure, at right level, have right fields.'''
-    mpath = mpaths[0]
-    for record_definition in structure:
-        if record_definition[ID] == mpath['BOTSID']:
-            for key in mpath:
-                for field_definition in record_definition[FIELDS]:
-                    if field_definition[ISFIELD]:
-                        if key == field_definition[ID]:
-                            break   #check next key
-                    else:
-                        for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
-                            if key == grammarsubfield[ID]:
-                                break   #check next key
-                        else:
-                            continue #checking field_defintions
-                        break   #check next key
-                else:   #Not found in record!
-                    return False
-            if mpaths[1:]:
-                return checkmpath(record_definition[LEVEL],mpaths[1:])
-            else:
-                return True    #no more levels, all fields found
-    else:
-        return False
+
+
