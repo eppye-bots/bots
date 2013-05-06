@@ -57,7 +57,6 @@ class Inmessage(message.Message):
         self._lex()
         if hasattr(self,'rawinput'):
             del self.rawinput
-        #~ self.display(self.lex_records)   #show lex_records (for protocol debugging)
         self.root = node.Node()  #make root Node None.
         self.iternext_lex_record = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
@@ -222,7 +221,7 @@ class Inmessage(message.Message):
             #record is found in grammar
             countnrofoccurences += 1
             newnode = node.Node(record=self._parsefields(current_lex_record,structure_level[structure_index]),
-                                linpos=(current_lex_record[0][POS],current_lex_record[0][LIN]) )  #make new node
+                                linpos_info=(current_lex_record[0][LIN],current_lex_record[0][POS]) )  #make new node
             inode.append(newnode)   #succes! append new node as a child to current (parent)node
             if SUBTRANSLATION in structure_level[structure_index]:
                 # start a SUBTRANSLATION; find the right messagetype, etc
@@ -318,7 +317,7 @@ class Inmessage(message.Message):
             #there is only one recordtype (this is checked in grammar.py).
             first = True
             for line in self.root.children:
-                kriterium = line.get(self.defmessage.nextmessageblock)
+                kriterium = line.get_checklevel1(self.defmessage.nextmessageblock)
                 if first:
                     first = False
                     newroot = node.Node()  #make new empty root node.
@@ -705,7 +704,7 @@ class csv(var):
         if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
             botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
             for lex_record in self.lex_records:
-                lex_record[0] = [{VALUE: botsid, POS: 0, LIN: 0, SFIELD: 0}]
+                lex_record[0:0] = [{VALUE: botsid, POS: 0, LIN:lex_record[0][LIN], SFIELD: False}]
 
 class excel(csv):
     def initfromfile(self):

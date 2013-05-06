@@ -41,7 +41,7 @@ class Message(object):
                     print '%s    (Record-id)'%(veld[VALUE])
                 else:
                     if veld[SFIELD] == 0:
-                        print '    %s    (veld)'%(veld[VALUE])
+                        print '    %s    (field)'%(veld[VALUE])
                     elif veld[SFIELD] == 1:
                         print '        %s    (sub)'%(veld[VALUE])
                     elif veld[SFIELD] == 2:
