@@ -13,7 +13,7 @@ class Node(object):
     '''
     #slots: python optimalisation to preserve memory. Disadv.: no dynamic attr in this class
     #in tests: for normal translations less memory and faster; no effect fo one-on-one translations.
-    __slots__ = ('record','children','_queries','linpos_info')    
+    __slots__ = ('record','children','_queries','linpos_info')
     def __init__(self,record=None,linpos=None):
         if record and 'BOTSIDnr' not in record:
             record['BOTSIDnr'] = u'1'
@@ -52,7 +52,6 @@ class Node(object):
                 botslib.updateunlessset(self._queries,updatequeries)
 
     queries = property(_getquerie,_updatequerie)
-
     def processqueries(self,queries,maxlevel):
         ''' copies values for queries 'down the tree' untill right level.
             So when edi file is split up in messages,
@@ -114,15 +113,13 @@ class Node(object):
         ''' extract information from edifile using QUERIES in grammar.structure; information will be placed in ta_info and in db-ta
         '''
         tmpdict = {}
-        #~ print 'get_queries_from_edi', record_definition[QUERIES]
         for key,value in record_definition[QUERIES].iteritems():
             found = self.enhancedget(value)   #search in last added node
             if found is not None:
-                found = found.strip()         #needed to get correct ISA-fields 
+                found = found.strip()         #needed to get correct ISA-fields
                 if found:
                     tmpdict[key] = found
         self.queries = tmpdict
-        #~ print 'result:',self.queries,'\n'
 
     #********************************************************
     #*** manipulate node.tree: get, put, change, delete etc *
@@ -152,7 +149,6 @@ class Node(object):
                         return terug
                 else:   #no child has given a valid return
                     return None
-
 
     def change(self,where,change):
         ''' where: node to find.
@@ -199,16 +195,14 @@ class Node(object):
                 else:   #no child has given a valid return
                     return False
 
-
     def delete(self,*mpaths):
-        ''' delete the last record of mpath if found (first: find/identify, than delete.        '''
+        ''' delete the last record of mpath if found (first: find/identify, than delete. '''
         self._mpath_checklevel1(mpaths)
         if len(mpaths) == 1:
             raise botslib.MappingFormatError(_(u'Only one dict: not allowed. Use different solution: delete(%(mpath)s)'),{'mpath':mpaths})
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        #go get it!
         terug =  bool(self._deletecore(mpaths))
         botsglobal.logmap.debug(u'"%(terug)s" for delete%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
         return terug  #return False if not removed, return True if removed
@@ -464,9 +458,7 @@ class Node(object):
     #*** utility functions **********************************
     #********************************************************
     def _mpath_checklevel1(self,mpaths):
-        ''' sanity check of mpaths.
-        '''
-        #sanity check of mpaths
+        ''' sanity check of mpaths. '''
         if not isinstance(mpaths,tuple):
             raise botslib.MappingFormatError(_(u'Parameter mpath must be tuple: %(mpaths)s'),{'mpaths':mpaths})
         for part in mpaths:
@@ -479,8 +471,9 @@ class Node(object):
                     raise botslib.MappingFormatError(_(u'Keys must be strings in mpath: %(mpaths)s'),{'mpaths':mpaths})
                 if not isinstance(value,basestring):
                     raise botslib.MappingFormatError(_(u'Values must be strings in mpath: getrecord(%(mpaths)s)'),{'mpaths':mpaths})
-                    
+
     def _mpath_checklevel2(self,mpaths):
+        ''' check of mpaths with grammar. '''
         def _mpath_ok_with_grammar(structure,mpaths):
             ''' inner function, recursive.
                 every part of mpaths should be in structure, at right level, have right fields.
@@ -515,7 +508,7 @@ class Node(object):
             full_mpath = botsglobal.inmessage.root._get_full_mpath(self) + mpaths
             if not _mpath_ok_with_grammar(botsglobal.defmessage.structure,full_mpath):
                 raise botslib.MappingFormatError(_(u'Parameter mpath is not valid according to grammar: %(mpaths)s'),{'mpaths':mpaths})
-                
+
     def _get_full_mpath(self,node2find):
         if self is node2find:
             return tuple()
@@ -528,7 +521,7 @@ class Node(object):
                     else:
                         return mpath
             return None
-        
+
     def display(self,level=0):
         '''for debugging
             usage eg in mappingscript:     inn.root.display()
@@ -549,6 +542,3 @@ class Node(object):
                 self.record[key] = value.strip()
         for child in self.children:
             child.stripnode()
-
-
-
