@@ -165,7 +165,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
                                 #~ inn_splitup.ta_info.pop('statust')
                             else:   #there is nothing else
-                                raise botslib.BotsError(_(u'Mappingscript returned dict with an unkown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
+                                raise botslib.BotsError(_(u'Mappingscript returned dict with an unknown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
                         else:  #note: this includes alt '' (empty string)
                             if alt_from_previous_run == doalttranslation:
                                 number_of_loops_with_same_alt += 1
