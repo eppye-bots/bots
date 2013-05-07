@@ -395,7 +395,7 @@ class Outmessage(message.Message):
                             if self.ta_info['replacechar']:
                                 char = self.ta_info['replacechar']
                             else:
-                                raise botslib.OutMessageError(_(u'[F51]: Character "%(char)s" is used as separator in this x12 file, so it can not be used in content. Field: "%(data)s".'),
+                                raise botslib.OutMessageError(_(u'[F51]: Character "%(char)s" is used as separator in this x12 file, so it can not be used in content. Field: "%(content)s".'),
                                                                 {'char':char,'content':field[VALUE]})
                         else:
                             value +=escape
