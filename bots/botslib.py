@@ -9,6 +9,7 @@ import string
 import urlparse
 import urllib
 import platform
+import collections
 import django
 from django.utils.translation import ugettext as _
 #Bots-modules (no code)
@@ -409,10 +410,33 @@ def txtexc():
         str().decode(): bytes->unicode
     '''
     if botsglobal.ini and botsglobal.ini.getboolean('settings','debug',False):
-        return traceback.format_exc(limit=None).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
+        return safe_unicode(traceback.format_exc(limit=None))
+        #~ return traceback.format_exc(limit=None).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
     else:
-        terug = traceback.format_exc(limit=0).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
+        terug = safe_unicode(traceback.format_exc(limit=0))
+        #~ terug = traceback.format_exc(limit=0).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
         return terug.replace(u'Traceback (most recent call last):\n',u'')
+
+def safe_unicode(value):
+    ''' For errors: return best possible unicode...should never lead to errors.
+    '''
+    try:
+        if isinstance(value, unicode):
+            return value            #is already unicode
+        elif isinstance(value, str):
+            for charset in ['utf_8','latin_1']:
+                try:
+                    return value.decode(charset, 'strict')  #decode strict
+                except:
+                    continue
+            return value.decode('utf_8', 'ignore')  #decode as if it is utf-8, ignore errors
+        else:
+            return unicode(value)
+    except:
+        try:
+            return repr(value)
+        except:
+            return u'Error while displaying error'
 
 class ErrorProcess(NewTransaction):
     ''' Used in logging of errors in processes: communication.py to indicate errors in receiving files (files have not been received)
@@ -710,52 +734,33 @@ def updateunlessset(updatedict,fromdict):
 #**************  Exception classes ***************************
 #**********************************************************/**
 class BotsError(Exception):
+    ''' formats the error messages. Under all circumstances: give (reasonable) output, no errors.
+        input (msg,*args,**kwargs) can be anything: strings (any charset), unicode, objects. Note that these are errors, so input can be 'not valid'!
+        to avoid the risk of 'errors during errors' catch-all solutions are used.
+        2 ways to raise Exceptions:
+        - BotsError('tekst %(var1)s %(var2)s',{'var1':'value1','var2':'value2'})  ###this one is preferred!!
+        - BotsError('tekst %(var1)s %(var2)s',var1='value1',var2='value2')
+    '''
     def __init__(self, msg,*args,**kwargs):
-        self.msg = msg
-        self.args = args
-        self.kwargs = kwargs
-    def __str__(self):
-        # gives the output for the error
-        # under all circumstances: no errors!
-        # input (msg,*args,**kwargs) cna be anything: strings (any charset), unicode, objects. Note that these are errors, so input can be 'not valid'!
-        # note: debugging all errors handling is not easy :-(
-        # to avoid the risk of 'errors during errors' a catch-all solution is used here when in production.
-        # when developing errors are raised!
-        # .decode(): bytes->unicode
-        # .encode(): unicode -> bytes
-        if self.args:   #most of the time args[0] is a dict
-            try:
-                terug = unicode(self.msg)%self.args[0]
-            except UnicodeError,msg: 
-                if botsglobal.ini.get('webserver','environment','development') == 'development':
-                    print 'case 1',self.msg, self.args,self.kwargs,msg
-                    raise Exception('Error in bots exception handling case 1')
-                safe_dict = collections.defaultdict(unicode,self.args[0])
-                terug = unicode(self.msg,'utf-8','ignore')%(safe_dict)
-            except Exception,msg:      #case string replacemetns are not OK
-                if botsglobal.ini.get('webserver','environment','development') == 'development':
-                    print 'vase 2',self.msg, self.args,self.kwargs,msg
-                    raise Exception('Error in bots exception handling case 2')
-                safe_dict = collections.defaultdict(unicode,self.args[0])
-                terug = unicode(self.msg)%(safe_dict)
+        self.msg = safe_unicode(msg)
+        if args:    ##expect args[0] to be a dict
+            if isinstance(args[0],dict):
+                xxx = args[0]
+            else:
+                xxx = {}
         else:
-            try:
-                terug = unicode(self.msg)%self.kwargs
-            except UnicodeError,msg: 
-                if botsglobal.ini.get('webserver','environment','development') == 'development':
-                    print 'case 3',self.msg, self.args,self.kwargs,msg
-                    raise Exception('Error in bots exception handling case 3')
-                safe_dict = collections.defaultdict(unicode,self.kwargs)
-                terug = unicode(self.msg,'utf-8','ignore')%(safe_dict)
-            except Exception,msg:   #case string replacemetns are not OK
-                if botsglobal.ini.get('webserver','environment','development') == 'development':
-                    print 'case 4',self.msg, self.args,self.kwargs,msg
-                    raise Exception('Error in bots exception handling case 4')
-                safe_dict = collections.defaultdict(unicode,self.kwargs)
-                terug = unicode(self.msg)%(safe_dict)
-        # 'terug' is unicode. This is encoded into uft-8 (failsafe) 
-        return terug.encode(u'utf-8',u'ignore')
-
+            xxx = kwargs
+        self.xxx = collections.defaultdict(unicode)     #catch-all if var in string is not there
+        for key,value in xxx.iteritems():
+            self.xxx[safe_unicode(key)] = safe_unicode(value)
+    def __unicode__(self):
+        try:
+            return self.msg%self.xxx
+        except:
+            return u'Error while displaying error'
+    __str__ = __unicode__
+    __repr__ = __unicode__
+            
 class CodeConversionError(BotsError):
     pass
 class CommunicationError(BotsError):
@@ -766,7 +771,7 @@ class CommunicationOutError(BotsError):
     pass
 class EanError(BotsError):
     pass
-class GrammarError(BotsError):         #grammar.py
+class GrammarError(BotsError):
     pass
 class InMessageError(BotsError):
     pass
@@ -776,7 +781,7 @@ class MessageError(BotsError):
     pass
 class MappingRootError(BotsError):
     pass
-class MappingFormatError(BotsError):   #mpath is not valid; mapth will mostly come from mappingscript
+class MappingFormatError(BotsError):
     pass
 class OutMessageError(BotsError):
     pass
