@@ -671,7 +671,7 @@ class _comsession(object):
                 if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
                     datetime_object = datetime.datetime.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")
                 else:
-                    datetime_object=datetime.datetime.now()
+                    datetime_object = datetime.datetime.now()
                 tofilename = tofilename.format(infile=infilename,datetime=datetime_object,**ta.__dict__)
             except:
                 txt = botslib.txtexc()
