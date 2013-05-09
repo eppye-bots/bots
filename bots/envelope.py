@@ -459,7 +459,7 @@ class x12(Envelope):
         self.out.tree2records(self.out.root)
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        isa_string = self.out.record2string(self.out.lex_records[0])
+        isa_string = self.out.record2string(self.out.lex_records[0:1])
         #ISA has the used separators at certain positions. Normally bots would give errors for this (can not use sep as data) or compress these aways. So this is hardcoded.
         if self.ta_info['version'] < '00403':
             isa_string = isa_string[:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + isa_string[103:] 

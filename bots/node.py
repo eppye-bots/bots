@@ -299,7 +299,7 @@ class Node(object):
 
     def getcountoccurrences(self,*mpaths):
         ''' count number of occurences of mpath. Eg count nr of LIN's'''
-        return len(list(self.getloop(*mpaths)))
+        return len(list(self.getloop_checklevel0(*mpaths)))
 
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
@@ -496,7 +496,6 @@ class Node(object):
                                     continue #checking field_defintions
                                 break   #check next key
                         else:   #Not found in record!
-                            print 'jaja1',key
                             return False
                     if mpaths[1:]:
                         return _mpath_ok_with_grammar(record_definition[LEVEL],mpaths[1:])
@@ -506,6 +505,7 @@ class Node(object):
                 return False
         if hasattr(botsglobal.defmessage,'structure'):
             full_mpath = botsglobal.inmessage.root._get_full_mpath(self) + mpaths
+            #~ print 'full_mpath',full_mpath
             if not _mpath_ok_with_grammar(botsglobal.defmessage.structure,full_mpath):
                 raise botslib.MappingFormatError(_(u'Parameter mpath is not valid according to grammar: %(mpaths)s'),{'mpaths':mpaths})
 

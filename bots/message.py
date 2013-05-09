@@ -326,7 +326,7 @@ class Message(object):
 
     def getcountoccurrences(self,*mpaths):
         ''' count number of nodes in self.root. Number of nodes is number of records.'''
-        return len(list(self.getloop(*mpaths)))
+        return len(list(self.root.getloop_checklevel0(*mpaths)))
 
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
