@@ -86,6 +86,7 @@ def generalinit(configdir):
     botsglobal.ini.set('directories','botspath',settings.PROJECT_PATH)
     # 'directories','config': absolute path for config directory
     botsglobal.ini.set('directories','config',configdirectory)
+    botsglobal.ini.set('directories','config_org',configdir)            #set config as originally received.
     # 'directories','usersysabs': absolute path for config usersysabs
     botsglobal.ini.set('directories','usersysabs',os.path.abspath(os.path.dirname(importedusersys.__file__)))    #???Find pathname usersys using imported usersys
     # botsglobal.usersysimportpath: used for imports from usersys

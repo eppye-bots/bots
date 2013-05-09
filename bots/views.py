@@ -620,9 +620,16 @@ def delete(request,*kw,**kwargs):
 
 def runengine(request,*kw,**kwargs):
     if request.method == 'GET':
-        #find out the right arguments to use
-        botsenginepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py')        #find the bots-engine
-        lijst = [sys.executable,botsenginepath] + sys.argv[1:]
+        #needed to find out right arguments:
+        # 1. python_executable_path. Problem in virtualenv. Use setting in bots.ini if there
+        # 2. botsengine_path. Problem in apache. Use setting in bots.ini if there
+        # 3. environment (config). OK
+        # 4. commandstorun (eg --new) and routes. OK
+        python_executable_path = botsglobal.ini.get('settings','python_executable_path',sys.executable)
+        botsengine_path = botsglobal.ini.get('settings','botsengine_path',os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py'))
+        environment = '-c' + botsglobal.ini.get('directories','config_org')
+        lijst = [python_executable_path,botsengine_path,environment]
+        # get 4. commandstorun (eg --new) and routes via request
         if 'clparameter' in request.GET:
             lijst.append(request.GET['clparameter'])
             

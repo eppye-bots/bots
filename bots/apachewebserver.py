@@ -1,20 +1,22 @@
 #!/usr/bin/env python
-''' startup script for bots using apache2 as webserver using wsgi.
-wsgi script (outside bots directory:
+''' This source file starts up bots monitor when using apache2 as webserver.
+'''
+'''
+WSGI SCRIPT EXAMPLE (outside bots directory, imports and starts this script apachewebserer.py):
 import sys
 import django.core.handlers.wsgi
 import mod_wsgi
 
 #set PYTHONPATH...not needed if bots is already on PYTHONPATH
-sys.path.append('/home/hje/Bots/botsdev')
+#sys.path.append('/usr/local/lib/python2.7/dist-packages')
 from bots import apachewebserver
 
 config = mod_wsgi.process_group
 apachewebserver.start(config)
 application = django.core.handlers.wsgi.WSGIHandler()
-
-
-apache config file very simple:
+'''
+'''
+APACHE CONFIG FILE EXAMPLE:
 WSGIScriptAlias /    <wsgi script>
 Alias /media    <media directory>
 
@@ -24,7 +26,6 @@ NameVirtualHost *:8080
 WSGIDaemonProcess config user=xxxxx
 WSGIProcessGroup config
 </VirtualHost>
-
 '''
 import botsglobal
 import botsinit
