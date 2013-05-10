@@ -707,6 +707,7 @@ class file(_comsession):
                 ta_to =   ta_from.copyta(status=FILEIN)
                 #open fromfile, syslock if indicated
                 fromfile = open(fromfilename,'rb')
+                filesize = os.fstat(fromfile.fileno()).st_size
                 if self.channeldict['syslock']:
                     if os.name == 'nt':
                         msvcrt.locking(fromfile.fileno(), msvcrt.LK_LOCK, 0x0fffffff)
@@ -718,9 +719,7 @@ class file(_comsession):
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 #copy
-                content = fromfile.read()
-                filesize = len(content)
-                tofile.write(content)
+                shutil.copyfileobj(fromfile,tofile,1048576)
                 tofile.close()
                 fromfile.close()
             except:
@@ -781,7 +780,7 @@ class file(_comsession):
                 #open fromfile
                 fromfile = botslib.opendata(row['filename'], 'rb')
                 #copy
-                shutil.copyfileobj(fromfile,tofile)
+                shutil.copyfileobj(fromfile,tofile,1048576)
                 fromfile.close()
                 tofile.close()
                 #~ raise Exception('test')
@@ -1674,12 +1673,14 @@ class communicationscript(_comsession):
                                                     fromchannel = self.channeldict['idchannel'],
                                                     idroute = self.idroute)
                     ta_to = ta_from.copyta(status = FILEIN)
+                    #open fromfile
                     fromfile = open(fromfilename, 'rb')
+                    filesize = os.fstat(fromfile.fileno()).st_size
+                    #open tofile
                     tofilename = str(ta_to.idta)
                     tofile = botslib.opendata(tofilename, 'wb')
-                    content = fromfile.read()
-                    filesize = len(content)
-                    tofile.write(content)
+                    #copy
+                    shutil.copyfileobj(fromfile,tofile,1048576)
                     fromfile.close()
                     tofile.close()
                 except:
@@ -1754,12 +1755,13 @@ class communicationscript(_comsession):
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
                 tofilename = self.filename_formatter(filename_mask,ta_from)
+                #open tofile
                 tofilename = botslib.join(outputdir,tofilename)
                 tofile = open(tofilename, mode)
                 #open fromfile
                 fromfile = botslib.opendata(row['filename'], 'rb')
                 #copy
-                shutil.copyfileobj(fromfile,tofile)
+                shutil.copyfileobj(fromfile,tofile,1048576)
                 fromfile.close()
                 tofile.close()
                 #one file is written; call external

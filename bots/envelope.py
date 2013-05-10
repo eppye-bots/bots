@@ -161,7 +161,7 @@ class Envelope(object):
     def writefilelist(self,tofile):
         for filename in self.ta_list:
             fromfile = botslib.opendata(filename, 'rb',self.ta_info['charset'])
-            shutil.copyfileobj(fromfile,tofile)
+            shutil.copyfileobj(fromfile,tofile,1048576)
             fromfile.close()
 
     def filelist2absolutepaths(self):
