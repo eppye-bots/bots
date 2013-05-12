@@ -1,5 +1,4 @@
 import django
-from django.conf import settings
 #***********
 import models
 import viewlib
@@ -8,8 +7,8 @@ import botsglobal
 HIDDENINPUT = django.forms.widgets.HiddenInput
 
 class Select(django.forms.Form):
-    datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom,input_formats=settings.DATETIME_INPUT_FORMATS)
-    dateuntil = django.forms.DateTimeField(initial=viewlib.datetimeuntil,input_formats=settings.DATETIME_INPUT_FORMATS)
+    datefrom = django.forms.DateTimeField(initial=viewlib.datetimefrom)
+    dateuntil = django.forms.DateTimeField(initial=viewlib.datetimeuntil)
     page = django.forms.IntegerField(required=False,initial=1,widget=HIDDENINPUT())
     sortedby = django.forms.CharField(initial='ts',widget=HIDDENINPUT())
     sortedasc = django.forms.BooleanField(initial=False,required=False,widget=HIDDENINPUT())

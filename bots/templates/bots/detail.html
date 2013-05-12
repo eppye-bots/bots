@@ -5,7 +5,7 @@
 {% block content %}
     <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
     <table>
-        <tr><td>{% trans 'Date/time' %}</td><td class="nowrap">{{rootta.ts|date:"DATETIME_FORMAT"}}</td></tr>
+        <tr><td>{% trans 'Date/time' %}</td><td class="nowrap">{{rootta.ts|date:"Y-m-d H:i:s"}}</td></tr>
         <tr><td>{% trans 'State' %}</td><td>{{rootta.get_statust_display}}</td></tr>
         <tr><td>{% trans 'Route' %}</td><td>{{rootta.idroute}}</td></tr>
 </table>

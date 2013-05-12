@@ -55,7 +55,7 @@
                 </td>
                 <td>{{ row.get_statust_display}}</td>
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
-                <td class="nowrap">{{row.ts|date:"DATETIME_FORMAT" }}</td>
+                <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s" }}</td>
                 <td class="nowrap">{{row.idroute}}</td>
                 <td>{{row.nrmessages}}</td>
                 <td class="nowrap">{{row.ineditype}}</td>

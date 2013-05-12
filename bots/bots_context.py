@@ -1,4 +1,3 @@
-from django.conf import settings
 import botsglobal
 import models
 
@@ -44,17 +43,6 @@ def set_context(request):
         custom_menuname = None
         custom_menus = None
     
-    if hasattr(settings,'DATE_FORMAT_PICKER'):
-        DTpicker_date = settings.DATE_FORMAT_PICKER
-    else:
-        DTpicker_date = 'yy-mm-dd'
-    if hasattr(settings,'TIME_FORMAT_PICKER'):
-        DTpicker_time = settings.TIME_FORMAT_PICKER
-    else:
-        DTpicker_time = 'hh:mm:ss'
-    DTpicker_ampm = 'true' if 'TT' in DTpicker_time else 'false'
-
-
     #the variables in the dict are set. eg in template use {{ bots_environment_text }}
     return {'bots_environment_text':bots_environment_text,
             'bots_environment_text_color':bots_environment_text_color,
@@ -65,8 +53,5 @@ def set_context(request):
             'menu_all_routes':menu_all_routes,
             'custom_menus':custom_menus,
             'custom_menuname':custom_menuname,
-            'DTpicker_date':DTpicker_date,
-            'DTpicker_time':DTpicker_time,
-            'DTpicker_ampm':DTpicker_ampm,
             }
 

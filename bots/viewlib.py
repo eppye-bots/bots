@@ -2,7 +2,6 @@ import sys
 import copy
 import datetime
 import django
-from django.conf import settings
 from django.core.paginator import Paginator,EmptyPage, InvalidPage
 from django.utils.translation import ugettext as _
 import models
@@ -210,13 +209,12 @@ def trace2detail(ta_object):
     return detaillist
 
 def datetimefrom():
-    terug = datetime.date.today() - datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
-    return terug.strftime(settings.DATETIME_INPUT_FORMATS[0])
+    terug = datetime.datetime.today() - datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
+    return terug.strftime('%Y-%m-%d 00:00:00')
 
 def datetimeuntil():
     terug = datetime.datetime.today()
-    terug.replace(hour=23, minute=59, second=59)
-    return terug.strftime(settings.DATETIME_INPUT_FORMATS[0])
+    return terug.strftime('%Y-%m-%d 23:59:59')
 
 def handlepagination(requestpost,cleaned_data):
     ''' use requestpost to set criteria for pagination in cleaned_data'''
