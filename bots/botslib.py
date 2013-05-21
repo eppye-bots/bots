@@ -39,10 +39,45 @@ def botsinfo():
 #**************getters/setters for some globals***********************/**
 #**********************************************************/**
 def get_minta4query():
-    ''' get the first idta for queries etc.
-        botsglobal.minta4query is set in router.py
+    ''' get the first idta for queries etc in whole run.
     '''
-    return botsglobal.minta4query
+    terug = botsglobal.minta4query_crash
+    if not terug:
+        return botsglobal.minta4query
+    else:
+        return terug
+
+def get_minta4query_route():
+    ''' get the first idta for queries etc in route.
+    '''
+    terug = botsglobal.minta4query_crash
+    if not terug:
+        return botsglobal.minta4query_route
+    else:
+        return terug
+
+def get_minta4query_routepart():
+    ''' get the first idta for queries etc in route-part.
+    '''
+    terug = botsglobal.minta4query_crash
+    if not terug:
+        return botsglobal.minta4query_routepart
+    else:
+        return terug
+
+def countoutfiles(idchannel,rootidta):
+    ''' counts the number of edifiles to be transmitted via outchannel.'''
+    for row in query('''SELECT COUNT(*) as count
+                        FROM ta
+                        WHERE idta>%(rootidta)s
+                        AND status=%(status)s
+                        AND statust=%(statust)s
+                        AND tochannel=%(tochannel)s
+                        ''',
+                        {'status':FILEOUT,'statust':OK,'tochannel':idchannel,'rootidta':rootidta}):
+        return row['count']
+
+
 
 def setrouteid(routeid):
     botsglobal.routeid = routeid
@@ -201,21 +236,14 @@ def trace_origin(ta,where=None):
     return teruglijst
 
 
-def addinfocore(change,where,wherestring):
+def addinfocore(change,where,wherestring=''):
     ''' core function for add/changes information in db-ta's.
         where-dict selects db-ta's, change-dict sets values;
         returns the number of db-ta that have been changed.
     '''
-    if 'rootidta' not in where:
-        where['rootidta'] = get_minta4query()
-        wherestring = ' idta > %(rootidta)s AND ' + wherestring
-    if 'statust' not in where:  #by default: look only for statust is OK
-        where['statust'] = OK
-        wherestring += ' AND statust = %(statust)s '
-    if 'statust' not in change: #by default: new ta is OK
-        change['statust'] = OK
+    wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring + ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta']) 
     counter = 0 #count the number of dbta changed
-    for row in query(u'''SELECT idta FROM ta WHERE '''+wherestring,where):
+    for row in query(u'''SELECT idta FROM ta '''+wherestring,where):
         counter += 1
         ta_from = OldTransaction(row['idta'])
         ta_from.copyta(**change)     #make new ta from ta_from, using parameters from change
@@ -225,31 +253,27 @@ def addinfocore(change,where,wherestring):
 def addinfo(change,where):
     ''' changes ta's; ta's are copyed to new ta; the status is updated.
         change-dict: values to change; where-dict: selection.'''
-    wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
-    return addinfocore(change=change,where=where,wherestring=wherestring)
+    return addinfocore(change=change,where=where)
+
+def updateinfocore(change,where,wherestring=''):
+    ''' update info in ta's.
+        where (dict) selects ta's,
+        change (dict) sets values;
+    '''
+    wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring + ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta'])
+    #change-dict: discard empty values. Change keys: this is needed because same keys can be in where-dict
+    change2 = [(key,value) for key,value in change.iteritems() if value]
+    if not change2:
+        return
+    changestring = ','.join([key+'=%(change_'+key+')s' for key,value in change2])
+    where.update([('change_'+key,value) for key,value in change2])
+    return changeq(u'''UPDATE ta SET ''' + changestring + wherestring,where)
 
 def updateinfo(change,where):
-    ''' update info in ta's; not to be used for status change (use addinfo)
-        where-dict selects ta's, change-dict sets values;
-    '''
-    if 'statust' not in where:
-        where['statust'] = OK
-    wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where])   #wherestring for copy & done
-    where['rootidta'] = get_minta4query()
-    wherestring = ' idta > %(rootidta)s AND ' + wherestring
-    #change-dict: discard empty values. Change keys: this is needed because same keys can be in where-dict
-    change = [(key,value) for key,value in change.iteritems() if value]
-    changestring = ','.join([key+'=%(change_'+key+')s' for key,value in change])
-    if not changestring:
-        return
-    where.update([('change_'+key,value) for key,value in change])
-    changeq(u'''UPDATE ta SET '''+changestring+ ''' WHERE '''+wherestring+ ''' ''',where)
+    updateinfocore(change=change,where=where)
 
 def changestatustinfo(change,where):
-    ''' update statust in ta.
-        where-dict selects db-ta's, change is the new statust;
-    '''
-    updateinfo({'statust':change},where)
+    updateinfocore({'statust':change},where)
 
 #**********************************************************/**
 #*************************Database***********************/**
@@ -282,7 +306,9 @@ def changeq(querystring,*args):
         botsglobal.db.rollback()    #rollback is needed for postgreSQL as this is also used by user scripts (eg via persist)
         raise
     botsglobal.db.commit()
+    terug = cursor.rowcount
     cursor.close()
+    return terug
 
 def insertta(querystring,*args):
     ''' insert ta

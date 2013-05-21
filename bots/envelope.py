@@ -7,28 +7,26 @@ import botsglobal
 import outmessage
 from botsconfig import *
 
-@botslib.log_session
-def mergemessages(startstatus=MERGE,endstatus=FILEOUT,idroute=''):
+                                
+def mergemessages(startstatus,endstatus,idroute,rootidta):
     ''' Merges and/or envelopes one or more messages to one file;
         In db-ta: attribute 'merge' indicates message should be merged with similar messages; 'merge' is generated in translation from messagetype-grammar
         If merge is False: 1 message per envelope - no merging, else append all similar messages to one file
         Implementation as separate loops: one for merge&envelope, another for enveloping only
-        db-ta status MERGE---->FILEOUT
+        db-ta status TRANSLATED---->FILEOUT
     '''
-    outerqueryparameters = {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query(),'merge':False}
     #**********for messages only to envelope (no merging)
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,tochannel,envelope,nrmessages,idta,filename,idroute,merge
+    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,nrmessages,idroute,merge,idta,filename
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
                                 AND statust=%(statust)s
-                                AND idroute=%(idroute)s
                                 AND merge=%(merge)s
                                 ''',
-                                outerqueryparameters):
+                                {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':False}):
         try:
             ta_info = dict(row)
-            ta_fromfile = botslib.OldTransaction(row['idta'])    #edi message to envelope
+            ta_fromfile = botslib.OldTransaction(ta_info['idta'])    #edi message to envelope
             ta_tofile = ta_fromfile.copyta(status=endstatus)  #edifile for enveloped message; attributes of not-enveloped message are copied...
             ta_info['filename'] = str(ta_tofile.idta)   #create filename for enveloped message
             botsglobal.logger.debug(u'Envelope 1 message editype: %(editype)s, messagetype: %(messagetype)s.',ta_info)
@@ -43,28 +41,20 @@ def mergemessages(startstatus=MERGE,endstatus=FILEOUT,idroute=''):
             ta_fromfile.update(statust=DONE)
 
     #**********for messages to merge & envelope
-    #all GROUP BY fields must be used in SELECT!
-    #as files get merged: can not copy idta; must extract relevant attributes.
-    outerqueryparameters['merge'] = True
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,tochannel,testindicator,charset,contenttype,envelope,sum(nrmessages) as nrmessages
+    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,sum(nrmessages) as nrmessages
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
                                 AND statust=%(statust)s
-                                AND idroute=%(idroute)s
                                 AND merge=%(merge)s
-                                GROUP BY editype,messagetype,frompartner,topartner,tochannel,testindicator,charset,contenttype,envelope
+                                GROUP BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope
                                 ''',
-                                outerqueryparameters):
+                                {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True}):
         try:
             ta_info = dict(row)
-            ta_info.update({'merge':False,'idroute':idroute})       #I do not undrestand why 'merge':False
             ta_tofile = botslib.NewTransaction(status=endstatus,idroute=idroute)  #edifile for enveloped messages
-            ta_info['filename'] = str(ta_tofile.idta)                           #create filename for enveloped message
-            innerqueryparameters = ta_info.copy()
-            innerqueryparameters.update(outerqueryparameters)
-            ta_list = []
-            idta_list = []
+            ta_info.update({'idroute':idroute,'merge':False,'filename':str(ta_tofile.idta)})       #SELECT/GROUP BY gives only values that are the grouped
+            filename_list = []
             #gather individual idta and filenames
             #explicitly allow formpartner/topartner to be None/NULL
             for row2 in botslib.query(u'''SELECT idta, filename
@@ -77,31 +67,23 @@ def mergemessages(startstatus=MERGE,endstatus=FILEOUT,idroute=''):
                                             AND messagetype=%(messagetype)s
                                             AND (frompartner=%(frompartner)s OR frompartner IS NULL)
                                             AND (topartner=%(topartner)s OR topartner IS NULL)
-                                            AND tochannel=%(tochannel)s
                                             AND testindicator=%(testindicator)s
                                             AND charset=%(charset)s
-                                            AND idroute=%(idroute)s
                                             ''',
-                                            innerqueryparameters):
+                                            {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,
+                                            'editype':ta_info['editype'],'messagetype':ta_info['messagetype'],'frompartner':ta_info['frompartner'],
+                                            'topartner':ta_info['topartner'],'testindicator':ta_info['testindicator'],'charset':ta_info['charset']}):
                 ta_fromfile = botslib.OldTransaction(row2['idta'])      #edi message to be merged/envelope
-                ta_fromfile.update(child=ta_tofile.idta)                #st child because of n->1 relation
-                ta_list.append(row2['filename'])
-                idta_list.append(row2['idta'])
+                ta_fromfile.update(child=ta_tofile.idta,statust=DONE)                #st child because of n->1 relation
+                filename_list.append(row2['filename'])
             botsglobal.logger.debug(u'Merge and envelope: editype: %(editype)s, messagetype: %(messagetype)s, %(nrmessages)s messages',ta_info)
-            envelope(ta_info,ta_list)
+            envelope(ta_info,filename_list)
             ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
         except:
             txt = botslib.txtexc()
-            #~ ta_tofile.mergefailure()
             ta_tofile.update(statust=ERROR,errortext=txt)
         else:
             ta_tofile.update(statust=OK,**ta_info)
-        finally:
-            #set status DONE for parents that have been merged
-            for idta in idta_list:
-                ta_fromfile = botslib.OldTransaction(idta)
-                ta_fromfile.update(statust=DONE)
-                
 
 
 def envelope(ta_info,ta_list):
@@ -262,7 +244,7 @@ class edifact(Envelope):
         self.writefilelist(tofile)
         tofile.write(self.out.record2string(self.out.lex_records[1:2]))
         tofile.close()
-        if self.ta_info['messagetype'][:6] != 'CONTRL' and botslib.checkconfirmrules('ask-edifact-CONTRL',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
+        if self.ta_info['messagetype'][:6] != 'CONTRL' and botslib.checkconfirmrules('ask-edifact-CONTRL',idroute=self.ta_info['idroute'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
                                                                                 editype='edifact',messagetype=self.ta_info['messagetype']):
             self.ta_info['confirmtype'] = u'ask-edifact-CONTRL'
@@ -471,7 +453,7 @@ class x12(Envelope):
         tofile.write(self.out.record2string(self.out.lex_records[2:])) #write GE and IEA
         #~ tofile.write(self.out.record2string(self.out.lex_records[-1])) #write IEA
         tofile.close()
-        if self.ta_info['functionalgroup'] != 'FA' and botslib.checkconfirmrules('ask-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['tochannel'],
+        if self.ta_info['functionalgroup'] != 'FA' and botslib.checkconfirmrules('ask-x12-997',idroute=self.ta_info['idroute'],
                                                                                 topartner=self.ta_info['topartner'],frompartner=self.ta_info['frompartner'],
                                                                                 editype='x12',messagetype=self.ta_info['messagetype']):
             self.ta_info['confirmtype'] = u'ask-x12-997'

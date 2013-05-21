@@ -23,7 +23,7 @@ from envelope import mergemessages
 from communication import run
 
 @botslib.log_session
-def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
+def translate(startstatus,endstatus,idroute,rootidta):
     ''' main translation loop.
         get edifiles to be translated, than:
         -   read, lex, parse, make tree of nodes.
@@ -43,7 +43,7 @@ def translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=''):
                                 AND status=%(status)s
                                 AND statust=%(statust)s
                                 AND idroute=%(idroute)s ''',
-                                {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':botslib.get_minta4query()}):
+                                {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':rootidta}):
         try:
             row = dict(rawrow)   #convert to real dictionary ()
             ta_fromfile = botslib.OldTransaction(row['idta'])

@@ -9,7 +9,7 @@ import botsglobal
 from botsconfig import *
 
 @botslib.log_session
-def preprocess(routedict,function, status=FILEIN,**argv):
+def preprocess(routedict,function,status=FILEIN,**argv):
     ''' for preprocessing of files.
         these are NOT translations; translation involve grammars, mapping scripts etc. think of eg:
         - unzipping zipped files.
@@ -27,7 +27,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
                                 AND idroute=%(idroute)s
                                 AND fromchannel=%(fromchannel)s
                                 ''',
-                                {'status':status,'statust':OK,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel'],'rootidta':botslib.get_minta4query()}):
+                                {'status':status,'statust':OK,'idroute':routedict['idroute'],'fromchannel':routedict['fromchannel'],'rootidta':botslib.get_minta4query_routepart()}):
         try:
             botsglobal.logger.debug(u'Start preprocessing "%(name)s" for file "%(filename)s".',
                                     {'name':function.__name__,'filename':row['filename']})
@@ -46,7 +46,7 @@ def preprocess(routedict,function, status=FILEIN,**argv):
     return nr_files
     
 @botslib.log_session
-def postprocess(routedict,function, status=FILEOUT,**argv):
+def postprocess(routedict,function,status=FILEOUT,**argv):
     ''' for postprocessing of files.
         these are NOT translations; translation involve grammars, mapping scripts etc. think of eg:
         - zip files.
@@ -62,7 +62,7 @@ def postprocess(routedict,function, status=FILEOUT,**argv):
                                 AND idroute=%(idroute)s
                                 AND tochannel=%(tochannel)s
                                 ''',
-                                {'status':status,'statust':OK,'idroute':routedict['idroute'],'tochannel':routedict['tochannel'],'rootidta':botslib.get_minta4query()}):
+                                {'status':status,'statust':OK,'idroute':routedict['idroute'],'tochannel':routedict['tochannel'],'rootidta':botslib.get_minta4query_routepart()}):
         try:
             botsglobal.logger.debug(u'Start postprocessing "%(name)s" for file "%(filename)s".',
                                     {'name':function.__name__,'filename':row['filename']})

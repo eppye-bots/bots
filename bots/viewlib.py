@@ -159,7 +159,7 @@ def trace2delete(trace):
             gathermember(child)
     def gatherdelete(ta_object):
         if ta_object.status == FILEOUT:
-            for includedta in models.ta.objects.filter(child=ta_object.idta,status=MERGE):    #select all db-ta_object's included in MERGED ta_object
+            for includedta in models.ta.objects.filter(child=ta_object.idta,status=MERGED):    #select all db-ta_object's included in MERGED ta_object
                 if includedta not in memberlist:
                     #~ print 'not found idta',includedta.idta, 'not to deletelist:',ta_object.idta
                     return

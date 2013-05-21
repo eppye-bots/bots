@@ -18,8 +18,7 @@ FILEIN   = 220      #received edifile
 PARSED   = 310      #edifile is lexed and parsed
 SPLITUP  = 320      #messages in the edifile have been split up
 TRANSLATED = 330    #result of translation
-MERGED   =   330    #for upward compatibility with pass-though scripts. These give files MERGED status.
-MERGE    =   400    #ready for enveloping
+MERGED   =   400    #envelope and/or merged.
 FILEOUT  = 500      #file is enveloped; ready for out
 EXTERNOUT = 520     #file is exported
 

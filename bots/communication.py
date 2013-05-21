@@ -36,7 +36,7 @@ import botsglobal
 from botsconfig import *
 
 @botslib.log_session
-def run(idchannel,command,idroute=''):
+def run(idchannel,command,idroute,rootidta):
     '''run a communication session (dispatcher for communication functions).'''
     for row in botslib.query('''SELECT *
                                 FROM channel
@@ -78,7 +78,7 @@ def run(idchannel,command,idroute=''):
         else:
             classtocall = globals()[channeldict['type']]                    #get the communication class from this module
 
-        comclass = classtocall(channeldict,idroute,userscript,scriptname,command) #call the class for this type of channel
+        comclass = classtocall(channeldict,idroute,userscript,scriptname,command,rootidta) #call the class for this type of channel
         comclass.run()
         botsglobal.logger.debug(u'Finished communication channel "%(idchannel)s" type %(type)s %(inorout)s.',channeldict)
         break   #there can only be one channel; this break takes care that if found, the 'else'-clause is skipped
@@ -92,31 +92,25 @@ class _comsession(object):
         Often 'idroute' is passed as a parameter. This is ONLY because of the @botslib.log_session-wrapper!
         use self.idroute!!
     '''
-    def __init__(self,channeldict,idroute,userscript,scriptname,command):
+    def __init__(self,channeldict,idroute,userscript,scriptname,command,rootidta):
         self.channeldict = channeldict
         self.idroute = idroute
         self.userscript = userscript
         self.scriptname = scriptname
         self.command = command
+        self.rootidta = rootidta
 
     def run(self):
         if self.channeldict['inorout'] == 'out':
-            #routes can have the same outchannel.
-            #the different outchannels can be 'direct' or deferred (in route)
-            #~ if self.command not in ['automaticretrycommunication','resend']: #for out-communicate: only precommunicate/mime if not retry.
             self.precommunicate()
-            if self.countoutfiles() > 0: #for out-comm: send if something to send
-                self.connect()
-                self.outcommunicate()
-                self.disconnect()
-                self.archive()
+            self.connect()
+            self.outcommunicate()
+            self.disconnect()
+            self.archive()
         else:   #incommunication
             if self.command == 'new': #only in-communicate for new run
                 #handle maxsecondsperchannel: use global value from bots.ini unless specified in channel. (In database this is field 'rsrv2'.)
-                if self.channeldict['rsrv2'] <= 0:
-                    self.maxsecondsperchannel = botsglobal.ini.getint('settings','maxsecondsperchannel',sys.maxint)
-                else:
-                    self.maxsecondsperchannel = self.channeldict['rsrv2']
+                self.maxsecondsperchannel = botsglobal.ini.getint('settings','maxsecondsperchannel',sys.maxint) if self.channeldict['rsrv2'] <= 0 else self.channeldict['rsrv2']
                 self.connect()
                 self.incommunicate()
                 self.disconnect()
@@ -165,7 +159,7 @@ class _comsession(object):
                                     AND   ''' + channel + '''=%(idchannel)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':status,
-                                    'statust':statust,'rootidta':botslib.get_minta4query()}):
+                                    'statust':statust,'rootidta':self.rootidta}):
             if not checkedifarchivepathisthere:
                 if archivezip:
                     botslib.dirshouldbethere(os.path.dirname(archivepath))
@@ -208,19 +202,6 @@ class _comsession(object):
             archivezipfilehandler.close()
 
 
-    def countoutfiles(self):
-        ''' counts the number of edifiles to be transmitted.'''
-        for row in botslib.query('''SELECT COUNT(*) as count
-                                    FROM ta
-                                    WHERE idta>%(rootidta)s
-                                    AND status=%(status)s
-                                    AND statust=%(statust)s
-                                    AND tochannel=%(tochannel)s
-                                    ''',
-                                    {'idroute':self.idroute,'status':FILEOUT,'statust':OK,
-                                    'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query()}):
-            return row['count']
-
     def postcommunicate(self):
         pass
 
@@ -241,7 +222,7 @@ class _comsession(object):
                                     AND tochannel=%(idchannel)s
                                     ''',
                                     {'idchannel':self.channeldict['idchannel'],'status':FILEOUT,
-                                    'statust':OK,'idroute':self.idroute,'rootidta':botslib.get_minta4query()}):
+                                    'statust':OK,'idroute':self.idroute,'rootidta':self.rootidta}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=FILEOUT)
@@ -473,7 +454,7 @@ class _comsession(object):
                                     AND statust=%(statust)s
                                     AND fromchannel=%(fromchannel)s
                                     ''',
-                                    {'status':FILEIN,'statust':OK,'rootidta':botslib.get_minta4query(),
+                                    {'status':FILEIN,'statust':OK,'rootidta':self.rootidta,
                                     'fromchannel':self.channeldict['idchannel'],'idroute':self.idroute}):
             try:
                 #default values for sending MDN; used to update ta if MDN is not asked
@@ -761,7 +742,7 @@ class file(_comsession):
                                         AND statust=%(statust)s
                                         AND tochannel=%(tochannel)s
                                         ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
                                     'status':FILEOUT,'statust':OK}):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -1011,7 +992,7 @@ class smtp(_comsession):
                                     AND statust=%(statust)s
                                     AND tochannel=%(tochannel)s
                                     ''',
-                                    {'status':FILEOUT,'statust':OK,'rootidta':botslib.get_minta4query(),
+                                    {'status':FILEOUT,'statust':OK,'rootidta':self.rootidta,
                                     'tochannel':self.channeldict['idchannel']}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -1177,7 +1158,7 @@ class ftp(_comsession):
                                       AND statust=%(statust)s
                                       AND tochannel=%(tochannel)s
                                         ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
                                     'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -1442,7 +1423,7 @@ class sftp(_comsession):
                                       AND statust=%(statust)s
                                       AND tochannel=%(tochannel)s
                                         ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
                                     'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -1482,7 +1463,7 @@ class xmlrpc(_comsession):
                                     AND status=%(status)s
                                     AND statust=%(statust)s
                                     AND tochannel=%(tochannel)s ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
                                     'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -1610,7 +1591,7 @@ class db(_comsession):
                                     AND status=%(status)s
                                     AND statust=%(statust)s
                                     AND tochannel=%(tochannel)s ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),'status':FILEOUT,'statust':OK}):
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,'status':FILEOUT,'statust':OK}):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
@@ -1749,7 +1730,7 @@ class communicationscript(_comsession):
                                     AND status=%(status)s
                                     AND statust=%(statust)s
                                     AND tochannel=%(tochannel)s ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
                                     'status':FILEOUT,'statust':OK}):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
@@ -1800,7 +1781,7 @@ class trash(_comsession):
                                         AND statust=%(statust)s
                                         AND tochannel=%(tochannel)s
                                         ''',
-                                    {'tochannel':self.channeldict['idchannel'],'rootidta':botslib.get_minta4query(),
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
                                     'status':FILEOUT,'statust':OK}):
             try:    #for each db-ta:
                 ta_from = botslib.OldTransaction(row['idta'])
