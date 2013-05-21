@@ -304,12 +304,12 @@ class Node(object):
     def getcountsum(self,*mpaths):
         ''' return the sum for all values found in mpath. Eg total number of ordered quantities.'''
         count = decimal.Decimal(0)
-        mpath_for_found_node = mpaths[-1].copy
+        mpath_for_found_node = mpaths[-1].copy()
         for key,value in mpaths[-1].items():
             if value is None:
                 del mpaths[-1][key]
-        for i in self.getloop(*mpaths):
-            value = i.get(mpath_for_found_node)
+        for i in self.getloop_checklevel1(*mpaths):
+            value = i.get_checklevel1(mpath_for_found_node)
             if value:
                 count += decimal.Decimal(value)
         return unicode(count)
