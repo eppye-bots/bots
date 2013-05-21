@@ -106,7 +106,7 @@ class new(object):
         if routedict['fromchannel']:
             #only done for edi files from this route-part, this inchannel
             botslib.tryrunscript(userscript,scriptname,'preincommunication',routedict=routedict)
-            communication.run(idchannel=routedict['fromchannel'],command=routedict['command'],idroute=routedict['idroute'],'rootidta':botslib.get_minta4query_routepart())  #communication.run incommunication
+            communication.run(idchannel=routedict['fromchannel'],command=routedict['command'],idroute=routedict['idroute'],rootidta=botslib.get_minta4query_routepart())  #communication.run incommunication
             #add attributes from route to the received files;
             where = {'statust':OK,'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute'],'rootidta':botslib.get_minta4query_routepart()}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
@@ -146,7 +146,7 @@ class new(object):
             #filter files in route for outchannel
             towhere = { 'status':MERGED,
                         'statust':OK,
-                        'rootidta':botslib.get_minta4query_route()
+                        'rootidta':botslib.get_minta4query_route(),
                         'idroute':routedict['idroute'],
                         'editype':routedict['toeditype'],
                         'messagetype':routedict['tomessagetype'],
