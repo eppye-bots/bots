@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+import sys
 import bots.botslib as botslib
 import bots.botsglobal as botsglobal
 import bots.botsinit as botsinit
