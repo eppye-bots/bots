@@ -35,7 +35,7 @@ DATABASES = {
         #~ 'NAME': 'botsdb',
         #~ 'USER': 'bots',
         #~ 'PASSWORD': 'botsbots',
-        #~ 'HOST': '127.0.0.1',
+        #~ 'HOST': '192.168.0.9',
         #~ 'PORT': '3306',
         #~ 'OPTIONS': {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'},
         #~ }
@@ -59,23 +59,9 @@ DATABASES = {
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-# alas this needs 3 different datetime formats: django display format, django input format, datetime picker.
 TIME_ZONE = 'Europe/Amsterdam'
-#*** set CCYY-MM-DD HH:MM:SS ******default bots settings/ISO 8601 *******
-#~ DATETIME_FORMAT = 'Y-m-d H:i:s' 
-#~ #DATETIME_INPUT_FORMATS (default setting)
-#~ DATE_FORMAT_PICKER = 'yy-mm-dd'
-#~ TIME_FORMAT_PICKER = 'hh:mm:ss'
 
-#*** set CCYY-MM-DD hh:MM TT (12 hours cleck, using AM/PM)
-DATETIME_FORMAT = 'Y-m-d h:i A' 
-DATETIME_INPUT_FORMATS = ('%Y-%m-%d %H:%M %p',)
-DATE_FORMAT_PICKER = 'yy-mm-dd'
-TIME_FORMAT_PICKER = 'hh:mm TT'
-
-
-
-#*********language code/internationalization*************************
+#~ *********language code/internationalization*************************
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
