@@ -36,15 +36,15 @@ BOTSIDNR = 9
 F_LENGTH = 10         #length of fixed record
 
 #***grammar.recorddefs: dict keys for fields of record eg: record[FIELDS][ID] == 'C124.0034'
-#ID = 0 (is already defined )
+#ID = 0 (is already defined)
 MANDATORY = 1
 LENGTH = 2
 SUBFIELDS = 2   #for composites
-FORMAT = 3		#format in grammar file
+FORMAT = 3      #format in grammar file
 ISFIELD = 4
 DECIMALS = 5
 MINLENGTH = 6
-BFORMAT = 7		#internal bots format; formats in grammar are converted to bformat
+BFORMAT = 7     #internal bots format; formats in grammar are converted to bformat
 MAXREPEAT = 8
 
 #***lex_record in self.lex_records: is a dict
@@ -54,4 +54,3 @@ LIN = 2
 POS = 3
 FIXEDLINE = 4           #for fixed records; tmp storage of fixed record
 FORMATFROMGRAMMAR = 5   #to store FORMAT field has in grammar
-
