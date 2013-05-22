@@ -143,7 +143,8 @@ def start():
         if acceptance_userscript:
             if hasattr(acceptance_userscript,'pretest'):
                 botslib.runscript(acceptance_userscript,acceptance_scriptname,'pretest',routestorun=routestorun)
-                
+
+        botslib.prepare_confirmrules()
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
         for command in commandstorun:
             botsglobal.logger.info(_(u'Run "%(command)s".'),{'command':command})

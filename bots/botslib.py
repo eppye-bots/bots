@@ -123,9 +123,8 @@ class _Transaction(object):
     def deleteonlychildren_core(self,idta):
         for row in query(u'''SELECT idta 
                             FROM ta
-                            WHERE idta>%(rootidta)s
-                            AND parent=%(idta)s''',
-                            {'idta':idta,'rootidta':get_minta4query()}):
+                            WHERE parent=%(idta)s''',
+                            {'idta':idta}):
             self.deleteonlychildren_core(row['idta'])
             changeq(u'''DELETE FROM ta
                         WHERE idta=%(idta)s''',
@@ -671,29 +670,36 @@ def check_if_other_engine_is_running():
     else:
         return engine_socket
 
+def prepare_confirmrules():
+    ''' as confirmrules are often used, read these into memory. Reason: performance.
+        additional notes:
+        - there are only a few confirmrules (10 would be a lot I guess).
+        - indexing is not helpfull for confirmrules, this means that each time the whole confirmrule-tabel is scanned.
+        - as confirmrules are used for incoming and outgoing (x12, edifact, email) this will almost always lead to better performance. 
+    '''
+    for confirmdict in query(u'''SELECT confirmtype,ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,messagetype,negativerule
+                        FROM confirmrule
+                        WHERE active=%(active)s
+                        ORDER BY negativerule ASC
+                        ''',
+                        {'active':True}):
+        botsglobal.confirmrules.append(confirmdict)
+
 def globalcheckconfirmrules(confirmtype):
     ''' global check if confirmrules with this confirmtype is uberhaupt used. 
     ''' 
-    for confirmdict in query(u'''SELECT confirmtype
-                        FROM confirmrule
-                        WHERE active=%(active)s
-                        AND confirmtype=%(confirmtype)s
-                        ''',
-                        {'active':True,'confirmtype':confirmtype}):
-        return True
+    for confirmdict in botsglobal.confirmrules:
+        if confirmdict['confirmtype'] == confirmtype:
+            return True
     return False
 
 def checkconfirmrules(confirmtype,**kwargs):
     confirm = False       #boolean to return: confirm of not?
     #confirmrules are evaluated one by one; first the positive rules, than the negative rules.
     #this make it possible to include first, than exclude. Eg: send for 'all', than exclude certain partners.
-    for confirmdict in query(u'''SELECT ruletype,idroute,idchannel_id as idchannel,frompartner_id as frompartner,topartner_id as topartner,messagetype,negativerule
-                        FROM confirmrule
-                        WHERE active=%(active)s
-                        AND confirmtype=%(confirmtype)s
-                        ORDER BY negativerule ASC
-                        ''',
-                        {'active':True,'confirmtype':confirmtype}):
+    for confirmdict in botsglobal.confirmrules:
+        if confirmdict['confirmtype'] != confirmtype:
+            continue
         if confirmdict['ruletype'] == 'all':
             confirm = not confirmdict['negativerule']
         elif confirmdict['ruletype'] == 'route':

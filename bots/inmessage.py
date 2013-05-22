@@ -964,13 +964,11 @@ class edifact(var):
             AFAICS generating error-CONTRL would not be hard...
             parameter 'error' is not used now.
         '''
-        #global check if confirmrules use 'send-edifact-CONTRL' at all. Check is only done once per bots-run. Reason: performance; CONTRL-message is not that much used.
+        #first check if there are any 'send-edifact-CONTRL' confirmrules.
         confirmtype = 'send-edifact-CONTRL'
-        if not hasattr(self.__class__,'send_edifact_CONTRL'):
-            self.__class__.send_edifact_CONTRL = botslib.globalcheckconfirmrules(confirmtype)
-        if not self.__class__.send_edifact_CONTRL:
+        if botslib.globalcheckconfirmrules(confirmtype):
             return
-        editype = self.__class__.__name__
+        editype = 'edifact' #self.__class__.__name__
         for nodeunb in self.getloop_checklevel1({'BOTSID':'UNB'}):
             sender = nodeunb.get_checklevel0({'BOTSID':'UNB','S002.0004':None})
             receiver = nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0010':None})
@@ -980,13 +978,13 @@ class edifact(var):
                 messagetype=nodeunh.queries['messagetype']
                 #no CONTRL for CONTRL or APERAK message; check if CONTRL should be send via confirmrules
                 if messagetype[:6] in ['CONTRL','APERAK'] or not botslib.checkconfirmrules(confirmtype,idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
-                                                                                                frompartner=sender,topartner=receiver,editype=editype,messagetype=messagetype):
+                                                                                                frompartner=sender,topartner=receiver,messagetype=messagetype):
                     messages_not_confirm.append(nodeunh)
                 else:
                     nr_message_to_confirm += 1
             if not nr_message_to_confirm:
                 continue
-            #remove message not to beconfirmed from tree (is destructive, but this is end of file processing anyway.
+            #remove message not to be confirmed from tree (is destructive, but this is end of file processing anyway.
             for message_not_confirm in messages_not_confirm:
                 nodeunb.children.remove(message_not_confirm)
             #check if there is a user mappingscript
@@ -1146,9 +1144,13 @@ class x12(var):
             send 997 messages
             parameter 'error' is not used
         '''
-        #filter the confirmationlist
+        confirmtype = 'send-x12-997'
+        if botslib.globalcheckconfirmrules(confirmtype):
+            return
+        editype = 'x12' #self.__class__.__name__
+        #filter the confirmationlist to tmpconfirmationlist
         tmpconfirmationlist = []
-        for confirmation in self.confirmationlist:
+        for confirmation in self.confirmationlist:  #list of GS-envelopes; per GS envelope a list of messages.
             if confirmation['gsqualifier'] == 'FA': #do not generate 997 for 997
                 continue
             tmpmessagelist = []
@@ -1158,16 +1160,15 @@ class x12(var):
                 for key in ['stqualifier','gsversion']:
                     if message_received[key]:
                         messagetype += message_received[key]
-                if botslib.checkconfirmrules('send-x12-997',idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
+                if botslib.checkconfirmrules(confirmtype,idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
                                                 frompartner=confirmation['sender'],topartner=confirmation['receiver'],
-                                                editype='x12',messagetype=messagetype):
+                                                messagetype=messagetype):
                     tmpmessagelist.append(message_received)
-            confirmation['STlist'] = tmpmessagelist
-            if not tmpmessagelist: #if no messages/transactions in GS-GE
+            if not tmpmessagelist: #if no messages/transactions in GS-GE to be confirmed: skip
                 continue
+            confirmation['STlist'] = tmpmessagelist
             tmpconfirmationlist.append(confirmation)
-        self.confirmationlist = tmpconfirmationlist
-        for confirmation in self.confirmationlist:
+        for confirmation in tmpconfirmationlist:
             reference = str(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED,reference=reference)
             filename = str(ta_confirmation.idta)
@@ -1185,7 +1186,7 @@ class x12(var):
             out.writeall()   #write tomessage (result of translation)
             botsglobal.logger.debug(u'Send x12 confirmation (997) route "%(route)s" fromchannel "%(fromchannel)s" frompartner "%(frompartner)s" topartner "%(topartner)s".',
                     {'route':self.ta_info['idroute'],'fromchannel':self.ta_info['fromchannel'],'frompartner':confirmation['receiver'],'topartner':confirmation['sender']})
-            self.ta_info.update(confirmtype='send-x12-997',confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
+            self.ta_info.update(confirmtype=confirmtype,confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
             ta_confirmation.update(statust=OK,**out.ta_info)    #update ta for confirmation
 
 

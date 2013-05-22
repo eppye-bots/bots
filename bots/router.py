@@ -170,6 +170,32 @@ class new(object):
             nr_of_outgoing_files_for_channel = botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
             
             if nr_of_outgoing_files_for_channel:
+                #**confirmation/acknowledgements for x12 and edifact
+                for row in botslib.query('''SELECT idta,editype,messagetype,frompartner,topartner
+                                            FROM ta
+                                            WHERE idta>%(rootidta)s
+                                            AND status=%(status)s
+                                            AND statust=%(statust)s
+                                            AND editype='edifact' OR editype='x12' ''',
+                                            {'status':FILEOUT,'statust':OK,'rootidta':botslib.get_minta4query_routepart()}):
+                        if row['editype'] == 'x12':
+                            confirmtype = u'ask-x12-997'
+                            if row['messagetype'][:3] in ['997','999'] or botslib.checkconfirmrules(confirmtype,idroute=routedict['idroute'],
+                                                                                topartner=row['topartner'],frompartner=row['frompartner'],
+                                                                                messagetype=row['messagetype'],idchannel=routedict['tochannel']):
+                                continue
+                        else:
+                            confirmtype= u'ask-edifact-CONTRL'
+                            if row['messagetype'][:6] in ['CONTRL','APERAK'] or botslib.checkconfirmrules(confirmtype,idroute=routedict['idroute'],
+                                                                                    topartner=row['topartner'],frompartner=row['frompartner'],
+                                                                                    messagetype=row['messagetype'],idchannel=routedict['tochannel']):
+                                continue
+                        botslib.changeq('''UPDATE ta
+                                           SET confirmasked=%(confirmasked)s, confirmtype=%(confirmtype)s
+                                           WHERE idta=%(idta)s ''',
+                                            {'idta':row['idta'],'confirmasked':True,'confirmtype':confirmtype})
+
+
                 #**zip outgoing
                 #for files in this route-part for this out-channel
                 if routedict['zip_outgoing'] == 1:               
