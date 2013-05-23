@@ -5,7 +5,6 @@ import time
 import codecs
 import traceback
 import socket
-import string
 import urlparse
 import urllib
 import platform
@@ -16,25 +15,6 @@ from django.utils.translation import ugettext as _
 from botsconfig import *    #constants
 import botsglobal           #globals
 
-def botsinfo():
-    return [
-            (_(u'served at port'),botsglobal.ini.getint('webserver','port',8080)),
-            (_(u'platform'),platform.platform()),
-            (_(u'machine'),platform.machine()),
-            (_(u'python version'),platform.python_version()),
-            (_(u'django version'),django.VERSION),
-            (_(u'bots version'),botsglobal.version),
-            (_(u'bots installation path'),botsglobal.ini.get('directories','botspath')),
-            (_(u'config path'),botsglobal.ini.get('directories','config')),
-            (_(u'botssys path'),botsglobal.ini.get('directories','botssys')),
-            (_(u'usersys path'),botsglobal.ini.get('directories','usersysabs')),
-            (u'DATABASE_ENGINE',botsglobal.settings.DATABASES['default']['ENGINE']),
-            (u'DATABASE_NAME',botsglobal.settings.DATABASES['default']['NAME']),
-            (u'DATABASE_USER',botsglobal.settings.DATABASES['default']['USER']),
-            (u'DATABASE_HOST',botsglobal.settings.DATABASES['default']['HOST']),
-            (u'DATABASE_PORT',botsglobal.settings.DATABASES['default']['PORT']),
-            (u'DATABASE_OPTIONS',botsglobal.settings.DATABASES['default']['OPTIONS']),
-            ]
 #**********************************************************/**
 #**************getters/setters for some globals***********************/**
 #**********************************************************/**
@@ -64,20 +44,6 @@ def get_minta4query_routepart():
         return botsglobal.minta4query_routepart
     else:
         return terug
-
-def countoutfiles(idchannel,rootidta):
-    ''' counts the number of edifiles to be transmitted via outchannel.'''
-    for row in query('''SELECT COUNT(*) as count
-                        FROM ta
-                        WHERE idta>%(rootidta)s
-                        AND status=%(status)s
-                        AND statust=%(statust)s
-                        AND tochannel=%(tochannel)s
-                        ''',
-                        {'status':FILEOUT,'statust':OK,'tochannel':idchannel,'rootidta':rootidta}):
-        return row['count']
-
-
 
 def setrouteid(routeid):
     botsglobal.routeid = routeid
@@ -191,6 +157,9 @@ class NewProcess(NewTransaction):
         self.processlist.pop()
 
 
+#**********************************************************/**
+#*************************Database***********************/**
+#**********************************************************/**
 def trace_origin(ta,where=None):
     ''' bots traces back all from the current step/ta.
         where is a dict that is used to indicate a condition.
@@ -234,7 +203,6 @@ def trace_origin(ta,where=None):
     trace_recurse(ta)
     return teruglijst
 
-
 def addinfocore(change,where,wherestring=''):
     ''' core function for add/changes information in db-ta's.
         where-dict selects db-ta's, change-dict sets values;
@@ -273,19 +241,6 @@ def updateinfo(change,where):
 
 def changestatustinfo(change,where):
     updateinfocore({'statust':change},where)
-
-#**********************************************************/**
-#*************************Database***********************/**
-#**********************************************************/**
-def set_database_lock():
-    try:
-        changeq(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
-    except:
-        return False
-    return True
-
-def remove_database_lock():
-    changeq('''DELETE FROM mutex WHERE mutexk=1''')
 
 def query(querystring,*args):
     ''' general query. yields rows from query '''
@@ -478,6 +433,7 @@ class ErrorProcess(NewTransaction):
 #**********************************************************/**
 #*************************import ***********************/**
 #**********************************************************/**
+not_import = set()    #register moduels that are not importable
 def isa_direct_importerror():
     ''' check if module itself is not there, or if there is an import error in the module.
         this avoid hard-to-find errors/problems.
@@ -504,11 +460,15 @@ def botsimport(*args):
         return: imported module, filename imported module;
         if could not be found or error in module: raise
     '''
+    global not_import
     modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
     modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
+    if modulepath in set:
+        raise ImportError(u'No import of module "%(modulefile)s".',{'modulefile':modulefile})
     try:
         module = botsbaseimport(modulepath)
     except ImportError:
+        not_import.add(modulepath)
         if isa_direct_importerror():
             #the module is not found
             botsglobal.logger.debug(u'No import of module "%(modulefile)s".',{'modulefile':modulefile})
@@ -616,60 +576,8 @@ def runscriptyield(module,modulefile,functioninscript,**argv):
         raise ScriptError(_(u'Script file "%(modulefile)s": "%(txt)s".'),{'modulefile':modulefile,'txt':txt})
 
 #**********************************************************/**
-#***************###############  misc.   #############
+#*************** confirmrules *****************************/**
 #**********************************************************/**
-def strftime(format):
-    if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-        return time.strftime(format,time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S"))    #if acceptance test use fixed date/time
-    else:
-        return time.strftime(format)
-    
-    
-def lookup_translation(frommessagetype,fromeditype,alt,frompartner,topartner):
-    ''' lookup the translation: frommessagetype,fromeditype,alt,frompartner,topartner -> mappingscript, tomessagetype, toeditype
-    '''
-    for row2 in query(u'''SELECT tscript,tomessagetype,toeditype
-                            FROM translate
-                            WHERE frommessagetype = %(frommessagetype)s
-                            AND fromeditype = %(fromeditype)s
-                            AND active=%(booll)s
-                            AND (alt='' OR alt=%(alt)s)
-                            AND (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
-                                                                                                                    FROM partnergroup
-                                                                                                                    WHERE from_partner_id=%(frompartner)s ))
-                            AND (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
-                                                                                                            FROM partnergroup
-                                                                                                            WHERE from_partner_id=%(topartner)s ))
-                            ORDER BY alt DESC,
-                                     CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id ,
-                                     CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
-                            {'frommessagetype':frommessagetype,
-                             'fromeditype':fromeditype,
-                             'alt':alt,
-                             'frompartner':frompartner,
-                             'topartner':topartner,
-                            'booll':True}):
-        return row2['tscript'],row2['toeditype'],row2['tomessagetype']
-        #translation is found; only the first one is used - this is what the ORDER BY in the query takes care of
-    else:       #no translation found in translate table
-        return None,None,None
-
-
-def check_if_other_engine_is_running():
-    ''' bots-engine always connects to 127.0.0.1 port 28081 (or port as set in bots.ini).
-        this  is a good way of detecting that another bots-engien is still running.
-        problem is avoided anyway if using jobqueueserver.
-    ''' 
-    try:
-        engine_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        port = botsglobal.ini.getint('settings','port',28081)
-        engine_socket.bind(('127.0.0.1', port))
-    except socket.error:
-        engine_socket.close()
-        raise
-    else:
-        return engine_socket
-
 def prepare_confirmrules():
     ''' as confirmrules are often used, read these into memory. Reason: performance.
         additional notes:
@@ -684,6 +592,34 @@ def prepare_confirmrules():
                         ''',
                         {'active':True}):
         botsglobal.confirmrules.append(confirmdict)
+
+def set_asked_confirmrules(routedict,rootidta):
+    ''' set 'ask confirmation/acknowledgements for x12 and edifact
+    '''
+    if not globalcheckconfirmrules(u'ask-x12-997') and not globalcheckconfirmrules(u'ask-edifact-CONTRL'):
+        return
+    for row in query('''SELECT parent,editype,messagetype,frompartner,topartner
+                                FROM ta
+                                WHERE idta>%(rootidta)s
+                                AND status=%(status)s
+                                AND statust=%(statust)s
+                                AND editype='edifact' OR editype='x12' ''',
+                                {'status':FILEOUT,'statust':OK,'rootidta':rootidta}):
+        if row['editype'] == 'x12':
+            if row['messagetype'][:3] in ['997','999']:
+                continue
+            confirmtype = u'ask-x12-997'
+        else:
+            if row['messagetype'][:6] in ['CONTRL','APERAK']:
+                continue
+            confirmtype= u'ask-edifact-CONTRL'
+        if not checkconfirmrules(confirmtype,idroute=routedict['idroute'],idchannel=routedict['tochannel'],
+                                    topartner=row['topartner'],frompartner=row['frompartner'],messagetype=row['messagetype']):
+            continue
+        changeq('''UPDATE ta
+                   SET confirmasked=%(confirmasked)s, confirmtype=%(confirmtype)s
+                   WHERE parent=%(parent)s ''',
+                   {'parent':row['parent'],'confirmasked':True,'confirmtype':confirmtype})
 
 def globalcheckconfirmrules(confirmtype):
     ''' global check if confirmrules with this confirmtype is uberhaupt used. 
@@ -720,6 +656,101 @@ def checkconfirmrules(confirmtype,**kwargs):
         #~ print '>>>>>>>>>>>>', confirm,confirmtype,kwargs,confirmdict
     return confirm
 
+#**********************************************************/**
+#***************###############  misc.   #############
+#**********************************************************/**
+def set_database_lock():
+    try:
+        changeq(u'''INSERT INTO mutex (mutexk) VALUES (1)''')
+    except:
+        return False
+    return True
+
+def remove_database_lock():
+    changeq('''DELETE FROM mutex WHERE mutexk=1''')
+
+def check_if_other_engine_is_running():
+    ''' bots-engine always connects to 127.0.0.1 port 28081 (or port as set in bots.ini).
+        this  is a good way of detecting that another bots-engien is still running.
+        problem is avoided anyway if using jobqueueserver.
+    ''' 
+    try:
+        engine_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        port = botsglobal.ini.getint('settings','port',28081)
+        engine_socket.bind(('127.0.0.1', port))
+    except socket.error:
+        engine_socket.close()
+        raise
+    else:
+        return engine_socket
+
+def countoutfiles(idchannel,rootidta):
+    ''' counts the number of edifiles to be transmitted via outchannel.'''
+    for row in query('''SELECT COUNT(*) as count
+                        FROM ta
+                        WHERE idta>%(rootidta)s
+                        AND status=%(status)s
+                        AND statust=%(statust)s
+                        AND tochannel=%(tochannel)s
+                        ''',
+                        {'status':FILEOUT,'statust':OK,'tochannel':idchannel,'rootidta':rootidta}):
+        return row['count']
+
+def lookup_translation(frommessagetype,fromeditype,alt,frompartner,topartner):
+    ''' lookup the translation: frommessagetype,fromeditype,alt,frompartner,topartner -> mappingscript, tomessagetype, toeditype
+    '''
+    for row2 in query(u'''SELECT tscript,tomessagetype,toeditype
+                            FROM translate
+                            WHERE frommessagetype = %(frommessagetype)s
+                            AND fromeditype = %(fromeditype)s
+                            AND active=%(booll)s
+                            AND (alt='' OR alt=%(alt)s)
+                            AND (frompartner_id IS NULL OR frompartner_id=%(frompartner)s OR frompartner_id in (SELECT to_partner_id
+                                                                                                                    FROM partnergroup
+                                                                                                                    WHERE from_partner_id=%(frompartner)s ))
+                            AND (topartner_id IS NULL OR topartner_id=%(topartner)s OR topartner_id in (SELECT to_partner_id
+                                                                                                            FROM partnergroup
+                                                                                                            WHERE from_partner_id=%(topartner)s ))
+                            ORDER BY alt DESC,
+                                     CASE WHEN frompartner_id IS NULL THEN 1 ELSE 0 END, frompartner_id ,
+                                     CASE WHEN topartner_id IS NULL THEN 1 ELSE 0 END, topartner_id ''',
+                            {'frommessagetype':frommessagetype,
+                             'fromeditype':fromeditype,
+                             'alt':alt,
+                             'frompartner':frompartner,
+                             'topartner':topartner,
+                            'booll':True}):
+        return row2['tscript'],row2['toeditype'],row2['tomessagetype']
+        #translation is found; only the first one is used - this is what the ORDER BY in the query takes care of
+    else:       #no translation found in translate table
+        return None,None,None
+
+def botsinfo():
+    return [
+            (_(u'served at port'),botsglobal.ini.getint('webserver','port',8080)),
+            (_(u'platform'),platform.platform()),
+            (_(u'machine'),platform.machine()),
+            (_(u'python version'),platform.python_version()),
+            (_(u'django version'),django.VERSION),
+            (_(u'bots version'),botsglobal.version),
+            (_(u'bots installation path'),botsglobal.ini.get('directories','botspath')),
+            (_(u'config path'),botsglobal.ini.get('directories','config')),
+            (_(u'botssys path'),botsglobal.ini.get('directories','botssys')),
+            (_(u'usersys path'),botsglobal.ini.get('directories','usersysabs')),
+            (u'DATABASE_ENGINE',botsglobal.settings.DATABASES['default']['ENGINE']),
+            (u'DATABASE_NAME',botsglobal.settings.DATABASES['default']['NAME']),
+            (u'DATABASE_USER',botsglobal.settings.DATABASES['default']['USER']),
+            (u'DATABASE_HOST',botsglobal.settings.DATABASES['default']['HOST']),
+            (u'DATABASE_PORT',botsglobal.settings.DATABASES['default']['PORT']),
+            (u'DATABASE_OPTIONS',botsglobal.settings.DATABASES['default']['OPTIONS']),
+            ]
+
+def strftime(format):
+    if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+        return time.strftime(format,time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S"))    #if acceptance test use fixed date/time
+    else:
+        return time.strftime(format)
+    
 class Uri(object):
     ''' generate uri from parts. '''
     def __init__(self,**kw):
