@@ -11,15 +11,13 @@ from botsconfig import *
 
 @botslib.log_session
 def rundispatcher(command,routestorun):
+    ''' one run for each command
+    '''
     classtocall = globals()[command]           #get the route class from this module
     myrun = classtocall(command,routestorun)
-    return myrun.run()
+    return myrun.run()      #return error indication: 0 for no error
 
 class new(object):
-    #important variables in run:
-    #-  root_idta of this run
-    #-  minta4query: minimum ta for queries: all database queries use this to limit the number of ta's to query.
-    #                for most Run-classes this is equal to root_idta_of_run, except for crashrecovery
     def __init__(self,command,routestorun):
         self.routestorun = routestorun
         self.command = command
@@ -42,6 +40,9 @@ class new(object):
         
     @botslib.log_session
     def router(self,route):
+        ''' for each route (as in self.routestorun).
+            a route can have multiple parts (seq)
+        '''
         botsglobal.minta4query_route = botslib._Transaction.processlist[-1]     #the idta of route
         foundroute = False
         for row in botslib.query('''SELECT idroute     ,
@@ -80,8 +81,8 @@ class new(object):
         
     @botslib.log_session
     def routepart(self,routedict):
-        ''' communication.run one route. variants:
-            -   a route can be a userscript;
+        ''' communication.run one route part. variants:
+            -   a route can be a routescript
             -   a route can do only incoming
             -   a route can do only outgoing
             -   a route can do both incoming and outgoing
@@ -108,7 +109,11 @@ class new(object):
             botslib.tryrunscript(userscript,scriptname,'preincommunication',routedict=routedict)
             communication.run(idchannel=routedict['fromchannel'],command=routedict['command'],idroute=routedict['idroute'],rootidta=botslib.get_minta4query_routepart())  #communication.run incommunication
             #add attributes from route to the received files;
-            where = {'statust':OK,'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute'],'rootidta':botslib.get_minta4query_routepart()}
+            if routedict['command'] == 'rereceive':
+                rootidta = botslib.get_minta4query()
+            else:
+                rootidta = botslib.get_minta4query_routepart()
+            where = {'statust':OK,'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute'],'rootidta':rootidta}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
             nr_of_incoming_files_for_channel = botslib.updateinfocore(change=change,where=where)
             botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
@@ -170,32 +175,8 @@ class new(object):
             nr_of_outgoing_files_for_channel = botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
             
             if nr_of_outgoing_files_for_channel:
-                #**confirmation/acknowledgements for x12 and edifact
-                for row in botslib.query('''SELECT idta,editype,messagetype,frompartner,topartner
-                                            FROM ta
-                                            WHERE idta>%(rootidta)s
-                                            AND status=%(status)s
-                                            AND statust=%(statust)s
-                                            AND editype='edifact' OR editype='x12' ''',
-                                            {'status':FILEOUT,'statust':OK,'rootidta':botslib.get_minta4query_routepart()}):
-                        if row['editype'] == 'x12':
-                            confirmtype = u'ask-x12-997'
-                            if row['messagetype'][:3] in ['997','999'] or botslib.checkconfirmrules(confirmtype,idroute=routedict['idroute'],
-                                                                                topartner=row['topartner'],frompartner=row['frompartner'],
-                                                                                messagetype=row['messagetype'],idchannel=routedict['tochannel']):
-                                continue
-                        else:
-                            confirmtype= u'ask-edifact-CONTRL'
-                            if row['messagetype'][:6] in ['CONTRL','APERAK'] or botslib.checkconfirmrules(confirmtype,idroute=routedict['idroute'],
-                                                                                    topartner=row['topartner'],frompartner=row['frompartner'],
-                                                                                    messagetype=row['messagetype'],idchannel=routedict['tochannel']):
-                                continue
-                        botslib.changeq('''UPDATE ta
-                                           SET confirmasked=%(confirmasked)s, confirmtype=%(confirmtype)s
-                                           WHERE idta=%(idta)s ''',
-                                            {'idta':row['idta'],'confirmasked':True,'confirmtype':confirmtype})
-
-
+                #**set asked confirmation/acknowledgements
+                botslib.set_asked_confirmrules(routedict,rootidta=botslib.get_minta4query_routepart())
                 #**zip outgoing
                 #for files in this route-part for this out-channel
                 if routedict['zip_outgoing'] == 1:               
@@ -205,7 +186,10 @@ class new(object):
             #for all files in run that are for this channel (including the deferred ones from other routes)
             if not routedict['defer']:
                 #determine range of idta to query: if channel was not deferred earlier in run: query only for route part else query for whole run
-                rootidta = botslib.get_minta4query_routepart() if not self.keep_track_if_outchannel_deferred.get(routedict['tochannel'],False) else botslib.get_minta4query()
+                if self.keep_track_if_outchannel_deferred.get(routedict['tochannel'],False) or routedict['command'] in ['resend','automaticretrycommunication']:
+                    rootidta = botslib.get_minta4query()
+                else:
+                    rootidta = botslib.get_minta4query_routepart()
                 if botslib.countoutfiles(idchannel=routedict['tochannel'],rootidta=rootidta):
                     botslib.tryrunscript(userscript,scriptname,'preoutcommunication',routedict=routedict)
                     communication.run(idchannel=routedict['tochannel'],command=routedict['command'],idroute=routedict['idroute'],rootidta=rootidta)
