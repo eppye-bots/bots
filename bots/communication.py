@@ -174,7 +174,10 @@ class _comsession(object):
                     absfilename = botslib.abspathdata(row['filename'])
                     taparent = botslib.OldTransaction(idta=row['idta'])
                     ta_list = botslib.trace_origin(ta=taparent,where={'status':EXTERNIN})
-                    archivename = os.path.basename(ta_list[0].filename)
+                    if ta_list:
+                        archivename = os.path.basename(ta_list[-1].filename)
+                    else:
+                        archivename = row['filename']
                 else:
                     # we have external filename, get internal
                     archivename = os.path.basename(row['filename'])
@@ -645,7 +648,10 @@ class _comsession(object):
             ta.synall()
             if '{infile' in tofilename:
                 ta_list = botslib.trace_origin(ta=ta,where={'status':EXTERNIN})
-                infilename = infilestr(os.path.basename(ta_list[0].filename))
+                if ta_list:
+                    infilename = infilestr(os.path.basename(ta_list[-1].filename))
+                else:
+                    infilename = ''
             else:
                 infilename = ''
             try:
