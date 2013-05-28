@@ -176,9 +176,9 @@ def read_index2database(orgpluglist):
         elif plug['plugintype'] == 'channel':
             #convert for correct environment: path and mpath in channels
             if 'path' in plug and plug['path'].startswith('botssys'):
-                plug['path'] = plug['path'].replace('botssys',botsglobal.ini.get('directories','botssys'),1)
+                plug['path'] = plug['path'].replace('botssys',botsglobal.ini.get('directories','botssys_org'),1)
             if 'testpath' in plug and plug['testpath'].startswith('botssys'):
-                plug['testpath'] = plug['testpath'].replace('botssys',botsglobal.ini.get('directories','botssys'),1)
+                plug['testpath'] = plug['testpath'].replace('botssys',botsglobal.ini.get('directories','botssys_org'),1)
         elif plug['plugintype'] == 'confirmrule':
             plug.pop('id', None)       #id is an artificial key, delete,
         elif plug['plugintype'] not in PLUGINCOMPARELIST:   #if not in PLUGINCOMPARELIST: do not use
@@ -359,10 +359,12 @@ def plugout_database_entry_as_string(plugdict):
         - starts with 'plugintype'
         - other entries are sorted; this because of predictability
         - produce unicode by using str().decode(unicode_escape): bytes->unicode; converts escaped unicode-chrs to correct unicode. repr produces these.
+        str().decode(): bytes->unicode
+        str().encode(): unicode->bytes
     '''
-    terug = u"{" + repr('plugintype').decode('unicode-escape') + u": " + repr(plugdict.pop('plugintype')).decode('unicode-escape')
+    terug = u"{" + repr('plugintype') + u": " + repr(plugdict.pop('plugintype'))
     for key in sorted(plugdict):
-        terug += u", " + repr(key).decode('unicode-escape') + u": " + repr(plugdict[key]).decode('unicode-escape')
+        terug += u", " + repr(key) + u": " + repr(plugdict[key])
     terug += u'},'
     return terug
 
