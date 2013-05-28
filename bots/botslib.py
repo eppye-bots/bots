@@ -160,49 +160,6 @@ class NewProcess(NewTransaction):
 #**********************************************************/**
 #*************************Database***********************/**
 #**********************************************************/**
-def trace_origin(ta,where=None):
-    ''' bots traces back all from the current step/ta.
-        where is a dict that is used to indicate a condition.
-        eg:  {'status':EXTERNIN}
-        If bots finds a ta for which this is true, the ta is added to a list.
-        The list is returned when all tracing is done, and contains all ta's for which 'where' is True
-    '''
-    def trace_recurse(ta):
-        ''' recursive
-            walk over ta's backward (to origin).
-            if condition is met, add the ta to a list
-        '''
-        for idta in get_parent(ta):
-            donelijst.append(idta)
-            taparent = OldTransaction(idta=idta)
-            taparent.synall()
-            for key,value in where.iteritems():
-                if getattr(taparent,key) != value:
-                    break
-            else:   #all where-criteria are true; check if we already have this ta
-                teruglijst.append(taparent)
-            trace_recurse(taparent)
-    def get_parent(ta):
-        ''' yields the parents of a ta '''
-        if ta.parent:   #the is a parent via the normal parent-pointer
-            if ta.parent not in donelijst:
-                yield ta.parent
-        else:           #no parent via parent-link, so look via child-link
-            for row in query('''SELECT idta
-                                 FROM ta
-                                 WHERE idta>%(rootidta)s
-                                 AND child=%(idta)s''',
-                                {'idta':ta.idta,'rootidta':get_minta4query()}):
-                if row['idta'] in donelijst:
-                    continue
-                yield row['idta']
-
-    donelijst = []
-    teruglijst = []
-    ta.syn('parent')
-    trace_recurse(ta)
-    return teruglijst
-
 def addinfocore(change,where,wherestring=''):
     ''' core function for add/changes information in db-ta's.
         where-dict selects db-ta's, change-dict sets values;
@@ -683,6 +640,50 @@ def check_if_other_engine_is_running():
         raise
     else:
         return engine_socket
+
+def trace_origin(ta,where=None):
+    ''' bots traces back all from the current step/ta.
+        where is a dict that is used to indicate a condition.
+        eg:  {'status':EXTERNIN}
+        If bots finds a ta for which this is true, the ta is added to a list.
+        The list is returned when all tracing is done, and contains all ta's for which 'where' is True
+    '''
+    def trace_recurse(ta):
+        ''' recursive
+            walk over ta's backward (to origin).
+            if condition is met, add the ta to a list
+        '''
+        for idta in get_parent(ta):
+            donelijst.append(idta)
+            taparent = OldTransaction(idta=idta)
+            taparent.synall()
+            for key,value in where.iteritems():
+                if getattr(taparent,key) != value:
+                    break
+            else:   #all where-criteria are true; 
+                teruglijst.append(taparent)
+            trace_recurse(taparent)
+    def get_parent(ta):
+        ''' yields the parents of a ta '''
+        if ta.parent:   #parent via the normal parent-attribute
+            if ta.parent not in donelijst:
+                yield ta.parent
+        else:           #no parent via parent-link, so look via child-link
+            for row in query('''SELECT idta
+                                 FROM ta
+                                 WHERE idta>%(minidta)s
+                                 AND idta<%(maxidta)s
+                                 AND child=%(idta)s''',
+                                {'idta':ta.idta,'minidta':ta.script,'maxidta':ta.idta}):
+                if row['idta'] in donelijst:
+                    continue
+                yield row['idta']
+
+    donelijst = []
+    teruglijst = []
+    ta.synall()
+    trace_recurse(ta)
+    return teruglijst
 
 def countoutfiles(idchannel,rootidta):
     ''' counts the number of edifiles to be transmitted via outchannel.'''
