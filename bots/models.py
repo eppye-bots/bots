@@ -32,6 +32,7 @@ STATUS = [
     (520,_(u'Send')),
     ]
 EDITYPES = [
+    DEFAULT_ENTRY,
     ('csv', _(u'csv')),
     ('database', _(u'database (old)')),
     ('db', _(u'db')),
