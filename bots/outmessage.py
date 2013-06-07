@@ -628,7 +628,7 @@ class xml(Outmessage):
                 if key.startswith(keyattributemarker):
                     attributedict[key[len(keyattributemarker):]] = value
                     del noderecord[key]
-            if text or attributedict:
+            if text is not None or attributedict:
                 ET.SubElement(xmlrecord, field_def[ID],attributedict).text=text    #add xml element to xml record
             #~ del noderecord[field_def[ID]]    #remove xml entity tag
         return xmlrecord
