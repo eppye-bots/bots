@@ -71,6 +71,12 @@ class Outmessage(message.Message):
         '''
         super(Outmessage,self).messagegrammarread(typeofgrammarfile)
         #read partner-syntax. Use this to always overrule values in self.ta_info
+        if self.ta_info.get('frompartner'):   
+            try:
+                partnersyntax = grammar.grammarread(self.ta_info['editype'],self.ta_info['frompartner'],typeofgrammarfile='partners')
+                self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
+            except ImportError:
+                pass        #No partner specific syntax found (is not an error).
         if self.ta_info.get('topartner'):   
             try:
                 partnersyntax = grammar.grammarread(self.ta_info['editype'],self.ta_info['topartner'],typeofgrammarfile='partners')

@@ -18,33 +18,6 @@ import botsglobal           #globals
 #**********************************************************/**
 #**************getters/setters for some globals***********************/**
 #**********************************************************/**
-def get_minta4query():
-    ''' get the first idta for queries etc in whole run.
-    '''
-    terug = botsglobal.minta4query_crash
-    if not terug:
-        return botsglobal.minta4query
-    else:
-        return terug
-
-def get_minta4query_route():
-    ''' get the first idta for queries etc in route.
-    '''
-    terug = botsglobal.minta4query_crash
-    if not terug:
-        return botsglobal.minta4query_route
-    else:
-        return terug
-
-def get_minta4query_routepart():
-    ''' get the first idta for queries etc in route-part.
-    '''
-    terug = botsglobal.minta4query_crash
-    if not terug:
-        return botsglobal.minta4query_routepart
-    else:
-        return terug
-
 def setrouteid(routeid):
     botsglobal.routeid = routeid
 
@@ -390,7 +363,6 @@ class ErrorProcess(NewTransaction):
 #**********************************************************/**
 #*************************import ***********************/**
 #**********************************************************/**
-not_import = set()    #register moduels that are not importable
 def isa_direct_importerror():
     ''' check if module itself is not there, or if there is an import error in the module.
         this avoid hard-to-find errors/problems.
@@ -417,15 +389,14 @@ def botsimport(*args):
         return: imported module, filename imported module;
         if could not be found or error in module: raise
     '''
-    global not_import
     modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
     modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
-    if modulepath in not_import:
+    if modulepath in botsglobal.not_import:
         raise ImportError(u'No import of module "%(modulefile)s".',{'modulefile':modulefile})
     try:
         module = botsbaseimport(modulepath)
     except ImportError:
-        not_import.add(modulepath)
+        botsglobal.not_import.add(modulepath)
         if isa_direct_importerror():
             #the module is not found
             botsglobal.logger.debug(u'No import of module "%(modulefile)s".',{'modulefile':modulefile})
