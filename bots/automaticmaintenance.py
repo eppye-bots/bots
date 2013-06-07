@@ -213,6 +213,9 @@ class Trace(object):
                 else:
                     self.divtext = ta_object['divtext']
             elif ta_object['status'] == EXTERNOUT:
+                #for resends: nrmessages is not picked up, do this here. 
+                if not self.nrmessages:
+                    self.nrmessages = ta_object['nrmessages']
                 if ta_object['numberofresends']:
                     if self.outidta:
                         if self.outidta != ta_object['idta'] and asterisk:
