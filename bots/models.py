@@ -3,6 +3,7 @@
     The generated database can be manipulated SQL. see bots/sql/*.
 '''
 import os
+import urllib
 from django.db import models
 from django.utils.translation import ugettext as _
 from django.core.validators import validate_email
@@ -149,6 +150,23 @@ def multiple_email_validator(value):
         except ValidationError:
             raise ValidationError(_(u'Enter valid e-mail address(es) separated by commas.'), code='invalid')
 
+def script_link1(script,linktext):
+    # if script exists return a plain text name as link; else return "no" icon, plain text name
+    # used in translate (all scripts should exist, missing script is an error)
+    if os.path.exists(script):
+        return '<a href="/srcfiler/?src=%s" target="_blank">%s</a>'%(urllib.quote(script),linktext)
+    else:
+        return '<img src="/media/admin/img/icon-no.gif"></img> %s'%linktext
+
+def script_link2(script):
+    # if script exists return "yes" icon + view link; else return "no" icon
+    # used in routes, channels (scripts are optional)
+    if os.path.exists(script):
+        return '<a href="/srcfiler/?src=%s" target="_blank"><img src="/media/admin/img/icon-yes.gif"></img> view</a>'%script
+    else:
+        return '<img src="/media/admin/img/icon-no.gif"></img>'
+
+
 class MultipleEmailField(models.CharField):
     default_validators = [multiple_email_validator]
     description = _('One or more e-mail address(es),separated by ",".')
@@ -236,6 +254,12 @@ class channel(models.Model):
     keyfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Private key file'),help_text=_(u'Path to file that contains PEM formatted private key.'))          #added 20121201
     certfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Certificate chain file'),help_text=_(u'Path to file that contains PEM formatted certificate chain.'))          #added 20121201
     testpath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Acceptance test path'),help_text=_(u'Path used during acceptance tests, see <a target="_blank" href="http://code.google.com/p/bots/wiki/DeploymentAcceptance">wiki</a>.'))           #added 20120111
+
+    def communicationscript(self):
+        return script_link2(os.path.join(botsglobal.ini.get('directories','usersysabs'),'communicationscripts', self.idchannel + '.py'))
+    communicationscript.allow_tags = True
+    communicationscript.short_description = 'Script'
+
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'
@@ -320,6 +344,22 @@ class translate(models.Model):
     desc = models.TextField(max_length=256,null=True,blank=True,verbose_name=_(u'Description'))
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
+
+    def tscript_link(self):
+        return script_link1(os.path.join(botsglobal.ini.get('directories','usersysabs'),'mappings', self.fromeditype, self.tscript + '.py'),self.tscript)
+    tscript_link.allow_tags = True
+    tscript_link.short_description = 'Mapping Script'
+
+    def frommessagetype_link(self):
+        return script_link1(os.path.join(botsglobal.ini.get('directories','usersysabs'),'grammars', self.fromeditype, self.frommessagetype + '.py'),self.frommessagetype)
+    frommessagetype_link.allow_tags = True
+    frommessagetype_link.short_description = 'Frommessagetype'
+
+    def tomessagetype_link(self):
+        return script_link1(os.path.join(botsglobal.ini.get('directories','usersysabs'),'grammars', self.toeditype, self.tomessagetype + '.py'),self.tomessagetype)
+    tomessagetype_link.allow_tags = True
+    tomessagetype_link.short_description = 'Tomessagetype'
+
     class Meta:
         db_table = 'translate'
         verbose_name = _(u'translation rule')
@@ -352,10 +392,19 @@ class routes(models.Model):
     zip_incoming = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_IN,verbose_name=_(u'Incoming zip-file handling'),help_text=_(u'Unzip received files.'))  #added 20100501 #20120828: use for zip-options
     zip_outgoing = models.IntegerField(null=True,blank=True,choices=ENCODE_ZIP_OUT,verbose_name=_(u'Outgoing zip-file handling'),help_text=_(u'Send files as zip-files.'))                        #added 20100501
     
-    def display_if_userscript(self):
-        return os.path.exists(os.path.join(botsglobal.ini.get('directories','usersysabs'),'routescripts', self.idroute + '.py'))
-    display_if_userscript.boolean = True
-    display_if_userscript.short_description = 'Route-script'
+    def routescript(self):
+        return script_link2(os.path.join(botsglobal.ini.get('directories','usersysabs'),'routescripts', self.idroute + '.py'))
+    routescript.allow_tags = True
+    routescript.short_description = 'Script'
+
+    def indefaultrun(self):
+        # Opposite of notindefaultrun. Put column next to active. More logical than a "double negative"
+        if self.notindefaultrun:
+            return '<img src="/media/admin/img/icon-no.gif"></img>'
+        else:
+            return '<img src="/media/admin/img/icon-yes.gif"></img>'
+    indefaultrun.short_description = 'Default Run'
+    indefaultrun.allow_tags = True
     
     class Meta:
         db_table = 'routes'

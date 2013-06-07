@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Bots Source Viewer</title>
+    <META Http-Equiv="Pragma" Content="no-cache" />
+    <style type="text/css">
+        .linenum {color: lightgray;}
+        .defname {color: black;}
+        .definition {color: blue; font-weight:bold;}
+        .keyword {color: blue;}
+        .string {color: magenta;}
+        .builtin {color: olive;}
+        .operator {color: brown;}
+        .comment {color: forestgreen;}
+        .docstring {color: forestgreen; font-style:italic;}
+    </style>
+</head>
+{% load i18n %}
+<body>
+    {% if error_content %} 
+        {{ error_content }} 
+    {% else %}
+        <h3>{{ src }}</h3>
+        <pre>{{ html_source|safe }}</pre>
+        <hr>
+    {% endif %}
+</body>
+</html>
+ 

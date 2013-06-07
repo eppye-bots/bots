@@ -23,6 +23,7 @@ urlpatterns = patterns('',
     (r'^reports.*', login_required(views.reports)),
     (r'^confirm.*', login_required(views.confirm)),
     (r'^filer.*', login_required(views.filer)),
+    (r'^srcfiler.*', login_required(views.srcfiler)),
     #only staff
     (r'^admin/$', login_required(views.home)),  #do not show django admin root page
     (r'^admin/bots/$', login_required(views.home)),  #do not show django admin root page

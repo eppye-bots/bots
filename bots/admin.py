@@ -48,12 +48,13 @@ class CcodetriggerAdmin(BotsAdmin):
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
-    list_display = ('idchannel', 'inorout', 'type', 'remove', 'host', 'port', 'username', 'secret', 'path', 'filename','testpath','archivepath','rsrv2','syslock','parameters','starttls','apop','askmdn','sendmdn','ftpactive', 'ftpbinary')
+    list_display = ('idchannel', 'inorout', 'type', 'communicationscript', 'remove', 'host', 'port', 'username', 'secret', 'path', 'filename','testpath','archivepath','rsrv2','syslock','parameters','starttls','apop','askmdn','sendmdn','ftpactive', 'ftpbinary')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
+    readonly_fields = ('communicationscript',)
     search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath')
     fieldsets = (
-        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'remove', ('host','port'), ('username', 'secret'), ('path', 'filename'), ('testpath','archivepath'), 'desc'),
+        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'communicationscript', 'remove', ('host','port'), ('username', 'secret'), ('path', 'filename'), ('testpath','archivepath'), 'desc'),
                          'classes': ('wide extrapretty',)
                         }),
         (_(u'Email specific'),{'fields': ('starttls', 'apop', 'askmdn', 'sendmdn' ),
@@ -181,20 +182,20 @@ class MyRouteAdminForm(forms.ModelForm):
 class RoutesAdmin(BotsAdmin):
     actions = ('activate',)
     form = MyRouteAdminForm
-    list_display = ('active','idroute','seq','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','testindicator','notindefaultrun','zip_incoming','zip_outgoing','display_if_userscript',)
+    list_display = ('active','indefaultrun','idroute','seq','routescript','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','testindicator','zip_incoming','zip_outgoing',)
     list_display_links = ('idroute',)
     list_filter = ('idroute','active','fromeditype')
     ordering = ('idroute','seq')
-    readonly_fields = ('display_if_userscript',)
+    readonly_fields = ('routescript',)
     search_fields = ('idroute', 'fromchannel__idchannel','fromeditype', 'frommessagetype', 'alt', 'tochannel__idchannel','toeditype', 'tomessagetype')
     fieldsets = (
-        (None,      {'fields':  ('active','display_if_userscript',('idroute', 'seq',),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc'),
+        (None,      {'fields':  (('active','notindefaultrun'),'routescript',('idroute', 'seq',),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc'),
                      'classes': ('wide extrapretty',)
                     }),
         (_(u'Filtering for outchannel'),{'fields':('toeditype', 'tomessagetype','frompartner_tochannel', 'topartner_tochannel', 'testindicator'),
                     'classes':  ('collapse wide extrapretty',)
                     }),
-        (_(u'Advanced'),{'fields':  ('alt','frompartner','topartner','notindefaultrun','defer','zip_incoming','zip_outgoing'),
+        (_(u'Advanced'),{'fields':  ('alt','frompartner','topartner','defer','zip_incoming','zip_outgoing'),
                      'classes': ('collapse wide extrapretty',)
                     }),
     )
@@ -218,7 +219,7 @@ class MyTranslateAdminForm(forms.ModelForm):
 class TranslateAdmin(BotsAdmin):
     actions = ('activate',)
     form = MyTranslateAdminForm
-    list_display = ('active', 'fromeditype', 'frommessagetype', 'alt', 'frompartner', 'topartner', 'tscript', 'toeditype', 'tomessagetype')
+    list_display = ('active', 'fromeditype', 'frommessagetype_link', 'alt', 'frompartner', 'topartner', 'tscript_link', 'toeditype', 'tomessagetype_link')
     list_display_links = ('fromeditype',)
     list_filter = ('active','fromeditype','toeditype')
     ordering = ('fromeditype','frommessagetype')

@@ -14,6 +14,7 @@ import viewlib
 import botslib
 import pluglib
 import botsglobal
+import py2html
 from botsconfig import *
 
 def server_error(request, template_name='500.html'):
@@ -113,17 +114,18 @@ def incoming(request,*kw,**kwargs):
                 ta_object = models.ta.objects.get(idta=idta)
                 viewlib.gettrace(ta_object)
                 viewlib.trace2delete(ta_object)
-            elif 'retransmit' in request.POST:        #coming from ViewIncoming
+            elif 'retransmit' in request.POST:
                 idta = request.POST[u'retransmit']
                 filereport = models.filereport.objects.get(idta=int(idta))
-                filereport.retransmit = not filereport.retransmit
-                filereport.save()
+                if filereport.fromchannel:   #for resend files fromchannel has no value. (do not rereceive resend items)
+                    filereport.retransmit = not filereport.retransmit
+                    filereport.save()
             elif 'rereceiveall' in request.POST:
                 #select all objects with parameters and set retransmit
                 query = models.filereport.objects.all()
                 incomingfiles = viewlib.filterquery2(query,formin.cleaned_data)
-                for incomingfile in incomingfiles:
-                    if incomingfile.statust != RESEND:
+                for incomingfile in incomingfiles:   #for resend files fromchannel has no value. (do not rereceive resend items)
+                    if incomingfile.fromchannel:
                         incomingfile.retransmit = not incomingfile.retransmit
                         incomingfile.save()
             else:                                    #coming from ViewIncoming
@@ -167,14 +169,14 @@ def outgoing(request,*kw,**kwargs):
                 return viewlib.render(request,formout)
             elif 'retransmit' in request.POST:        #coming from ViewIncoming
                 ta_object = models.ta.objects.get(idta=int(request.POST[u'retransmit']))
-                if ta_object.statust != RESEND:
+                if ta_object.statust != RESEND:     #can only resend last file
                     ta_object.retransmit = not ta_object.retransmit
                     ta_object.save()
             elif 'resendall' in request.POST:
                 #select all objects with parameters and set retransmit
                 query = models.ta.objects.filter(status=EXTERNOUT)
                 outgoingfiles = viewlib.filterquery2(query,formin.cleaned_data)
-                for outgoingfile in outgoingfiles:
+                for outgoingfile in outgoingfiles:       #can only resend last file
                     if outgoingfile.statust != RESEND:
                         outgoingfile.retransmit = not outgoingfile.retransmit
                         outgoingfile.save()
@@ -392,6 +394,23 @@ def filer(request,*kw,**kwargs):
         except:
             #~ print botslib.txtexc()
             return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': _(u'No such file.')},context_instance=django.template.RequestContext(request))
+
+def srcfiler(request,*kw,**kwargs):
+    ''' handles bots source file viewer. display grammar, mapping, userscript etc.'''
+    if request.method == 'GET':
+        try:
+            src = request.GET['src']
+            if botsglobal.ini.get('directories','usersys') in src and src.endswith('.py'): # only python source in usersys!
+                with open(src) as f:
+                    source = f.read()
+                classified_text = py2html.analyze_python(source)
+                html_source = py2html.html_highlight(classified_text)
+                return  django.shortcuts.render_to_response('bots/srcfiler.html', {'src':src, 'html_source':html_source},context_instance=django.template.RequestContext(request))
+            else:
+                return  django.shortcuts.render_to_response('bots/srcfiler.html', {'error_content': _(u'File %s not allowed.' %src)},context_instance=django.template.RequestContext(request))
+        except:
+            #~ print botslib.txtexc()
+            return  django.shortcuts.render_to_response('bots/srcfiler.html', {'error_content': _(u'No such file.')},context_instance=django.template.RequestContext(request))
 
 def plugin(request,*kw,**kwargs):
     if request.method == 'GET':
