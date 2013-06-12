@@ -531,7 +531,7 @@ def set_asked_confirmrules(routedict,rootidta):
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
                                 AND statust=%(statust)s
-                                AND editype='edifact' OR editype='x12' ''',
+                                AND (editype='edifact' OR editype='x12') ''',
                                 {'status':FILEOUT,'statust':OK,'rootidta':rootidta}):
         if row['editype'] == 'x12':
             if row['messagetype'][:3] in ['997','999']:
