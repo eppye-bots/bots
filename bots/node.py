@@ -503,11 +503,14 @@ class Node(object):
                         return True    #no more levels, all fields found
             else:
                 return False
-        if hasattr(botsglobal.defmessage,'structure'):
-            full_mpath = botsglobal.inmessage.root._get_full_mpath(self) + mpaths
-            #~ print 'full_mpath',full_mpath
-            if not _mpath_ok_with_grammar(botsglobal.defmessage.structure,full_mpath):
-                raise botslib.MappingFormatError(_(u'Parameter mpath is not valid according to grammar: %(mpaths)s'),{'mpaths':mpaths})
+        if not hasattr(botsglobal.defmessage,'structure'):  #there is not always a structure (or a grammar)
+            return
+        first_part_mpath = botsglobal.inmessage.root._get_full_mpath(self)
+        if first_part_mpath is None:
+            return  #when not found: is probably outmessage? only check for get/getloop of incoming messages.
+        full_mpath =  first_part_mpath + mpaths
+        if not _mpath_ok_with_grammar(botsglobal.defmessage.structure,full_mpath):
+            raise botslib.MappingFormatError(_(u'Parameter mpath is not valid according to grammar: %(mpaths)s'),{'mpaths':mpaths})
 
     def _get_full_mpath(self,node2find):
         if self is node2find:
