@@ -9,14 +9,14 @@
 		<li><a href="/admin/password_change/">{% trans 'Change password' %}</a></li>
 	</ul>
 	<ul>
-		<a {% if not bots_touchscreen %} href="/incoming/?last" {% endif %} >{% trans 'Last run' %}</a>
+		<a {% if not bots_touchscreen %} href="/incoming/?lastrun=1" {% endif %} >{% trans 'Last run' %}</a>
 		<li><a href="/incoming/?lastrun=1" >{% trans 'Incoming' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
 		<li><a href="/document/?lastrun=1" >{% trans 'Document' %}</a></li>
 		<li><a href="/outgoing/?lastrun=1" >{% trans 'Outgoing' %}</a></li>
 		<li><a href="/processes/?lastrun=1" >{% trans 'Process Errors' %}</a></li>
 	</ul>
 	<ul>
-		<a {% if not bots_touchscreen %} href="/reports/?all" {% endif %} >{% trans 'All runs' %}</a>
+		<a {% if not bots_touchscreen %} href="/reports/?lastrun=0" {% endif %} >{% trans 'All runs' %}</a>
 		<li><a href="/reports/?lastrun=0" >{% trans 'Report (per run)' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
         <li><a href="/incoming/?lastrun=0" >{% trans 'Incoming' %}</a></li>
 		<li><a href="/document/?lastrun=0;status=320" >{% trans 'Document-in' %}</a></li>
