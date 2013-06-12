@@ -1436,11 +1436,6 @@ class jsonnocheck(json):
         return self.ta_info['defaultBOTSIDroot']   #as there is no structure in grammar, use value form syntax.
 
 
-class database(jsonnocheck):
-    #20120101 depreciated. use class db
-    pass
-
-
 class db(Inmessage):
     ''' For database connector.
         the database-object is unpickled, and passed to the mappingscript.

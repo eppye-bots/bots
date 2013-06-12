@@ -837,10 +837,6 @@ class templatehtml(Outmessage):
         botsglobal.logger.debug(_(u'End writing to file "%(filename)s".'),self.ta_info)
 
 
-class database(jsonnocheck):
-    #20120101 depreciated. use class db
-    pass
-
 class db(Outmessage):
     ''' For database connector. 
         out.root is pickled, and saved.

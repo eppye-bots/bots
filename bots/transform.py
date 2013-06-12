@@ -337,53 +337,6 @@ def getcodeset(ccodeid,leftcode,field='rightcode'):
         terug.append(row[field])
     return  terug
 
-#***code conversion via file. 20111116: depreciated
-def safecodeconversion(modulename,value):
-    ''' converts code using a codelist.
-        converted value is returned.
-        codelist is first imported from file in codeconversions (lookup right place/mudule in bots.ini)
-    '''
-    module,filename = botslib.botsimport('codeconversions',modulename)
-    try:
-        return module.codeconversions[value]
-    except KeyError:
-        return value
-
-def codeconversion(modulename,value):
-    ''' converts code using a codelist.
-        converted value is returned.
-        codelist is first imported from file in codeconversions (lookup right place/mudule in bots.ini)
-    '''
-    module,filename = botslib.botsimport('codeconversions',modulename)
-    try:
-        return module.codeconversions[value]
-    except KeyError:
-        raise botslib.CodeConversionError(_(u'Value "%(value)s" not in file for codeconversion "%(filename)s".'),
-                                            {'value':value,'filename':filename})
-
-def safercodeconversion(modulename,value):
-    ''' as codeconversion but reverses the dictionary first'''
-    module,filename = botslib.botsimport('codeconversions',modulename)
-    if not hasattr(module,'botsreversed'+'codeconversions'):
-        reversedict = dict((value,key) for key,value in module.codeconversions.iteritems())
-        setattr(module,'botsreversed'+'codeconversions',reversedict)
-    try:
-        return module.botsreversedcodeconversions[value]
-    except KeyError:
-        return value
-
-def rcodeconversion(modulename,value):
-    ''' as codeconversion but reverses the dictionary first'''
-    module,filename = botslib.botsimport('codeconversions',modulename)
-    if not hasattr(module,'botsreversed'+'codeconversions'):
-        reversedict = dict((value,key) for key,value in module.codeconversions.iteritems())
-        setattr(module,'botsreversed'+'codeconversions',reversedict)
-    try:
-        return module.botsreversedcodeconversions[value]
-    except KeyError:
-        raise botslib.CodeConversionError(_(u'Value "%(value)s" not in file for reversed codeconversion "%(filename)s".'),
-                                            {'value':value,'filename':filename})
-
 #*********************************************************************
 #*** utily functions for calculating/generating/checking EAN/GTIN/GLN
 #*********************************************************************
