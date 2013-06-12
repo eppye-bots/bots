@@ -110,7 +110,10 @@ def translate(startstatus,endstatus,idroute,rootidta):
                         alt_from_previous_run = inn_splitup.ta_info['alt']      #needed to check for infinite loop
                         if botsglobal.ini.getint('settings','get_checklevel',1) == 2:
                             #~ print 'jaja',inn_splitup.ta_info['editype'],inn_splitup.ta_info['messagetype']
-                            botsglobal.defmessage = grammar.grammarread(inn_splitup.ta_info['editype'],inn_splitup.ta_info['messagetype'])
+                            try:    #try to ead the grammar. not all editype have/need a grammar.
+                                botsglobal.defmessage = grammar.grammarread(inn_splitup.ta_info['editype'],inn_splitup.ta_info['messagetype'])
+                            except:
+                                pass
                             #~ print botsglobal.defmessage
                             botsglobal.inmessage = inn_splitup
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
