@@ -163,7 +163,7 @@ def script_link2(script):
     # if script exists return "yes" icon + view link; else return "no" icon
     # used in routes, channels (scripts are optional)
     if os.path.exists(script):
-        return '<a href="/srcfiler/?src=%s" target="_blank"><img src="/media/admin/img/icon-yes.gif"></img> view</a>'%script
+        return '<a href="/srcfiler/?src=%s" target="_blank"><img src="/media/admin/img/icon-yes.gif"></img> view</a>'%urllib.quote(script)
     else:
         return '<img src="/media/admin/img/icon-no.gif"></img>'
 
