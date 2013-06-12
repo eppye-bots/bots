@@ -10,19 +10,20 @@
 	</ul>
 	<ul>
 		<a {% if not bots_touchscreen %} href="/incoming/?last" {% endif %} >{% trans 'Last run' %}</a>
-		<li><a href="/incoming/?last" >{% trans 'Incoming' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
-		<li><a href="/document/?last" >{% trans 'Document' %}</a></li>
-		<li><a href="/outgoing/?last" >{% trans 'Outgoing' %}</a></li>
-		<li><a href="/processes/?last" >{% trans 'Process Errors' %}</a></li>
+		<li><a href="/incoming/?lastrun=1" >{% trans 'Incoming' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
+		<li><a href="/document/?lastrun=1" >{% trans 'Document' %}</a></li>
+		<li><a href="/outgoing/?lastrun=1" >{% trans 'Outgoing' %}</a></li>
+		<li><a href="/processes/?lastrun=1" >{% trans 'Process Errors' %}</a></li>
 	</ul>
 	<ul>
 		<a {% if not bots_touchscreen %} href="/reports/?all" {% endif %} >{% trans 'All runs' %}</a>
-		<li><a href="/reports/?all" >{% trans 'Report (per run)' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
-        <li><a href="/incoming/?all" >{% trans 'Incoming' %}</a></li>
-		<li><a href="/document/?all" >{% trans 'Document' %}</a></li>
-		<li><a href="/outgoing/?all" >{% trans 'Outgoing' %}</a></li>
-		<li><a href="/processes/?all" >{% trans 'Process Errors' %}</a></li>
-		<li><a href="/confirm/?all" >{% trans 'Confirmations' %}</a></li>
+		<li><a href="/reports/?lastrun=0" >{% trans 'Report (per run)' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
+        <li><a href="/incoming/?lastrun=0" >{% trans 'Incoming' %}</a></li>
+		<li><a href="/document/?lastrun=0;status=320" >{% trans 'Document-in' %}</a></li>
+		<li><a href="/document/?lastrun=0;status=330" >{% trans 'Document-out' %}</a></li>
+		<li><a href="/outgoing/?lastrun=0" >{% trans 'Outgoing' %}</a></li>
+		<li><a href="/confirm/?lastrun=0" >{% trans 'Confirmations' %}</a></li>
+		<li><a href="/processes/?lastrun=0" >{% trans 'Process Errors' %}</a></li>
 	</ul>
 	<ul>
 		<a {% if not bots_touchscreen %} href="/document/?select" {% endif %} >{% trans 'Select' %}</a>

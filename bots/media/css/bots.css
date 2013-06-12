@@ -104,13 +104,13 @@ div.dropdown  ul {
 	padding:0;
 	position:absolute;
 	visibility:hidden;
-	z-index:598;
 	left:99%;
 	top:1px;
 	background: #efefef;
 	}
 div.dropdown:hover  ul {
 	visibility:visible;
+	z-index:598;
 	}
 div.dropdown  ul  li {
 	list-style: none;
@@ -122,6 +122,19 @@ div.dropdown:hover >button,
 div.dropdown  ul li:hover,
 div.dropdown  ul li button:hover{
 	color: #028;
+	}
+/***********************************************************************/
+/**INFO**************************************************************/
+div.info  table {
+	position:absolute;
+	visibility:hidden;
+	background: #efefef;
+    color: #666;
+	white-space: nowrap;
+	}
+div.info:hover  table {
+	visibility:visible;
+	z-index:599;
 	}
 /***********************************************************************/
 /**FILTER***************************************************************/

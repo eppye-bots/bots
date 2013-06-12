@@ -6,7 +6,7 @@
     <input onClick="history.back()" type="button" value="{% trans 'Back' %}" />
     <table>
         <tr><td>{% trans 'Date/time' %}</td><td class="nowrap">{{rootta.ts|date:"Y-m-d H:i:s"}}</td></tr>
-        <tr><td>{% trans 'State' %}</td><td>{{rootta.get_statust_display}}</td></tr>
+        <tr><td>{% trans 'Status' %}</td><td>{{rootta.get_statust_display}}</td></tr>
         <tr><td>{% trans 'Route' %}</td><td>{{rootta.idroute}}</td></tr>
 </table>
     <table id="botstable">
@@ -14,19 +14,17 @@
             <tr>
                 <th></th>
                 <th><button class="botsheader" />{% trans 'Phase' %}</button></th>
-                <th><button class="botsheader" />{% trans 'State' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Status' %}</button></th>
+                <th><button class="botsheader" />{% trans 'File' %}</button></th>
                 <th><button class="botsheader" />{% trans '#mes' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Editype' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Messagetype' %}</button></th>
-                <th><button class="botsheader" />{% trans 'File' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Channel' %}</button></th>
                 <th><button class="botsheader" />{% trans 'FromPartner' %}</button></th>
                 <th><button class="botsheader" />{% trans 'ToPartner' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Reference' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Size' %}</button></th>
-                <th><button class="botsheader" />{% trans 'Channel' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Error' %}</button></th>
-                <th><button class="botsheader" />{% trans 'FromMail' %}</button></th>
-                <th><button class="botsheader" />{% trans 'ToMail' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Charset' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Contenttype' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Alt' %}</button></th>
@@ -41,18 +39,16 @@
                 <td class="nowrap">{{row.ind}}</td>
                 <td>{{row.get_status_display}}</td>
                 <td>{{row.get_statust_display}}</td>
+                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink" title="{{row.filename}}">{{row.filename|shortpath}}</a></td>
                 <td>{{row.nrmessages}}</td>
                 <td class="nowrap">{{row.editype}}</td>
                 <td class="nowrap">{{row.messagetype}}</td>
-                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink" title="{{row.filename}}">{{row.filename|shortpath}}</a></td>
+                <td class="nowrap">{{row.channel}}</td>
                 <td class="nowrap">{{row.frompartner}}</td>
                 <td class="nowrap">{{row.topartner}}</td>
                 <td>{{row.reference}}</td>
                 <td class="nowrap">{% if row.filesize %}{{row.filesize|filesizeformat}}{% endif %}</td>
-                <td class="nowrap">{{row.channel}}</td>
                 <td style="white-space: pre;">{{row.errortext}}</td>
-                <td>{{row.frommail}}</td>
-                <td>{{row.tomail}}</td>
                 <td>{{row.charset}}</td>
                 <td>{{row.contenttype}}</td>
                 <td>{{row.alt}}</td>

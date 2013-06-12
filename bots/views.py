@@ -40,8 +40,8 @@ def reports(request,*kw,**kwargs):
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectReports()
             return viewlib.render(request,formout)
-        else:                              #via menu, go to view form
-            cleaned_data = {'page':1,'sortedby':'ts','sortedasc':False}
+        else:                              #via menu, parse get-parameters, go to view form
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
     else:                                  # request.method == 'POST'
         if 'fromselect' in request.POST:        #coming from select criteria screen
             formin = forms.SelectReports(request.POST)
@@ -82,10 +82,8 @@ def incoming(request,*kw,**kwargs):
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectIncoming()
             return viewlib.render(request,formout)
-        elif 'all' in request.GET:             #via menu, go to all runs
-            cleaned_data = {'page':1,'sortedby':'ts','sortedasc':False}
-        else:                              #via menu, go to view form for last run
-            cleaned_data = {'page':1,'lastrun':True,'sortedby':'ts','sortedasc':False}
+        else:                                   #via menu, parse recevied parameters
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
     else:                                  # request.method == 'POST'
         if '2outgoing' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             request.POST = viewlib.changepostparameters(request.POST,soort='in2out')
@@ -142,10 +140,8 @@ def outgoing(request,*kw,**kwargs):
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectOutgoing()
             return viewlib.render(request,formout)
-        elif 'all' in request.GET:             #via menu, go to all runs
-            cleaned_data = {'page':1,'sortedby':'ts','sortedasc':False}
-        else:                              #via menu, go to view form for last run
-            cleaned_data = {'page':1,'lastrun':True,'sortedby':'ts','sortedasc':False}
+        else:                                   #via menu, parse recevied parameters
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
     else:                                  # request.method == 'POST'
         if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             request.POST = viewlib.changepostparameters(request.POST,soort='out2in')
@@ -184,7 +180,6 @@ def outgoing(request,*kw,**kwargs):
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
 
-    #~ query = models.ta.objects.filter(status=EXTERNOUT,statust=DONE)
     query = models.ta.objects.filter(status=EXTERNOUT)
     pquery = viewlib.filterquery(query,cleaned_data)
     formout = forms.ViewOutgoing(initial=cleaned_data)
@@ -195,10 +190,10 @@ def document(request,*kw,**kwargs):
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectDocument()
             return viewlib.render(request,formout)
-        elif 'all' in request.GET:             #via menu, go to all runs
+        else:                                   #via menu, parse recevied parameters
             cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
-        else:                              #via menu, go to view form for last run
-            cleaned_data = {'page':1,'lastrun':True,'sortedby':'idta','sortedasc':False}
+            cleaned_data['lastrun'] = bool(int(request.GET.get('lastrun',0)))
+            cleaned_data['status'] = int(request.GET.get('status',0))
     else:                                  # request.method == 'POST'
         if 'fromselect' in request.POST:        #coming from select criteria screen
             formin = forms.SelectDocument(request.POST)
@@ -208,7 +203,7 @@ def document(request,*kw,**kwargs):
             formin = forms.ViewDocument(request.POST)
             if not formin.is_valid():
                 return viewlib.render(request,formin)
-            elif '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
+            if '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
                 formout = forms.SelectDocument(formin.cleaned_data)
                 return viewlib.render(request,formout)
             elif 'retransmit' in request.POST:        #coming from Documents, no reportidta
@@ -224,8 +219,6 @@ def document(request,*kw,**kwargs):
     pquery = viewlib.filterquery(query,cleaned_data)
     viewlib.trace_document(pquery)
     formout = forms.ViewDocument(initial=cleaned_data)
-    #~ from django.db import connections
-    #~ print django.db.connection.queries
     return viewlib.render(request,formout,pquery)
 
 def process(request,*kw,**kwargs):
@@ -233,10 +226,8 @@ def process(request,*kw,**kwargs):
         if 'select' in request.GET:             #via menu, go to select form
             formout = forms.SelectProcess()
             return viewlib.render(request,formout)
-        elif 'all' in request.GET:             #via menu, go to all runs
-            cleaned_data = {'page':1,'sortedby':'ts','sortedasc':False}
-        else:                              #via menu, go to view form for last run
-            cleaned_data = {'page':1,'lastrun':True,'sortedby':'ts','sortedasc':False}
+        else:                                   #via menu, parse recevied parameters
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
     else:                                  # request.method == 'POST'
         if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             request.POST = viewlib.changepostparameters(request.POST,soort='fromprocess')
@@ -288,7 +279,7 @@ def confirm(request,*kw,**kwargs):
             formout = forms.SelectConfirm()
             return viewlib.render(request,formout)
         else:                              #via menu, go to view form for last run
-            cleaned_data = {'page':1,'sortedby':'ts','sortedasc':False}
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
     else:                                  # request.method == 'POST'
         if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             request.POST = viewlib.changepostparameters(request.POST,soort='confirm2in')
@@ -363,7 +354,7 @@ def filer(request,*kw,**kwargs):
             elif request.GET['action'] == 'next':
                 if currentta.child:     #has a explicit child
                     talijst = list(models.ta.objects.filter(idta=currentta.child))
-                else:
+                else: 
                     talijst = list(models.ta.objects.filter(parent=currentta.idta))
             for ta_object in talijst:
                 #determine if can display file
@@ -381,7 +372,7 @@ def filer(request,*kw,**kwargs):
                     ta_object.has_file = False
                     ta_object.content = _(u'No file available for display.')
                 #determine has previous:
-                if ta_object.parent or ta_object.status == FILEOUT:
+                if ta_object.parent or ta_object.status == MERGED:
                     ta_object.has_previous = True
                 else:
                     ta_object.has_previous = False
@@ -392,7 +383,6 @@ def filer(request,*kw,**kwargs):
                     ta_object.has_next = True
             return  django.shortcuts.render_to_response('bots/filer.html', {'idtas': talijst},context_instance=django.template.RequestContext(request))
         except:
-            #~ print botslib.txtexc()
             return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': _(u'No such file.')},context_instance=django.template.RequestContext(request))
 
 def srcfiler(request,*kw,**kwargs):

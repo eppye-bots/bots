@@ -3,6 +3,7 @@
 <head>
 	<title>Bots File Viewer</title>
     <META Http-Equiv="Pragma" Content="no-cache" />
+    <link rel="stylesheet" type="text/css" href="/media/css/bots.css" />
 </head>
 {% load i18n %}
 <body>
@@ -11,19 +12,37 @@
 	{% else %}
 		<div">
 			{% for ta in idtas %}
-				<table border="1" cellpadding="3" cellspacing="0" width="100%">
+				<table border="1" cellpadding="3" cellspacing="0" >
 				<tr>
 				<td width="90px" align="center">{% if ta.has_previous %}<a href="/filer/?action=previous&amp;idta={{ta.idta}}">{% trans 'Previous' %}</a>{% endif %}</td>
 				<td width="90px" align="center">{% if ta.has_next %}<a href="/filer/?action=next&amp;idta={{ta.idta}}">{% trans 'Next' %}</a>{% endif %}</td>
 				<td width="90px" align="center">{% if ta.has_file %}<a href="/filer/?action=downl&amp;idta={{ta.idta}}">{% trans 'Download' %}</a>{% endif %}</td>
-				<td width="*" align="left">{% trans 'Route' %} &quot;{{ ta.idroute }}&quot;;
-											{% trans 'phase' %} &quot;{{ ta.get_status_display }}&quot;;
-											{% trans 'status' %} &quot;{{ ta.get_statust_display }}&quot;;
-											{% trans 'editype' %} &quot;{{ ta.editype }}&quot;;
-											{% trans 'messagetype' %} &quot;{{ ta.messagetype }}&quot;;
-											{% trans 'date' %} &quot;{{ ta.ts|date:"Y-m-d H:i:s" }}&quot;;
-											{% trans 'file' %} &quot;{{ ta.filename }}&quot;;
-											{% trans 'charset' %} &quot;{{ ta.charset }}&quot;
+				<td width="90px" align="center">{{ ta.get_status_display }}</td>
+				<td width="90px">
+					<div class="info" align="center">info
+						<table>
+							<tr><td>{% trans 'Status' %}</td><td>{{ ta.get_statust_display }}</td></tr>
+							<tr><td>{% trans 'Date/time' %}</td><td>{{ ta.ts|date:"Y-m-d H:i:s" }}</td></tr>
+							<tr><td>{% trans 'Reference' %}</td><td>{{ ta.reference }}</td></tr>
+							<tr><td>{% trans 'Editype' %}</td><td>{{ ta.editype }}</td></tr>
+							<tr><td>{% trans 'Messagetype' %}</td><td>{{ ta.messagetype }}</td></tr>
+							<tr><td>{% trans 'Route' %}</td><td>{{ ta.idroute }}</td></tr>
+							<tr><td>{% trans 'FromChannel' %}</td><td>{{ ta.fromchannel }}</td></tr>
+							<tr><td>{% trans 'ToChannel' %}</td><td>{{ ta.tochannel }}</td></tr>
+							<tr><td>{% trans 'Frompartner' %}</td><td>{{ ta.frompartner }}</td></tr>
+							<tr><td>{% trans 'Topartner' %}</td><td>{{ ta.topartner }}</td></tr>
+							<tr><td>{% trans 'Nrmessages' %}</td><td>{{ ta.nrmessages }}</td></tr>
+							<tr><td>{% trans 'Filesize' %}</td><td>{{ ta.filesize }}</td></tr>
+							<tr><td>{% trans 'Charset' %}</td><td>{{ ta.charset }}</td></tr>
+							<tr><td>{% trans 'Test' %}</td><td>{{ ta.testindicator }}</td></tr>
+							<tr><td>{% trans 'Contenttype' %}</td><td>{{ ta.contenttype }}</td></tr>
+							<tr><td>{% trans 'Botskey' %}</td><td>{{ ta.botskey }}</td></tr>
+							<tr><td>{% trans 'Alt' %}</td><td>{{ ta.alt }}</td></tr>
+							<tr><td>{% trans 'Merge' %}</td><td>{{ ta.merge }}</td></tr>
+							<tr><td>{% trans 'Envelope' %}</td><td>{{ ta.envelope }}</td></tr>
+							<tr><td>{% trans 'File' %}</td><td>{{ ta.filename }}</td></tr>
+						</table>
+					</div>
 				</td>
 				</tr>
 				</table>

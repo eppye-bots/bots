@@ -1,5 +1,6 @@
 {% extends "admin/base.html" %}
 {% load i18n %}
+{% load botsfilters %}
 
 {% block content %}
 <form action="{{ form.action }}" method="post">{% csrf_token %}
@@ -17,14 +18,16 @@
                 <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'Phase' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="botskey" />{% trans 'Document number' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="reference" />{% trans 'Reference' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="confirmtext" />{% trans 'Confirm' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="filename" />{% trans 'File' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="confirmtext" />{% trans 'ConfirmType' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="confirmidta" />{% trans 'ConfirmFile' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="editype" />{% trans 'Editype' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="messagetype" />{% trans 'Messagetype' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="idroute" />{% trans 'Route' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="fromchannel" />{% trans 'Channel' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="frompartner" />{% trans 'FromPartner' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="topartner" />{% trans 'ToPartner' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="editype" />{% trans 'Editype' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="messagetype" />{% trans 'Messagetype' %}</button></th>
             </tr>
         </thead>
         <tbody>
@@ -33,7 +36,6 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><button class="botsheader" onclick="window.open('/filer/?action=this&amp;idta={{row.idta}}'); return false;">{% trans 'View this file' %}</button></li>
                             {% if row.incoming %} 
                                 <li><button class="botsheader" onclick="document.location.href='/detail/?inidta={{row.incoming}}'; return false;">{% trans 'View detail' %}</button></li>
                                 <li><button class="botsheader" onclick="window.open('/filer/?action=this&amp;idta={{row.incoming}}'); return false;">{% trans 'View incoming file' %}</button></li>
@@ -48,13 +50,21 @@
                 <td><a href="/filer/?action=this&amp;idta={{row.idta}}" class="botslink" target="_blank">{{row.botskey}}</a></td>
                 <td>{{row.reference}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
+                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink" title="{{row.infilename}}">{{row.filename|shortpath}}</a></td>
                 <td style="white-space: pre;">{{row.confirmtext}}</td>
+                <td>{% if row.confirmidta > 0 %}
+                        <a href="/filer/?action=this&amp;idta={{row.confirmidta}}" target="_blank" class="botslink">{{row.confirmidta}}</a>
+                    {% else  %}
+                        {% if row.confirmidta %}
+                            {% trans 'Manual confirm' %}
+                        {% endif %}
+                    {% endif %}</td>
+                <td class="nowrap">{{row.editype}}</td>
+                <td class="nowrap">{{row.messagetype}}</td>
                 <td class="nowrap">{{row.idroute}}</td>
                 <td class="nowrap">{{row.channel}}</td>
                 <td class="nowrap">{{row.frompartner}}</td>
                 <td class="nowrap">{{row.topartner}}</td>
-                <td class="nowrap">{{row.editype}}</td>
-                <td class="nowrap">{{row.messagetype}}</td>
             </tr>
         {% endfor %}
         </tbody>

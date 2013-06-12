@@ -112,7 +112,8 @@ def trace_document(pquery):
             except IndexError:
                 return    #no result, return
         if child.confirmasked:
-            taorg.confirmtext += _(u'Confirm send: %(confirmasked)s; confirmed: %(confirmed)s; confirmtype: %(confirmtype)s\n') % {'confirmasked':child.confirmasked,'confirmed':child.confirmed,'confirmtype':child.confirmtype}
+            taorg.confirmtext += u'%(confirmtype)s\n' % {'confirmasked':child.confirmasked,'confirmed':child.confirmed,'confirmtype':child.confirmtype}
+            taorg.confirmidta = child.confirmidta
         if child.status == EXTERNOUT:
             taorg.outgoing = child.idta
             taorg.channel = child.tochannel
@@ -127,7 +128,8 @@ def trace_document(pquery):
             except IndexError:
                 return    #no result, return
         if parent.confirmasked:
-            taorg.confirmtext += u'Confirm asked: %(confirmasked)s; confirmed: %(confirmed)s; confirmtype: %(confirmtype)s\n' % {'confirmasked':parent.confirmasked,'confirmed':parent.confirmed,'confirmtype':parent.confirmtype}
+            taorg.confirmtext += u'%(confirmtype)s\n' % {'confirmasked':parent.confirmasked,'confirmed':parent.confirmed,'confirmtype':parent.confirmtype}
+            taorg.confirmidta = parent.confirmidta
         if parent.status == EXTERNIN:
             taorg.incoming = parent.idta
             taorg.channel = parent.fromchannel
@@ -139,8 +141,6 @@ def trace_document(pquery):
             trace_back(taorg)
         else:
             trace_forward(taorg)
-        if not taorg.confirmtext:
-            taorg.confirmtext = u'---'
 
 
 def gettrace(ta_object):

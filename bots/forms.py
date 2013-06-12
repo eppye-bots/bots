@@ -1,4 +1,5 @@
 import django
+from django.utils.translation import ugettext as _
 #***********
 import models
 import viewlib
@@ -70,6 +71,7 @@ class ViewIncoming(View):
 class SelectDocument(Select):
     template = 'bots/selectform.html'
     action = '/document/'
+    status = django.forms.ChoiceField([(0,"---------"),(320,_(u'Document-in')),(330,_(u'Document-out'))],required=False,initial=0)
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
@@ -87,6 +89,7 @@ class SelectDocument(Select):
 class ViewDocument(View):
     template = 'bots/document.html'
     action = '/document/'
+    status = django.forms.IntegerField(required=False,initial=0,widget=HIDDENINPUT())
     idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
     frompartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
     topartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
