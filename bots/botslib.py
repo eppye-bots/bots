@@ -138,7 +138,7 @@ def addinfocore(change,where,wherestring=''):
         where-dict selects db-ta's, change-dict sets values;
         returns the number of db-ta that have been changed.
     '''
-    wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring + ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta']) 
+    wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring
     counter = 0 #count the number of dbta changed
     for row in query(u'''SELECT idta FROM ta '''+wherestring,where):
         counter += 1
@@ -150,14 +150,15 @@ def addinfocore(change,where,wherestring=''):
 def addinfo(change,where):
     ''' changes ta's; ta's are copyed to new ta; the status is updated.
         change-dict: values to change; where-dict: selection.'''
-    return addinfocore(change=change,where=where)
+    wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta'])   #wherestring for copy & done
+    return addinfocore(change=change,where=where,wherestring=wherestring)
 
 def updateinfocore(change,where,wherestring=''):
     ''' update info in ta's.
         where (dict) selects ta's,
         change (dict) sets values;
     '''
-    wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring + ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta'])
+    wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring
     #change-dict: discard empty values. Change keys: this is needed because same keys can be in where-dict
     change2 = [(key,value) for key,value in change.iteritems() if value]
     if not change2:
@@ -167,10 +168,11 @@ def updateinfocore(change,where,wherestring=''):
     return changeq(u'''UPDATE ta SET ''' + changestring + wherestring,where)
 
 def updateinfo(change,where):
-    updateinfocore(change=change,where=where)
+    wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta'])   #wherestring for copy & done
+    return updateinfocore(change=change,where=where,wherestring=wherestring)
 
 def changestatustinfo(change,where):
-    updateinfocore({'statust':change},where)
+    return updateinfo({'statust':change},where)
 
 def query(querystring,*args):
     ''' general query. yields rows from query '''

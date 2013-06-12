@@ -115,7 +115,7 @@ class new(object):
                 rootidta = self.get_minta4query_routepart()
             where = {'statust':OK,'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute'],'rootidta':rootidta}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
-            nr_of_incoming_files_for_channel = botslib.updateinfocore(change=change,where=where)
+            nr_of_incoming_files_for_channel = botslib.updateinfo(change=change,where=where)
             botslib.tryrunscript(userscript,scriptname,'postincommunication',routedict=routedict)
             if nr_of_incoming_files_for_channel:
                 #unzip incoming files (if indicated)
@@ -146,7 +146,7 @@ class new(object):
             envelope.mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=routedict['idroute'],rootidta=self.get_minta4query_routepart())
             botslib.tryrunscript(userscript,scriptname,'postmerge',routedict=routedict)
         elif routedict['translateind'] == 2:        #pass-through: pickup the incoming files and mark these as MERGED (==translation is finished)
-            botslib.addinfocore(change={'status':MERGED,'statust':OK},where={'status':FILEIN,'statust':OK,'idroute':routedict['idroute'],'rootidta':self.get_minta4query_route()})
+            botslib.addinfo(change={'status':MERGED,'statust':OK},where={'status':FILEIN,'statust':OK,'idroute':routedict['idroute'],'rootidta':self.get_minta4query_route()})
         #NOTE: routedict['translateind'] == 0 than nothing will happen with the files in this route. 
 
         #ommunication outgoing channel: MERGED->RAWOUT
@@ -155,27 +155,27 @@ class new(object):
             #filter files in route for outchannel
             towhere = { 'status':MERGED,
                         'statust':OK,
-                        'rootidta':self.get_minta4query_route(),
                         'idroute':routedict['idroute'],
                         'editype':routedict['toeditype'],
                         'messagetype':routedict['tomessagetype'],
                         'testindicator':routedict['testindicator'],
                         }
             towhere = dict([(key, value) for key,value in towhere.iteritems() if value])   #remove nul-values from dict
-            wherestring = ''
+            wherestring = ' AND '.join([key+'=%('+key+')s ' for key in towhere])
             if routedict['frompartner_tochannel_id']:   #use frompartner_tochannel in where-clause of query (partner/group dependent outchannel
                 towhere['frompartner_tochannel_id'] = routedict['frompartner_tochannel_id']
                 wherestring += ''' AND (frompartner=%(frompartner_tochannel_id)s
-                                        OR frompartner in (SELECT from_partner_id
-                                                            FROM partnergroup
-                                                            WHERE to_partner_id =%(frompartner_tochannel_id)s ))'''
+                                    OR frompartner in (SELECT from_partner_id
+                                    FROM partnergroup
+                                    WHERE to_partner_id=%(frompartner_tochannel_id)s )) '''
             if routedict['topartner_tochannel_id']:   #use topartner_tochannel in where-clause of query (partner/group dependent outchannel
                 towhere['topartner_tochannel_id'] = routedict['topartner_tochannel_id']
                 wherestring += ''' AND (topartner=%(topartner_tochannel_id)s
-                                        OR topartner in (SELECT from_partner_id
-                                                            FROM partnergroup
-                                                            WHERE to_partner_id=%(topartner_tochannel_id)s ))'''
+                                    OR topartner in (SELECT from_partner_id
+                                    FROM partnergroup
+                                    WHERE to_partner_id=%(topartner_tochannel_id)s )) '''
             toset = {'status':FILEOUT,'statust':OK,'tochannel':routedict['tochannel']}
+            towhere['rootidta'] = self.get_minta4query_route()
             nr_of_outgoing_files_for_channel = botslib.addinfocore(change=toset,where=towhere,wherestring=wherestring)
             
             if nr_of_outgoing_files_for_channel:
@@ -202,7 +202,7 @@ class new(object):
                     #- status EXTERNOUT statust DONE (if communication goes OK)
                     #- status EXTERNOUT status ERROR (if file is not communicatied)
                     #to have the same status for all outgoing files some manipulation is needed, eg in case no connection could be made.
-                    botslib.addinfocore(change={'status':EXTERNOUT,'statust':ERROR},where={'status':FILEOUT,'statust':OK,'tochannel':routedict['tochannel'],'rootidta':rootidta})
+                    botslib.addinfo(change={'status':EXTERNOUT,'statust':ERROR},where={'status':FILEOUT,'statust':OK,'tochannel':routedict['tochannel'],'rootidta':rootidta})
                     botslib.tryrunscript(userscript,scriptname,'postoutcommunication',routedict=routedict)
                 
         botslib.tryrunscript(userscript,scriptname,'end',routedict=routedict)
