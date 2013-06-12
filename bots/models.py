@@ -118,7 +118,8 @@ CONFIRMTYPELIST = [DEFAULT_ENTRY] + CONFIRMTYPE
 
 #***Functions that produced codelists.**********************************************
 def getroutelist():     #needed because the routeid is needed (and this is not theprimary key
-    return [DEFAULT_ENTRY]+[(l,l) for l in routes.objects.values_list('idroute', flat=True).distinct() ]
+    return [DEFAULT_ENTRY]+[(l,l) for l in routes.objects.values_list('idroute', flat=True).order_by('idroute').distinct() ]
+
 def getinmessagetypes():
     return [DEFAULT_ENTRY]+[(l,l) for l in translate.objects.values_list('frommessagetype', flat=True).order_by('frommessagetype').distinct() ]
 def getoutmessagetypes():
