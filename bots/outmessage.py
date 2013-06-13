@@ -460,14 +460,14 @@ class idoc(fixed):
         
     def _canonicaltree(self,node_instance,structure):
         self.headerrecordnumber = self.recordnumber
-        super(idoc,self)._canonicaltree(node_instance,structure_record)
+        super(idoc,self)._canonicaltree(node_instance,structure)
         
-    def _canonicalfields(self,node_instance,structure_record):
+    def _canonicalfields(self,node_instance,record_definition):
         if self.ta_info['automaticcount']:
-            node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM'],'SEGNUM':str(self.recordnumber),'PSGNUM':str(self.headerrecordnumber),'HLEVEL':str(len(structure_record[MPATH]))})
+            node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM'],'SEGNUM':str(self.recordnumber),'PSGNUM':str(self.headerrecordnumber),'HLEVEL':str(len(record_definition[MPATH]))})
         else:
             node_instance.record.update({'MANDT':self.ta_info['MANDT'],'DOCNUM':self.ta_info['DOCNUM']})
-        super(idoc,self)._canonicalfields(node_instance,structure_record)
+        super(idoc,self)._canonicalfields(node_instance,record_definition)
         self.recordnumber += 1      #tricky. EDI_DC is not counted, so I count after writing.
 
 
