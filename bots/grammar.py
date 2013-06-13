@@ -577,11 +577,14 @@ class fixed(Grammar):
                         self.is_first_record = False
                         startrecordID = position_in_record
                         endrecordID = position_in_record + field[LENGTH]
-                        syntaxfromgrammar = getattr(self.module, 'syntax',{})      #original grammar systax has to be changed, so get it.
                         self.syntax['startrecordID'] = startrecordID            #also change in the copy made.
                         self.syntax['endrecordID'] = endrecordID
-                        syntaxfromgrammar['startrecordID'] = startrecordID
-                        syntaxfromgrammar['endrecordID'] = endrecordID
+                        #original grammar syntax has to be changed
+                        if not hasattr(self.module, 'syntax'):      
+                            self.module.syntax = {}
+                        self.module.syntax['startrecordID'] = startrecordID
+                        self.module.syntax['endrecordID'] = endrecordID
+                        syntaxfromgrammar = getattr(self.module, 'syntax',{})      #original grammar syntax has to be changed, so get it.
                     else:        #check startrecordID, endrecordID
                         if self.syntax['startrecordID'] != position_in_record or self.syntax['endrecordID'] != position_in_record + field[LENGTH]:
                             raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record %(key)s: position and length of BOTSID should be equal in all records.'),

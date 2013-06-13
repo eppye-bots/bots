@@ -29,7 +29,7 @@ class Message(object):
         '''
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'],typeofgrammarfile)
         #write values from grammar to self.ta_info - unless these values are already set (eg by mappingscript)
-        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)    
+        botslib.updateunlessset(self.ta_info,self.defmessage.syntax)
 
     @staticmethod
     def display(lex_records):
