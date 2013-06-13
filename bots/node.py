@@ -508,7 +508,10 @@ class Node(object):
         first_part_mpath = botsglobal.inmessage.root._get_full_mpath(self)
         if first_part_mpath is None:
             return  #when not found: is probably outmessage? only check for get/getloop of incoming messages.
-        full_mpath =  first_part_mpath + mpaths
+        if botsglobal.defmessage.nextmessage is None:  #the inmessage object is based on the nextmessage string, so correct for this
+            full_mpath =  first_part_mpath + mpaths
+        else:
+            full_mpath = botsglobal.defmessage.nextmessage[:-1] + first_part_mpath + mpaths
         if not _mpath_ok_with_grammar(botsglobal.defmessage.structure,full_mpath):
             raise botslib.MappingFormatError(_(u'Parameter mpath is not valid according to grammar: %(mpaths)s'),{'mpaths':mpaths})
 
