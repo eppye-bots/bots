@@ -364,7 +364,7 @@ class Inmessage(message.Message):
     def _canonicaltree(self,node_instance,structure):
         ''' For nodes: check min and max occurence; sort the records conform grammar
         '''
-        super(Inmessage,self)._canonicalfields(node_instance,structure)
+        super(Inmessage,self)._canonicaltree(node_instance,structure)
         if QUERIES in structure:
             node_instance.get_queries_from_edi(structure)
 
