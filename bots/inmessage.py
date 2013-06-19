@@ -1145,7 +1145,7 @@ class x12(var):
             parameter 'error' is not used
         '''
         confirmtype = 'send-x12-997'
-        if botslib.globalcheckconfirmrules(confirmtype):
+        if not botslib.globalcheckconfirmrules(confirmtype):
             return
         editype = 'x12' #self.__class__.__name__
         #filter the confirmationlist to tmpconfirmationlist
