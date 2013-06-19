@@ -553,7 +553,7 @@ def set_asked_confirmrules(routedict,rootidta):
 
 def globalcheckconfirmrules(confirmtype):
     ''' global check if confirmrules with this confirmtype is uberhaupt used. 
-    ''' 
+    '''
     for confirmdict in botsglobal.confirmrules:
         if confirmdict['confirmtype'] == confirmtype:
             return True

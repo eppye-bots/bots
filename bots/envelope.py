@@ -286,9 +286,9 @@ class tradacoms(Envelope):
 
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-        tofile.write(self.out.record2string(self.out.lex_records[0:0]))
+        tofile.write(self.out.record2string(self.out.lex_records[0:1]))
         self.writefilelist(tofile)
-        tofile.write(self.out.record2string(self.out.lex_records[-2:-1]))
+        tofile.write(self.out.record2string(self.out.lex_records[1:2]))
         tofile.close()
 
 
