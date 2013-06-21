@@ -34,7 +34,6 @@
         </thead>
         <tbody>
         {% for row in detaillist %}
-            {% if row.status != 400 %}
             <tr class="{% cycle 'row1' 'row2' %}">
                 <td class="nowrap">{{row.ind}}</td>
                 <td>{{row.get_status_display}}</td>
@@ -55,7 +54,6 @@
                 <td>{{row.divtext}}</td>
                 <td>{{row.testindicator}}</td>
             </tr>
-            {% endif %}
         {% endfor %}
         </tbody>
     </table>
