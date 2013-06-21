@@ -215,13 +215,12 @@ class Outmessage(message.Message):
                     value = value.rjust(field_definition[MINLENGTH])
                 else:
                     value = value.ljust(field_definition[MINLENGTH])    #add spaces (left, because A-field is right aligned)
-            if field_definition[MINLENGTH] > len(value) > field_definition[LENGTH]:
-                if len(value) > field_definition[LENGTH]:
-                    self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-                if len(value) < field_definition[MINLENGTH]:
-                    self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                        {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+            if len(value) > field_definition[LENGTH]:
+                self.add2errorlist(_(u'[F20]: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+            if len(value) < field_definition[MINLENGTH]:
+                self.add2errorlist(_(u'[F21]: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                    {'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
         elif field_definition[BFORMAT] in 'DT':
             lenght = len(value)
             if field_definition[BFORMAT] == 'D':

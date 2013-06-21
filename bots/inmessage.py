@@ -89,13 +89,12 @@ class Inmessage(message.Message):
             for fixed field: same handling; length is not checked.
         '''
         if field_definition[BFORMAT] == 'A':
-            if field_definition[MINLENGTH] > len(value) > field_definition[LENGTH]:
-                if len(value) > field_definition[LENGTH]:
-                    self.add2errorlist(_(u'[F05]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-                if len(value) < field_definition[MINLENGTH]:
-                    self.add2errorlist(_(u'[F06]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+            if len(value) > field_definition[LENGTH]:
+                self.add2errorlist(_(u'[F05]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+            if len(value) < field_definition[MINLENGTH]:
+                self.add2errorlist(_(u'[F06]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
         elif field_definition[BFORMAT] in 'DT':
             lenght = len(value)
             if field_definition[BFORMAT] == 'D':
@@ -133,13 +132,12 @@ class Inmessage(message.Message):
                         length += 1
             else:
                 length = len(value)
-            if field_definition[MINLENGTH] > length > field_definition[LENGTH]:
-                if length > field_definition[LENGTH]:
-                    self.add2errorlist(_(u'[F10]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
-                if length < field_definition[MINLENGTH]:
-                    self.add2errorlist(_(u'[F11]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
-                                        {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
+            if length > field_definition[LENGTH]:
+                self.add2errorlist(_(u'[F10]%(linpos)s: Record "%(record)s" field "%(field)s" too big (max %(max)s): "%(content)s".\n')%
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'max':field_definition[LENGTH]})
+            if length < field_definition[MINLENGTH]:
+                self.add2errorlist(_(u'[F11]%(linpos)s: Record "%(record)s" field "%(field)s" too small (min %(min)s): "%(content)s".\n')%
+                                    {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value,'min':field_definition[MINLENGTH]})
             if value[-1] == u'-':    #if minus-sign at the end, put it in front.
                 value = value[-1] + value[:-1]
             value = value.replace(self.ta_info['triad'],u'')     #strip triad-separators

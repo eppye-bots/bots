@@ -167,13 +167,12 @@ class Message(object):
                     count += 1
                     self._canonicaltree(childnode,record_definition)         #use rest of index in deeper level
                     sortednodelist.append(childnode)
-                if record_definition[MIN] > count > record_definition[MAX]:
-                    if record_definition[MIN] > count:
-                        self.add2errorlist(_(u'[S03]%(linpos)s: Record "%(mpath)s" occurs %(count)d times, min is %(mincount)d.\n')%
-                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'count':count,'mincount':record_definition[MIN]})
-                    if record_definition[MAX] < count:
-                        self.add2errorlist(_(u'[S04]%(linpos)s: Record "%(mpath)s" occurs %(count)d times, max is %(maxcount)d.\n')%
-                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'count':count,'maxcount':record_definition[MAX]})
+                if record_definition[MIN] > count:
+                    self.add2errorlist(_(u'[S03]%(linpos)s: Record "%(mpath)s" occurs %(count)d times, min is %(mincount)d.\n')%
+                                        {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'count':count,'mincount':record_definition[MIN]})
+                if record_definition[MAX] < count:
+                    self.add2errorlist(_(u'[S04]%(linpos)s: Record "%(mpath)s" occurs %(count)d times, max is %(maxcount)d.\n')%
+                                        {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'count':count,'maxcount':record_definition[MAX]})
             node_instance.children = sortednodelist
 
     def _canonicalfields(self,node_instance,record_definition):
