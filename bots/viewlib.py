@@ -282,7 +282,7 @@ def filterquery(query , org_cleaned_data, incoming=False):
 
 def filterquery2(query , org_cleaned_data, incoming=False):
     ''' use the data of the form (mostly in hidden fields) to do the query.
-        is like 'filterquery' , but does not use paginator. Just reterun the resulting (filtered) query.'''
+        is like 'filterquery' , but does not use paginator. Just return the resulting (filtered) query.'''
     cleaned_data = copy.copy(org_cleaned_data)    #copy because it it destroyed in setting up query
     cleaned_data.pop('page')                      #pop this because it is not used (and give an error) 
     if 'dateuntil' in cleaned_data:

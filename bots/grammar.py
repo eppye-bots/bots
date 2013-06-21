@@ -714,7 +714,7 @@ class xmlnocheck(xml):
 class template(Grammar):
     #20120101 depreciated. use class templatehtml
     _checkstructurerequired = False
-    defaultsyntax = { \
+    defaultsyntax = {
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
@@ -744,7 +744,7 @@ class template(Grammar):
         }
 class templatehtml(Grammar):
     _checkstructurerequired = False
-    defaultsyntax = { \
+    defaultsyntax = {
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
         'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
