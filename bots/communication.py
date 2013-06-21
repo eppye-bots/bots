@@ -36,8 +36,10 @@ import botsglobal
 from botsconfig import *
 
 @botslib.log_session
-def run(idchannel,command,idroute,rootidta):
+def run(idchannel,command,idroute,rootidta=None):
     '''run a communication session (dispatcher for communication functions).'''
+    if rootidta is None:
+        rootidta = botsglobal.currentrun.get_minta4query()
     for row in botslib.query('''SELECT *
                                 FROM channel
                                 WHERE idchannel=%(idchannel)s''',

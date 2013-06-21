@@ -135,8 +135,6 @@ class NewProcess(NewTransaction):
 #**********************************************************/**
 def addinfocore(change,where,wherestring=''):
     ''' core function for add/changes information in db-ta's.
-        where-dict selects db-ta's, change-dict sets values;
-        returns the number of db-ta that have been changed.
     '''
     wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring
     counter = 0 #count the number of dbta changed
@@ -148,9 +146,18 @@ def addinfocore(change,where,wherestring=''):
     return counter
 
 def addinfo(change,where):
-    ''' changes ta's; ta's are copyed to new ta; the status is updated.
-        change-dict: values to change; where-dict: selection.'''
-    wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta'])   #wherestring for copy & done
+    ''' change ta's to new phase: ta's are copied to new ta.
+        returns the number of db-ta that have been changed.
+        change (dict): values to change.
+        where (dict): selection.
+    '''
+    if 'rootidta' not in where:
+        where['rootidta'] = botsglobal.currentrun.get_minta4query()
+    if 'statust' not in where:  #by default: look only for statust is OK
+        where['statust'] = OK
+    if 'statust' not in change: #by default: new ta is OK
+        change['statust'] = OK
+    wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta'])   #wherestring; does not use rootidta
     return addinfocore(change=change,where=where,wherestring=wherestring)
 
 def updateinfocore(change,where,wherestring=''):
@@ -168,6 +175,17 @@ def updateinfocore(change,where,wherestring=''):
     return changeq(u'''UPDATE ta SET ''' + changestring + wherestring,where)
 
 def updateinfo(change,where):
+    ''' update ta's.
+        returns the number of db-ta that have been changed.
+        change (dict): values to change.
+        where (dict): selection.
+    '''
+    if 'rootidta' not in where:
+        where['rootidta'] = botsglobal.currentrun.get_minta4query()
+    if 'statust' not in where:  #by default: look only for statust is OK
+        where['statust'] = OK
+    if 'statust' not in change: #by default: new ta is OK
+        change['statust'] = OK
     wherestring = ' AND '.join([key+'=%('+key+')s ' for key in where if key != 'rootidta'])   #wherestring for copy & done
     return updateinfocore(change=change,where=where,wherestring=wherestring)
 

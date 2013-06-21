@@ -8,13 +8,15 @@ import outmessage
 from botsconfig import *
 
                                 
-def mergemessages(startstatus,endstatus,idroute,rootidta):
+def mergemessages(startstatus,endstatus,idroute,rootidta=None):
     ''' Merges and/or envelopes one or more messages to one file;
         In db-ta: attribute 'merge' indicates message should be merged with similar messages; 'merge' is generated in translation from messagetype-grammar
         If merge is False: 1 message per envelope - no merging, else append all similar messages to one file
         Implementation as separate loops: one for merge&envelope, another for enveloping only
         db-ta status TRANSLATED---->FILEOUT
     '''
+    if rootidta is None:
+        rootidta = botsglobal.currentrun.get_minta4query()
     #**********for messages only to envelope (no merging)
     for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,nrmessages,idroute,merge,idta,filename
                                 FROM ta
