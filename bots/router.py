@@ -106,13 +106,13 @@ class new(object):
         #- preprocessing
         if routedict['fromchannel']:
             #only done for edi files from this route-part, this inchannel
-            botslib.tryrunscript(userscript,scriptname,'preincommunication',routedict=routedict)
-            communication.run(idchannel=routedict['fromchannel'],command=routedict['command'],idroute=routedict['idroute'],rootidta=self.get_minta4query_routepart())  #communication.run incommunication
-            #add attributes from route to the received files;
             if routedict['command'] == 'rereceive':
                 rootidta = self.get_minta4query()
             else:
                 rootidta = self.get_minta4query_routepart()
+            botslib.tryrunscript(userscript,scriptname,'preincommunication',routedict=routedict)
+            communication.run(idchannel=routedict['fromchannel'],command=routedict['command'],idroute=routedict['idroute'],rootidta=rootidta)  #communication.run incommunication
+            #add attributes from route to the received files;
             where = {'statust':OK,'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute'],'rootidta':rootidta}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
             nr_of_incoming_files_for_channel = botslib.updateinfo(change=change,where=where)
