@@ -308,18 +308,19 @@ class automaticretrycommunication(new):
         if not startidta:
             return False    #no run
         do_retransmit = False
-        for row in botslib.query('''SELECT idta,numberofresends
+        for row in botslib.query('''SELECT idta,parent,numberofresends
                                     FROM ta
                                     WHERE idta > %(startidta)s
                                     AND status = %(status)s
                                     AND statust = %(statust)s ''',
                                     {'statust':ERROR,'status':EXTERNOUT,'startidta':startidta}):
             do_retransmit = True
-            ta_resend = botslib.OldTransaction(row['idta'])
-            ta_resend.update(statust=RESEND)
+            ta_outgoing = botslib.OldTransaction(row['idta'])
+            ta_outgoing.update(retransmit=False,statust=RESEND)     #set retransmit back to False
+            ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
             ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE) #inject; status is DONE so this ta is not used further
             ta_externin.copyta(status=FILEOUT,statust=OK,numberofresends=row['numberofresends'])  #reinjected file is ready as new input
-            
+
         if do_retransmit:
             return super(automaticretrycommunication, self).run()
         else:
