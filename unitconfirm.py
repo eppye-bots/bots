@@ -226,15 +226,18 @@ if __name__ == '__main__':
     newcommand = [pythoninterpreter,'bots-engine.py',]
     shutil.rmtree(os.path.join(botssys, 'outfile'),ignore_errors=True)    #remove whole output directory
     subprocess.call(newcommand)
-    botsinit.generalinit('config')
-    botsinit.initenginelogging('engine')
-    botsinit.connect() 
     print '''expect:
     21 files received/processed in run.
     17 files without errors,
     4 files with errors,
     30 files send in run.
     '''
+    #connect to database etc
+    #check nrs confirmed etc.
+    botsinit.generalinit('config')
+    botsinit.initenginelogging('engine')
+    botsinit.connect()
+    botslib.prepare_confirmrules()
     unittest.main()
     logging.shutdown()
     botsglobal.db.close()
