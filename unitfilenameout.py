@@ -22,7 +22,7 @@ botssys = 'bots/botssys'
 
 class TestMain(unittest.TestCase):
     def testroutetestmdn(self):
-        comclass = communication._comsession(channeldict={'idchannel':'dutchic_desadv_out'},idroute='dutchic_desadv',userscript=None,scriptname=None,command='new')
+        comclass = communication._comsession(channeldict={'idchannel':'dutchic_desadv_out'},idroute='dutchic_desadv',userscript=None,scriptname=None,command='new',rootidta=0)
         count = 0
         for row in botslib.query(u'''SELECT idta
                                 FROM    ta

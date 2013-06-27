@@ -31,49 +31,59 @@ class TestGrammar(unittest.TestCase):
         gramfield = tabel._checkfield
         #edifact formats to bots formats
         field =       ['S001.0001','M', 1,'A']
-        fieldresult = ['S001.0001','M', 1,'A',True,0,0,'A']
+        fieldresult = ['S001.0001',1, 1,'A',True,0,0,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'N']
-        fieldresult = ['S001.0001','M', 4,'N',True,0,0,'R']
+        fieldresult = ['S001.0001',1, 4,'N',True,0,0,'R',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'AN']
-        fieldresult = ['S001.0001','M', 4,'AN',True,0,0,'A']
+        fieldresult = ['S001.0001',1, 4,'AN',True,0,0,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         #min&max length
         field =       ['S001.0001','M', (2,4),'AN']
-        fieldresult = ['S001.0001','M', 4,'AN',True,0,2,'A']
+        fieldresult = ['S001.0001',1, 4,'AN',True,0,2,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', (0,4),'AN']
-        fieldresult = ['S001.0001','M', 4,'AN',True,0,0,'A']
+        fieldresult = ['S001.0001',1, 4,'AN',True,0,0,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         #decimals
         field =       ['S001.0001','M', 3.2,'N']
-        fieldresult = ['S001.0001','M', 3,'N',True,2,0,'R']
+        fieldresult = ['S001.0001',1, 3,'N',True,2,0,'R',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 18.9,'N']
-        fieldresult = ['S001.0001','M', 18,'N',True,9,0,'R']
+        fieldresult = ['S001.0001',1, 18,'N',True,9,0,'R',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', (4,4.3),'N']
-        fieldresult = ['S001.0001','M', 4,'N',True,3,4,'R']
+        fieldresult = ['S001.0001',1, 4,'N',True,3,4,'R',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult),
         
         field =       ['S001.0001','M', (3.2,4.2),'N']
-        fieldresult = ['S001.0001','M', 4,'N',True,2,3,'R']
+        fieldresult = ['S001.0001',1, 4,'N',True,2,3,'R',1]
+        gramfield(field,'')
+        self.assertEqual(field,fieldresult),
+        
+        field =       ['S001.0001','C', (3.2,4.2),'N']
+        fieldresult = ['S001.0001',0, 4,'N',True,2,3,'R',1]
+        gramfield(field,'')
+        self.assertEqual(field,fieldresult),
+        
+        field =       ['S001.0001',('C',1234567), (3.2,4.2),'N']
+        fieldresult = ['S001.0001',0, 4,'N',True,2,3,'R',1234567]
         gramfield(field,'')
         self.assertEqual(field,fieldresult),
         
@@ -122,63 +132,73 @@ class TestGrammar(unittest.TestCase):
         gramfield = tabel._checkfield
         #x12 formats to bots formats
         field =       ['S001.0001','M', 1,'AN']
-        fieldresult = ['S001.0001','M', 1,'AN',True,0,0,'A']
+        fieldresult = ['S001.0001',1, 1,'AN',True,0,0,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'DT']
-        fieldresult = ['S001.0001','M', 4,'DT',True,0,0,'D']
+        fieldresult = ['S001.0001',1, 4,'DT',True,0,0,'D',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'TM']
-        fieldresult = ['S001.0001','M', 4,'TM',True,0,0,'T']
+        fieldresult = ['S001.0001',1, 4,'TM',True,0,0,'T',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'B']
-        fieldresult = ['S001.0001','M', 4,'B',True,0,0,'A']
+        fieldresult = ['S001.0001',1, 4,'B',True,0,0,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'ID']
-        fieldresult = ['S001.0001','M', 4,'ID',True,0,0,'A']
+        fieldresult = ['S001.0001',1, 4,'ID',True,0,0,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'R']
-        fieldresult = ['S001.0001','M', 4,'R',True,0,0,'R']
+        fieldresult = ['S001.0001',1, 4,'R',True,0,0,'R',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'N']
-        fieldresult = ['S001.0001','M', 4,'N',True,0,0,'I']
+        fieldresult = ['S001.0001',1, 4,'N',True,0,0,'I',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'N0']
-        fieldresult = ['S001.0001','M', 4,'N0',True,0,0,'I']
+        fieldresult = ['S001.0001',1, 4,'N0',True,0,0,'I',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'N3']
-        fieldresult = ['S001.0001','M', 4,'N3',True,3,0,'I']
+        fieldresult = ['S001.0001',1, 4,'N3',True,3,0,'I',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'N9']
-        fieldresult = ['S001.0001','M', 4,'N9',True,9,0,'I']
+        fieldresult = ['S001.0001',1, 4,'N9',True,9,0,'I',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         #decimals
         field =       ['S001.0001','M', 3,'R']
-        fieldresult = ['S001.0001','M', 3,'R',True,0,0,'R']
+        fieldresult = ['S001.0001',1, 3,'R',True,0,0,'R',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M',4.3,'R']
-        fieldresult = ['S001.0001','M', 4,'R',True,3,0,'R']
+        fieldresult = ['S001.0001',1, 4,'R',True,3,0,'R',1]
+        gramfield(field,'')
+        self.assertEqual(field,fieldresult)
+        
+        field =       ['S001.0001','C',4.3,'R']
+        fieldresult = ['S001.0001',0, 4,'R',True,3,0,'R',1]
+        gramfield(field,'')
+        self.assertEqual(field,fieldresult)
+        
+        field =       ['S001.0001',('M',99999),4.3,'R']
+        fieldresult = ['S001.0001',1, 4,'R',True,3,0,'R',99999]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
@@ -192,37 +212,47 @@ class TestGrammar(unittest.TestCase):
         gramfield = tabel._checkfield
         #fixed formats to bots formats
         field =       ['S001.0001','M', 1,'A']
-        fieldresult = ['S001.0001','M', 1,'A',True,0,1,'A']
+        fieldresult = ['S001.0001',1, 1,'A',True,0,1,'A',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'D']
-        fieldresult = ['S001.0001','M', 4,'D',True,0,4,'D']
+        fieldresult = ['S001.0001',1, 4,'D',True,0,4,'D',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'T']
-        fieldresult = ['S001.0001','M', 4,'T',True,0,4,'T']
+        fieldresult = ['S001.0001',1, 4,'T',True,0,4,'T',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4,'R']
-        fieldresult = ['S001.0001','M', 4,'R',True,0,4,'R']
+        fieldresult = ['S001.0001',1, 4,'R',True,0,4,'R',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4.3,'N']
-        fieldresult = ['S001.0001','M', 4,'N',True,3,4,'N']
+        fieldresult = ['S001.0001',1, 4,'N',True,3,4,'N',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M', 4.3,'I']
-        fieldresult = ['S001.0001','M', 4,'I',True,3,4,'I']
+        fieldresult = ['S001.0001',1, 4,'I',True,3,4,'I',1]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
         field =       ['S001.0001','M',4.3,'R']
-        fieldresult = ['S001.0001','M', 4,'R',True,3,4,'R']
+        fieldresult = ['S001.0001',1, 4,'R',True,3,4,'R',1]
+        gramfield(field,'')
+        self.assertEqual(field,fieldresult)
+        
+        field =       ['S001.0001','C',4.3,'R']
+        fieldresult = ['S001.0001',0, 4,'R',True,3,4,'R',1]
+        gramfield(field,'')
+        self.assertEqual(field,fieldresult)
+        
+        field =       ['S001.0001',('C',5),4.3,'R']
+        fieldresult = ['S001.0001',0, 4,'R',True,3,4,'R',5]
         gramfield(field,'')
         self.assertEqual(field,fieldresult)
         
