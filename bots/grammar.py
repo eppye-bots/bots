@@ -467,6 +467,12 @@ class Grammar(object):
                                         {'grammar':self.grammarname,'record':recordid,'field':field[ID],'format':field[FORMAT],'keys':self.formatconvert.keys()})
 
 #grammar subclasses. contain the defaultsyntax
+class test(Grammar):
+    defaultsyntax = {
+        'checkcollision':True,
+        'noBOTSID':False,
+        }
+
 class csv(Grammar):
     def extracheck(self):
         if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
