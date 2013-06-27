@@ -566,7 +566,7 @@ def set_asked_confirmrules(routedict,rootidta):
             continue
         changeq('''UPDATE ta
                    SET confirmasked=%(confirmasked)s, confirmtype=%(confirmtype)s
-                   WHERE parent=%(parent)s ''',
+                   WHERE idta=%(parent)s ''',
                    {'parent':row['parent'],'confirmasked':True,'confirmtype':confirmtype})
 
 def globalcheckconfirmrules(confirmtype):
