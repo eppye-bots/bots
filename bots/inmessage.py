@@ -964,7 +964,7 @@ class edifact(var):
         '''
         #first check if there are any 'send-edifact-CONTRL' confirmrules.
         confirmtype = 'send-edifact-CONTRL'
-        if botslib.globalcheckconfirmrules(confirmtype):
+        if not botslib.globalcheckconfirmrules(confirmtype):
             return
         editype = 'edifact' #self.__class__.__name__
         for nodeunb in self.getloop_checklevel1({'BOTSID':'UNB'}):
@@ -1003,6 +1003,7 @@ class edifact(var):
                 botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
             else:
                 #default mapping script for CONTRL
+                #write UCI for UNB (envelope)
                 out.put({'BOTSID':'UNH','0062':reference,'S009.0065':'CONTRL','S009.0052':'2','S009.0054':'2','S009.0051':'UN','S009.0057':'EAN002'})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'7'})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0020':nodeunb.get_checklevel0({'BOTSID':'UNB','0020':None})})
@@ -1014,6 +1015,7 @@ class edifact(var):
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0007':nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0007':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0014':nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0014':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0042':nodeunb.get_checklevel0({'BOTSID':'UNB','S003.0042':None})})
+                #write UCM for each UNH (message)
                 for nodeunh in nodeunb.getloop_checklevel0({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                     lou = out.putloop({'BOTSID':'UNH'},{'BOTSID':'UCM'})
                     lou.put({'BOTSID':'UCM','0083':'7'})
@@ -1024,7 +1026,8 @@ class edifact(var):
                     lou.put({'BOTSID':'UCM','S009.0051':nodeunh.get_checklevel0({'BOTSID':'UNH','S009.0051':None})})
                     lou.put({'BOTSID':'UCM','S009.0057':nodeunh.get_checklevel0({'BOTSID':'UNH','S009.0057':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':out.getcount()+1,'0062':reference})  #last line (counts the segments produced in out-message)
-                if translationscript and hasattr(translationscript,'change'):       #user mapping script that only changes the default mapping
+                #try to run the user mapping script fuction 'change' (after the default mapping); 'chagne' fucntion recieves the tree as written by default mapping, function can change tree.
+                if translationscript and hasattr(translationscript,'change'):
                     botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out)
             #write tomessage (result of translation)
             out.writeall()
@@ -1085,12 +1088,8 @@ class x12(var):
 
     def checkenvelope(self):
         ''' check envelopes, gather information to generate 997 '''
-        self.confirmationlist = []              #information about the x12 file for confirmation/997; for x12 this is done per functional group
-        #~ self.root.display()
         for nodeisa in self.getloop_checklevel1({'BOTSID':'ISA'}):
             botsglobal.logmap.debug(u'Start parsing X12 envelopes')
-            #~ sender = nodeisa.get_checklevel0({'BOTSID':'ISA','ISA06':None})
-            #~ receiver = nodeisa.get_checklevel0({'BOTSID':'ISA','ISA08':None})
             isareference = nodeisa.get_checklevel0({'BOTSID':'ISA','ISA13':None})
             ieareference = nodeisa.get_checklevel0({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA02':None})
             if isareference and ieareference and isareference != ieareference:
@@ -1103,11 +1102,11 @@ class x12(var):
             except:
                 self.add2errorlist(_(u'[E15]: Count of messages in IEA is invalid: "%(count)s".\n')%{'count':ieacount})
             for nodegs in nodeisa.getloop_checklevel0({'BOTSID':'ISA'},{'BOTSID':'GS'}):
-                sender = nodegs.get_checklevel0({'BOTSID':'GS','GS02':None})
-                receiver = nodegs.get_checklevel0({'BOTSID':'GS','GS03':None})
-                gsqualifier = nodegs.get_checklevel0({'BOTSID':'GS','GS01':None})
+                #~ sender = nodegs.get_checklevel0({'BOTSID':'GS','GS02':None})
+                #~ receiver = nodegs.get_checklevel0({'BOTSID':'GS','GS03':None})
+                #~ gsqualifier = nodegs.get_checklevel0({'BOTSID':'GS','GS01':None})
                 gsreference = nodegs.get_checklevel0({'BOTSID':'GS','GS06':None})
-                gsversion = nodegs.get_checklevel0({'BOTSID':'GS','GS08':None})
+                #~ gsversion = nodegs.get_checklevel0({'BOTSID':'GS','GS08':None})
                 gereference = nodegs.get_checklevel0({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
                 if gsreference and gereference and gsreference != gereference:
                     self.add2errorlist(_(u'[E16]: GS-reference is "%(gsreference)s"; should be equal to GE-reference "%(gereference)s".\n')%{'gsreference':gsreference,'gereference':gereference})
@@ -1118,9 +1117,8 @@ class x12(var):
                         self.add2errorlist(_(u'[E17]: Count in GE-GE01 is %(gecount)s; should be equal to number of transactions: %(messagecount)s.\n')%{'gecount':gecount,'messagecount':messagecount})
                 except:
                     self.add2errorlist(_(u'[E18]: Count of messages in GE is invalid: "%(count)s".\n')%{'count':gecount})
-                self.confirmationlist.append({'gsqualifier':gsqualifier,'gsreference':gsreference,'gecount':gecount,'sender':sender,'receiver':receiver,'STlist':[]})   #gather information about functional group (GS-GE)
                 for nodest in nodegs.getloop_checklevel0({'BOTSID':'GS'},{'BOTSID':'ST'}):
-                    stqualifier = nodest.get_checklevel0({'BOTSID':'ST','ST01':None})
+                    #~ stqualifier = nodest.get_checklevel0({'BOTSID':'ST','ST01':None})
                     streference = nodest.get_checklevel0({'BOTSID':'ST','ST02':None})
                     sereference = nodest.get_checklevel0({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
                     #referencefields are numerical; should I compare values??
@@ -1133,7 +1131,6 @@ class x12(var):
                             self.add2errorlist(_(u'[E20]: Count in SE-SE01 is %(secount)s; should be equal to number of segments %(segmentcount)s.\n')%{'secount':secount,'segmentcount':segmentcount})
                     except:
                         self.add2errorlist(_(u'[E21]: Count of segments in SE is invalid: "%(count)s".\n')%{'count':secount})
-                    self.confirmationlist[-1]['STlist'].append({'streference':streference,'stqualifier':stqualifier,'gsversion':gsversion})   #add info per message to functional group
             botsglobal.logmap.debug(u'Parsing X12 envelopes is OK')
 
     def handleconfirm(self,ta_fromfile,error):
@@ -1142,51 +1139,68 @@ class x12(var):
             send 997 messages
             parameter 'error' is not used
         '''
+        #first check if there are any 'send-x12-997' confirmrules.
         confirmtype = 'send-x12-997'
         if not botslib.globalcheckconfirmrules(confirmtype):
             return
         editype = 'x12' #self.__class__.__name__
-        #filter the confirmationlist to tmpconfirmationlist
-        tmpconfirmationlist = []
-        for confirmation in self.confirmationlist:  #list of GS-envelopes; per GS envelope a list of messages.
-            if confirmation['gsqualifier'] == 'FA': #do not generate 997 for 997
+        for nodegs in self.getloop_checklevel1({'BOTSID':'ISA'},{'BOTSID':'GS'}):
+            sender = nodegs.get_checklevel0({'BOTSID':'GS','GS02':None})
+            receiver = nodegs.get_checklevel0({'BOTSID':'GS','GS03':None})
+            if nodegs.get_checklevel0({'BOTSID':'GS','GS01':None}) == 'FA': #do not generate 997 for 997
                 continue
-            tmpmessagelist = []
-            for message_received in confirmation['STlist']:
-                #gather full messagetype:
-                messagetype = ''
-                for key in ['stqualifier','gsversion']:
-                    if message_received[key]:
-                        messagetype += message_received[key]
-                if botslib.checkconfirmrules(confirmtype,idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
-                                                frompartner=confirmation['sender'],topartner=confirmation['receiver'],
-                                                messagetype=messagetype):
-                    tmpmessagelist.append(message_received)
-            if not tmpmessagelist: #if no messages/transactions in GS-GE to be confirmed: skip
+            nr_message_to_confirm = 0
+            messages_not_confirm = []
+            for nodest in nodegs.getloop_checklevel0({'BOTSID':'GS'},{'BOTSID':'ST'}):
+                messagetype=nodest.queries['messagetype']
+                if not botslib.checkconfirmrules(confirmtype,idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
+                                                                                                frompartner=sender,topartner=receiver,messagetype=messagetype):
+                    messages_not_confirm.append(nodest)
+                else:
+                    nr_message_to_confirm += 1
+            if not nr_message_to_confirm:
                 continue
-            confirmation['STlist'] = tmpmessagelist
-            tmpconfirmationlist.append(confirmation)
-        for confirmation in tmpconfirmationlist:
+            #remove message not to be confirmed from tree (is destructive, but this is end of file processing anyway.
+            for message_not_confirm in messages_not_confirm:
+                nodegs.children.remove(message_not_confirm)
+            #check if there is a user mappingscript
+            tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=editype,frommessagetype='997',frompartner=receiver,topartner=sender,alt='')
+            if not tscript:
+                tomessagetype = '997004010'  #default messagetype for CONTRL
+                translationscript = None
+            else:
+                translationscript,scriptfilename = botslib.botsimport('mappings',editype,tscript)  #import the mappingscript
+            #generate CONTRL-message. One received interchange->one CONTRL-message
             reference = str(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
-            ta_confirmation = ta_fromfile.copyta(status=TRANSLATED,reference=reference)
+            ta_confirmation = ta_fromfile.copyta(status=TRANSLATED)
             filename = str(ta_confirmation.idta)
-            out = outmessage.outmessage_init(editype='x12',messagetype='997004010',filename=filename)    #make outmessage object
-            out.ta_info['frompartner'] = confirmation['receiver']   #sender and receiver are swapped for sending 997!
-            out.ta_info['topartner'] = confirmation['sender']
-            out.put({'BOTSID':'ST','ST01':'997','ST02':reference})
-            out.put({'BOTSID':'ST'},{'BOTSID':'AK1','AK101':confirmation['gsqualifier'],'AK102':confirmation['gsreference']})
-            out.put({'BOTSID':'ST'},{'BOTSID':'AK9','AK901':'A','AK902':confirmation['gecount'],'AK903':confirmation['gecount'],'AK904':confirmation['gecount']})
-            for message_received in confirmation['STlist']:
-                lou = out.putloop({'BOTSID':'ST'},{'BOTSID':'AK2'})
-                lou.put({'BOTSID':'AK2','AK201':message_received['stqualifier'],'AK202':message_received['streference']})
-                lou.put({'BOTSID':'AK2'},{'BOTSID':'AK5','AK501':'A'})
-            out.put({'BOTSID':'ST'},{'BOTSID':'SE','SE01':out.getcount()+1,'SE02':reference})  #last line (counts the segments produced in out-message)
+            out = outmessage.outmessage_init(editype=editype,messagetype=tomessagetype,filename=filename,reference=reference,statust=OK)    #make outmessage object
+            out.ta_info['frompartner'] = receiver   #reverse!
+            out.ta_info['topartner'] = sender       #reverse!
+            if translationscript and hasattr(translationscript,'main'):
+                botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
+            else:
+                #default mapping script for CONTRL
+                #write AK1/AK9 for GS (envelope)
+                out.put({'BOTSID':'ST','ST01':'997','ST02':reference})
+                out.put({'BOTSID':'ST'},{'BOTSID':'AK1','AK101':nodegs.get_checklevel0({'BOTSID':'GS','GS01':None}),'AK102':nodegs.get_checklevel0({'BOTSID':'GS','GS06':None})})
+                gecount = nodegs.get_checklevel0({'BOTSID':'GS'},{'BOTSID':'GE','GE01':None})
+                out.put({'BOTSID':'ST'},{'BOTSID':'AK9','AK901':'A','AK902':gecount,'AK903':gecount,'AK904':gecount})
+                #write AK2 for each ST (message)
+                for nodest in nodegs.getloop_checklevel0({'BOTSID':'GS'},{'BOTSID':'ST'}):
+                    lou = out.putloop({'BOTSID':'ST'},{'BOTSID':'AK2'})
+                    lou.put({'BOTSID':'AK2','AK201':nodest.get_checklevel0({'BOTSID':'ST','ST01':None}),'AK202':nodest.get_checklevel0({'BOTSID':'ST','ST02':None})})
+                    lou.put({'BOTSID':'AK2'},{'BOTSID':'AK5','AK501':'A'})
+                out.put({'BOTSID':'ST'},{'BOTSID':'SE','SE01':out.getcount()+1,'SE02':reference})  #last line (counts the segments produced in out-message)
+                #try to run the user mapping script fuction 'change' (after the default mapping); 'chagne' fucntion recieves the tree as written by default mapping, function can change tree.
+                if translationscript and hasattr(translationscript,'change'):
+                    botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out)
+            #write tomessage (result of translation)
             out.writeall()   #write tomessage (result of translation)
             botsglobal.logger.debug(u'Send x12 confirmation (997) route "%(route)s" fromchannel "%(fromchannel)s" frompartner "%(frompartner)s" topartner "%(topartner)s".',
-                    {'route':self.ta_info['idroute'],'fromchannel':self.ta_info['fromchannel'],'frompartner':confirmation['receiver'],'topartner':confirmation['sender']})
+                    {'route':self.ta_info['idroute'],'fromchannel':self.ta_info['fromchannel'],'frompartner':receiver,'topartner':sender})
             self.ta_info.update(confirmtype=confirmtype,confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
-            ta_confirmation.update(statust=OK,**out.ta_info)    #update ta for confirmation
-
+            ta_confirmation.update(**out.ta_info)    #update ta for confirmation
 
 class tradacoms(var):
     def checkenvelope(self):
