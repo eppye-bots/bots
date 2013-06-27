@@ -225,8 +225,6 @@ if __name__ == '__main__':
     utilsunit.comparedicts({'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0},utilsunit.getreportlastrun()) #check report
 
 
-
-
     logging.shutdown()
     botsglobal.db.close
     print 'Tests OK!!!' 

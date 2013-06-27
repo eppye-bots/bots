@@ -96,6 +96,8 @@ class Testnode(unittest.TestCase):
             self.assertEqual(count3,countlist[count],'Cmplines')
             count += 1
         self.assertEqual(out.getcountoccurrences({'BOTSID':'UNB'},{'BOTSID':'UNH'}),count,'Cmplines')
+        self.assertEqual(inn.getcountoccurrences({'BOTSID':'UNB'},{'BOTSID':'UNH'}),count,'Cmplines')
+        self.assertEqual(inn.getcount(),sum(nrsegmentslist,4),'Cmplines')
         self.assertEqual(out.getcount(),sum(nrsegmentslist,4),'Cmplines')
 
         #* get, getnozero, countmpath, sort**************************************
