@@ -252,8 +252,6 @@ def filterquery(query , org_cleaned_data, incoming=False):
         query = query.filter(ts__lt=cleaned_data.pop('dateuntil'))
     if 'datefrom' in cleaned_data:
         query = query.filter(ts__gte=cleaned_data.pop('datefrom'))
-    if 'botskey' in cleaned_data and cleaned_data['botskey']:
-        query = query.filter(botskey__exact=cleaned_data.pop('botskey'))
     if 'sortedby' in cleaned_data:
         query = query.order_by({True:'',False:'-'}[cleaned_data.pop('sortedasc')] + cleaned_data.pop('sortedby'))
     if 'lastrun' in cleaned_data:
