@@ -8,19 +8,21 @@ import bots.botsinit as botsinit
 no plugin needed.
 run in commandline.
 should give no errors.
+utf-16 etc are reported.
 '''
 
 def testraise(expect,msg2,*args,**kwargs):
     try:
         raise botslib.BotsError(msg2,*args,**kwargs)
     except Exception, msg:
-        xxx = unicode(msg)
-        if not isinstance(xxx,unicode):
-            print 'Error xxx\n',msg
+        if not isinstance(msg,unicode):
+            msg = unicode(msg)
+            #~ print 'not unicode',type(msg),expect
+            #~ print 'Error xxx\n',msg
         if expect:
-            if unicode(expect) != xxx.strip():
+            if unicode(expect) != msg.strip():
                 print expect,'(expected)'
-                print unicode(msg),'(received)'
+                print msg,'(received)'
         txt = botslib.txtexc()
         if not isinstance(txt,unicode):
             print 'Error txt\n',txt
