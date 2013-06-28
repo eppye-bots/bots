@@ -65,20 +65,20 @@ class ViewIncoming(View):
     outeditype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     outmessagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
-    botskey = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    reference = django.forms.CharField(required=False,widget=HIDDENINPUT())
     fromchannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class SelectDocument(Select):
     template = 'bots/selectform.html'
     action = '/document/'
-    status = django.forms.ChoiceField([(0,"---------"),(320,_(u'Document-in')),(330,_(u'Document-out'))],required=False,initial=0)
+    status = django.forms.TypedChoiceField([(0,"---------"),(320,_(u'Document-in')),(330,_(u'Document-out'))],required=False,initial=0,coerce=int)
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
     editype = django.forms.ChoiceField(models.EDITYPES,required=False)
     messagetype = django.forms.ChoiceField(required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
-    botskey = django.forms.CharField(required=False,label='Document number',max_length=35)
+    reference = django.forms.CharField(required=False,label='Reference',max_length=35)
     def __init__(self, *args, **kwargs):
         super(SelectDocument, self).__init__(*args, **kwargs)
         self.fields['idroute'].choices = models.getroutelist()
@@ -96,7 +96,7 @@ class ViewDocument(View):
     editype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     messagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
-    botskey = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    reference = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class SelectOutgoing(Select):
     template = 'bots/selectform.html'
