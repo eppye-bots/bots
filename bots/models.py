@@ -86,7 +86,7 @@ CONFIRMTYPE = [
     ('send-edifact-CONTRL',_(u'send an edifact confirmation (CONTRL) when receiving')),
     ]
 RULETYPE = (
-    ('all',_(u'Confirm all incoming')),
+    ('all',_(u'Confirm all')),
     ('route',_(u'Route')),
     ('channel',_(u'Channel')),
     ('frompartner',_(u'Frompartner')),
