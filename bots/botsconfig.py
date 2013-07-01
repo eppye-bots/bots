@@ -8,6 +8,7 @@ ERROR   = 1 #error in transaction.
 OK      = 2 #successfull, result is 'save'. Should be picked up in same run. If automatic evaluation finds this: is 'stuck'.
 DONE    = 3 #successfull, and result is picked up by next step
 RESEND  = 4 #file has been resend.
+NO_RETRY  = 5 #file has been resend.
 
 #***for status in ta:
 PROCESS = 1
