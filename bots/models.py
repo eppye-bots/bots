@@ -18,6 +18,7 @@ STATUST = [
     (2, _(u'Stuck')),
     (3, _(u'Done')),
     (4, _(u'Resend')),
+    (5, _(u'No retry')),
     ]
 STATUS = [
     (1,_(u'Process')),

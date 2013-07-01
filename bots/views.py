@@ -176,6 +176,11 @@ def outgoing(request,*kw,**kwargs):
                     if outgoingfile.statust != RESEND:
                         outgoingfile.retransmit = not outgoingfile.retransmit
                         outgoingfile.save()
+            elif 'noautomaticretry' in request.POST:        #coming from ViewIncoming
+                ta_object = models.ta.objects.get(idta=int(request.POST[u'noautomaticretry']))
+                if ta_object.statust == ERROR:
+                    ta_object.statust = NO_RETRY
+                    ta_object.save()
             else:                                    #coming from ViewIncoming
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
