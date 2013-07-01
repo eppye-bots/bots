@@ -22,6 +22,7 @@ class Node(object):
         self.linpos_info = linpos_info
         self._queries = None
         self.structure = None
+        self.checklevel = 0
 
     def linpos(self):
         if self.linpos_info:
