@@ -82,6 +82,7 @@ class Message(object):
             raise botslib.MessageError(_(u'[G50]: Grammar "%(grammar)s" starts with record "%(grammarroot)s"; but while reading edi-file found start-record "%(root)s".'),
                                         {'root':node_instance.record['BOTSID'],'grammarroot':structure[0][ID],'grammar':grammar.grammarname})
         self._checkifrecordsingrammar(node_instance,structure[0],grammar.grammarname)
+        self.checklevel = botsglobal.ini.getint('settings','get_checklevel',1)
         self._canonicaltree(node_instance,structure[0])
         if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the records read) be logged.
             self._logmessagecontent(node_instance)
@@ -160,6 +161,7 @@ class Message(object):
         self._canonicalfields(node_instance,structure)    #handle fields of this record
         if node_instance.structure is None:
             node_instance.structure = structure
+        node_instance.checklevel = self.checklevel
         if LEVEL in structure:
             for record_definition in structure[LEVEL]:  #for every record_definition (in grammar) of this level
                 count = 0                           #count number of occurences of record

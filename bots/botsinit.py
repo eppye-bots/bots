@@ -12,21 +12,22 @@ class BotsConfig(ConfigParser.RawConfigParser):
     ''' As ConfigParser, but with defaults.
     '''
     def get(self,section, option, default=''):
-        if self.has_option(section, option):
+        try:
             return ConfigParser.RawConfigParser.get(self,section, option)
-        elif default == '':
-            raise botslib.BotsError(u'No entry "%(option)s" in section "%(section)s" in "bots.ini".',{'option':option,'section':section})
-        else:
-            return default
+        except ConfigParser.Error:
+            if default == '':
+                raise botslib.BotsError(u'No entry "%(option)s" in section "%(section)s" in "bots.ini".',{'option':option,'section':section})
+            else:
+                return default
     def getint(self,section, option, default):
-        if self.has_option(section, option):
+        try:
             return ConfigParser.RawConfigParser.getint(self,section, option)
-        else:
+        except ConfigParser.Error:
             return default
     def getboolean(self,section, option, default):
-        if self.has_option(section, option):
+        try:
             return ConfigParser.RawConfigParser.getboolean(self,section, option)
-        else:
+        except ConfigParser.Error:
             return default
 
 def generalinit(configdir):
