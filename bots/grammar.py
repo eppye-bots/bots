@@ -342,7 +342,7 @@ class Grammar(object):
             if i[MIN] > i[MAX]:
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s", in structure, at "%(mpath)s": record where MIN > MAX: "%(record)s".'),
                                             {'grammar':self.grammarname,'mpath':mpath,'record':str(i)[:100]})
-            i[MPATH] = mpath + [[i[ID]]]
+            i[MPATH] = mpath + [i[ID]]
             if LEVEL in i:
                 self._checkstructure(i[LEVEL],i[MPATH])
 
@@ -468,11 +468,11 @@ class Grammar(object):
 
 #grammar subclasses. contain the defaultsyntax
 class test(Grammar):
+    ''' For unit tests '''
     defaultsyntax = {
         'checkcollision':True,
         'noBOTSID':False,
         }
-
 class csv(Grammar):
     def extracheck(self):
         if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
@@ -602,8 +602,6 @@ class fixed(Grammar):
             #go recursive
             if LEVEL in i:
                 self._linkrecorddefs2structure(i[LEVEL])
-
-
 class idoc(fixed):
     defaultsyntax = {
         'automaticcount':True,

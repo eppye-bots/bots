@@ -108,13 +108,6 @@ def translate(startstatus,endstatus,idroute,rootidta):
                                                 {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'],tscript) #get the mappingscript
                         alt_from_previous_run = inn_splitup.ta_info['alt']      #needed to check for infinite loop
-                        if botsglobal.ini.getint('settings','get_checklevel',1) == 2:
-                            #~ print 'jaja',inn_splitup.ta_info['editype'],inn_splitup.ta_info['messagetype']
-                            try:    #try to read the grammar. not all editype have/need a grammar.
-                                botsglobal.defmessage = grammar.grammarread(inn_splitup.ta_info['editype'],inn_splitup.ta_info['messagetype'])
-                            except:
-                                botsglobal.defmessage = None
-                            botsglobal.inmessage = inn_splitup
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
                         

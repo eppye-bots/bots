@@ -52,9 +52,9 @@ class Message(object):
 
     @staticmethod
     def mpathformat(mpath):
-        ''' mpath is like: [['UNH'], ['NAD']]
+        ''' mpath is eg: ['UNH', 'NAD'], formatted is: 'UNH-NAD'.
         '''
-        return '-'.join([record[0] for record in mpath])
+        return '-'.join(mpath)
         
     def checkmessage(self,node_instance,grammar,subtranslation=False):
         ''' The node tree is check, sorted, fields are formatted etc against grammar. (so far only minimal tests have been done during processing)
@@ -158,6 +158,8 @@ class Message(object):
         '''
         sortednodelist = []
         self._canonicalfields(node_instance,structure)    #handle fields of this record
+        if node_instance.structure is None:
+            node_instance.structure = structure
         if LEVEL in structure:
             for record_definition in structure[LEVEL]:  #for every record_definition (in grammar) of this level
                 count = 0                           #count number of occurences of record
@@ -343,17 +345,6 @@ class Message(object):
         else:   #self.root is dummy root
             for childnode in self.root.children:
                 for terug in childnode.getloop(*mpaths): #search recursive for rest of mpaths
-                    yield terug
-
-    def getloop_checklevel1(self,*mpaths):
-        ''' query tree with mpath; generates all the nodes. Is typically used as: for record in inn.get(mpath):
-        '''
-        if self.root.record:    #self.root is a real root
-            for terug in self.root.getloop_checklevel1(*mpaths): #search recursive for rest of mpaths
-                yield terug
-        else:   #self.root is dummy root
-            for childnode in self.root.children:
-                for terug in childnode.getloop_checklevel1(*mpaths): #search recursive for rest of mpaths
                     yield terug
 
     def put(self,*mpaths,**kwargs):
