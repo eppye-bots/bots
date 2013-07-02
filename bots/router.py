@@ -299,6 +299,10 @@ class automaticretrycommunication(new):
         '''
         #bots keeps track of last time automaticretrycommunication was done; reason: performance
         idta_lastretry = botslib.uniquecore('bots__automaticretrycommunication',updatewith=self.minta4query)
+        if idta_lastretry == 1:
+            #this is the first time automaticretrycommunication is run.
+            #do not do anything this run, in order to avoid sending older files. 
+            return False    #no run
         for row in botslib.query('''SELECT MIN(idta) AS min_idta
                                     FROM filereport
                                     WHERE idta > %(idta_lastretry)s
