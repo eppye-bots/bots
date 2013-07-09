@@ -65,7 +65,7 @@ class Inmessage(message.Message):
                                             {'line':leftover[0][LIN], 'pos':leftover[0][POS]})
         del self.lex_records
         #end parsing; self.root is root of a tree (of nodes).
-        
+
         self.checkenvelope()
         self.checkmessage(self.root,self.defmessage)
         #get queries-dict for parsed message; this is used to update in database
@@ -598,7 +598,7 @@ class var(Inmessage):
             if char == rep_sep:
                 lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current value to lex_record
                 value = u''
-                sfield = 2        #new token is sub-field
+                sfield = 2        #new token is repeating
                 continue
         #end of for-loop. all characters have been processed.
         #in a perfect world, value should always be empty now, but:
@@ -639,14 +639,12 @@ class var(Inmessage):
                     continue
                 if field_definition[MAXREPEAT] == 1: #definition says: not repeating 
                     if field_definition[ISFIELD]:    #definition says: field       +E+
-                        if value:
-                            record2build[field_definition[ID]] = value
+                        record2build[field_definition[ID]] = value
                     else:                                      #definition says: subfield    +E:S+
                         tsubindex = 0
                         list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
                         sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
-                        if value:
-                            record2build[sub_field_in_record_definition[ID]] = value
+                        record2build[sub_field_in_record_definition[ID]] = value
                 else:   #definition says: repeating 
                     if field_definition[ISFIELD]:      #definition says: field      +E*R+
                         record2build[field_definition[ID]] = [value]
@@ -668,16 +666,19 @@ class var(Inmessage):
                                           {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
                 if field_definition[MAXREPEAT] == 1: #definition says: not repeating   +E:S+
-                    if value:
-                        record2build[sub_field_in_record_definition[ID]] = value
+                    record2build[sub_field_in_record_definition[ID]] = value
                 else:                                          #definition says: repeating       +E:S*R:S+
                     record2build[field_definition[ID]][-1][sub_field_in_record_definition[ID]] = value
             else:                         #  preceded by repeat separator
                 #check if repeating!
                 if field_definition[MAXREPEAT] == 1:
-                    self.add2errorlist(_(u'[F??] line %(line)s pos %(pos)s: Record "%(record)s" expect not-repeating elemen, but "%(content)s" is repeating.\n')%
-                                          {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
+                    if 'ISA' == self.mpathformat(record_definition[MPATH]) and field_definition[ID] == 'ISA11':     #exception for ISA
+                        pass
+                    else:
+                        self.add2errorlist(_(u'[F40] line %(line)s pos %(pos)s: Record "%(record)s" expect not-repeating elemen, but "%(content)s" is repeating.\n')%
+                                              {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
+                        
                 if field_definition[ISFIELD]:      #definition says: field      +E*R+
                     record2build[field_definition[ID]].append(value)
                 else:                                        #definition says: first subfield   +E:S*R:S+
@@ -1067,7 +1068,9 @@ class x12(var):
                 if char != self.ta_info['field_sep']:
                     raise botslib.InMessageError(_(u'[A63]: Non-valid ISA header; position %(pos)s of ISA is "%(foundchar)s", expect here element separator "%(field_sep)s".'),
                                                     {'pos':str(count),'foundchar':char,'field_sep':self.ta_info['field_sep']})
-            elif count < 84:
+            elif count == 83:
+                self.ta_info['reserve'] = char
+            elif count < 85:
                 continue
             elif count <= 89:
                 version += char
@@ -1082,7 +1085,7 @@ class x12(var):
                 raise botslib.InMessageError(_(u'[A61]: Edi file contains only whitespace.'))  #not with mailbag
             else:
                 raise botslib.InMessageError(_(u'[A62]: Expect X12 file but envelope is not right.'))
-        if version < '004030':  #not used before this version
+        if version < '00403':  #not used before this version
             self.ta_info['reserve'] = ''    
         self.ta_info['skip_char'] = self.ta_info['skip_char'].replace(self.ta_info['record_sep'],'') #if <CR> is segment terminator: cannot be in the skip_char-string!
 

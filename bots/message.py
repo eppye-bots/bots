@@ -127,28 +127,21 @@ class Message(object):
             for field_definition in record_definition[FIELDS]:
                 if field_definition[ISFIELD]:    #if field (no composite)
                     if field == field_definition[ID]:
-                        break
+                        break   #OK!
                 else:   #if composite
-                    if field_definition[MAXREPEAT] == 1:    #if composite is non-repeating
+                    if field_definition[MAXREPEAT] == 1:    #non-repeating composite 
                         for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
                             if field == grammarsubfield[ID]:
                                 break   #break out of grammarsubfield-for-loop ->goto break out of field_definition-for-loop
                         else:
                             continue    #nothing found; continue with next gammarfield
                         break   #break out of field_definition-for-loop
-                    else: #composite is repeating
-                        if field != field_definition[ID]:   #first check compositeID
-                            continue
-                        break
-                        #TODO
-                        #check for all fields in reperating composite the content
-                        #~ for content_dict in node_instance.record[field]:    #content is a list of dicts
-                            #~ for field2 in content_dict.keys():              #for every field in this dict
-                                #~ for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields to search field
-                                    #~ if field == grammarsubfield[ID]:
-                                        #~ break
-                                #~ else:
-            else:           #not found in grammar
+                    else: #repeating composite
+                        if field == field_definition[ID]:
+                            #OK. Contents is a list of dicts;
+                            #TODO: check for each dict if sub-fields exist in grammar. 
+                            break
+            else:           #field not found in grammar
                 if self.ta_info['checkunknownentities']:
                     self.add2errorlist(_(u'[F01]%(linpos)s: Record: "%(mpath)s" has unknown field "%(field)s".\n')%
                                             {'linpos':node_instance.linpos(),'field':field,'mpath':self.mpathformat(record_definition[MPATH])})
@@ -180,7 +173,8 @@ class Message(object):
             node_instance.children = sortednodelist
 
     def _canonicalfields(self,node_instance,record_definition):
-        ''' For fields: check M/C; format the fields. Fields are not sorted (a dict can not be sorted).
+        ''' For all fields: check M/C, format.
+            Fields are not sorted (a dict can not be sorted).
             Fields are never added.
         '''
         noderecord = node_instance.record
@@ -194,36 +188,48 @@ class Message(object):
                                                 {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
                         continue
                     noderecord[field_definition[ID]] = self._formatfield(value,field_definition,record_definition,node_instance)
-                else: #repeating field; a list of values; if repeating element was empty the value is ''
+                else: #repeating field;
+                    #a list of values; values can be empty or None; at least one field should have value, else dropped
                     valuelist = noderecord.get(field_definition[ID])
-                    if not valuelist:
+                    if valuelist is None:   #empty lists are already catched in node.put()
                         if field_definition[MANDATORY]:
-                            self.add2errorlist(_(u'[F02]%(linpos)s: Record "%(mpath)s" field "%(field)s" is mandatory.\n')%
+                            self.add2errorlist(_(u'[F41]%(linpos)s: Record "%(mpath)s" repeating field "%(field)s" is mandatory.\n')%
                                                 {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
                         continue
                     if not isinstance(valuelist,list):
-                        self.add2errorlist(_(u'[FXX]%(linpos)s: Record "%(mpath)s" field "%(field)s" should be a list.\n')%
-                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
-                        continue
+                        raise botslib.MappingFormatError(_(u'Repeating field: must be a list: put(%(valuelist)s)'),{'mpath':valuelist})
                     if len(valuelist) > field_definition[MAXREPEAT]:
-                        self.add2errorlist(_(u'[FXX]%(linpos)s: Record "%(mpath)s" repeating composite "%(field)s" occurs %(occurs)s times, max is %(max)s.\n')%
+                        self.add2errorlist(_(u'[F42]%(linpos)s: Record "%(mpath)s" repeating field "%(field)s" occurs %(occurs)s times, max is %(max)s.\n')%
                                             {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID],
                                              'occurs':len(valuelist),'max':field_definition[MAXREPEAT]})
                     newlist = []
+                    repeating_field_has_data = False
                     for value in valuelist:
+                        if value is None:
+                            value = ''
+                        else:
+                            value = unicode(value).strip()
+                            if value:
+                                repeating_field_has_data = True
                         newlist.append(self._formatfield(value,field_definition,record_definition,node_instance))
+                    if not repeating_field_has_data:
+                        if field_definition[MANDATORY]:
+                            self.add2errorlist(_(u'[F43]%(linpos)s: Record "%(mpath)s" repeating field "%(field)s" is mandatory.\n')%
+                                                {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
+                        del noderecord[field_definition[ID]]
+                        continue
                     noderecord[field_definition[ID]] = newlist
-            else:               #if composite: loop over subfields in grammar
-                if field_definition[MAXREPEAT] == 1:    #if non-repeating compostie
+            else:                                   #composite
+                if field_definition[MAXREPEAT] == 1:    #non-repeating compostie
                     #first check if there is any data att all in this composite
                     for grammarsubfield in field_definition[SUBFIELDS]:
                         if noderecord.get(grammarsubfield[ID]):
                             break   #composite has data.
-                    else:           #if composite has no data
+                    else:           #composite has no data
                         if field_definition[MANDATORY]:
                             self.add2errorlist(_(u'[F03]%(linpos)s: Record "%(mpath)s" composite "%(field)s" is mandatory.\n')%
                                                 {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
-                        continue    #there is no data in compisite, and composite is conditional: composite is OK
+                        continue    #there is no data in composite, so do nothing
                     #there is data in the composite!
                     for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
                         value = noderecord.get(grammarsubfield[ID])
@@ -233,44 +239,65 @@ class Message(object):
                                                     {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':grammarsubfield[ID]})
                             continue
                         noderecord[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,record_definition,node_instance)
-                else:   #if repeating composite
-                    #first check if there is any data at all in this composite
+                else:   #if repeating composite: list of dicts
                     valuelist = noderecord.get(field_definition[ID])
-                    if not valuelist:
+                    #~ print 'valuelist',valuelist
+                    if valuelist is None:   #empty lists are catched in node.put()
                         if field_definition[MANDATORY]:
-                            self.add2errorlist(_(u'[F02]%(linpos)s: Record "%(mpath)s" repeating composite "%(field)s" is mandatory.\n')%
+                            self.add2errorlist(_(u'[F44]%(linpos)s: Record "%(mpath)s" repeating composite "%(field)s" is mandatory.\n')%
                                                 {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
                         continue
                     if not isinstance(valuelist,list):
-                        self.add2errorlist(_(u'[FXX]%(linpos)s: Record "%(mpath)s" field "%(field)s" should be a list.\n')%
-                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
-                        continue
+                        raise botslib.MappingFormatError(_(u'Repeating composite: must be a list: put(%(valuelist)s)'),{'mpath':valuelist})
                     if len(valuelist) > field_definition[MAXREPEAT]:
-                        self.add2errorlist(_(u'[FXX]%(linpos)s: Record "%(mpath)s" repeating composite "%(field)s" occurs %(occurs)s times, max is %(max)s.\n')%
+                        self.add2errorlist(_(u'[F45]%(linpos)s: Record "%(mpath)s" repeating composite "%(field)s" occurs %(occurs)s times, max is %(max)s.\n')%
                                             {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID],
                                              'occurs':len(valuelist),'max':field_definition[MAXREPEAT]})
                     #is a list of composites; each composite is a dict.
-                    #loop over composites.
-                    #first check if there is data in the composite
-                    #if so, check M/C
+                    #loop over composites/dicts, create a new list
+                    #- dict can be empty: {}. check if: composite contains data or is empty
+                    #- if composite is not-empty, check M/C of elements in composite
+                    #- keys should be basestring.
+                    #- convert values to unicode 
+                    #- check if there is data for whole repeating composite
+                    newlist = []
+                    repeating_composite_has_data = False
                     for comp in valuelist:
-                        for grammarsubfield in field_definition[SUBFIELDS]:
-                            if comp.get(grammarsubfield[ID]):
-                                break   #composite has data.
-                        else:           #if composite has no data
-                            if field_definition[MANDATORY]:
-                                self.add2errorlist(_(u'[FXX]%(linpos)s: Record "%(mpath)s" composite "%(field)s" is mandatory.\n')%
-                                                    {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
-                            continue    #there is no data in compisite, and composite is conditional: composite is OK
-                        #there is data in the composite!
-                        for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
-                            value = comp.get(grammarsubfield[ID])
-                            if not value:
-                                if grammarsubfield[MANDATORY]:
-                                    self.add2errorlist(_(u'[F04]%(linpos)s: Record "%(mpath)s" subfield "%(field)s" is mandatory.\n')%
-                                                        {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':grammarsubfield[ID]})
-                                continue
-                            comp[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,record_definition,node_instance)
+                        if not isinstance(comp,dict):
+                            raise botslib.MappingFormatError(_(u'Repeating composite: each composite must be a dict: put(%(valuelist)s)'),{'mpath':valuelist})
+                        #check each dict, convert values to unicode
+                        #also: check if dict has data at all
+                        composite_has_data = False
+                        for key,value in comp.iteritems():
+                            if not isinstance(key,basestring):
+                                raise botslib.MappingFormatError(_(u'Repeating composite: keys must be strings: put(%(mpath)s)'),{'mpath':valuelist})
+                            if value is None:
+                                comp[key] = u''
+                            else:
+                                comp[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
+                                if comp[key]:
+                                    composite_has_data = True
+                        if composite_has_data:
+                            repeating_composite_has_data = True
+                            for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
+                                value = comp.get(grammarsubfield[ID])
+                                if not value:
+                                    if grammarsubfield[MANDATORY]:
+                                        self.add2errorlist(_(u'[F46]%(linpos)s: Record "%(mpath)s" subfield "%(field)s" in repeating composite is mandatory.\n')%
+                                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':grammarsubfield[ID]})
+                                    continue
+                                comp[grammarsubfield[ID]] = self._formatfield(value,grammarsubfield,record_definition,node_instance)
+                        else:
+                            comp = {}
+                        newlist.append(comp)
+                    if not repeating_composite_has_data: 
+                        if field_definition[MANDATORY]: 
+                            self.add2errorlist(_(u'[F47]%(linpos)s: Record "%(mpath)s" repeating composite "%(field)s" is mandatory.\n')%
+                                            {'linpos':node_instance.linpos(),'mpath':self.mpathformat(record_definition[MPATH]),'field':field_definition[ID]})
+                        
+                        del noderecord[field_definition[ID]]
+                    else:
+                        noderecord[field_definition[ID]] = newlist
 
 
     def _logmessagecontent(self,node_instance):

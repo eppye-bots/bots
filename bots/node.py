@@ -367,10 +367,16 @@ class Node(object):
                     return False
                 if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'Keys must be strings: put(%(mpath)s)'),{'mpath':mpaths})
-                if kwargs.get('strip',True):
-                    part[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
+                if isinstance(value,list):
+                    #empty is not useful, drop it (like None)
+                    if not value:
+                        botsglobal.logmap.debug(u'Empty list in put %(mpaths)s.',{'mpaths':str(mpaths)})
+                        return False
                 else:
-                    part[key] = unicode(value)          #used for fixed ISA header of x12
+                    if kwargs.get('strip',True):
+                        part[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
+                    else:
+                        part[key] = unicode(value)          #used for fixed ISA header of x12
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
 
@@ -478,6 +484,8 @@ class Node(object):
                                 if key == field_definition[ID]:
                                     break   #check next key
                             else:
+                                if key == field_definition[ID]:         #first check compostie-key itself, for repeating composites
+                                    break   #check next key
                                 for grammarsubfield in field_definition[SUBFIELDS]:   #loop subfields
                                     if key == grammarsubfield[ID]:
                                         break   #check next key
