@@ -99,6 +99,12 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(None,transform.useoneof(''),'test useoneof')
         self.assertEqual(None,transform.useoneof(None,None,None,None),'test useoneof')
         
+    def testuseoneofalt(self):
+        self.assertEqual(u'test',None or 'test','test useoneof')
+        self.assertEqual(u'test','test' or 'test1' or 'test2','test useoneof')
+        self.assertEqual(None,None,'test useoneof')
+        self.assertEqual(None,None or None or None or None,'test useoneof')
+        
     def testdateformat(self):
         self.assertEqual(None,transform.dateformat(''),'test dateformat')
         self.assertEqual(None,transform.dateformat(None),'test dateformat')
