@@ -470,7 +470,7 @@ def deldata(filename):
     try:
         os.remove(filename)
     except:
-        print 'not deleted', filename
+        #~ print 'not deleted', filename
         pass
 
 def opendata(filename,mode,charset=None,errors='strict'):
