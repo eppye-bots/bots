@@ -383,7 +383,8 @@ class Outmessage(message.Message):
 
 
     def _initfield(self,field_definition):
-        ''' basically csv only.
+        ''' for some editypes like fixed fields without date have specific initalisation.
+            this is controlled by the 'stripfield_sep' parameter in grammar.
         '''
         if field_definition[BFORMAT] in 'ADT':
             value = ''
@@ -422,7 +423,7 @@ class Outmessage(message.Message):
 
         lijst = []
         for lex_record in lex_records:
-            if noBOTSID:  #for some csv-files: do not write BOTSID so remove it
+            if noBOTSID:  #for csv/fixed: do not write BOTSID so remove it
                 del lex_record[0]
             fieldcount = 0
             mode_quote = False

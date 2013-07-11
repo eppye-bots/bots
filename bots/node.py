@@ -260,6 +260,18 @@ class Node(object):
         botsglobal.logmap.debug(u'"%(terug)s" for get%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
         return terug
 
+    def get_nogrammarcheck(self,*mpaths):
+        ''' like get, without grammarcheck.
+            this is used in 'sort'. 
+        '''
+        remember = self.checklevel
+        self.checklevel = 0
+        try:
+            terug = self.get(*mpaths)
+            return terug
+        finally:
+            self.checklevel = remember
+
     def _getcore(self,mpaths):
         if len(mpaths) != 1:    #node is not end-node
             for key,value in mpaths[0].iteritems():          #check all items in mpath;
@@ -447,8 +459,30 @@ class Node(object):
         ''' sort nodes. eg in mappingscript:     inn.sort({'BOTSID':'UNH'},{'BOTSID':'LIN','C212.7140':None})
             This will sort the LIN segments by article number.
         '''
+        if self.checklevel:
+            self._mpath_sanity_check(mpaths[:-1])
+            #sanity check of last part of mpaths: None only allowed in last section of Mpath; check last part
+            if not isinstance(mpaths[-1],dict):
+                raise botslib.MappingFormatError(_(u'Must be dicts in tuple: get(%(mpath)s)'),{'mpath':mpaths})
+            if 'BOTSID' not in mpaths[-1]:
+                raise botslib.MappingFormatError(_(u'Last section without "BOTSID": get(%(mpath)s)'),{'mpath':mpaths})
+            count = 0
+            for key,value in mpaths[-1].iteritems():
+                if not isinstance(key,basestring):
+                    raise botslib.MappingFormatError(_(u'Keys must be strings in last section: get(%(mpath)s)'),{'mpath':mpaths})
+                if value is None:
+                    count += 1
+                elif not isinstance(value,basestring):
+                    raise botslib.MappingFormatError(_(u'Values must be strings (or none) in last section: get(%(mpath)s)'),{'mpath':mpaths})
+            if count > 1:
+                raise botslib.MappingFormatError(_(u'Max one "None" in last section: get(%(mpath)s)'),{'mpath':mpaths})
+        for part in mpaths:
+            if 'BOTSIDnr' not in part:
+                part['BOTSIDnr'] = u'1'
+        if self.checklevel == 2:
+            self._mpath_grammar_check(mpaths)
         comparekey = mpaths[1:]
-        self.children.sort(key=lambda s: s.get(*comparekey))
+        self.children.sort(key=lambda s: s.get_nogrammarcheck(*comparekey))
     #********************************************************
     #*** utility functions **********************************
     #********************************************************

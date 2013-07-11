@@ -516,6 +516,9 @@ class excel(csv):
     pass
 class fixed(Grammar):
     def extracheck(self):
+        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
+            raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
+                                            {'grammar':self.grammarname})
         if self.nextmessageblock is not None and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if nextmessageblock: there can be only one record in recorddefs.'),
                                             {'grammar':self.grammarname})
@@ -545,6 +548,7 @@ class fixed(Grammar):
         'decimaal':'.',
         'envelope':'',
         'merge':True,
+        'noBOTSID':False,           #allow fixed records without record ID.
         'triad':'',
         #settings needed as defaults, but not useful for this editype 
         'add_crlfafterrecord_sep':'',
@@ -622,6 +626,7 @@ class idoc(fixed):
         'escape':'',
         'field_sep':'',
         'forcequote':0,         #csv only
+        'noBOTSID':False,           #allow fixed records without record ID.
         'quote_char':"",
         'record_sep':"\r\n",
         'record_tag_sep':"",    #Tradacoms/GTDI

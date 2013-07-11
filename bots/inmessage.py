@@ -377,12 +377,19 @@ class fixed(Inmessage):
 
     def _lex(self):
         ''' edi file->self.lex_records.'''
-        startrecordid = self.ta_info['startrecordID']
-        endrecordid = self.ta_info['endrecordID']
-        for linenr,line in enumerate(self.filehandler):
-            if not line.isspace():
-                line = line.rstrip('\r\n')
-                self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
+        if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
+            botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
+            for linenr,line in enumerate(self.filehandler):
+                if not line.isspace():
+                    line = line.rstrip('\r\n')
+                    self.lex_records.append([{VALUE:botsid,LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
+        else:
+            startrecordid = self.ta_info['startrecordID']
+            endrecordid = self.ta_info['endrecordID']
+            for linenr,line in enumerate(self.filehandler):
+                if not line.isspace():
+                    line = line.rstrip('\r\n')
+                    self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
 
     def _parsefields(self,lex_record,record_definition):
         ''' Parse fields from one fixed message-record and check length of the fixed record.
@@ -390,22 +397,43 @@ class fixed(Inmessage):
         record2build = {} #start with empty dict
         fixedrecord = lex_record[ID][FIXEDLINE]  #shortcut to fixed incoming record
         lenfixed = len(fixedrecord)
-        recordlength = record_definition[F_LENGTH]
-        if recordlength != lenfixed:
-            if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-                raise botslib.InMessageError(_(u'[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                                line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
-            if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-                raise botslib.InMessageError(_(u'[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                                line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
-        pos = 0
-        for field_definition in record_definition[FIELDS]:
-            value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
-            if value:
-                record2build[field_definition[ID]] = value
-            pos += field_definition[LENGTH]
-        record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
-        return record2build
+        if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
+            recordlength = record_definition[F_LENGTH] - len(lex_record[ID][VALUE])
+            if recordlength != lenfixed:
+                if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
+                    raise botslib.InMessageError(_(u'[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
+                if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
+                    raise botslib.InMessageError(_(u'[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
+            pos = 0
+            for field_definition in record_definition[FIELDS]:
+                if field_definition[ID] == 'BOTSID':
+                    record2build['BOTSID'] = lex_record[ID][VALUE]
+                    continue
+                value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
+                if value:
+                    record2build[field_definition[ID]] = value
+                pos += field_definition[LENGTH]
+            record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
+            return record2build
+        else:
+            recordlength = record_definition[F_LENGTH]
+            if recordlength != lenfixed:
+                if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
+                    raise botslib.InMessageError(_(u'[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
+                if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
+                    raise botslib.InMessageError(_(u'[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
+            pos = 0
+            for field_definition in record_definition[FIELDS]:
+                value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
+                if value:
+                    record2build[field_definition[ID]] = value
+                pos += field_definition[LENGTH]
+            record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
+            return record2build
 
     def _formatfield(self,value,field_definition,structure_record,node_instance):
         ''' Format of a field is checked and converted if needed.
@@ -639,12 +667,14 @@ class var(Inmessage):
                     continue
                 if field_definition[MAXREPEAT] == 1: #definition says: not repeating 
                     if field_definition[ISFIELD]:    #definition says: field       +E+
-                        record2build[field_definition[ID]] = value
+                        if value:
+                            record2build[field_definition[ID]] = value
                     else:                                      #definition says: subfield    +E:S+
                         tsubindex = 0
                         list_of_subfields_in_record_definition = list_of_fields_in_record_definition[tindex][SUBFIELDS]
                         sub_field_in_record_definition = list_of_subfields_in_record_definition[tsubindex]
-                        record2build[sub_field_in_record_definition[ID]] = value
+                        if value:
+                            record2build[sub_field_in_record_definition[ID]] = value
                 else:   #definition says: repeating 
                     if field_definition[ISFIELD]:      #definition says: field      +E*R+
                         record2build[field_definition[ID]] = [value]
@@ -666,7 +696,8 @@ class var(Inmessage):
                                           {'content':lex_field[VALUE],'line':lex_field[LIN],'pos':lex_field[POS],'record':self.mpathformat(record_definition[MPATH])})
                     continue
                 if field_definition[MAXREPEAT] == 1: #definition says: not repeating   +E:S+
-                    record2build[sub_field_in_record_definition[ID]] = value
+                    if value:
+                        record2build[sub_field_in_record_definition[ID]] = value
                 else:                                          #definition says: repeating       +E:S*R:S+
                     record2build[field_definition[ID]][-1][sub_field_in_record_definition[ID]] = value
             else:                         #  preceded by repeat separator
@@ -1010,12 +1041,12 @@ class edifact(var):
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0020':nodeunb.get({'BOTSID':'UNB','0020':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0004':sender})     #not reverse!
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0007':nodeunb.get({'BOTSID':'UNB','S002.0007':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0014':nodeunb.get({'BOTSID':'UNB','S002.0014':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0008':nodeunb.get({'BOTSID':'UNB','S002.0008':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0042':nodeunb.get({'BOTSID':'UNB','S002.0042':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0010':receiver})   #not reverse!
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0007':nodeunb.get({'BOTSID':'UNB','S003.0007':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0014':nodeunb.get({'BOTSID':'UNB','S003.0014':None})})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0042':nodeunb.get({'BOTSID':'UNB','S003.0042':None})})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S003.0046':nodeunb.get({'BOTSID':'UNB','S003.0046':None})})
                 #write UCM for each UNH (message)
                 for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                     lou = out.putloop({'BOTSID':'UNH'},{'BOTSID':'UCM'})
