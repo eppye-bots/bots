@@ -422,7 +422,7 @@ def plugin(request,*kw,**kwargs):
                     if pluglib.read_plugin(request.FILES['file'].temporary_file_path()):
                         messages.add_message(request, messages.INFO, _(u'Overwritten existing files.'))
                 except Exception,msg:
-                    notification = u'Error reading plugin: "%s".'%str(msg)
+                    notification = u'Error reading plugin: "%s".' % str(msg)
                     botsglobal.logger.error(notification)
                     messages.add_message(request, messages.INFO, notification)
                 else:
@@ -446,7 +446,7 @@ def plugin_index(request,*kw,**kwargs):
             try:
                 pluglib.read_index('index')
             except Exception,msg:
-                notification = u'Error reading configuration index file: "%s".'%str(msg)
+                notification = u'Error reading configuration index file: "%s".' % str(msg)
                 botsglobal.logger.error(notification)
                 messages.add_message(request, messages.INFO, notification)
             else:
@@ -494,7 +494,7 @@ def plugout_backup_core(request,*kw,**kwargs):
                                     }
         pluglib.make_plugin(dummy_for_cleaned_data,filename)
     except Exception,msg:
-        notification = u'Error writing backup plugin: "%s".'%str(msg)
+        notification = u'Error writing backup plugin: "%s".' % str(msg)
         botsglobal.logger.error(notification)
         messages.add_message(request, messages.INFO, notification)
     else:

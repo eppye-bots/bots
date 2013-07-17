@@ -5,7 +5,7 @@ from django.core.handlers.wsgi import WSGIHandler
 from django.utils.translation import ugettext as _
 import cherrypy
 from cherrypy import wsgiserver
-import botslib
+#~ import botslib
 import botsglobal
 import botsinit
 

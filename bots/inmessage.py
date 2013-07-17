@@ -258,7 +258,7 @@ class Inmessage(message.Message):
                 else:
                     get_next_lex_record = True
                 #accomodate for UNS = UNS construction
-                if structure_level[structure_index][MIN]==structure_level[structure_index][MAX]==countnrofoccurences:
+                if structure_level[structure_index][MIN] == structure_level[structure_index][MAX] == countnrofoccurences:
                     #~ print 'tabel',structure_level[structure_index][ID],'message',current_lex_record[ID][VALUE],structure_index,structure_end
                     if structure_index +1 == structure_end:
                         pass
@@ -299,7 +299,7 @@ class Inmessage(message.Message):
                     first = False
                 ta_info = self.ta_info.copy()
                 ta_info.update(eachmessage.queries)
-                ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
+                ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
                 yield self._initmessagefromnode(eachmessage,ta_info)
             if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
                 first = True
@@ -309,7 +309,7 @@ class Inmessage(message.Message):
                         first = False
                     ta_info = self.ta_info.copy()
                     ta_info.update(eachmessage.queries)
-                    ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
+                    ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
                     yield self._initmessagefromnode(eachmessage,ta_info)
         elif self.defmessage.nextmessageblock is not None:          #for csv/fixed: nextmessageblock indicates which field determines a message (as long as the field is the same, it is one message)
             #there is only one recordtype (this is checked in grammar.py).
@@ -323,7 +323,7 @@ class Inmessage(message.Message):
                 elif kriterium != oldkriterium:
                     ta_info = self.ta_info.copy()
                     ta_info.update(oldline.queries)        #update ta_info with information (from previous line) 20100905
-                    ta_info['bots_accessenvelope']=self.root      #give mappingscript access to envelope
+                    ta_info['bots_accessenvelope'] = self.root      #give mappingscript access to envelope
                     yield self._initmessagefromnode(newroot,ta_info)
                     newroot = node.Node()  #make new empty root node.
                     oldkriterium = kriterium
@@ -335,19 +335,19 @@ class Inmessage(message.Message):
                 if not first:
                     ta_info = self.ta_info.copy()
                     ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
-                    ta_info['bots_accessenvelope']=self.root       #give mappingscript access to envelope
+                    ta_info['bots_accessenvelope'] = self.root       #give mappingscript access to envelope
                     yield self._initmessagefromnode(newroot,ta_info)
         else:   #no split up indicated in grammar;
             if self.root.record or self.ta_info.get('pass_all',False):    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
-                ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelop
+                ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelop
                 yield self._initmessagefromnode(self.root,ta_info)
             else:   #pass nodes under root one by one
                 for child in self.root.children:
                     ta_info = self.ta_info.copy()
                     ta_info.update(child.queries)
-                    ta_info['bots_accessenvelope']=self.root   #give mappingscript access to envelope
+                    ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
                     yield self._initmessagefromnode(child,ta_info)
                     
     @classmethod
@@ -745,7 +745,7 @@ class excel(csv):
             self.xlrd = __import__('xlrd')
         except ImportError:
             raise ImportError(_(u'Dependency failure: editype "excel" requires python library "xlrd".'))
-        import csv
+        import csv as csvlib
         import StringIO
         
         self.messagegrammarread()
@@ -767,7 +767,7 @@ class excel(csv):
             raise botslib.InMessageError(_(u'Excel extraction failed, may not be an Excel file? Error:\n%(txt)s'),
                                             {'txt':txt})
         rawinputfile = StringIO.StringIO()
-        csvout = csv.writer(rawinputfile, quotechar=self.ta_info['quote_char'], delimiter=self.ta_info['field_sep'], doublequote=doublequote, escapechar=self.ta_info['escape'])
+        csvout = csvlib.writer(rawinputfile, quotechar=self.ta_info['quote_char'], delimiter=self.ta_info['field_sep'], doublequote=doublequote, escapechar=self.ta_info['escape'])
         csvout.writerows( map(self.utf8ize, xlsdata) )
         rawinputfile.seek(0)
         self.rawinput = rawinputfile.read()
@@ -1005,7 +1005,7 @@ class edifact(var):
             nr_message_to_confirm = 0
             messages_not_confirm = []
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
-                messagetype=nodeunh.queries['messagetype']
+                messagetype = nodeunh.queries['messagetype']
                 #no CONTRL for CONTRL or APERAK message; check if CONTRL should be send via confirmrules
                 if messagetype[:6] in ['CONTRL','APERAK'] or not botslib.checkconfirmrules(confirmtype,idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
                                                                                                 frompartner=sender,topartner=receiver,messagetype=messagetype):
@@ -1186,7 +1186,7 @@ class x12(var):
             nr_message_to_confirm = 0
             messages_not_confirm = []
             for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
-                messagetype=nodest.queries['messagetype']
+                messagetype = nodest.queries['messagetype']
                 if not botslib.checkconfirmrules(confirmtype,idroute=self.ta_info['idroute'],idchannel=self.ta_info['fromchannel'],
                                                                                                 frompartner=sender,topartner=receiver,messagetype=messagetype):
                     messages_not_confirm.append(nodest)
@@ -1352,7 +1352,7 @@ class xml(Inmessage):
                     newnode.record[xmlchildnode.tag] = xmlchildnode.text      #add as a field
                 #convert the xml-attributes of this 'xml-filed' to fields in dict with attributemarker.
                 newnode.record.update((xmlchildnode.tag + self.ta_info['attributemarker'] + key, value) for key,value in xmlchildnode.items() if value)
-            elif entitytype==1:  #is a record according to grammar
+            elif entitytype == 1:  #is a record according to grammar
                 newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
                 self.stack.pop()    #handled the xmlnode, so remove it from the stack
             else:   #is a record, but not in grammar

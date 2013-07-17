@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 ''' This source file starts up bots monitor when using apache2 as webserver.
-'''
-'''
+
 WSGI SCRIPT EXAMPLE (outside bots directory, imports and starts this script apachewebserer.py):
 import sys
 import django.core.handlers.wsgi

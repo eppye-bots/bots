@@ -52,7 +52,7 @@ def analyze_python(source):
             kind = 'operator'
         elif tok_type == tokenize.STRING:
             kind = 'string'
-            if prev_tok_type == tokenize.INDENT or scol==0:
+            if prev_tok_type == tokenize.INDENT or scol == 0:
                 kind = 'docstring'
         elif tok_type == tokenize.NAME:
             if tok_str in ('def', 'class', 'import', 'from'):

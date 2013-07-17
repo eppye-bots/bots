@@ -560,7 +560,7 @@ def set_asked_confirmrules(routedict,rootidta):
         else:
             if row['messagetype'][:6] in ['CONTRL','APERAK']:
                 continue
-            confirmtype= u'ask-edifact-CONTRL'
+            confirmtype = u'ask-edifact-CONTRL'
         if not checkconfirmrules(confirmtype,idroute=routedict['idroute'],idchannel=routedict['tochannel'],
                                     topartner=row['topartner'],frompartner=row['frompartner'],messagetype=row['messagetype']):
             continue
@@ -737,11 +737,11 @@ def botsinfo():
             (u'DATABASE_OPTIONS',botsglobal.settings.DATABASES['default']['OPTIONS']),
             ]
 
-def strftime(format):
+def strftime(timeformat):
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-        return time.strftime(format,time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S"))    #if acceptance test use fixed date/time
+        return time.strftime(timeformat,time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S"))    #if acceptance test use fixed date/time
     else:
-        return time.strftime(format)
+        return time.strftime(timeformat)
     
 class Uri(object):
     ''' generate uri from parts. '''
@@ -810,7 +810,7 @@ class BotsError(Exception):
             self.xxx[safe_unicode(key)] = safe_unicode(value)
     def __unicode__(self):
         try:
-            return self.msg%self.xxx
+            return self.msg % self.xxx
         except:
             return u'Error while displaying error'
     __str__ = __unicode__

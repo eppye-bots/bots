@@ -3,7 +3,7 @@
 '''
 import os
 import sys
-import time
+#~ import time
 import zipfile
 import zipimport
 import codecs
@@ -347,7 +347,7 @@ def make_database2plug(cleaned_data):
 def make_plugs2string(plugs):
     ''' return plugs (serialized objects) as unicode strings.
     '''
-    tmpbotsindex = [u'# -*- coding: utf-8 -*-',u'import datetime',"version = '%s'"%(botsglobal.version),'plugins = [']
+    tmpbotsindex = [u'# -*- coding: utf-8 -*-',u'import datetime',"version = '%s'" % (botsglobal.version),'plugins = [']
     for plug in plugs:
         tmpbotsindex.append(plugout_database_entry_as_string(plug['fields']))
         #check confirmrule: id is non-artifical key?

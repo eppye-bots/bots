@@ -56,7 +56,7 @@ class Message(object):
         '''
         return '-'.join(mpath)
         
-    def checkmessage(self,node_instance,grammar,subtranslation=False):
+    def checkmessage(self,node_instance,defmessage,subtranslation=False):
         ''' The node tree is check, sorted, fields are formatted etc against grammar. (so far only minimal tests have been done during processing)
             For checking translation & subtranslation
             parameter 'subtranslation' only used for reporting
@@ -68,20 +68,20 @@ class Message(object):
             root.record filled, root.children filled: outgoing messages.
         '''
         if node_instance.record:        #root record contains information; write whole tree in one time
-            self._checkonemessage(node_instance,grammar,subtranslation)
+            self._checkonemessage(node_instance,defmessage,subtranslation)
         else:
             for childnode in node_instance.children:
-                self._checkonemessage(childnode,grammar,subtranslation)
+                self._checkonemessage(childnode,defmessage,subtranslation)
 
         if self.errorlist and not subtranslation:
             raise botslib.MessageError(_(u'%(errorlist)s'),{'errorlist':''.join(self.errorlist)})
 
-    def _checkonemessage(self,node_instance,grammar,subtranslation):
-        structure = grammar.structure
+    def _checkonemessage(self,node_instance,defmessage,subtranslation):
+        structure = defmessage.structure
         if node_instance.record['BOTSID'] != structure[0][ID]:
             raise botslib.MessageError(_(u'[G50]: Grammar "%(grammar)s" starts with record "%(grammarroot)s"; but while reading edi-file found start-record "%(root)s".'),
-                                        {'root':node_instance.record['BOTSID'],'grammarroot':structure[0][ID],'grammar':grammar.grammarname})
-        self._checkifrecordsingrammar(node_instance,structure[0],grammar.grammarname)
+                                        {'root':node_instance.record['BOTSID'],'grammarroot':structure[0][ID],'grammar':defmessage.grammarname})
+        self._checkifrecordsingrammar(node_instance,structure[0],defmessage.grammarname)
         self.checklevel = botsglobal.ini.getint('settings','get_checklevel',1)
         self._canonicaltree(node_instance,structure[0])
         if not subtranslation and botsglobal.ini.getboolean('settings','readrecorddebug',False):       #should the content of the message (the records read) be logged.

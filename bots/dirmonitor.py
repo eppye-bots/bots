@@ -211,8 +211,8 @@ def start():
                         for task in tasks:
                             logger.info(u'Send to queue "%s %s %s".',botsenginepath,'-c' + configdir,task)
                             job2queue.send_job_to_jobqueue([sys.executable,botsenginepath,'-c' + configdir,task])
-                    except Exception, msg:
-                        logger.info(u'Error in running task: "%(msg)s".',msg=msg)
+                    except Exception, mssg:
+                        logger.info(u'Error in running task: "%(msg)s".',msg=mssg)
                     tasks.clear()
                     active_receiving = False
                 else:                                   #cond.wait returned probably because of a timeout

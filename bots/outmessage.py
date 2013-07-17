@@ -437,7 +437,7 @@ class Outmessage(message.Message):
                         fieldcount = 2
                     else:
                         value += field_sep
-                elif field[SFIELD]==1:   #is a subfield:
+                elif field[SFIELD] == 1:   #is a subfield:
                     value += sfield_sep
                 else:                   #repeat
                     value += rep_sep

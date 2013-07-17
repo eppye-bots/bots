@@ -241,7 +241,7 @@ class _comsession(object):
                 else:   #assemble message: headers and payload. Bots uses simple MIME-envelope; by default payload is an attachment
                     message = email.Message.Message()
                     #set 'from' header (sender)
-                    frommail,ccfrom = self.idpartner2mailaddress(row['frompartner'])    #lookup email address for partnerID
+                    frommail,ccfrom_not_used_variable = self.idpartner2mailaddress(row['frompartner'])    #lookup email address for partnerID
                     message.add_header('From', frommail)
 
                     #set 'to' header (receiver)
@@ -283,7 +283,7 @@ class _comsession(object):
                     #set attachment filename
                     filename_mask = self.channeldict['filename'] if self.channeldict['filename'] else '*'
                     attachmentfilename = self.filename_formatter(filename_mask,ta_to)
-                    if attachmentfilename and self.channeldict['sendmdn']!= 'body':  #if not explicitly indicated 'as body' or (old)  if attachmentfilename is None or empty string: do not send as an attachment.
+                    if attachmentfilename and self.channeldict['sendmdn'] != 'body':  #if not explicitly indicated 'as body' or (old)  if attachmentfilename is None or empty string: do not send as an attachment.
                         message.add_header("Content-Disposition",'attachment',filename=attachmentfilename)
 
                     #set Content-Type and charset
@@ -485,8 +485,8 @@ class _comsession(object):
                         raise botslib.CommunicationInError(_(u'"From" emailaddress(es) %(email)s not authorised/unknown for channel "%(idchannel)s".'),
                                                             {'email':frommail,'idchannel':self.channeldict['idchannel']})
                 #topartner, cc (incl autorization)
-                list_to_address = [self.checkheaderforcharset(address) for name,address in email.Utils.getaddresses(msg.get_all('to', []))] 
-                list_cc_address = [self.checkheaderforcharset(address) for name,address in email.Utils.getaddresses(msg.get_all('cc', []))] 
+                list_to_address = [self.checkheaderforcharset(address) for name_not_used_variable,address in email.Utils.getaddresses(msg.get_all('to', []))] 
+                list_cc_address = [self.checkheaderforcharset(address) for name_not_used_variable,address in email.Utils.getaddresses(msg.get_all('cc', []))] 
                 cc_content      = ','.join([address for address in (list_to_address + list_cc_address)])
                 topartner = ''  #initialise topartner
                 tomail = ''     #initialise tomail

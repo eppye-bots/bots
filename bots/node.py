@@ -486,7 +486,8 @@ class Node(object):
     #********************************************************
     #*** utility functions **********************************
     #********************************************************
-    def _mpath_sanity_check(self,mpaths):
+    @staticmethod
+    def _mpath_sanity_check(mpaths):
         ''' sanity check of mpaths. '''
         if not isinstance(mpaths,tuple):
             raise botslib.MappingFormatError(_(u'Parameter mpath must be tuple: %(mpaths)s'),{'mpaths':mpaths})

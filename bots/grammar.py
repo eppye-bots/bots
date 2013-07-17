@@ -19,7 +19,7 @@ def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
         #Get right syntax: start with classtocall.defaultsyntax, update with envelope.syntax, update again with messagetype.syntax
         syntax = classtocall.defaultsyntax.copy()
         envelope = messagegrammar.syntax.get('envelope') or classtocall.defaultsyntax['envelope']
-        if envelope and envelope!=grammarname:
+        if envelope and envelope != grammarname:
             try:
                 envelopegrammar = classtocall(typeofgrammarfile='grammars',editype=editype,grammarname=envelope)
                 syntax.update(envelopegrammar.syntax)
@@ -210,7 +210,7 @@ class Grammar(object):
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record "%(record)s", field "%(field)s": number of repeats must be integer.'),
                                                 {'grammar':self.grammarname,'record':recordid,'field':field[ID]})
             field[MAXREPEAT] = field[MANDATORY][1]
-            field[MANDATORY] = 0 if field[MANDATORY][0]=='C' else 1
+            field[MANDATORY] = 0 if field[MANDATORY][0] == 'C' else 1
         else:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record "%(record)s", field "%(field)s": mandatory/conditional has to be a string (or tuple in case of repeating field).'),
                                             {'grammar':self.grammarname,'record':recordid,'field':field[ID]})
@@ -594,7 +594,7 @@ class fixed(Grammar):
                             self.module.syntax = {}
                         self.module.syntax['startrecordID'] = startrecordID
                         self.module.syntax['endrecordID'] = endrecordID
-                        syntaxfromgrammar = getattr(self.module, 'syntax',{})      #original grammar syntax has to be changed, so get it.
+                        #~ syntaxfromgrammar = getattr(self.module, 'syntax',{})      #original grammar syntax has to be changed, so get it.
                     else:        #check startrecordID, endrecordID
                         if self.syntax['startrecordID'] != position_in_record or self.syntax['endrecordID'] != position_in_record + field[LENGTH]:
                             raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record %(key)s: position and length of BOTSID should be equal in all records.'),

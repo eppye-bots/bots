@@ -3,7 +3,7 @@ from django.utils.translation import ugettext as _
 #***********
 import models
 import viewlib
-import botsglobal
+#~ import botsglobal
 
 HIDDENINPUT = django.forms.widgets.HiddenInput
 
