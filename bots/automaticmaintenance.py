@@ -90,11 +90,35 @@ def email_error_report(rootidtaofrun):
         reporttext += _(u'    %d errors in processes.\n')%(results['processerrors'])
     reporttext += _(u'    %d files send in run.\n')%(results['send'])
 
-    botsglobal.logger.info(reporttext)
-    # sendreportifprocesserror allows blocking of email reports for process errors
-    if (results['lasterror'] or results['lastopen'] or results['lastok'] or
-       (results['processerrors'] and botsglobal.ini.getboolean('settings','sendreportifprocesserror',True))):
+    botsglobal.logger.info(reporttext)      #log the report texts
+    # only send email report if there are errors.
+    # sendreportifprocesserror (in bots.ini): no email reports if only process errors
+    if results['lasterror'] or results['lastopen'] or results['lastok'] or (results['processerrors'] and botsglobal.ini.getboolean('settings','sendreportifprocesserror',True)):
+
+        # Include details about process errors in the email report; if debug is True: includes trace
+        if results['processerrors']:
+            for row in botslib.query('''SELECT idroute,fromchannel,tochannel,errortext
+                                        FROM ta
+                                        WHERE idta>=%(rootidtaofrun)s
+                                        AND status=%(status)s
+                                        AND statust=%(statust)s ''',
+                                        {'rootidtaofrun':rootidtaofrun,'status':PROCESS,'statust':ERROR}):
+                reporttext += '\nProcess error:\n'
+                for key in row.keys():
+                    reporttext += '%s: %s\n' % (key,row[key])
+        # Include details about file errors in the email report; if debug is True: includes trace
+        if results['lasterror'] or results['lastopen'] or results['lastok']:
+            for row in botslib.query('''SELECT idroute,frompartner,fromchannel,topartner,tochannel,errortext
+                                        FROM filereport
+                                        WHERE idta>%(rootidtaofrun)s
+                                        AND statust!=%(statust)s ''',
+                                        {'rootidtaofrun':rootidtaofrun,'statust':DONE}):
+                reporttext += '\nFile error:\n'
+                for key in row.keys():
+                    reporttext += '%s: %s\n' % (key,row[key])
+
         botslib.sendbotserrorreport(subject,reporttext)
+
     return int(results['status'])    #return report status: 0 (no error) or 1 (error)
 
 
