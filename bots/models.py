@@ -33,7 +33,7 @@ STATUS = [
     (520,_(u'Send')),
     ]
 EDITYPES = [
-    DEFAULT_ENTRY,
+    #~ DEFAULT_ENTRY,
     ('csv', _(u'csv')),
     ('database', _(u'database (old)')),
     ('db', _(u'db')),
@@ -116,6 +116,7 @@ TRANSLATETYPES = (
     (2,_(u'Pass-through')),
     )
 CONFIRMTYPELIST = [DEFAULT_ENTRY] + CONFIRMTYPE
+EDITYPESLIST = [DEFAULT_ENTRY] + EDITYPES
 
 #***Functions that produced codelists.**********************************************
 def getroutelist():     #needed because the routeid is needed (and this is not theprimary key
