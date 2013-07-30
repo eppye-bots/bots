@@ -17,6 +17,9 @@ from botsconfig import *
 
 #***functions for mapping******************************************
 def map_treewalker(node_instance,mpath):
+    ''' Generator function.
+        
+    '''
     mpath.append({'BOTSID':node_instance.record['BOTSID']})
     for childnode in node_instance.children:
         yield childnode,mpath[:]
@@ -25,16 +28,15 @@ def map_treewalker(node_instance,mpath):
     mpath.pop()
 
 
-def map_writefields(tree,node_instance,mpath):
-    putmpath = copy.deepcopy(mpath)
-    #~ print mpath
-    #~ print node_instance.record
-    for key in node_instance.record.keys():
-        #~ print key
-        if key not in ['BOTSID','BOTSIDnr']:
-            putmpath[-1][key] = u'dummy'
-            #~ print 'mpath used',mpath
-    tree.put(*putmpath)
+def map_writefields(node_out,node_in,mpath):
+    ''' als fields of this level are written to node_out.
+    '''
+    mpath_with_all_fields = copy.deepcopy(mpath)     #use a copy of mpath (do not want to change it)
+    for key in node_in.record.keys():       
+        if key in ['BOTSID','BOTSIDnr']:    #skip these
+            continue
+        mpath_with_all_fields[-1][key] = u'dummy'    #add key to the mpath
+    node_out.put(*mpath_with_all_fields)            #write all fields.
 
 #***functions for generating grammar from tree******************************************
 def tree2grammar(node_instance,structure,recorddefs):
@@ -141,7 +143,6 @@ def start():
     #the xml file is parsed as an xmlnocheck message
     editype = 'xmlnocheck'
     messagetype = 'xmlnocheckxxxtemporaryforxml2grammar'
-    mpath = []
     #a (temp) xmlnocheck grammar is needed (but needs not actual content. This file is not removed.
     tmpgrammarfile = botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars',editype,messagetype+'.py')
     filehandler = open(tmpgrammarfile,'w')
@@ -154,13 +155,15 @@ def start():
     
     #***do the mapping***************************************************
     #handle root
-    rootmpath = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
-    out.put(*rootmpath)
-    map_writefields(out,inn.root,rootmpath)
+    mpath_root = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
+    out.put(*mpath_root)
+    map_writefields(out,inn.root,mpath_root)
+    
     #walk tree; write results to out-tree
-    for node_instance,mpath in map_treewalker(inn.root,mpath):
+    mpath_start = []
+    for node_instance,mpath in map_treewalker(inn.root,mpath_start):
         mpath.append({'BOTSID':node_instance.record['BOTSID']})
-        if out.get(*mpath) is None:
+        if out.get(*mpath) is None:     #if node does not exist: write it.
             out.put(*mpath)
         map_writefields(out,node_instance,mpath)
 
