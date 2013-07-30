@@ -182,7 +182,7 @@ class MyRouteAdminForm(forms.ModelForm):
 class RoutesAdmin(BotsAdmin):
     actions = ('activate',)
     form = MyRouteAdminForm
-    list_display = ('active','indefaultrun','idroute','seq','routescript','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','testindicator','zip_incoming','zip_outgoing',)
+    list_display = ('active','idroute','seq','routescript','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','indefaultrun','testindicator','zip_incoming','zip_outgoing',)
     list_display_links = ('idroute',)
     list_filter = ('idroute','active','fromeditype')
     ordering = ('idroute','seq')
