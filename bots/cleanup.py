@@ -62,16 +62,20 @@ def _cleanupsession():
 
 
 def _cleanarchive():
-    ''' delete all archive directories older than maxdaysarchive days.'''
+    ''' delete all archive directories older than maxdaysarchive days. Errors are ignored.'''
     vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
     for row in botslib.query('''SELECT archivepath FROM channel WHERE archivepath != '' '''):
         vanafdir = botslib.join(row['archivepath'],vanaf)
         for entry in glob.iglob(botslib.join(row['archivepath'],'*')):
             if entry < vanafdir:
                 if entry.endswith('.zip'):
-                    os.remove(entry)
+                    try:
+                        os.remove(entry)
+                    except:
+                        pass
                 else:
                     shutil.rmtree(entry,ignore_errors=True)
+
 
 
 def _cleandatafile():
