@@ -71,6 +71,7 @@ def translate(startstatus,endstatus,idroute,rootidta):
                     ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
                     #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
+                    inn_splitup.ta_info['idta'] = ta_splitup.idta     #for confirmations in userscript; used to give idta of 'confirming message'
                     post_mapping_mode = False       #if post_mapping: reuse out-object, if no translation is found no error
                     number_of_loops_with_same_alt = 0
                     while 1:    #continue as long as there are (alt-)translations

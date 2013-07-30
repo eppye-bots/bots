@@ -1212,7 +1212,7 @@ class x12(var):
             out.ta_info['frompartner'] = receiver   #reverse!
             out.ta_info['topartner'] = sender       #reverse!
             if translationscript and hasattr(translationscript,'main'):
-                botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
+                botslib.runscript(translationscript,scriptfilename,'main',inn=nodegs,out=out)
             else:
                 #default mapping script for CONTRL
                 #write AK1/AK9 for GS (envelope)
@@ -1228,7 +1228,7 @@ class x12(var):
                 out.put({'BOTSID':'ST'},{'BOTSID':'SE','SE01':out.getcount()+1,'SE02':reference})  #last line (counts the segments produced in out-message)
                 #try to run the user mapping script fuction 'change' (after the default mapping); 'chagne' fucntion recieves the tree as written by default mapping, function can change tree.
                 if translationscript and hasattr(translationscript,'change'):
-                    botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out)
+                    botslib.runscript(translationscript,scriptfilename,'change',inn=nodegs,out=out)
             #write tomessage (result of translation)
             out.writeall()   #write tomessage (result of translation)
             botsglobal.logger.debug(u'Send x12 confirmation (997) route "%(route)s" fromchannel "%(fromchannel)s" frompartner "%(frompartner)s" topartner "%(topartner)s".',

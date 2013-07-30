@@ -29,6 +29,7 @@
                 <th><button class="botsheader" type="submit" name="order" value="tochannel" >{% trans 'ToChannel' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="frompartner" >{% trans 'FromPartner' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="topartner" >{% trans 'ToPartner' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="reference" >{% trans 'Reference' %}</button></th>
             </tr>
         </thead>
         <tbody>
@@ -59,6 +60,7 @@
                 <td class="nowrap">{{row.tochannel}}</td>
                 <td class="nowrap">{{row.frompartner}}</td>
                 <td class="nowrap">{{row.topartner}}</td>
+                <td class="nowrap">{{row.reference}}</td>
             </tr>
         {% endfor %}
         </tbody>
