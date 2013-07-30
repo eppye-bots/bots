@@ -1,6 +1,6 @@
 #constants/definitions for Bots
 #to be used as:
-#from bots.config import *
+#from botsconfig import *
 
 #***for statust in ta:
 OPEN    = 0 #Bots always closes transaction. OPEN is severe error
