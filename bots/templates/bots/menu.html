@@ -11,7 +11,8 @@
 	<ul>
 		<a {% if not bots_touchscreen %} href="/incoming/?lastrun=1" {% endif %} >{% trans 'Last run' %}</a>
 		<li><a href="/incoming/?lastrun=1" >{% trans 'Incoming' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
-		<li><a href="/document/?lastrun=1" >{% trans 'Document' %}</a></li>
+		<li><a href="/document/?lastrun=1;status=320" >{% trans 'Document-in' %}</a></li>
+		<li><a href="/document/?lastrun=1;status=330" >{% trans 'Document-out' %}</a></li>
 		<li><a href="/outgoing/?lastrun=1" >{% trans 'Outgoing' %}</a></li>
 		<li><a href="/processes/?lastrun=1" >{% trans 'Process Errors' %}</a></li>
 	</ul>
