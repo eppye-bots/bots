@@ -364,6 +364,20 @@ class Node(object):
             return None
         return terug
 
+    def getdecimal(self,*mpaths):
+        ''' like get, but return a decimal value. If value to return is None or not numeric, zero is returned.
+            warning: this function might 'mask' errors, because when input is not-valid, it aalwyas return a decimal 0. 
+            useful eg for when math calculations are needed in mapping.
+        '''
+        terug = self.get(*mpaths)
+        if terug and terug[-1] == u'-':    #if minus-sign at the end, put it in front. This is useful for idocs, where fields are never defined as numeric.
+            terug = terug[-1] + terug[:-1]
+        try:
+            return decimal.Decimal(terug)
+        except (TypeError,ValueError):
+            return decimal.Decimal('0')
+
+
     def put(self,*mpaths,**kwargs):
         #sanity check of mpaths
         if not mpaths or not isinstance(mpaths,tuple):

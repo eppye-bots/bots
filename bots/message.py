@@ -346,9 +346,17 @@ class Message(object):
         ''' like get, returns None is value is zero (0) or not numeric.
             Is sometimes usefull in mapping.'''
         if self.root.record is None:
-            raise botslib.MappingRootError(_(u'get(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+            raise botslib.MappingRootError(_(u'getnozero(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
                                             {'mpath':mpaths})
         return self.root.getnozero(*mpaths)
+
+    def getdecimal(self,*mpaths):
+        ''' like get, returns None is value is zero (0) or not numeric.
+            Is sometimes usefull in mapping.'''
+        if self.root.record is None:
+            raise botslib.MappingRootError(_(u'getdecimal(%(mpath)s): "root" of incoming message is empty; either split messages or use inn.getloop'),
+                                            {'mpath':mpaths})
+        return self.root.getdecimal(*mpaths)
 
     def getcount(self):
         ''' count number of nodes in self.root. Number of nodes is number of records.'''
