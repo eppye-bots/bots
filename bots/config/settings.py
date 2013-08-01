@@ -35,7 +35,7 @@ DATABASES = {
         #~ 'NAME': 'botsdb',
         #~ 'USER': 'bots',
         #~ 'PASSWORD': 'botsbots',
-        #~ 'HOST': '192.168.0.9',
+        #~ 'HOST': '127.0.0.1',
         #~ 'PORT': '3306',
         #~ 'OPTIONS': {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'},
         #~ }
