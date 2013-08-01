@@ -76,7 +76,7 @@ def run(idchannel,command,idroute,rootidta=None):
         if userscript and hasattr(userscript,channeldict['type']):          #check communication class in userscript (sub classing)
             classtocall = getattr(userscript,channeldict['type'])
         elif userscript and hasattr(userscript,'UserCommunicationClass'):   #check for communication class called 'UserCommunicationClass' in userscript. 20110920: Obsolete, depreciated. Keep this for now.
-            classtocall = getattr(userscript,'UserCommunicationClass')       #20130206: does have advantages...liek for testing etc (no dependent upon type)
+            classtocall = getattr(userscript,'UserCommunicationClass')       #20130206: does have advantages...like for testing etc (no dependent upon type)
         else:
             classtocall = globals()[channeldict['type']]                    #get the communication class from this module
 
