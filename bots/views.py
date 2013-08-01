@@ -693,7 +693,7 @@ def sendtestmailmanagers(request,*kw,**kwargs):
     except:
         txt = botslib.txtexc()
         messages.add_message(request, messages.INFO, _(u'Sending test mail failed.'))
-        botsglobal.logger.info(_(u'Sending test mail failed, error:\n%s(txt)'), {'txt':txt})
+        botsglobal.logger.info(_(u'Sending test mail failed, error:\n%(txt)s'), {'txt':txt})
         return django.shortcuts.redirect('/home')
     notification = _(u'Sending test mail succeeded.')
     messages.add_message(request, messages.INFO, notification)
