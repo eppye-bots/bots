@@ -1312,13 +1312,11 @@ class sftp(_comsession):
         try:
             import paramiko
         except:
-            txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "paramiko". Error:\n%(txt)s'),{'txt':txt})
+            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "paramiko".'))
         try:
             from Crypto import Cipher
         except:
-            txt = botslib.txtexc()
-            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "pycrypto". Error:\n%(txt)s'),{'txt':txt})
+            raise ImportError(_(u'Dependency failure: communicationtype "sftp" requires python library "pycrypto".'))
         # setup logging if required
         ftpdebug = botsglobal.ini.getint('settings','ftpdebug',0)
         if ftpdebug > 0:
@@ -1534,8 +1532,8 @@ class db(_comsession):
     '''
     def connect(self):
         if self.userscript is None:
-            raise ImportError(_(u'Channel "%(idchannel)s" is type "db", but no communicationscript exists.'),
-                                {'idchannel':self.channeldict})
+            raise ImportError(_(u'Channel "%(idchannel)s" is type "db", but no communicationscript exists.' %
+                                {'idchannel':self.channeldict}))
         #check functions bots assumes to be present in userscript:
         if not hasattr(self.userscript,'connect'):
             raise botslib.ScriptImportError(_(u'No function "connect" in imported communicationscript "%(communicationscript)s".'),
@@ -1647,8 +1645,8 @@ class communicationscript(_comsession):
     ''' 
     def connect(self):
         if self.userscript is None or not botslib.tryrunscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict):
-            raise ImportError(_(u'Channel "%(idchannel)s" is type "communicationscript", but no communicationscript exists.'),
-                                {'idchannel':self.channeldict})
+            raise ImportError(_(u'Channel "%(idchannel)s" is type "communicationscript", but no communicationscript exists.' %
+                                {'idchannel':self.channeldict}))
 
 
     @botslib.log_session

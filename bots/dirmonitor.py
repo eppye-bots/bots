@@ -20,8 +20,7 @@ if os.name == 'nt':
     try:
         import win32file, win32con
     except Exception, msg: 
-        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "Python Win32 Extensions" on windows. Error:\n%(msg)s',
-                            {'msg':msg})
+        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "Python Win32 Extensions" on windows.')
    
     def windows_event_handler(logger,dir_watch,cond,tasks):
         ACTIONS = { 1 : "Created  ",      #tekst for printing results
@@ -78,8 +77,7 @@ else:
     try:
         import pyinotify
     except Exception, msg: 
-        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "pyinotify" on linux. Error:\n%(msg)s',
-                            {'msg':msg})
+        raise ImportError(u'Dependency failure: bots directory monitoring requires python library "pyinotify" on linux.')
     
     class LinuxEventHandler(pyinotify.ProcessEvent):
         ''' 

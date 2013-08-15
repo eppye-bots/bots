@@ -17,7 +17,7 @@ def sqlite_database_is_version3():
                 return False
             else:
                 return True
-    raise Exception('Could determine version of database')
+    raise Exception('Could not determine version of database')
 
 
 QUERYSTRING = '''

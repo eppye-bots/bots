@@ -412,7 +412,7 @@ def botsimport(*args):
     modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
     modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
     if modulepath in botsglobal.not_import:
-        raise ImportError(u'No import of module "%(modulefile)s".',{'modulefile':modulefile})
+        raise ImportError(u'No import of module "%(modulefile)s".' % {'modulefile':modulefile})
     try:
         module = botsbaseimport(modulepath)
     except ImportError:
