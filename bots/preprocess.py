@@ -114,7 +114,7 @@ HEADER = re.compile('''
     )
     ''',re.DOTALL|re.VERBOSE)
 
-def mailbag(ta_from,endstatus,**argv):
+def mailbag(ta_from,endstatus,frommessagetype,**argv):
     ''' 2 main functions:
         -   recognizes and distuinguishes several edi types: x12 edifact tradacoms ('mailbag' in, correct editype out)
         -   split up interchanges (edifact, x12, tradacoms)
@@ -254,7 +254,15 @@ def mailbag(ta_from,endstatus,**argv):
         tofile = botslib.opendata(tofilename,'wb')
         tofile.write(edifile[headpos:endpos])
         tofile.close()
-        ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=editype,filesize=filesize) #update outmessage transaction with ta_info;
+        #editype is now either edifact, x12 or tradacoms
+        #frommessagetype is the original frommessagetype (from route).
+        #frommessagetype would normally be edifact, x12, tradacoms or mailbag, but could also be eg ORDERSD96AUNEAN007.
+        #If so, we want to preserve that.
+        if frommessagetype != 'mailbag' and frommessagetype != editype:
+            messagetype = frommessagetype
+        else:
+            messagetype = editype
+        ta_to.update(statust=OK,filename=tofilename,editype=editype,messagetype=messagetype,filesize=filesize) #update outmessage transaction with ta_info;
         startpos = endpos
         nr_interchanges += 1
         botsglobal.logger.debug(_(u'        File written: "%(tofilename)s".'),{'tofilename':tofilename})

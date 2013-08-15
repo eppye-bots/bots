@@ -129,7 +129,7 @@ class new(object):
                 else:
                     editypes_via_mailbag = ['mailbag','edifact','x12','tradacoms']
                 if routedict['fromeditype'] in editypes_via_mailbag:               #mailbag for the route.
-                    preprocess.preprocess(routedict=routedict,function=preprocess.mailbag,rootidta=self.get_minta4query_routepart())
+                    preprocess.preprocess(routedict=routedict,function=preprocess.mailbag,rootidta=self.get_minta4query_routepart(),frommessagetype=routedict['frommessagetype'])
 
         #translate, merge, pass through: INFILE->MERGED
         if int(routedict['translateind']) == 1:
