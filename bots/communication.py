@@ -1533,7 +1533,7 @@ class db(_comsession):
     def connect(self):
         if self.userscript is None:
             raise ImportError(_(u'Channel "%(idchannel)s" is type "db", but no communicationscript exists.' %
-                                {'idchannel':self.channeldict}))
+                                {'idchannel':self.channeldict['idchannel']}))
         #check functions bots assumes to be present in userscript:
         if not hasattr(self.userscript,'connect'):
             raise botslib.ScriptImportError(_(u'No function "connect" in imported communicationscript "%(communicationscript)s".'),
