@@ -315,7 +315,7 @@ class Inmessage(message.Message):
             #there is only one recordtype (this is checked in grammar.py).
             first = True
             for line in self.root.children:
-                kriterium = line.get(self.defmessage.nextmessageblock)
+                kriterium = line.enhancedget(self.defmessage.nextmessageblock)
                 if first:
                     first = False
                     newroot = node.Node()  #make new empty root node.
