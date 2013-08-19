@@ -5,6 +5,7 @@ import os
 import atexit
 import logging
 import socket
+import time
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
@@ -146,7 +147,12 @@ def start():
 
         botslib.prepare_confirmrules()
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
+        first_command_2_run = True
         for command in commandstorun:
+            if first_command_2_run:
+                first_command_2_run = False
+            else:
+                time.sleep(1)   #if multiple commands in run: reports etc are based on timestamp; so there needs to be at least one second between these runs.
             botsglobal.logger.info(_(u'Run "%(command)s".'),{'command':command})
             #get list of routes to run
             if routestorun:
