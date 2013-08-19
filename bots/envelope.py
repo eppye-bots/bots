@@ -24,8 +24,9 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                 AND status=%(status)s
                                 AND statust=%(statust)s
                                 AND merge=%(merge)s
+                                AND idroute=%(idroute)s
                                 ''',
-                                {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':False}):
+                                {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':False,'idroute':idroute}):
         try:
             ta_info = dict(row)
             ta_fromfile = botslib.OldTransaction(ta_info['idta'])    #edi message to envelope
@@ -49,9 +50,10 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                 AND status=%(status)s
                                 AND statust=%(statust)s
                                 AND merge=%(merge)s
+                                AND idroute=%(idroute)s
                                 GROUP BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope
                                 ''',
-                                {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True}):
+                                {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,'idroute':idroute}):
         try:
             ta_info = dict(row)
             ta_tofile = botslib.NewTransaction(status=endstatus,idroute=idroute)  #edifile for enveloped messages
