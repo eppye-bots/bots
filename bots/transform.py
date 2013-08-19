@@ -23,7 +23,7 @@ from envelope import mergemessages
 from communication import run
 
 @botslib.log_session
-def translate(startstatus,endstatus,idroute,rootidta):
+def translate(startstatus,endstatus,idroute,rootidta,command):
     ''' main translation loop.
         get edifiles to be translated, than:
         -   read, lex, parse, make tree of nodes.
@@ -63,7 +63,8 @@ def translate(startstatus,endstatus,idroute,rootidta):
                                                 charset=row['charset'],
                                                 alt=row['alt'],
                                                 fromchannel=row['fromchannel'],
-                                                idroute=idroute)
+                                                idroute=idroute,
+                                                command=command)
             #if no exception: infile has been lexed and parsed OK.
             #edifile.ta_info contains info: QUERIES, charset etc
             for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile

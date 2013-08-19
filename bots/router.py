@@ -139,7 +139,7 @@ class new(object):
                 rootidta = self.get_minta4query()
             else:
                 rootidta = self.get_minta4query_route()
-            transform.translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=routedict['idroute'],rootidta=rootidta)
+            transform.translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=routedict['idroute'],rootidta=rootidta,command=routedict['command'])
             botslib.tryrunscript(userscript,scriptname,'posttranslation',routedict=routedict)
             #**merge: for files in this route-part (the translated files)
             botslib.tryrunscript(userscript,scriptname,'premerge',routedict=routedict)
@@ -240,7 +240,7 @@ class crashrecovery(new):
                                     FROM ta
                                     WHERE idta < %(rootidta_of_current_run)s
                                     AND script = 0 ''',
-                                    {'rootidta_of_current_run':self.get_minta4query()}):
+                                    {'rootidta_of_current_run':self.minta4query}):
             self.minta4query_crash = row['crashed_idta']
         if not self.minta4query_crash:
             return False    #no run
@@ -282,14 +282,21 @@ class crashrecovery(new):
         return self.minta4query_crash
 
     def get_minta4query_route(self):
-        ''' get the first idta for queries etc in route.
+        ''' find out where route was started.
+            if not started in crashed run, value for recovery run will be found.
         '''
-        return self.minta4query_crash
+        for row in botslib.query('''SELECT MIN(idta) as route_idta
+                                    FROM ta
+                                    WHERE idta > %(rootidta_of_current_run)s
+                                    AND script = %(rootidta_of_current_run)s
+                                    AND idroute = %(idroute)s ''',
+                                    {'rootidta_of_current_run':self.get_minta4query(),'idroute':botslib.getrouteid()}):
+            return row['route_idta']
 
     def get_minta4query_routepart(self):
-        ''' get the first idta for queries etc in route-part.
+        ''' as seq is not logged, use start-point for whole route.
         '''
-        return self.minta4query_crash
+        return self.get_minta4query_route()
 
 
 
