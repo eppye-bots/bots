@@ -458,7 +458,7 @@ def plugin_index(request,*kw,**kwargs):
 def plugout_index(request,*kw,**kwargs):
     if request.method == 'GET':
         filename = botslib.join(botsglobal.ini.get('directories','usersysabs'),'index.py')
-        botsglobal.logger.info(_(u'Start writing configuration index file "%s".'),filename)
+        botsglobal.logger.info(_(u'Start writing configuration index file "%(file)s".'),{'file':filename})
         try:
             dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':True,'databasetransactions':False}
             pluglib.make_index(dummy_for_cleaned_data,filename)
@@ -479,7 +479,7 @@ def plugout_backup(request,*kw,**kwargs):
         
 def plugout_backup_core(request,*kw,**kwargs):
     filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y%m%d%H%M%S'))
-    botsglobal.logger.info(_(u'Start writing backup plugin "%s".'),filename)
+    botsglobal.logger.info(_(u'Start writing backup plugin "%(file)s".'),{'file':filename})
     try:
         dummy_for_cleaned_data = {'databaseconfiguration':True,
                                     'umlists':True,
@@ -511,14 +511,14 @@ def plugout(request,*kw,**kwargs):
             form = forms.PlugoutForm(request.POST)
             if form.is_valid():
                 filename = botslib.join(botsglobal.ini.get('directories','botssys'),'plugin_temp.zip')
-                botsglobal.logger.info(_(u'Start writing plugin "%s".'),filename)
+                botsglobal.logger.info(_(u'Start writing plugin "%(file)s".'),{'file':filename})
                 try:
                     pluglib.make_plugin(form.cleaned_data,filename)
                 except botslib.PluginError, msg:
                     botsglobal.logger.error(str(msg))
                     messages.add_message(request,messages.INFO,str(msg))
                 else:
-                    botsglobal.logger.info(_(u'Plugin "%s" created successful.'),filename)
+                    botsglobal.logger.info(_(u'Plugin "%(file)s" created successful.'),{'file':filename})
                     response = django.http.HttpResponse(open(filename, 'rb').read(), content_type='application/zip')
                     # response['Content-Length'] = os.path.getsize(filename)
                     response['Content-Disposition'] = 'attachment; filename=' + 'plugin' + time.strftime('_%Y%m%d') + '.zip'
@@ -654,7 +654,7 @@ def runengine(request,*kw,**kwargs):
             messages.add_message(request, messages.INFO, job2queue.JOBQUEUEMESSAGE2TXT[terug])
             botsglobal.logger.info(job2queue.JOBQUEUEMESSAGE2TXT[terug])
         else:                                                       #run bots-engine direct.; reports back if bots-engien is started succesful. **not reported: problems with running.
-            botsglobal.logger.info(_(u'Run bots-engine with parameters: "%s"'),str(lijst))
+            botsglobal.logger.info(_(u'Run bots-engine with parameters: "%(parameters)s"'),{'parameters':str(lijst)})
             #first check if another instance of bots-engine is running/if port is free
             try:
                 engine_socket = botslib.check_if_other_engine_is_running()

@@ -32,16 +32,16 @@ class Jobqueue(object):
             if job[TASK] == task:
                 if job[PRIORITY] != priority:   #change priority. is this useful?
                     job[PRIORITY] = priority
-                    self.logger.info(u'Duplicate job, changed priority to %(priority)s: %(task)s',priority=priority,task=task)
+                    self.logger.info(u'Duplicate job, changed priority to %(priority)s: %(task)s',{'priority':priority,'task':task})
                     self._sort()
                     return 0        #zero or other code??
                 else:
-                    self.logger.info(u'Duplicate job not added: %(task)s',task=task)
+                    self.logger.info(u'Duplicate job not added: %(task)s',{'task':task})
                     return 4
         #add the job
         self.jobcounter += 1
         self.jobqueue.append([priority, self.jobcounter,task])
-        self.logger.info(u'Added job %(job)s, priority %(priority)s: %(task)s',job=self.jobcounter,priority=priority,task=task)
+        self.logger.info(u'Added job %(job)s, priority %(priority)s: %(task)s',{'job':self.jobcounter,'priority':priority,'task':task})
         self._sort()
         return 0
 
@@ -57,14 +57,14 @@ class Jobqueue(object):
 
     def _sort(self):
         self.jobqueue.sort(reverse=True)
-        self.logger.debug(u'Job queue changed. New queue: %(queue)s',queue=''.join(['\n    ' + repr(job) for job in self.jobqueue]))
+        self.logger.debug(u'Job queue changed. New queue: %(queue)s',{'queue':''.join(['\n    ' + repr(job) for job in self.jobqueue])})
         #~ print self.jobqueue
 
 #-------------------------------------------------------------------------------
 def maxruntimeerror(logger,maxruntime,jobnumber,task_to_run):
-    logger.error(u'Job %(job)s exceeded maxruntime of %(maxruntime)s minutes',job=jobnumber,maxruntime=maxruntime)
+    logger.error(u'Job %(job)s exceeded maxruntime of %(maxruntime)s minutes',{'job':jobnumber,'maxruntime':maxruntime})
     botslib.sendbotserrorreport(u'[Bots Job Queue] - Job exceeded maximum runtime',
-                                u'Job %s exceeded maxruntime of %s minutes:\n %s' % (jobnumber,maxruntime,task_to_run))
+                                u'Job %(job)s exceeded maxruntime of %(maxruntime)s minutes:\n %(task)s' % {'job':jobnumber,'maxruntime':maxruntime,'task':task_to_run})
 
 #-------------------------------------------------------------------------------
 def launcher(logger,port,lauchfrequency,maxruntime):
@@ -83,14 +83,14 @@ def launcher(logger,port,lauchfrequency,maxruntime):
             timer_thread.start()
             try:
                 starttime = datetime.datetime.now()
-                logger.info(u'Starting job %(job)s',job=jobnumber)
+                logger.info(u'Starting job %(job)s',{'job':jobnumber})
                 result = subprocess.call(task_to_run,stdin=open(os.devnull,'r'),stdout=open(os.devnull,'w'),stderr=open(os.devnull,'w'))
                 time_taken = datetime.timedelta(seconds=(datetime.datetime.now() - starttime).seconds)
-                logger.info(u'Finished job %(job)s, elapsed time %(time_taken)s, result %(result)s',job=jobnumber,time_taken=time_taken,result=result)
+                logger.info(u'Finished job %(job)s, elapsed time %(time_taken)s, result %(result)s',{'job':jobnumber,'time_taken':time_taken,'result':result})
             except Exception, msg:
-                logger.error(u'Error starting job %(job)s: %(msg)s',job=jobnumber,msg=msg)
+                logger.error(u'Error starting job %(job)s: %(msg)s',{'job':jobnumber,'msg':msg})
                 botslib.sendbotserrorreport(u'[Bots Job Queue] - Error starting job',
-                                            u'Error starting job %s:\n %s\n\n %s' % (jobnumber,task_to_run,msg))
+                                            u'Error starting job %(job)s:\n %(task)s\n\n %(msg)s' % {'job':jobnumber,'task':task_to_run,'msg':msg})
             timer_thread.cancel()
 
 
@@ -125,10 +125,10 @@ def start():
         sys.exit(1)
     process_name = 'jobqueue'
     logger = botsinit.initserverlogging(process_name)
-    logger.log(25,u'Bots %(process_name)s started.',process_name=process_name)
-    logger.log(25,u'Bots %(process_name)s configdir: "%(configdir)s".',process_name=process_name,configdir=botsglobal.ini.get('directories','config'))
+    logger.log(25,u'Bots %(process_name)s started.',{'process_name':process_name})
+    logger.log(25,u'Bots %(process_name)s configdir: "%(configdir)s".',{'process_name':process_name,'configdir':botsglobal.ini.get('directories','config')})
     port = botsglobal.ini.getint('jobqueue','port',28082)
-    logger.log(25,u'Bots %(process_name)s listens for xmlrpc at port: "%(port)s".',process_name=process_name,port=port)
+    logger.log(25,u'Bots %(process_name)s listens for xmlrpc at port: "%(port)s".',{'process_name':process_name,'port':port})
 
     #start launcher thread
     lauchfrequency = botsglobal.ini.getint('jobqueue','lauchfrequency',5)

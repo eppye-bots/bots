@@ -155,7 +155,7 @@ def start():
         sys.exit(1)
     process_name = 'dirmonitor'
     logger = botsinit.initserverlogging(process_name)
-    logger.log(25,u'Bots %(process_name)s started.',process_name=process_name)
+    logger.log(25,u'Bots %(process_name)s started.',{'process_name':process_name})
     logger.log(25,u'Bots %(process_name)s configdir: "%(configdir)s".',{'process_name':process_name,'configdir':botsglobal.ini.get('directories','config')})
     
     botsenginepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),'bots-engine.py')        #get path to bots-engine
@@ -186,7 +186,7 @@ def start():
         dir_watch_thread.start()
 
     # this main thread get the results from the watch-thread(s).
-    logger.info(u'Bots %(process_name)s started.',process_name=process_name)
+    logger.info(u'Bots %(process_name)s started.',{'process_name':process_name})
     active_receiving = False
     timeout = 2.0
     cond.acquire()
@@ -207,10 +207,10 @@ def start():
                 if current_time - last_time >= timeout:  #cond.wait returned probably because of a timeout
                     try:
                         for task in tasks:
-                            logger.info(u'Send to queue "%s %s %s".',botsenginepath,'-c' + configdir,task)
+                            logger.info(u'Send to queue "%(path)s %(config)s %(task)s".',{'path':botsenginepath,'config':'-c' + configdir,'task':task})
                             job2queue.send_job_to_jobqueue([sys.executable,botsenginepath,'-c' + configdir,task])
-                    except Exception, mssg:
-                        logger.info(u'Error in running task: "%(msg)s".',msg=mssg)
+                    except Exception, msg:
+                        logger.info(u'Error in running task: "%(msg)s".',{'msg':msg})
                     tasks.clear()
                     active_receiving = False
                 else:                                   #cond.wait returned probably because of a timeout
