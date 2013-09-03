@@ -1,5 +1,5 @@
 #Globals used by Bots
-version = '3.1.0rc'       #bots version
+version = '3.1.0'       #bots version
 db = None               #db-object
 ini = None              #ini-file-object that is read (bots.ini)
 logger = None           #logger or bots-engine
