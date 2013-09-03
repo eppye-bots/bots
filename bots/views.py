@@ -415,7 +415,7 @@ def plugin(request,*kw,**kwargs):
         if 'submit' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             form = forms.UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
-                #always write backup plugin first
+                #write backup plugin first
                 plugout_backup_core(request,*kw,**kwargs)        
                 #read the plugin
                 try:
@@ -440,7 +440,7 @@ def plugin_index(request,*kw,**kwargs):
         return django.shortcuts.render_to_response('bots/plugin_index.html', context_instance=django.template.RequestContext(request))
     else:
         if 'submit' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            #always write backup plugin first
+            #write backup plugin first
             plugout_backup_core(request,*kw,**kwargs)        
             #read the plugin
             try:
@@ -533,6 +533,9 @@ def delete(request,*kw,**kwargs):
         if 'submit' in request.POST:
             form = forms.DeleteForm(request.POST)
             if form.is_valid():
+                if form.cleaned_data['delconfiguration'] or form.cleaned_data['delcodelists'] or form.cleaned_data['deluserscripts']:
+                    #write backup plugin first
+                    plugout_backup_core(request,*kw,**kwargs)        
                 botsglobal.logger.info(_(u'Start deleting in configuration.'))
                 if form.cleaned_data['deltransactions']:
                     from django.db import connection, transaction
