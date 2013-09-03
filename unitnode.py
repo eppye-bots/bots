@@ -11,7 +11,7 @@ import bots.botsglobal as botsglobal
 
 '''plugin unitnode.zip
 not an acceptance tst
-does not work with get_checklevel
+does not work with get_checklevel=2
 '''
 
 #fetchqueries is dynamically added to node, to retrieve and check 
