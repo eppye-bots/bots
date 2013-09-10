@@ -96,7 +96,7 @@ class new(object):
         if botslib.tryrunscript(userscript,scriptname,'main',routedict=routedict):
             return  #so: if function ' main' : communication.run only the routescript, nothing else.
         if not (userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']):
-            raise botslib.ScriptError(_(u'Route "%(route)s" is empty: no routescript, not enough parameters.'),routedict)
+            raise botslib.ScriptError(_(u'Route "%(idroute)s" is empty: no routescript, not enough parameters.'),routedict)
 
         botslib.tryrunscript(userscript,scriptname,'start',routedict=routedict)
 
