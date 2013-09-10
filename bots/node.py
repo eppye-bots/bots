@@ -89,6 +89,7 @@ class Node(object):
             - dict:     do get(mpath); can not be a mpath with multiple
             - tuple:    do get(mpath); can be multiple dicts in mapth
             - list:     for each listmembr do a get(); append the results
+            - function: function should return a value (or None, if not found)
         '''
         if isinstance(mpaths,dict):
             return self.get(mpaths)
