@@ -65,6 +65,7 @@ def translate(startstatus,endstatus,idroute,rootidta,command):
                                                 fromchannel=row['fromchannel'],
                                                 idroute=idroute,
                                                 command=command)
+            edifile.checkforerrorlist()
             #if no exception: infile has been lexed and parsed OK.
             #edifile.ta_info contains info: QUERIES, charset etc
             for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile
@@ -189,8 +190,13 @@ def translate(startstatus,endstatus,idroute,rootidta,command):
                     ta_splitup.update(statust=DONE, **inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
 
 
-        #exceptions file_in-level (file not OK according to grammar)
-        except:
+        #exceptions file_in-level
+        except botslib.MessageError:    #only non-fatal parse errors in incomign file; a list of these errors is build. Data from QUERIES is probably correct
+            txt = botslib.txtexc()
+            ta_parsed.update(statust=ERROR,errortext=txt,**edifile.ta_info)
+            ta_parsed.deletechildren()
+            botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
+        except:                         #fatal parse/lex errors in incoming file
             txt = botslib.txtexc()
             ta_parsed.update(statust=ERROR,errortext=txt)
             ta_parsed.deletechildren()

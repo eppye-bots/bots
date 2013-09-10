@@ -239,6 +239,7 @@ class edifact(Envelope):
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
         #convert the tree into segments; here only the UNB is written (first segment)
         self.out.checkmessage(self.out.root,self.out.defmessage)
+        self.out.checkforerrorlist()
         self.out.tree2records(self.out.root)
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
@@ -286,6 +287,7 @@ class tradacoms(Envelope):
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
         #convert the tree into segments; here only the STX is written (first segment)
         self.out.checkmessage(self.out.root,self.out.defmessage)
+        self.out.checkforerrorlist()
         self.out.tree2records(self.out.root)
 
         #start doing the actual writing:
@@ -437,6 +439,7 @@ class x12(Envelope):
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
         #convert the tree into segments; here only the UNB is written (first segment)
         self.out.checkmessage(self.out.root,self.out.defmessage)
+        self.out.checkforerrorlist()
         self.out.tree2records(self.out.root)
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])

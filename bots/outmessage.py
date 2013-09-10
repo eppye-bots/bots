@@ -90,6 +90,7 @@ class Outmessage(message.Message):
         '''
         self.messagegrammarread()
         self.checkmessage(self.root,self.defmessage)
+        self.checkforerrorlist()
         self.nrmessagewritten = 0
         if self.root.record:        #root record contains information; write whole tree in one time
             self.multiplewrite = False
@@ -563,6 +564,7 @@ class tradacoms(var):
             if not self.nrmessagewritten:
                 self._initwrite()
             self.checkmessage(tradacomsmessage,self.defmessage)
+            self.checkforerrorlist()
             self._write(tradacomsmessage)
             self.nrmessagewritten += 1
         self.ta_info['messagetype'] = messagetype
@@ -593,6 +595,7 @@ class xml(Outmessage):
         ''' write envelope for XML messages'''
         self._initwrite()
         self.checkmessage(node_instance,self.defmessage)
+        self.checkforerrorlist()
         xmltree = ET.ElementTree(self._node2xml(node_instance))
         root = xmltree.getroot()
         ETI.include(root)

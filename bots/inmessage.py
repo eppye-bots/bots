@@ -785,6 +785,7 @@ class excel(csv):
                                             {'leftover':leftover})
         del self.lex_records
         self.checkmessage(self.root,self.defmessage)
+        self.checkforerrorlist()
 
     def read_xls(self,infilename):
         # Read excel first sheet into a 2-d array
@@ -1323,6 +1324,7 @@ class xml(Inmessage):
         self.stackinit()
         self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
+        self.checkforerrorlist()
 
     def _handle_empty(self,xmlnode):
         if xmlnode.text:
@@ -1431,6 +1433,7 @@ class json(Inmessage):
         else:
             #root in JSON is neither dict or list.
             raise botslib.InMessageError(_(u'[J53]: Content must be a "list" or "object".'))
+        self.checkforerrorlist()
 
     def _getrootid(self):
         return self.defmessage.structure[0][ID]

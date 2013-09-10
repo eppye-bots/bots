@@ -18,10 +18,20 @@ class Message(object):
         self.messagecount = 0       #count messages in edi file; used in reporting errors.
 
     def add2errorlist(self,errortxt):
-        self.errorlist.append(self.messagetypetxt + errortxt)
-        if len(self.errorlist) >= botsglobal.ini.getint('settings','max_number_errors',10) :
-            raise botslib.MessageError(_(u'At least %(max_number_errors)s errors:\n%(errorlist)s'),
-                                        {'max_number_errors':len(self.errorlist), 'errorlist':''.join(self.errorlist)})
+        ''' Handle non-fatal parse errors.
+        '''
+        if len(self.errorlist) < botsglobal.ini.getint('settings','max_number_errors',10):
+            self.errorlist.append(self.messagetypetxt + errortxt)
+        elif len(self.errorlist) == botsglobal.ini.getint('settings','max_number_errors',10):
+            self.errorlist.append(_(u'Found at least %(max_number_errors)s errors.'),
+                                        {'max_number_errors':len(self.errorlist)})
+        else:
+            #more than max_number_errors are not displayed
+            pass
+
+    def checkforerrorlist(self):
+        if self.errorlist:
+            raise botslib.MessageError(_(u'%(errorlist)s'),{'errorlist':''.join(self.errorlist)})
 
 
     def messagegrammarread(self,typeofgrammarfile='grammars'):
@@ -73,13 +83,10 @@ class Message(object):
             for childnode in node_instance.children:
                 self._checkonemessage(childnode,defmessage,subtranslation)
 
-        if self.errorlist and not subtranslation:
-            raise botslib.MessageError(_(u'%(errorlist)s'),{'errorlist':''.join(self.errorlist)})
-
     def _checkonemessage(self,node_instance,defmessage,subtranslation):
         structure = defmessage.structure
         if node_instance.record['BOTSID'] != structure[0][ID]:
-            raise botslib.MessageError(_(u'[G50]: Grammar "%(grammar)s" starts with record "%(grammarroot)s"; but while reading edi-file found start-record "%(root)s".'),
+            raise botslib.MessageRootError(_(u'[G50]: Grammar "%(grammar)s" starts with record "%(grammarroot)s"; but in edi-file found start-record "%(root)s".'),
                                         {'root':node_instance.record['BOTSID'],'grammarroot':structure[0][ID],'grammar':defmessage.grammarname})
         self._checkifrecordsingrammar(node_instance,structure[0],defmessage.grammarname)
         self.checklevel = botsglobal.ini.getint('settings','get_checklevel',1)

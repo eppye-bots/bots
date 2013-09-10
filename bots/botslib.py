@@ -834,6 +834,8 @@ class LockedFileError(BotsError):
     pass
 class MessageError(BotsError):
     pass
+class MessageRootError(BotsError):
+    pass
 class MappingRootError(BotsError):
     pass
 class MappingFormatError(BotsError):
