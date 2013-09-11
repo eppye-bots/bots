@@ -1075,7 +1075,7 @@ class x12(var):
     @staticmethod
     def _manipulatemessagetype(messagetype,inode):
         ''' x12 also needs field from GS record to identify correct messagetype '''
-        return messagetype +  inode.record['GS08']
+        return messagetype +  inode.record.get('GS08','')
 
     def _sniff(self):
         ''' examine a file for syntax parameters and correctness of protocol
