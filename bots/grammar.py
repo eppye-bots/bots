@@ -499,7 +499,7 @@ class csv(Grammar):
         'quote_char':"'",
         'record_sep':"\r\n",
         'skip_char':'',
-        'skip_firstline':False,     #often first line in CSV is 
+        'skip_firstline':False,     #often first line in CSV is fieldnames. Usage: either False/True, or number of lines. If True, number of lines is 1
         'triad':'',
         'wrap_length':0,     #for producing wrapped format, where a file consists of fixed length records ending with crr/lf. Often seen in mainframe, as400
         #settings needed as defaults, but not useful for this editype 
