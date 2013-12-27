@@ -29,13 +29,33 @@ import grammar
 from botsconfig import *
 
 def parse_edi_file(**ta_info):
-    ''' Read,lex, parse edi-file. Is a dispatch function for Inmessage and subclasses.'''
+    ''' Read,lex, parse edi-file. Is a dispatch function for Inmessage and subclasses.
+        Error handling: there are different types of errors.
+        For all errors related to incoming messages: catch these.
+        Try to extract the relevant information for the message.
+        - unicode errors: charset is wrong.
+    '''
     try:
         classtocall = globals()[ta_info['editype']]  #get inmessage class to call (subclass of Inmessage)
     except KeyError:
         raise botslib.InMessageError(_(u'Unknown editype for incoming message: %(editype)s'),ta_info)
     ediobject = classtocall(ta_info)
-    ediobject.initfromfile()
+    #read, lex, parse the incoming edi file
+    #all errors are caught; these are 'fatal errors': processing has stopped.
+    #get information from error/exception; format this into ediobject.errorfatal
+    try:
+        ediobject.initfromfile()
+    except UnicodeError,msg:
+        start = msg.start - 10 if msg.start >= 10 else 0
+        content = msg.object[start:msg.end+10]
+        #msg.encoding should contain encoding, but does not (think this is not OK for UNOA, etc)
+        ediobject.errorfatal = unicode(botslib.InMessageError(_(u'[A59]: incoming file has not allowed characters at/after file-position %(pos)s: "%(content)s".'),
+                                        {'pos':msg.start,'content':content}))
+    except:
+        #~ txt = botslib.txtexc(mention_exception_type=False)
+        txt = botslib.txtexc()
+        ediobject.errorfatal = unicode(botslib.InMessageError(_(u'[Fatal]: incoming file has error: "%(txt)s".'),
+                                        {'txt':txt}))
     return ediobject
 
 #*****************************************************************************
@@ -48,15 +68,18 @@ class Inmessage(message.Message):
         self.lex_records = []        #init list of lex_records
 
     def initfromfile(self):
-        ''' initialisation from a edi file '''
+        ''' Initialisation from a edi file.
+        '''
         self.messagegrammarread()
-        self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
-        self._readcontent_edifile()
-        self._sniff()           #some hard-coded parsing of edi file; ta_info can be overruled by syntax-parameters in edi-file
-        #start lexing and parsing
+        #~ self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
+        #**charset errors, lex errors
+        self._readcontent_edifile()     #open file. variants: read with charset, read as binary & handled in sniff, only opened and read in _lex.
+        self._sniff()           #some hard-coded examination of edi file; ta_info can be overruled by syntax-parameters in edi-file
+        #start lexing
         self._lex()
         if hasattr(self,'rawinput'):
             del self.rawinput
+        #**breaking parser errors
         self.root = node.Node()  #make root Node None.
         self.iternext_lex_record = iter(self.lex_records)
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
@@ -64,8 +87,9 @@ class Inmessage(message.Message):
             raise botslib.InMessageError(_(u'[A50] line %(line)s pos %(pos)s: Found non-valid data at end of edi file; probably a problem with separators or message structure.'),
                                             {'line':leftover[0][LIN], 'pos':leftover[0][POS]})
         del self.lex_records
-        #end parsing; self.root is root of a tree (of nodes).
+        #self.root is now root of a tree (of nodes).
 
+        #**non-breaking parser errors
         self.checkenvelope()
         self.checkmessage(self.root,self.defmessage)
         #get queries-dict for parsed message; this is used to update in database
@@ -213,6 +237,10 @@ class Inmessage(message.Message):
                                                                             {'record':self.mpathformat(structure_level[structure_index][MPATH])})
                 structure_index += 1
                 if structure_index == structure_end:  #current_lex_record is not in this level. Go level up
+                    #if on 'first level': give specific error
+                    if current_lex_record is not None and structure_level == self.defmessage.structure:
+                        raise botslib.InMessageError(self.messagetypetxt + _(u'[S50]: Line:%(line)s pos:%(pos)s record:"%(record)s": message has an error in its structure; this record is not allowed here. Scanned in message definition until mandatory record: "%(looked)s".'),
+                                                                            {'record':current_lex_record[ID][VALUE],'line':current_lex_record[ID][LIN],'pos':current_lex_record[ID][POS],'looked':self.mpathformat(structure_level[structure_index-1][MPATH])})
                     return current_lex_record    #return either None (no more lex_records to parse) or the last current_lex_record (the last current_lex_record is not found in this level)
                 countnrofoccurences = 0
                 continue  #continue while-loop: get_next_lex_record is false as no match with structure is made; go and look at next record of structure
@@ -276,6 +304,7 @@ class Inmessage(message.Message):
         ''' read content of edi file to memory.
         '''
         botsglobal.logger.debug(u'Read edi file "%(filename)s".',self.ta_info)
+        #~ print self.ta_info
         self.rawinput = botslib.readdata(filename=self.ta_info['filename'],charset=self.ta_info['charset'],errors=self.ta_info['checkcharsetin'])
 
     def _sniff(self):
@@ -377,19 +406,27 @@ class fixed(Inmessage):
 
     def _lex(self):
         ''' edi file->self.lex_records.'''
-        if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
-            botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
-            for linenr,line in enumerate(self.filehandler):
-                if not line.isspace():
-                    line = line.rstrip('\r\n')
-                    self.lex_records.append([{VALUE:botsid,LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
-        else:
-            startrecordid = self.ta_info['startrecordID']
-            endrecordid = self.ta_info['endrecordID']
-            for linenr,line in enumerate(self.filehandler):
-                if not line.isspace():
-                    line = line.rstrip('\r\n')
-                    self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
+        try:
+            #there is a problem with the way python reads line by line: file/line offset is not correctly reported.
+            #so the error is catched here to give correct/reasonable result.
+            if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
+                botsid = self.defmessage.structure[0][ID]   #add the recordname as BOTSID
+                for linenr,line in enumerate(self.filehandler, start=1):
+                    if not line.isspace():
+                        line = line.rstrip('\r\n')
+                        self.lex_records.append([{VALUE:botsid,LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
+            else:
+                startrecordid = self.ta_info['startrecordID']
+                endrecordid = self.ta_info['endrecordID']
+                for linenr,line in enumerate(self.filehandler, start=1):
+                    if not line.isspace():
+                        line = line.rstrip('\r\n')
+                        self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
+        except UnicodeError,msg:
+            rep_linenr = locals().get('linenr',0) + 1
+            start = msg.start - 10 if msg.start >= 10 else 0
+            content = msg.object[start:msg.end+10]
+            raise botslib.InMessageError(_(u'Characterset problem in file. At/after line %(line)s: "%(content)s"'),{'line':rep_linenr,'content':content})
 
     def _parsefields(self,lex_record,record_definition):
         ''' Parse fields from one fixed message-record and check length of the fixed record.
@@ -927,9 +964,9 @@ class edifact(var):
         except LookupError:
             raise botslib.InMessageError(_(u'[A58]: Edifact file has unknown characterset "%(charset)s".'),
                                             {'charset':found_charset})
-        except UnicodeDecodeError, msg:
-            raise botslib.InMessageError(_(u'[A59]: Edifact file has not allowed characters at/after file-position %(content)s.'),
-                                            {'content':msg[2]})
+        #~ except UnicodeDecodeError, msg:
+            #~ raise botslib.InMessageError(_(u'[A59]: Edifact file has not allowed characters at/after file-position %(content)s.'),
+                                            #~ {'content':msg[2]})
         if self.ta_info['version'] < '4':     #repeat char only for version >= 4
             self.ta_info['reserve'] = ''
 
@@ -1069,6 +1106,26 @@ class edifact(var):
             self.ta_info.update(confirmtype=confirmtype,confirmed=True,confirmasked = True,confirmidta=ta_confirmation.idta)  #this info is used in transform.py to update the ta.....ugly...
             ta_confirmation.update(**out.ta_info)    #update ta for confirmation
             
+    def try_to_retrieve_info(self):
+        ''' when edi-file is not correct, (try to) get info about eg partnerID's in message
+            for now: look around in lexed record
+        '''
+        if hasattr(self,'lex_records'):
+            for lex_record in self.lex_records:
+                if lex_record[0][VALUE] == 'UNB':
+                    count_fields = 0
+                    for field in lex_record:
+                        if not field[SFIELD]:  #if field (not subfield etc)
+                            count_fields += 1
+                            if count_fields == 3:
+                                self.ta_info['frompartner'] = field[VALUE]
+                            elif count_fields == 4:
+                                self.ta_info['topartner'] = field[VALUE]
+                            elif count_fields == 6:
+                                self.ta_info['reference'] = field[VALUE]
+                                return
+                    return
+
 
 class x12(var):
     ''' class for x12 inmessage objects.'''
@@ -1167,6 +1224,25 @@ class x12(var):
                     except:
                         self.add2errorlist(_(u'[E21]: Count of segments in SE is invalid: "%(count)s".\n')%{'count':secount})
             botsglobal.logmap.debug(u'Parsing X12 envelopes is OK')
+
+    def try_to_retrieve_info(self):
+        ''' when edi-file is not correct, (try to) get info about eg partnerID's in message
+            for now: look around in lexed record
+        '''
+        if hasattr(self,'lex_records'):
+            for lex_record in self.lex_records:
+                if lex_record[0][VALUE] == 'ISA':
+                    count_fields = 0
+                    for field in lex_record:
+                        count_fields += 1
+                        if count_fields == 7:
+                            self.ta_info['frompartner'] = field[VALUE]
+                        elif count_fields == 9:
+                            self.ta_info['topartner'] = field[VALUE]
+                        elif count_fields == 15:
+                            self.ta_info['reference'] = field[VALUE]
+                            return
+                    return
 
     def handleconfirm(self,ta_fromfile,error):
         ''' end of edi file handling.
@@ -1324,7 +1400,7 @@ class xml(Inmessage):
         self.stackinit()
         self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
-        self.checkforerrorlist()
+        self.ta_info.update(self.root.queries)
 
     def _handle_empty(self,xmlnode):
         if xmlnode.text:
@@ -1416,6 +1492,7 @@ class json(Inmessage):
                 if not child.record:    #sanity test: the children must have content
                     raise botslib.InMessageError(_(u'[J51]: No usable content.'))
                 self.checkmessage(child,self.defmessage)
+                self.ta_info.update(child.queries)
         elif isinstance(jsonobject,dict):
             if len(jsonobject)==1 and isinstance(jsonobject.values()[0],dict):
                 # best structure: {rootid:{id2:<dict, list>}}
@@ -1430,10 +1507,10 @@ class json(Inmessage):
             if not self.root:
                 raise botslib.InMessageError(_(u'[J52]: No usable content.'))
             self.checkmessage(self.root,self.defmessage)
+            self.ta_info.update(self.root.queries)
         else:
             #root in JSON is neither dict or list.
             raise botslib.InMessageError(_(u'[J53]: Content must be a "list" or "object".'))
-        self.checkforerrorlist()
 
     def _getrootid(self):
         return self.defmessage.structure[0][ID]
@@ -1446,7 +1523,7 @@ class json(Inmessage):
                 if newnode:
                     lijst.append(newnode)
             elif self.ta_info['checkunknownentities']:
-                raise botslib.InMessageError(_(u'[J54]: List content in must be a "object".'))
+                raise botslib.InMessageError(_(u'[J54]: List content must be a "object".'))
         return lijst
 
     def _dojsonobject(self,jsonobject,name):

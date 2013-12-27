@@ -335,18 +335,18 @@ def log_session(func):
             return terug
     return wrapper
 
-def txtexc():
+def txtexc(mention_exception_type=True):
     ''' Process last exception to get (safe) errortext.
         str().decode(): bytes->unicode
     '''
     if botsglobal.ini and botsglobal.ini.getboolean('settings','debug',False):
         return safe_unicode(traceback.format_exc(limit=None))
-        #~ return traceback.format_exc(limit=None).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
     else:
         terug = safe_unicode(traceback.format_exc(limit=0))
-        #~ terug = traceback.format_exc(limit=0).decode('utf-8','ignore')    #problems with char set for some input data, so always decode this ->to unicode
-        return terug.replace(u'Traceback (most recent call last):\n',u'')
-
+        terug = terug.replace(u'Traceback (most recent call last):\n',u'')
+        if not mention_exception_type:
+            terug = terug.partition(': ')[2]
+        return terug
 def safe_unicode(value):
     ''' For errors: return best possible unicode...should never lead to errors.
     '''
@@ -780,7 +780,8 @@ def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
 
 def updateunlessset(updatedict,fromdict):
-    updatedict.update((key,value) for key, value in fromdict.iteritems() if key not in updatedict)
+    updatedict.update((key,value) for key, value in fromdict.iteritems() if key not in updatedict) #!!TODO when is this valid? Note: prevents setting charset from gramamr 
+    #~ updatedict.update((key,value) for key, value in fromdict.iteritems() if key not in updatedict or not updatedict[key]) #!!TODO when is this valid? Note: prevents setting charset from gramamr 
     #~ for key, value in fromdict.iteritems():
         #~ if key not in updatedict:
             #~ updatedict[key] = value

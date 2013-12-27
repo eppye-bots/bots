@@ -13,7 +13,8 @@ class Message(object):
     '''
     def __init__(self,ta_info):
         self.ta_info = ta_info      #here ta_info is only filled with parameters from db-ta
-        self.errorlist = []         #collect all (non-fatal) errors in the edi file; used in reporting errors.
+        self.errorlist = []         #collect non-fatal errors in the edi file; used in reporting errors.
+        self.errorfatal = ''        #store fatal errors: errors that stop the processing of the file
         self.messagetypetxt = ''    #used in reporting errors.
         self.messagecount = 0       #count messages in edi file; used in reporting errors.
 
@@ -26,20 +27,36 @@ class Message(object):
             self.errorlist.append(_(u'Found at least %(max_number_errors)s errors.'),
                                         {'max_number_errors':len(self.errorlist)})
         else:
-            #more than max_number_errors are not displayed
+            #more than max_number_errors: stop adding new errors to list.
             pass
 
     def checkforerrorlist(self):
+        ''' examine the message-object.
+        '''
+        if self.errorfatal:
+            self.try_to_retrieve_info()
+            raise botslib.MessageError(self.errorfatal)
         if self.errorlist:
-            raise botslib.MessageError(_(u'%(errorlist)s'),{'errorlist':''.join(self.errorlist)})
+            raise botslib.MessageError(u'%(errorlist)s',{'errorlist':''.join(self.errorlist)})
 
 
+    def try_to_retrieve_info(self):
+        ''' when edi-file is not correct, (try to) get info about eg partnerID's in message
+            method is specified in subclasses.
+        ''' 
+        pass
+        
     def messagegrammarread(self,typeofgrammarfile='grammars'):
         ''' read grammar for a message/envelope.
         '''
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'],typeofgrammarfile)
         #write values from grammar to self.ta_info - unless these values are already set (eg by mappingscript)
+        #~ print 'point message.messagegrammarread1',self.ta_info
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)
+        if not self.ta_info['charset']:
+            self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
+        #~ print 'point message.messagegrammarread2',self.defmessage.syntax
+        #~ print 'point message.messagegrammarread3',self.ta_info
 
     @staticmethod
     def display(lex_records):
