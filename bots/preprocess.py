@@ -19,7 +19,7 @@ def preprocess(routedict,function,status=FILEIN,rootidta=None,**argv):
         preprocess is called right after the in-communicatiation
     '''
     if rootidta is None:
-        rootidta = botsglobal.currentrun.get_minta4query_routepart()
+        rootidta = botsglobal.currentrun.get_minta4query()
     nr_files = 0
     for row in botslib.query(u'''SELECT idta,filename
                                 FROM ta
