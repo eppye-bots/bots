@@ -581,6 +581,12 @@ class var(Inmessage):
         valuepos    = 1    #record position of token in line
         countline   = 1    #count number of lines; start with 1
         countpos    = 0    #count position/number of chars within line
+        #csv files can be tab-delimited. that leads to errors when first field is not filled:
+        if isinstance(self,csv) and self.ta_info['field_sep'].isspace():        #and: is tab-delimited
+            use_mode_inrecord = False
+        else:
+            use_mode_inrecord = True
+
         sep = field_sep + sfield_sep + record_sep + escape + rep_sep
 
         for char in self.rawinput:    #get next char
@@ -653,7 +659,10 @@ class var(Inmessage):
                 lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current value to lex_record
                 self.lex_records.append(lex_record)                 #write lex_record to self.lex_records
                 lex_record = []
-                mode_inrecord = 0    #    
+                if use_mode_inrecord:
+                    mode_inrecord = 0    #we are not in a record
+                else:
+                    mode_inrecord = 1    #for tab-delimited csv: we are still in a record
                 value = u''
                 sfield = 0      #new token is field 
                 continue
