@@ -144,6 +144,9 @@ def start():
         if acceptance_userscript:
             if hasattr(acceptance_userscript,'pretest'):
                 botslib.runscript(acceptance_userscript,acceptance_scriptname,'pretest',routestorun=routestorun)
+        if userscript and hasattr(userscript,'pre'):
+            botslib.runscript(userscript,scriptname,'pre',commandstorun=commandstorun,routestorun=routestorun)
+
 
         botslib.prepare_confirmrules()
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
@@ -177,9 +180,13 @@ def start():
                                             {'active':True}):
                     use_routestorun.append(row['idroute'])
                 botsglobal.logger.info(_(u'Run all active routes from database: "%(routes)s".'),{'routes':str(use_routestorun)})
+            if userscript and hasattr(userscript,'pre' + command):
+                botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
             errorinrun += router.rundispatcher(command,use_routestorun)
             if userscript and hasattr(userscript,'post' + command):
                 botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
+        if userscript and hasattr(userscript,'post'):
+            botslib.runscript(userscript,scriptname,'post',commandstorun=commandstorun,routestorun=routestorun)
         #in acceptance tests: run a user script that can do checks on results of acceptance test.******************************
         #this is before the cleanup, but this is not critical 
         if acceptance_userscript:
