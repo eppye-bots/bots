@@ -108,7 +108,7 @@ def email_error_report(rootidtaofrun):
                     reporttext += '%s: %s\n' % (key,row[key])
         # Include details about file errors in the email report; if debug is True: includes trace
         if results['lasterror'] or results['lastopen'] or results['lastok']:
-            for row in botslib.query('''SELECT idroute,frompartner,fromchannel,topartner,tochannel,errortext
+            for row in botslib.query('''SELECT idroute,frompartner,fromchannel,topartner,tochannel,errortext,infilename
                                         FROM filereport
                                         WHERE idta>%(rootidtaofrun)s
                                         AND statust!=%(statust)s ''',
