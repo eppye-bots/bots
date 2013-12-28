@@ -239,7 +239,7 @@ class channel(models.Model):
     starttls = models.BooleanField(default=False,verbose_name='No check from-address',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
     apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #20110104: used as 'no check on "to:" email address'
     remove = models.BooleanField(default=False,help_text=_(u"Delete incoming edi files after reading. Use this in production, else edi files are read over and over again."))
-    path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both are used
+    path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both host and path are used
     filename = StripCharField(max_length=256,blank=True,help_text=_(u'Incoming: use wild-cards eg: "*.edi". <br>Outgoing: many options, see <a target="_blank" href="http://code.google.com/p/bots/wiki/Filenames">wiki</a>. Advised: use "*" in filename (is replaced by unique counter per channel); eg "D_*.edi" gives D_1.edi, D_2.edi, etc.'))
     lockname = StripCharField(max_length=35,blank=True,help_text=_(u'Use directory locking: when reading or writing edi files use this file to indicate directory lock.'))
     syslock = models.BooleanField(default=False,help_text=_(u'Use system file locking for reading or writing edi files (windows, *nix).'))
