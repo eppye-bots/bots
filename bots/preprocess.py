@@ -200,7 +200,7 @@ def mailbag(ta_from,endstatus,frommessagetype,**argv):
                         escape = char
                     elif count == 6:
                         record_sep = char
-                if count != 6:
+                if count != 6 and len(found.group('UNAstring').rstrip()) != 6:
                     raise botslib.InMessageError(_(u'[M55]: Non-valid UNA-segment at position %(pos)s. UNA-segment should be 6 positions.'),{'pos':headpos})
                 if found.group('field_sep') != field_sep:
                     raise botslib.InMessageError(_(u'[M56]: Data element separator used in edifact file differs from value indicated in UNA-segment.'))
