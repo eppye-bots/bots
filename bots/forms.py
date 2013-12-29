@@ -127,6 +127,7 @@ class SelectOutgoing(Select):
     editype = django.forms.ChoiceField(models.EDITYPESLIST,required=False)
     messagetype = django.forms.ChoiceField(required=False)
     lastrun = django.forms.BooleanField(required=False,initial=False)
+    reference = django.forms.CharField(required=False,label='Filename',max_length=70)
     def __init__(self, *args, **kwargs):
         super(SelectOutgoing, self).__init__(*args, **kwargs)
         self.fields['idroute'].choices = models.getroutelist()
