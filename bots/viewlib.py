@@ -2,7 +2,7 @@ import sys
 import copy
 import datetime
 import django
-from django.core.paginator import Paginator,EmptyPage, InvalidPage
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.utils.translation import ugettext as _
 import models
 import botsglobal
@@ -235,9 +235,6 @@ def handlepagination(requestpost,cleaned_data):
                 cleaned_data['sortedasc'] = False
             else:
                 cleaned_data['sortedasc'] = True
-
-def render(request,form,query=None):
-    return django.shortcuts.render_to_response(form.template, {'form': form,"queryset":query},context_instance=django.template.RequestContext(request))
 
 def getidtalastrun():
     return models.filereport.objects.all().aggregate(django.db.models.Max('reportidta'))['reportidta__max']

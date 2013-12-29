@@ -17,6 +17,7 @@ import botsglobal
 import py2html
 from botsconfig import *
 
+
 def server_error(request, template_name='500.html'):
     ''' the 500 error handler.
         Templates: `500.html`
@@ -29,96 +30,101 @@ def server_error(request, template_name='500.html'):
     return django.http.HttpResponseServerError(temp.render(django.template.Context({'exc_info':exc_info})))
 
 def index(request,*kw,**kwargs):
-    return django.shortcuts.render_to_response('admin/base.html', {},context_instance=django.template.RequestContext(request))
+    ''' when using eg http://localhost:8080
+        index can be reached without being logged in.
+        most of the time user is redirected to '/home'
+    '''
+    return django.shortcuts.render(request,'admin/base.html')
 
 def home(request,*kw,**kwargs):
-    return django.shortcuts.render_to_response('bots/about.html', {'botsinfo':botslib.botsinfo()},context_instance=django.template.RequestContext(request))
+    return django.shortcuts.render(request,'bots/about.html',{'botsinfo':botslib.botsinfo()})
 
 def reports(request,*kw,**kwargs):
-    #~ print 'reports received',kw,kwargs,request.POST,request.GET
     if request.method == 'GET':
-        if 'select' in request.GET:             #via menu, go to select form
-            formout = forms.SelectReports()
-            return viewlib.render(request,formout)
-        else:                              #via menu, parse get-parameters, go to view form
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
-    else:                                  # request.method == 'POST'
-        if 'fromselect' in request.POST:        #coming from select criteria screen
+        if 'select' in request.GET:             #from menu:select->reports
+            form = forms.SelectReports()     
+            return django.shortcuts.render(request, form.template, {'form': form})    #go to the SelectReports form
+        else:                                   #from menu:run->report
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}   #go to default report-query using these default parameters
+    else: #request.method == 'POST'
+        if 'fromselect' in request.POST:        #from SelectReports form
             formin = forms.SelectReports(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-        else:
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            #go to default report-query using parameters from select screen
+        else:                                   #from ViewReports form
             formin = forms.ViewReports(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-            if '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
-                formout = forms.SelectReports(formin.cleaned_data)
-                return viewlib.render(request,formout)
-            elif 'report2incoming' in request.POST:         #coming from ViewIncoming, go to incoming
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            elif '2select' in request.POST:               #from ViewReports form using button change selection
+                form = forms.SelectReports(formin.cleaned_data)
+                return django.shortcuts.render(request, form.template, {'form': form})
+            elif 'report2incoming' in request.POST:       #from ViewReports form using star view incoming
                 request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2incoming']))
                 return incoming(request)
-            elif 'report2outgoing' in request.POST:         #coming from ViewIncoming, go to incoming
+            elif 'report2outgoing' in request.POST:       #from ViewReports form using star view outgoing
                 request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2outgoing']))
                 return outgoing(request)
-            elif 'report2process' in request.POST:         #coming from ViewIncoming, go to incoming
+            elif 'report2process' in request.POST:       #from ViewReports form using star view process errors
                 request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2process']))
                 return process(request)
-            elif 'report2errors' in request.POST:         #coming from ViewIncoming, go to incoming
+            elif 'report2errors' in request.POST:       #from ViewReports form using star file errors
                 newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2errors']))
                 newpost['statust'] = ERROR
                 request.POST = newpost
                 return incoming(request)
-            else:                                    #coming from ViewIncoming
+            else:                                       #from ViewReports, next page etc 
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-
+    #normal report-query with parameters
     query = models.report.objects.all()
     pquery = viewlib.filterquery(query,cleaned_data)
-    formout = forms.ViewReports(initial=cleaned_data)
-    return viewlib.render(request,formout,pquery)
+    form = forms.ViewReports(initial=cleaned_data)
+    return django.shortcuts.render(request, form.template, {'form': form,'queryset':pquery})
 
 def incoming(request,*kw,**kwargs):
     if request.method == 'GET':
-        if 'select' in request.GET:             #via menu, go to select form
-            formout = forms.SelectIncoming()
-            return viewlib.render(request,formout)
-        else:                                   #via menu, parse recevied parameters
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
-    else:                                  # request.method == 'POST'
-        if '2outgoing' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='in2out')
-            return outgoing(request)
-        elif '2process' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='2process')
-            return process(request)
-        elif '2confirm' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='in2confirm')
-            return process(request)
-        elif 'fromselect' in request.POST:        #coming from select criteria screen
+        if 'select' in request.GET:             #from menu:select->incoming
+            form = forms.SelectIncoming()
+            return django.shortcuts.render(request, form.template, {'form': form})    #go to the SelectIncoming form
+        else:                                  #from menu:run->incoming
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))} #go to default incoming-query using these default parameters
+    else: #request.method == 'POST'
+        if 'fromselect' in request.POST:        #from SelectIncoming form
             formin = forms.SelectIncoming(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-        else:                                   #coming from ViewIncoming
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            #go to default report-query using parameters from select screen
+        elif '2outgoing' in request.POST:        #from ViewIncoming form, using button 'outgoing (same selection)'
+            request.POST = viewlib.changepostparameters(request.POST,soort='in2out')
+            return outgoing(request)
+        elif '2process' in request.POST:        #from ViewIncoming form, using button 'process errors (same selection)'
+            request.POST = viewlib.changepostparameters(request.POST,soort='2process')
+            return process(request)
+        elif '2confirm' in request.POST:        #from ViewIncoming form, using button 'confirm (same selection)'
+            request.POST = viewlib.changepostparameters(request.POST,soort='in2confirm')
+            return confirm(request)
+        else:                                   #from ViewIncoming form, check this form first
             formin = forms.ViewIncoming(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-            elif '2select' in request.POST:         #go to select form using same criteria
-                formout = forms.SelectIncoming(formin.cleaned_data)
-                return viewlib.render(request,formout)
-            elif 'delete' in request.POST:        #coming from ViewIncoming
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            elif '2select' in request.POST:     #from ViewIncoming form using button change selection
+                form = forms.SelectIncoming(formin.cleaned_data)
+                return django.shortcuts.render(request, form.template, {'form': form})
+            elif 'delete' in request.POST:        #from ViewIncoming form using star delete
                 idta = int(request.POST[u'delete'])
                 #~ query = models.filereport.objects.filter(idta=int(idta)).all().delete()
                 models.filereport.objects.filter(idta=idta).delete()
                 ta_object = models.ta.objects.get(idta=idta)
                 viewlib.gettrace(ta_object)
                 viewlib.trace2delete(ta_object)
-            elif 'retransmit' in request.POST:
+            elif 'retransmit' in request.POST:        #from ViewIncoming form using star rereceive
                 idta = request.POST[u'retransmit']
                 filereport = models.filereport.objects.get(idta=int(idta))
                 if filereport.fromchannel:   #for resend files fromchannel has no value. (do not rereceive resend items)
                     filereport.retransmit = not filereport.retransmit
                     filereport.save()
-            elif 'rereceiveall' in request.POST:
+            elif 'rereceiveall' in request.POST:        #from ViewIncoming form using button 'rereceive all'
                 #select all objects with parameters and set retransmit
                 query = models.filereport.objects.all()
                 incomingfiles = viewlib.filterquery2(query,formin.cleaned_data)
@@ -126,49 +132,50 @@ def incoming(request,*kw,**kwargs):
                     if incomingfile.fromchannel:
                         incomingfile.retransmit = not incomingfile.retransmit
                         incomingfile.save()
-            else:                                    #coming from ViewIncoming
+            else:                                    #from ViewIncoming, next page etc 
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-
+    #normal incoming-query with parameters
     query = models.filereport.objects.all()
     pquery = viewlib.filterquery(query,cleaned_data,incoming=True)
-    formout = forms.ViewIncoming(initial=cleaned_data)
-    return viewlib.render(request,formout,pquery)
+    form = forms.ViewIncoming(initial=cleaned_data)
+    return django.shortcuts.render(request, form.template, {'form': form,'queryset':pquery})
 
 def outgoing(request,*kw,**kwargs):
     if request.method == 'GET':
-        if 'select' in request.GET:             #via menu, go to select form
-            formout = forms.SelectOutgoing()
-            return viewlib.render(request,formout)
-        else:                                   #via menu, parse recevied parameters
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
-    else:                                  # request.method == 'POST'
-        if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='out2in')
-            return incoming(request)
-        elif '2process' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='2process')
-            return process(request)
-        elif '2confirm' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='out2confirm')
-            return process(request)
-        elif 'fromselect' in request.POST:        #coming from select criteria screen
+        if 'select' in request.GET:             #from menu:select->outgoing
+            form = forms.SelectOutgoing()
+            return django.shortcuts.render(request, form.template, {'form': form})
+        else:                                  #from menu:run->outgoing
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))} #go to default outgoing-query using these default parameters
+    else: #request.method == 'POST'
+        if 'fromselect' in request.POST:        #from SelectOutgoing form
             formin = forms.SelectOutgoing(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-        else:
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            #go to default outgoing-query using parameters from select screen
+        elif '2incoming' in request.POST:        #from ViewOutgoing form, using button 'incoming (same selection)'
+            request.POST = viewlib.changepostparameters(request.POST,soort='out2in')
+            return incoming(request)
+        elif '2process' in request.POST:         #from ViewOutgoing form, using button 'process errors (same selection)'
+            request.POST = viewlib.changepostparameters(request.POST,soort='2process')
+            return process(request)
+        elif '2confirm' in request.POST:        #from ViewOutgoing form, using button 'confirm (same selection)'
+            request.POST = viewlib.changepostparameters(request.POST,soort='out2confirm')
+            return confirm(request)
+        else:                                   #from ViewOutgoing form, check this form first
             formin = forms.ViewOutgoing(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-            elif '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
-                formout = forms.SelectOutgoing(formin.cleaned_data)
-                return viewlib.render(request,formout)
-            elif 'retransmit' in request.POST:        #coming from ViewIncoming
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            elif '2select' in request.POST:     #from ViewOutgoing form using button change selection
+                form = forms.SelectOutgoing(formin.cleaned_data)
+                return django.shortcuts.render(request, form.template, {'form': form})
+            elif 'retransmit' in request.POST:  #from ViewOutgoing form using star resend
                 ta_object = models.ta.objects.get(idta=int(request.POST[u'retransmit']))
                 if ta_object.statust != RESEND:     #can only resend last file
                     ta_object.retransmit = not ta_object.retransmit
                     ta_object.save()
-            elif 'resendall' in request.POST:
+            elif 'resendall' in request.POST:        #from ViewOutgoing form using button 'resend all'
                 #select all objects with parameters and set retransmit
                 query = models.ta.objects.filter(status=EXTERNOUT)
                 outgoingfiles = viewlib.filterquery2(query,formin.cleaned_data)
@@ -176,89 +183,92 @@ def outgoing(request,*kw,**kwargs):
                     if outgoingfile.statust != RESEND:
                         outgoingfile.retransmit = not outgoingfile.retransmit
                         outgoingfile.save()
-            elif 'noautomaticretry' in request.POST:        #coming from ViewIncoming
+            elif 'noautomaticretry' in request.POST:        #from ViewOutgoing form using star 'no automaticretry'
                 ta_object = models.ta.objects.get(idta=int(request.POST[u'noautomaticretry']))
                 if ta_object.statust == ERROR:
                     ta_object.statust = NO_RETRY
                     ta_object.save()
-            else:                                    #coming from ViewIncoming
+            else:                                    #from ViewIncoming, next page etc 
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-
+    #normal outgoing-query with parameters
     query = models.ta.objects.filter(status=EXTERNOUT)
     pquery = viewlib.filterquery(query,cleaned_data)
-    formout = forms.ViewOutgoing(initial=cleaned_data)
-    return viewlib.render(request,formout,pquery)
+    form = forms.ViewOutgoing(initial=cleaned_data)
+    return django.shortcuts.render(request, form.template, {'form': form,'queryset':pquery})
 
 def document(request,*kw,**kwargs):
     if request.method == 'GET':
-        if 'select' in request.GET:             #via menu, go to select form
-            formout = forms.SelectDocument()
-            return viewlib.render(request,formout)
-        else:                                   #via menu, parse recevied parameters
+        if 'select' in request.GET:             #from menu:select->document
+            form = forms.SelectDocument()
+            return django.shortcuts.render(request, form.template, {'form': form})
+        else:                                   #from menu:run->document
             cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
             cleaned_data['lastrun'] = bool(int(request.GET.get('lastrun',0)))
             cleaned_data['status'] = int(request.GET.get('status',0))
-    else:                                  # request.method == 'POST'
-        if 'fromselect' in request.POST:        #coming from select criteria screen
+             #go to default document-query using these default parameters
+    else: #request.method == 'POST'
+        if 'fromselect' in request.POST:         #from SelectDocument form
             formin = forms.SelectDocument(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            #go to default document-query using parameters from select screen
         else:
             formin = forms.ViewDocument(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-            if '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
-                formout = forms.SelectDocument(formin.cleaned_data)
-                return viewlib.render(request,formout)
-            elif 'retransmit' in request.POST:        #coming from Documents, no reportidta
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            elif '2select' in request.POST:         #coming from ViewDocument, change the selection criteria, go to select form
+                form = forms.SelectDocument(formin.cleaned_data)
+                return django.shortcuts.render(request, form.template, {'form': form})
+            elif 'retransmit' in request.POST:        #coming from ViewDocument, no reportidta
                 idta = request.POST[u'retransmit']
                 filereport = models.filereport.objects.get(idta=int(idta),statust=DONE)
                 filereport.retransmit = not filereport.retransmit
                 filereport.save()
-            else:                                    #coming from ViewIncoming
+            else:                                    #coming from ViewDocument, next page etc
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-
+    #normal document-query with parameters
     query = models.ta.objects.filter(django.db.models.Q(status=SPLITUP)|django.db.models.Q(status=TRANSLATED))
     pquery = viewlib.filterquery(query,cleaned_data)
     viewlib.trace_document(pquery)
-    formout = forms.ViewDocument(initial=cleaned_data)
-    return viewlib.render(request,formout,pquery)
+    form = forms.ViewDocument(initial=cleaned_data)
+    return django.shortcuts.render(request, form.template, {'form': form,'queryset':pquery})
 
 def process(request,*kw,**kwargs):
     if request.method == 'GET':
-        if 'select' in request.GET:             #via menu, go to select form
-            formout = forms.SelectProcess()
-            return viewlib.render(request,formout)
-        else:                                   #via menu, parse recevied parameters
+        if 'select' in request.GET:             #from menu:select->process
+            form = forms.SelectProcess()
+            return django.shortcuts.render(request, form.template, {'form': form})
+        else:                                   #from menu:run->process
             cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
-    else:                                  # request.method == 'POST'
-        if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='fromprocess')
-            return incoming(request)
-        elif '2outgoing' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='fromprocess')
-            return outgoing(request)
-        elif 'fromselect' in request.POST:        #coming from select criteria screen
+             #go to default process-query using these default parameters
+    else: #request.method == 'POST'
+        if 'fromselect' in request.POST:         #from SelectProcess form
             formin = forms.SelectProcess(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+        elif '2incoming' in request.POST:        #coming from ViewProcess, go to incoming form using same criteria
+            request.POST = viewlib.changepostparameters(request.POST,soort='fromprocess')
+            return incoming(request)
+        elif '2outgoing' in request.POST:        #coming from ViewProcess, go to outgoing form using same criteria
+            request.POST = viewlib.changepostparameters(request.POST,soort='fromprocess')
+            return outgoing(request)
         else:
             formin = forms.ViewProcess(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-            elif '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
-                formout = forms.SelectProcess(formin.cleaned_data)
-                return viewlib.render(request,formout)
-            else:                                    #coming from ViewIncoming
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+            elif '2select' in request.POST:         #coming from ViewProcess, change the selection criteria, go to select form
+                form = forms.SelectProcess(formin.cleaned_data)
+                return django.shortcuts.render(request, form.template, {'form': form})
+            else:                                    #coming from ViewProcess
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-
+    #normal process-query with parameters
     query = models.ta.objects.filter(status=PROCESS,statust=ERROR)
     pquery = viewlib.filterquery(query,cleaned_data)
-    formout = forms.ViewProcess(initial=cleaned_data)
-    return viewlib.render(request,formout,pquery)
+    form = forms.ViewProcess(initial=cleaned_data)
+    return django.shortcuts.render(request, form.template, {'form': form,'queryset':pquery})
 
 def detail(request,*kw,**kwargs):
     ''' in: the idta, either as parameter in or out.
@@ -270,33 +280,34 @@ def detail(request,*kw,**kwargs):
         than make up the details for the trace
     '''
     if request.method == 'GET':
-        if 'inidta' in request.GET: #detail for incoming screen
+        if 'inidta' in request.GET: #from incoming screen
             rootta = models.ta.objects.get(idta=int(request.GET['inidta']))
-        else:                       #detail for outgoing: trace back to EXTERNIN first
+        else:                       #from outgoing screen: trace back to EXTERNIN first
             rootta = viewlib.django_trace_origin(int(request.GET['outidta']),{'status':EXTERNIN})[0]
         viewlib.gettrace(rootta)
         detaillist = viewlib.trace2detail(rootta)
-        return django.shortcuts.render_to_response('bots/detail.html', {'detaillist':detaillist,'rootta':rootta,},context_instance=django.template.RequestContext(request))
+        return django.shortcuts.render(request,'bots/detail.html',{'detaillist':detaillist,'rootta':rootta})
 
 def confirm(request,*kw,**kwargs):
     if request.method == 'GET':
-        if 'select' in request.GET:             #via menu, go to select form
-            formout = forms.SelectConfirm()
-            return viewlib.render(request,formout)
-        else:                              #via menu, go to view form for last run
+        if 'select' in request.GET:             #from menu:select->confirm
+            form = forms.SelectConfirm()
+            return django.shortcuts.render(request, form.template, {'form': form})
+        else:                                  #from menu:run->confirm
             cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
-    else:                                  # request.method == 'POST'
-        if '2incoming' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='confirm2in')
-            return incoming(request)
-        elif '2outgoing' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
-            request.POST = viewlib.changepostparameters(request.POST,soort='confirm2out')
-            return outgoing(request)
-        elif 'fromselect' in request.POST:        #coming from select criteria screen
+             #go to default confirm-query using these default parameters
+    else: #request.method == 'POST'
+        if 'fromselect' in request.POST:         #from SelectConfirm form
             formin = forms.SelectConfirm(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-        elif 'confirm' in request.POST:        #coming from 'star' menu 'Manual confirm'
+                return django.shortcuts.render(request, formin.template, {'form': formin})
+        elif '2incoming' in request.POST:        #coming from ViewConfirm, go to incoming form using same criteria
+            request.POST = viewlib.changepostparameters(request.POST,soort='confirm2in')
+            return incoming(request)
+        elif '2outgoing' in request.POST:        #coming from ViewConfirm, go to outgoing form using same criteria
+            request.POST = viewlib.changepostparameters(request.POST,soort='confirm2out')
+            return outgoing(request)
+        elif 'confirm' in request.POST:        #coming ViewConfirm, using star 'Manual confirm'
             ta_object = models.ta.objects.get(idta=int(request.POST[u'confirm']))
             if ta_object.confirmed == False and ta_object.confirmtype.startswith('ask'):
                 ta_object.confirmed = True
@@ -308,22 +319,22 @@ def confirm(request,*kw,**kwargs):
             # then just refresh the current view
             formin = forms.ViewConfirm(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
+                return django.shortcuts.render(request, formin.template, {'form': formin})
         else:
             formin = forms.ViewConfirm(request.POST)
             if not formin.is_valid():
-                return viewlib.render(request,formin)
-            elif '2select' in request.POST:         #coming from ViewIncoming, change the selection criteria, go to select form
-                formout = forms.SelectConfirm(formin.cleaned_data)
-                return viewlib.render(request,formout)
-            else:                                    #coming from ViewIncoming
+                return django.shortcuts.render(request, formin.template, {'form':formin})
+            elif '2select' in request.POST:         #coming from ViewConfirm, change the selection criteria, go to select form
+                form = forms.SelectConfirm(formin.cleaned_data)
+                return django.shortcuts.render(request, form.template, {'form':form})
+            else:                                    #coming from ViewConfirm, next page etc
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
-
+    #normal confirm-query with parameters
     query = models.ta.objects.filter(confirmasked=True)
     pquery = viewlib.filterquery(query,cleaned_data)
-    formout = forms.ViewConfirm(initial=cleaned_data)
-    return viewlib.render(request,formout,pquery)
+    form = forms.ViewConfirm(initial=cleaned_data)
+    return django.shortcuts.render(request, form.template, {'form':form, 'queryset':pquery})
 
 def filer(request,*kw,**kwargs):
     ''' handles bots file viewer. Only files in data dir of Bots are displayed.'''
@@ -386,9 +397,9 @@ def filer(request,*kw,**kwargs):
                     ta_object.has_next = False
                 else:
                     ta_object.has_next = True
-            return  django.shortcuts.render_to_response('bots/filer.html', {'idtas': talijst},context_instance=django.template.RequestContext(request))
+            return django.shortcuts.render(request,'bots/filer.html',{'idtas': talijst})
         except:
-            return  django.shortcuts.render_to_response('bots/filer.html', {'error_content': _(u'No such file.')},context_instance=django.template.RequestContext(request))
+            return django.shortcuts.render(request,'bots/filer.html',{'error_content': _(u'No such file.')})
 
 def srcfiler(request,*kw,**kwargs):
     ''' handles bots source file viewer. display grammar, mapping, userscript etc.'''
@@ -400,17 +411,16 @@ def srcfiler(request,*kw,**kwargs):
                     source = f.read()
                 classified_text = py2html.analyze_python(source)
                 html_source = py2html.html_highlight(classified_text)
-                return  django.shortcuts.render_to_response('bots/srcfiler.html', {'src':src, 'html_source':html_source},context_instance=django.template.RequestContext(request))
+                return django.shortcuts.render(request,'bots/srcfiler.html',{'src':src, 'html_source':html_source})
             else:
-                return  django.shortcuts.render_to_response('bots/srcfiler.html', {'error_content': _(u'File %s not allowed.' %src)},context_instance=django.template.RequestContext(request))
+                return django.shortcuts.render(request,'bots/srcfiler.html',{'error_content': _(u'File %s not allowed.' %src)})
         except:
-            #~ print botslib.txtexc()
-            return  django.shortcuts.render_to_response('bots/srcfiler.html', {'error_content': _(u'No such file.')},context_instance=django.template.RequestContext(request))
+            return django.shortcuts.render(request,'bots/srcfiler.html',{'error_content': _(u'No such file.')})
 
 def plugin(request,*kw,**kwargs):
     if request.method == 'GET':
         form = forms.UploadFileForm()
-        return django.shortcuts.render_to_response('bots/plugin.html', {'form':form},context_instance=django.template.RequestContext(request))
+        return django.shortcuts.render(request,'bots/plugin.html',{'form': form})
     else:
         if 'submit' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             form = forms.UploadFileForm(request.POST, request.FILES)
@@ -437,7 +447,7 @@ def plugin(request,*kw,**kwargs):
 
 def plugin_index(request,*kw,**kwargs):
     if request.method == 'GET':
-        return django.shortcuts.render_to_response('bots/plugin_index.html', context_instance=django.template.RequestContext(request))
+        return django.shortcuts.render(request,'bots/plugin_index.html')
     else:
         if 'submit' in request.POST:        #coming from ViewIncoming, go to outgoing form using same criteria
             #write backup plugin first
@@ -505,7 +515,7 @@ def plugout_backup_core(request,*kw,**kwargs):
 def plugout(request,*kw,**kwargs):
     if request.method == 'GET':
         form = forms.PlugoutForm()
-        return  django.shortcuts.render_to_response('bots/plugout.html', {'form': form},context_instance=django.template.RequestContext(request))
+        return django.shortcuts.render(request,'bots/plugout.html',{'form': form})
     else:
         if 'submit' in request.POST:
             form = forms.PlugoutForm(request.POST)
@@ -528,7 +538,7 @@ def plugout(request,*kw,**kwargs):
 def delete(request,*kw,**kwargs):
     if request.method == 'GET':
         form = forms.DeleteForm()
-        return  django.shortcuts.render_to_response('bots/delete.html', {'form': form},context_instance=django.template.RequestContext(request))
+        return django.shortcuts.render(request,'bots/delete.html',{'form': form})
     else:
         if 'submit' in request.POST:
             form = forms.DeleteForm(request.POST)
