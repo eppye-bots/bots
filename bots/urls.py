@@ -15,6 +15,7 @@ urlpatterns = patterns('',
     (r'^logout.*', 'django.contrib.auth.views.logout',{'next_page': '/'}),
     #login required
     (r'^home.*', login_required(views.home)),
+    (r'^incoming_filename.*', login_required(views.incoming_filename)),
     (r'^incoming.*', login_required(views.incoming)),
     (r'^detail.*', login_required(views.detail)),
     (r'^process.*', login_required(views.process)),

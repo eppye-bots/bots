@@ -689,8 +689,10 @@ class file(_comsession):
         startdatetime = datetime.datetime.now()
         for fromfilename in filelist:
             try:
+                reference = os.path.basename(fromfilename)
                 ta_from = botslib.NewTransaction(filename=fromfilename,
                                                 status=EXTERNIN,
+                                                reference=reference,
                                                 fromchannel=self.channeldict['idchannel'],
                                                 idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
@@ -757,6 +759,7 @@ class file(_comsession):
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
                 #open tofile, incl syslock if indicated
                 tofilename = self.filename_formatter(filename_mask,ta_from)
+                reference = tofilename
                 tofilename = botslib.join(outputdir,tofilename)
                 tofile = open(tofilename, mode)
                 if self.channeldict['syslock']:
@@ -777,7 +780,7 @@ class file(_comsession):
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename=tofilename,numberofresends=row['numberofresends']+1)
+                ta_to.update(statust=DONE,filename=tofilename,reference=reference,numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 

@@ -141,6 +141,35 @@ def incoming(request,*kw,**kwargs):
     form = forms.ViewIncoming(initial=cleaned_data)
     return django.shortcuts.render(request, form.template, {'form': form,'queryset':pquery})
 
+def incoming_filename(request,*kw,**kwargs):
+    if request.method == 'GET':
+        if 'select' in request.GET:             #from menu:select->Incoming filename
+            form = forms.SelectInfilename()
+            return django.shortcuts.render(request, form.template, {'form': form})    #go to the SelectInfilename form
+        else:                                   #via menu, parse recevied parameters
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
+    else: #request.method == 'POST'
+        if 'fromselect' in request.POST:        #from SelectInfilename form
+            formin = forms.ViewInfilename(request.POST)
+            if not formin.is_valid():
+                return viewlib.render(request,formin)
+        else:
+            formin = forms.ViewInfilename(request.POST)
+            if not formin.is_valid():
+                return viewlib.render(request,formin)
+        cleaned_data = formin.cleaned_data
+    #first make a list of idta's from EXTERNIN
+    ta_query = models.ta.objects.filter(status=EXTERNIN)
+    ta_pquery = viewlib.filterquery2(ta_query,cleaned_data,incoming=True)
+    ta_list = ta_pquery.values_list('idta', flat=True)
+    #use this list a filter for filereports
+    pquery = models.filereport.objects.filter(idta__in=ta_list)
+    cleaned_data.pop('reference')   #do not use this as attribute is not in filereport table
+    pquery = viewlib.filterquery(pquery,cleaned_data,incoming=True)
+    
+    form = forms.ViewIncoming(initial=cleaned_data)
+    return django.shortcuts.render(request, form.template, {'form': form, 'queryset':pquery})
+
 def outgoing(request,*kw,**kwargs):
     if request.method == 'GET':
         if 'select' in request.GET:             #from menu:select->outgoing

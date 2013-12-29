@@ -31,6 +31,24 @@ class ViewReports(View):
     action = '/reports/'
     status = django.forms.IntegerField(required=False,initial='',widget=HIDDENINPUT())
 
+class SelectInfilename(Select):
+    template = 'bots/selectform.html'
+    action = '/incoming_filename/'
+    idroute = django.forms.ChoiceField([],required=False,initial='')
+    fromchannel = django.forms.ChoiceField([],required=False)
+    reference = django.forms.CharField(required=False,label='Filename',max_length=70)
+    def __init__(self, *args, **kwargs):
+        super(SelectInfilename, self).__init__(*args, **kwargs)
+        self.fields['idroute'].choices = models.getroutelist()
+        self.fields['fromchannel'].choices = models.getfromchannels()
+
+class ViewInfilename(View):
+    template = 'bots/incoming.html'
+    action = '/incoming/'
+    idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    reference = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    fromchannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
+
 class SelectIncoming(Select):
     template = 'bots/selectform.html'
     action = '/incoming/'
