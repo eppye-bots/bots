@@ -147,6 +147,7 @@ class ViewOutgoing(View):
     messagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
     tochannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    reference = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class SelectProcess(Select):
     template = 'bots/selectform.html'
