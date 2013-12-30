@@ -1,4 +1,5 @@
 #bots modules
+import sys
 import botslib
 import botsglobal
 from botsconfig import *
@@ -49,13 +50,20 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
     rootta.syn('ts')    #get the timestamp of this run
     lastreceived = resultsofrun[DONE]+resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]
     status = bool(resultsofrun[OK]+resultsofrun[OPEN]+resultsofrun[ERROR]+processerrors)
+    #give information about the used command line parameters for each run. Problem is that there is only 35pos for this (in MySQL, PostgreSQL).
+    #~ commandline = 
+    if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+        commandline = ' '.join(sys.argv)
+    else:
+        commandline = ' '.join([arg for arg in sys.argv[1:] if arg!='-cconfig' and not arg.startswith('--')])[:35]
     botslib.changeq(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,send,processerrors,
-                                            ts,lastreceived,status,type,filesize,acceptance)
+                                            ts,lastreceived,status,type,filesize,acceptance,rsrv1)
                             VALUES  (%(rootidtaofrun)s,%(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,%(send)s,%(processerrors)s,
-                                    %(ts)s,%(lastreceived)s,%(status)s,%(type)s,%(totalfilesize)s,%(acceptance)s) ''',
+                                    %(ts)s,%(lastreceived)s,%(status)s,%(type)s,%(totalfilesize)s,%(acceptance)s,%(rsrv1)s) ''',
                             {'rootidtaofrun':rootidtaofrun,'lastopen':resultsofrun[OPEN],'lasterror':resultsofrun[ERROR],'lastok':resultsofrun[OK],
                             'lastdone':resultsofrun[DONE],'send':send,'processerrors':processerrors,'ts':rootta.ts,'lastreceived':lastreceived,
-                            'status':status,'type':command,'totalfilesize':totalfilesize,'acceptance':int(botsglobal.ini.getboolean('acceptance','runacceptancetest',False))})
+                            'status':status,'type':command,'totalfilesize':totalfilesize,'acceptance':int(botsglobal.ini.getboolean('acceptance','runacceptancetest',False)),
+                            'rsrv1':commandline})
     #20120830: if new run with nothing received and no process errors: delete ta's.
     if command == 'new' and not lastreceived and not processerrors:
         botslib.changeq('''DELETE FROM ta WHERE idta>=%(rootidtaofrun)s''',{'rootidtaofrun':rootidtaofrun})
