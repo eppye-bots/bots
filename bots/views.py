@@ -4,8 +4,8 @@ import time
 import shutil
 import subprocess
 import traceback
-import django
 import socket
+import django
 from django.utils.translation import ugettext as _
 from django.contrib import messages
 import forms
@@ -52,6 +52,25 @@ def reports(request,*kw,**kwargs):
             if not formin.is_valid():
                 return django.shortcuts.render(request, formin.template, {'form': formin})
             #go to default report-query using parameters from select screen
+        elif 'report2incoming' in request.POST:       #from ViewReports form using star view incoming
+            request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2incoming']))
+            return incoming(request)
+        elif 'report2outgoing' in request.POST:       #from ViewReports form using star view outgoing
+            request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2outgoing']))
+            return outgoing(request)
+        elif 'report2process' in request.POST:       #from ViewReports form using star view process errors
+            request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2process']))
+            return process(request)
+        elif 'report2errors' in request.POST:       #from ViewReports form using star file errors
+            newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2errors']))
+            newpost['statust'] = ERROR
+            request.POST = newpost
+            return incoming(request)
+        elif 'report2commerrors' in request.POST:       #from ViewReports form using star communcation errors
+            newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2commerrors']))
+            newpost['statust'] = ERROR
+            request.POST = newpost
+            return outgoing(request)
         else:                                   #from ViewReports form
             formin = forms.ViewReports(request.POST)
             if not formin.is_valid():
@@ -59,25 +78,6 @@ def reports(request,*kw,**kwargs):
             elif '2select' in request.POST:               #from ViewReports form using button change selection
                 form = forms.SelectReports(formin.cleaned_data)
                 return django.shortcuts.render(request, form.template, {'form': form})
-            elif 'report2incoming' in request.POST:       #from ViewReports form using star view incoming
-                request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2incoming']))
-                return incoming(request)
-            elif 'report2outgoing' in request.POST:       #from ViewReports form using star view outgoing
-                request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2outgoing']))
-                return outgoing(request)
-            elif 'report2process' in request.POST:       #from ViewReports form using star view process errors
-                request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2process']))
-                return process(request)
-            elif 'report2errors' in request.POST:       #from ViewReports form using star file errors
-                newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2errors']))
-                newpost['statust'] = ERROR
-                request.POST = newpost
-                return incoming(request)
-            elif 'report2commerrors' in request.POST:       #from ViewReports form using star communcation errors
-                newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2commerrors']))
-                newpost['statust'] = ERROR
-                request.POST = newpost
-                return outgoing(request)
             else:                                       #from ViewReports, next page etc 
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
