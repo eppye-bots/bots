@@ -73,6 +73,11 @@ def reports(request,*kw,**kwargs):
                 newpost['statust'] = ERROR
                 request.POST = newpost
                 return incoming(request)
+            elif 'report2commerrors' in request.POST:       #from ViewReports form using star communcation errors
+                newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2commerrors']))
+                newpost['statust'] = ERROR
+                request.POST = newpost
+                return outgoing(request)
             else:                                       #from ViewReports, next page etc 
                 viewlib.handlepagination(request.POST,formin.cleaned_data)
         cleaned_data = formin.cleaned_data
