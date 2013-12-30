@@ -492,7 +492,7 @@ class report(models.Model):
     ts = models.DateTimeField(db_index=True)                     #copied from (runroot)ta
     type = StripCharField(max_length=35)
     status = models.BooleanField()
-    rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
+    rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501. 20131230: used to store the commandline for the run.
     rsrv2 = models.IntegerField(null=True)                       #added 20100501.
     filesize = models.IntegerField(null=True)                    #added 20121030: total size of messages that have been translated.
     acceptance = models.IntegerField(null=True)                            #added 20130114: 
