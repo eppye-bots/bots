@@ -34,7 +34,7 @@ class _Transaction(object):
     #filtering values for db handling to avoid unknown fields in db.
     filterlist = ('statust','status','divtext','parent','child','script','frompartner','topartner','fromchannel','tochannel','editype','messagetype','merge',
                 'testindicator','reference','frommail','tomail','contenttype','errortext','filename','charset','alt','idroute','nrmessages','retransmit',
-                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc','rsrv1','filesize','numberofresends')
+                'confirmasked','confirmed','confirmtype','confirmidta','envelope','botskey','cc','rsrv1','filesize','numberofresends','rsrv3')
     processlist = [0]  #stack for bots-processes. last one is the current process; starts with 1 element in list: root
 
     def update(self,**ta_info):
@@ -87,8 +87,8 @@ class _Transaction(object):
             parameters for new transaction are in ta_info (new transaction is updated with these values).
         '''
         script = _Transaction.processlist[-1]
-        newidta = insertta(u'''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope)
-                                SELECT %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope
+        newidta = insertta(u'''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope,rsrv3)
+                                SELECT %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope,rsrv3
                                 FROM ta
                                 WHERE idta=%(idta)s''',
                                 {'idta':self.idta,'script':script,'newstatus':status})

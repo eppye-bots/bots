@@ -544,7 +544,7 @@ class ta(models.Model):
     cc = StripCharField(max_length=512)               #added 20091111
     rsrv1 = StripCharField(max_length=35)             #added 20100501; 20120618: email subject
     rsrv2 = models.IntegerField(null=True)            #added 20100501;
-    rsrv3 = StripCharField(max_length=35)             #added 20100501
+    rsrv3 = StripCharField(max_length=35)             #added 20100501; 20131231: envelopeID to explicitly control enveloping (enveloping criterium)
     rsrv4 = models.IntegerField(null=True)            #added 20100501; 
     rsrv5 = StripCharField(max_length=35)             #added 20121030
     filesize = models.IntegerField(null=True)         #added 20121030; 

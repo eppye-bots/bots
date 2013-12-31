@@ -18,7 +18,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
     if rootidta is None:
         rootidta = botsglobal.currentrun.get_minta4query()
     #**********for messages only to envelope (no merging)
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,nrmessages,idroute,merge,idta,filename
+    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,nrmessages,idroute,merge,idta,filename,rsrv3
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
@@ -44,14 +44,14 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
             ta_fromfile.update(statust=DONE)
 
     #**********for messages to merge & envelope
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,sum(nrmessages) as nrmessages
+    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3,sum(nrmessages) as nrmessages
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
                                 AND statust=%(statust)s
                                 AND merge=%(merge)s
                                 AND idroute=%(idroute)s
-                                GROUP BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope
+                                GROUP BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3
                                 ''',
                                 {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,'idroute':idroute}):
         try:
@@ -76,7 +76,8 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                             ''',
                                             {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,
                                             'editype':ta_info['editype'],'messagetype':ta_info['messagetype'],'frompartner':ta_info['frompartner'],
-                                            'topartner':ta_info['topartner'],'testindicator':ta_info['testindicator'],'charset':ta_info['charset']}):
+                                            'topartner':ta_info['topartner'],'testindicator':ta_info['testindicator'],'charset':ta_info['charset'],
+                                            'rsrv3':ta_info['rsrv3']}):
                 ta_fromfile = botslib.OldTransaction(row2['idta'])      #edi message to be merged/envelope
                 ta_fromfile.update(child=ta_tofile.idta,statust=DONE)                #st child because of n->1 relation
                 filename_list.append(row2['filename'])
@@ -209,7 +210,6 @@ class edifact(Envelope):
             self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['topartner']))
         else:
             self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['frompartner']))
-
         #testindicator is more complex:
         if self.ta_info['testindicator'] and self.ta_info['testindicator'] != '0':    #first check value from ta; do not use default
             testindicator = '1'
