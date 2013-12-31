@@ -254,7 +254,7 @@ class channel(models.Model):
     desc = models.TextField(max_length=256,null=True,blank=True,verbose_name=_(u'Description'))
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
     rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds for in-communication channel to run. Purpose: limit incoming edi files; for large volumes it is better read more often than all files in one time.'))   #added 20100501. 20110906: max communication time.
-    rsrv3 = models.IntegerField(null=True,blank=True)   #added 20121030.
+    rsrv3 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max days archive'),help_text=_(u'Max number of days files are kept in archive. Overrules global setting in bots.ini.'))   #added 20121030. #20131231: use as maxdaysarchive
     keyfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Private key file'),help_text=_(u'Path to file that contains PEM formatted private key.'))          #added 20121201
     certfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Certificate chain file'),help_text=_(u'Path to file that contains PEM formatted certificate chain.'))          #added 20121201
     testpath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Acceptance test path'),help_text=_(u'Path used during acceptance tests, see <a target="_blank" href="http://code.google.com/p/bots/wiki/DeploymentAcceptance">wiki</a>.'))           #added 20120111

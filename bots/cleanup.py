@@ -63,8 +63,12 @@ def _cleanupsession():
 
 def _cleanarchive():
     ''' delete all archive directories older than maxdaysarchive days. Errors are ignored.'''
-    vanaf = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
-    for row in botslib.query('''SELECT archivepath FROM channel WHERE archivepath != '' '''):
+    vanaf_default = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
+    for row in botslib.query('''SELECT archivepath,rsrv3 FROM channel WHERE archivepath != '' '''):
+        if row['rsrv3']:
+            vanaf = (datetime.date.today()-datetime.timedelta(days=row['rsrv3'])).strftime('%Y%m%d')
+        else:
+            vanaf = vanaf_default
         vanafdir = botslib.join(row['archivepath'],vanaf)
         for entry in glob.iglob(botslib.join(row['archivepath'],'*')):
             if entry < vanafdir:
