@@ -7,16 +7,8 @@ def set_context(request):
     bots_environment_text = botsglobal.ini.get('webserver','environment_text',' ')
     bots_environment_text_color = botsglobal.ini.get('webserver','environment_text_color','#000000')
     botslogo = botsglobal.ini.get('webserver','botslogo',"bots/botslogo.html")
+    bots_touchscreen = botsglobal.ini.getboolean('webserver','bots_touchscreen',False)
     bots_mindate = 0 - botsglobal.ini.getint('settings','maxdays',30)
-
-    try:
-        groups = request.user.groups.values_list('name',flat=True)
-    except AttributeError:
-        groups = None
-    if groups and 'touchscreen' in groups:
-        bots_touchscreen = True
-    else:
-        bots_touchscreen = False
 
     bots_http_path = request.get_full_path()
     if bots_http_path.startswith('/admin/bots/'):
@@ -54,4 +46,3 @@ def set_context(request):
             'custom_menus':custom_menus,
             'custom_menuname':custom_menuname,
             }
-
