@@ -23,6 +23,7 @@
                 <th><button class="botsheader"/>{% trans 'Size' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Error' %}</button></th>
                 <th><button class="botsheader" />{% trans 'Commandline' %}</button></th>
+                <th><button class="botsheader" />{% trans 'Acceptance' %}</button></th>
             </tr>
         </thead>
         <tbody>
@@ -42,7 +43,7 @@
                 <td>{% if row.status %}
                         {% if row.lasterror or row.lastok or row.lastopen %}
                             <img src="/media/admin/img/icon_error.gif" style="width: 1em;"/>
-                    {% else %}
+                        {% else %}
                             <img src="/media/admin/img/icon_alert.gif" style="width: 1em;"/>
                         {% endif %}
                     {% else %}
@@ -69,6 +70,12 @@
                     {% endif %}
                 </td>
                 <td>{{row.rsrv1}}</td>
+                <td>{% if row.acceptance %}
+                        True
+                    {% else %}
+                        False
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
         </tbody>
