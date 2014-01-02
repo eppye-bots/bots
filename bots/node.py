@@ -108,7 +108,7 @@ class Node(object):
                     collect += found
             return collect
         elif callable(mpaths):
-            return mpaths()
+            return mpaths(thisnode=self)
         else:
             raise botslib.MappingFormatError(_(u'Must be dict, list or tuple: enhancedget(%(mpath)s)'),{'mpath':mpaths})
 
