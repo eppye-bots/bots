@@ -84,6 +84,7 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/home'
 LOGOUT_URL = '/logout/'
 #~ LOGOUT_REDIRECT_URL = #not such parameter; is set in urls.py
+ALLOWED_HOSTS = ['*']
 
 #*********sessions, cookies, log out time*************************
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True      #True: always log in when browser is closed
@@ -138,7 +139,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth', 
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
+    #~ 'django.core.context_processors.media',
     'django.core.context_processors.request',
     'django.contrib.messages.context_processors.messages',
     'django.core.context_processors.static',
