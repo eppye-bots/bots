@@ -636,6 +636,11 @@ def delete(request,*kw,**kwargs):
                     notification = _(u'User code lists are deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
+                if form.cleaned_data['delpersist']:
+                    models.persist.objects.all().delete()
+                    notification = _(u'Persist data is deleted.')
+                    messages.add_message(request, messages.INFO, notification)
+                    botsglobal.logger.info(notification)
                 if form.cleaned_data['delinfile']:
                     deletefrompath = botslib.join(botsglobal.ini.get('directories','botssys','botssys'),'infile')
                     shutil.rmtree(deletefrompath,ignore_errors=True)
@@ -659,20 +664,6 @@ def delete(request,*kw,**kwargs):
                             if bestand != '__init__.py':
                                 os.remove(os.path.join(root,bestand))
                     notification = _(u'User scripts are deleted (in usersys).')
-                    messages.add_message(request, messages.INFO, notification)
-                    botsglobal.logger.info(notification)
-                elif form.cleaned_data['delbackup']:
-                    deletefrompath = botsglobal.ini.get('directories','usersysabs')
-                    for root, dirs, files in os.walk(deletefrompath):
-                        head, tail = os.path.split(root)
-                        if tail == 'charsets':
-                            del dirs[:]
-                            continue
-                        for bestand in files:
-                            name,ext = os.path.splitext(bestand)
-                            if ext and len(ext) == 15 and ext[1:].isdigit() :
-                                os.remove(os.path.join(root,bestand))
-                    notification = _(u'Backupped user scripts are deleted/purged (in usersys).')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 botsglobal.logger.info(_(u'Finished deleting in configuration.'))
