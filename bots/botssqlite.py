@@ -3,6 +3,9 @@ try:
 except ImportError:
     import sqlite3 as sqlite    #works OK for python26
 
+import re
+reformatparamstyle = re.compile(u'%\((?P<name>[^)]+)\)s')
+
 #~ #bots engine uses:
 #~ ''' SELECT *
     #~ FROM ta
@@ -14,25 +17,9 @@ except ImportError:
     #~ WHERE idta=:idta ''',
     #~ {'idta': 12345}
 
-import re
-reformatparamstyle = re.compile(u'%\((?P<name>[^)]+)\)s')
 
-def adapter4bool(boolfrompython):
-    #SQLite expects a string
-    if boolfrompython:
-        return '1'
-    else:
-        return '0'
-
-def converter4bool(strfromdb):
-    #SQLite returns a string
-    if strfromdb == '1':
-        return True
-    else:
-        return False
-
-sqlite.register_adapter(bool,adapter4bool)
-sqlite.register_converter('BOOLEAN',converter4bool)
+sqlite.register_adapter(bool, lambda s: '1' if s else '0')
+sqlite.register_converter('BOOLEAN', lambda s: s == '1')
 
 def connect(database):
     con = sqlite.connect(database, factory=BotsConnection,detect_types=sqlite.PARSE_DECLTYPES, timeout=99.0, isolation_level='EXCLUSIVE')
