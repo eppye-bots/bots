@@ -775,7 +775,13 @@ class file(_comsession):
                 shutil.copyfileobj(fromfile,tofile,1048576)
                 fromfile.close()
                 tofile.close()
-                #~ raise Exception('test')
+                #Rename filename over havign written the file.
+                #This is for save file writing: do not want another process to read the file while it is being written.
+                #Rename is atomic within same file system (network shares?)
+                if self.channeldict['mdnchannel']:
+                    tofilename_old = tofilename
+                    tofilename = botslib.rreplace(tofilename_old,self.channeldict['mdnchannel'])
+                    os.rename(tofilename_old,tofilename)
             except:
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,numberofresends=row['numberofresends']+1)
@@ -1182,6 +1188,10 @@ class ftp(_comsession):
                     fromfile = botslib.opendata(row['filename'], 'r')
                     self.session.storlines(mode + tofilename, fromfile)
                 fromfile.close()
+                if self.channeldict['mdnchannel']:
+                    tofilename_old = tofilename
+                    tofilename = botslib.rreplace(tofilename_old,self.channeldict['mdnchannel'])
+                    self.session.rename(tofilename_old,tofilename)
             except:
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='ftp:/'+posixpath.join(self.dirpath,tofilename),numberofresends=row['numberofresends']+1)
@@ -1443,6 +1453,10 @@ class sftp(_comsession):
                 tofile.write(fromfile.read())
                 tofile.close()
                 fromfile.close()
+                if self.channeldict['mdnchannel']:
+                    tofilename_old = tofilename
+                    tofilename = botslib.rreplace(tofilename_old,self.channeldict['mdnchannel'])
+                    self.session.rename(tofilename_old,tofilename)
             except:
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,filename='sftp:/'+posixpath.join(self.dirpath,tofilename),numberofresends=row['numberofresends']+1)

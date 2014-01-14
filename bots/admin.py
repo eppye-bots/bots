@@ -48,13 +48,13 @@ class CcodetriggerAdmin(BotsAdmin):
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
-    list_display = ('idchannel', 'inorout', 'type', 'communicationscript', 'remove', 'host', 'port', 'username', 'secret', 'path', 'filename','testpath','archivepath','rsrv3','rsrv2','syslock','parameters','starttls','apop','askmdn','sendmdn','ftpactive', 'ftpbinary')
+    list_display = ('idchannel', 'inorout', 'type', 'communicationscript', 'remove', 'host', 'port', 'username', 'secret', 'path', 'filename','mdnchannel','testpath','archivepath','rsrv3','rsrv2','syslock','parameters','starttls','apop','askmdn','sendmdn','ftpactive', 'ftpbinary')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
     readonly_fields = ('communicationscript',)
     search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath')
     fieldsets = (
-        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'communicationscript', 'remove', ('host','port'), ('username', 'secret'), ('path', 'filename'), ('testpath'),('archivepath','rsrv3'), 'desc'),
+        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'communicationscript', 'remove', ('host','port'), ('username', 'secret'), ('path'), ('filename','mdnchannel'), ('testpath'),('archivepath','rsrv3'), 'desc'),
                          'classes': ('wide extrapretty',)
                         }),
         (_(u'Email specific'),{'fields': ('starttls', 'apop', 'askmdn', 'sendmdn' ),

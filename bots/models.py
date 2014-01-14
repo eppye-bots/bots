@@ -249,7 +249,7 @@ class channel(models.Model):
     ftpbinary = models.BooleanField(default=False,verbose_name=_(u'ftp binary transfer mode'),help_text=_(u'File transfers are ASCII unless this is ticked.'))
     askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'))     #20100703: used to indicate mime-encoding
     sendmdn = StripCharField(max_length=17,blank=True,choices=EDI_AS_ATTACHMENT,verbose_name=_(u'Edi file in email as'),help_text=_(u'Send edi-files in emails as attachment or in body?'))      #20120922: for email/mime: edi file as attachment or in body 
-    mdnchannel = StripCharField(max_length=35,blank=True)           #not used anymore 20091019
+    mdnchannel = StripCharField(max_length=35,blank=True,verbose_name=_(u'Tmp part of file name'),help_text=_(u'After writing a file, bots renames file without this tmp part. used for safer writing.'))           #not used anymore 20091019 #20140113:use as tmp part of file name
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write edi files to an archive. See <a target="_blank" href="http://code.google.com/p/bots/wiki/Archiving">wiki</a>. Eg: "C:/edi/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True,verbose_name=_(u'Description'))
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
