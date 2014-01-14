@@ -1467,12 +1467,50 @@ class sftp(_comsession):
 
 
 class xmlrpc(_comsession):
-    scheme = 'http'
+    ''' General xmlrpc implementation. Xmlrpc is often quite specific.
+        Probably you will have to script your own xmlrpc class, but this is a good starting point.
+        From channel is used: usernaem, secret, host, port, path. Path is the function to be used/called.
+    '''
     def connect(self):
         import xmlrpclib
-        self.uri = botslib.Uri(scheme=self.scheme,username=self.channeldict['username'],password=self.channeldict['secret'],host=self.channeldict['host'],port=self.channeldict['port'],path=self.channeldict['path'])
-        self.session = xmlrpclib.ServerProxy(self.uri.uri)
+        uri = "http://%(username)s%(secret)s@%(host)s:%(port)s"%self.channeldict
+        self.filename = "http://%(username)s@%(host)s:%(port)s"%self.channeldict    #used as 'filename' in reports etc
+        session = xmlrpclib.ServerProxy(uri)
+        self.xmlrpc_call = getattr(session,self.channeldict['path'])                #self.xmlrpc_call is called in communication
 
+    @botslib.log_session
+    def incommunicate(self):
+        startdatetime = datetime.datetime.now()
+        while True:
+            ta_from = ta_to = None
+            try:
+                content = self.xmlrpc_call()
+                if content is None:
+                    break   #nothing (more) to receive.
+                ta_from = botslib.NewTransaction(filename=self.filename,
+                                                    status=EXTERNIN,
+                                                    fromchannel=self.channeldict['idchannel'],
+                                                    idroute=self.idroute)
+                ta_to =   ta_from.copyta(status=FILEIN)
+                tofilename = str(ta_to.idta)
+                tofile = botslib.opendata(tofilename, 'wb')
+                simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
+                tofile.close()
+                filesize = os.path.getsize(botslib.abspathdata(tofilename))
+            except:
+                txt = botslib.txtexc()
+                botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
+                if ta_from is not None:
+                    ta_from.delete()
+                if ta_to is not None:
+                    ta_to.delete()
+                break   #break out of while loop (else this would be endless)
+            else:
+                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
+                ta_from.update(statust=DONE)
+            finally:
+                if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
+                    break
 
     @botslib.log_session
     def outcommunicate(self):
@@ -1491,50 +1529,18 @@ class xmlrpc(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
-                fromfile = botslib.opendata(row['fromfilename'], 'rb',row['charset'])
+                fromfile = botslib.opendata(row['filename'], 'rb',row['charset'])
                 content = fromfile.read()
                 fromfile.close()
-                tocall = getattr(self.session,self.channeldict['filename'])
-                filename = tocall(content)
+                response = self.xmlrpc_call(content)
             except:
                 txt = botslib.txtexc()
                 ta_to.update(statust=ERROR,errortext=txt,numberofresends=row['numberofresends']+1)
             else:
-                ta_to.update(statust=DONE,filename=self.uri.update(path=self.channeldict['path'],filename=str(filename)),numberofresends=row['numberofresends']+1)
+                ta_to.update(statust=DONE,filename=self.filename,numberofresends=row['numberofresends']+1)
             finally:
                 ta_from.update(statust=DONE)
 
-
-    @botslib.log_session
-    def incommunicate(self):
-        startdatetime = datetime.datetime.now()
-        while True:
-            try:
-                tocall = getattr(self.session,self.channeldict['path'])
-                content = tocall()
-                if content is None:
-                    break   #nothing (more) to receive.
-                ta_from = botslib.NewTransaction(filename=self.uri.update(path=self.channeldict['path'],filename=self.channeldict['filename']),
-                                                    status=EXTERNIN,
-                                                    fromchannel=self.channeldict['idchannel'],
-                                                    idroute=self.idroute)
-                ta_to =   ta_from.copyta(status=FILEIN)
-                tofilename = str(ta_to.idta)
-                tofile = botslib.opendata(tofilename, 'wb')
-                simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
-                tofile.close()
-                filesize = os.path.getsize(botslib.abspathdata(tofilename))
-            except:
-                txt = botslib.txtexc()
-                botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
-            else:
-                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
-                ta_from.update(statust=DONE)
-            finally:
-                if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
-                    break
 
 class db(_comsession):
     ''' communicate with a database; directly read or write from a database.

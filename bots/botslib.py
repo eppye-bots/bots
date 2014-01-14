@@ -742,39 +742,6 @@ def strftime(timeformat):
         return time.strftime(timeformat,time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S"))    #if acceptance test use fixed date/time
     else:
         return time.strftime(timeformat)
-    
-class Uri(object):
-    ''' generate uri from parts. '''
-    def __init__(self,**kw):
-        self.uriparts = dict(scheme='',username='',password='',host='',port='',path='',parameters='',filename='',query={},fragment='')
-        self.uriparts.update(**kw)
-    def update(self,**kw):
-        self.uriparts.update(kw)
-        return self.uri
-    @property   #the getter
-    def uri(self):
-        if not self.uriparts['scheme']:
-            raise BotsError(_(u'No scheme in uri.'))
-        #assemble complete host name
-        fullhost = ''
-        if self.uriparts['username']:   #always use both?
-            fullhost += self.uriparts['username'] + '@'
-        if self.uriparts['host']:
-            fullhost += self.uriparts['host']
-        if self.uriparts['port']:
-            fullhost += ':' + str(self.uriparts['port'])
-        #assemble complete path
-        if self.uriparts['path'].strip().endswith('/'):
-            fullpath = self.uriparts['path'] + self.uriparts['filename']
-        else:
-            fullpath = self.uriparts['path'] + '/' + self.uriparts['filename']
-        if fullpath.endswith('/'):
-            fullpath = fullpath[:-1]
-
-        _uri = urlparse.urlunparse((self.uriparts['scheme'],fullhost,fullpath,self.uriparts['parameters'],urllib.urlencode(self.uriparts['query']),self.uriparts['fragment']))
-        if not _uri:
-            raise BotsError(_(u'Uri is empty.'))
-        return _uri
 
 def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
