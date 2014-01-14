@@ -753,11 +753,13 @@ def updateunlessset(updatedict,fromdict):
         #~ if key not in updatedict:
             #~ updatedict[key] = value
 
-def rreplace(org,old):
-    ''' replace last occurence of string 'old' in string 'org'
+def rreplace(org,old,new='',count=1):
+    ''' string handling:
+        replace old with new in org, max count times.
+        with default values: remove last occurence of old in org.
     '''
-    lijst = org.rsplit(old,1)
-    return ''.join(lijst)
+    lijst = org.rsplit(old,count)
+    return new.join(lijst)
 #**********************************************************/**
 #**************  Exception classes ***************************
 #**********************************************************/**
