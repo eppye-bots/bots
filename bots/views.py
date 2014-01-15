@@ -256,7 +256,7 @@ def document(request,*kw,**kwargs):
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'retransmit' in request.POST:        #coming from ViewDocument, no reportidta
                 idta = request.POST[u'retransmit']
-                filereport = models.filereport.objects.get(idta=int(idta),statust=DONE)
+                filereport = models.filereport.objects.get(idta=int(idta))
                 filereport.retransmit = not filereport.retransmit
                 filereport.save()
             else:                                    #coming from ViewDocument, next page etc
