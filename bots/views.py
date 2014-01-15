@@ -504,7 +504,7 @@ def plugout_index(request,*kw,**kwargs):
         filename = botslib.join(botsglobal.ini.get('directories','usersysabs'),'index.py')
         botsglobal.logger.info(_(u'Start writing configuration index file "%(file)s".'),{'file':filename})
         try:
-            dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':True,'databasetransactions':False}
+            dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':botsglobal.ini.getboolean('settings','codelists_in_plugin',True),'databasetransactions':False}
             pluglib.make_index(dummy_for_cleaned_data,filename)
         except Exception,msg:
             notification = _(u'Error writing configuration index file: "%s".')%str(msg)
@@ -526,7 +526,7 @@ def plugout_backup_core(request,*kw,**kwargs):
     botsglobal.logger.info(_(u'Start writing backup plugin "%(file)s".'),{'file':filename})
     try:
         dummy_for_cleaned_data = {'databaseconfiguration':True,
-                                    'umlists':True,
+                                    'umlists':botsglobal.ini.getboolean('settings','codelists_in_plugin',True),
                                     'fileconfiguration':True,
                                     'infiles':False,
                                     'charset':True,

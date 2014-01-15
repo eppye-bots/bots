@@ -33,7 +33,7 @@ def start():
     import pluglib              #import here, import at start of file gives error; first initialize.
     usersys = botsglobal.ini.get('directories','usersysabs')
     index_filename = os.path.join(usersys,'index.py')
-    dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':True,'databasetransactions':False}
+    dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':botsglobal.ini.getboolean('settings','codelists_in_plugin',True),'databasetransactions':False}
     pluglib.make_index(dummy_for_cleaned_data,index_filename)
     
 

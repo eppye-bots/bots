@@ -282,7 +282,7 @@ def make_index(cleaned_data,filename):
     ''' generate only the index file of the plugin.
         used eg for configuration change management.
     '''
-    plugs = make_database2plug(cleaned_data)
+    plugs = all_database2plug(cleaned_data)
     plugsasstring = make_plugs2string(plugs)
     filehandler = codecs.open(filename,'w','utf-8')
     filehandler.write(plugsasstring)
@@ -291,7 +291,7 @@ def make_index(cleaned_data,filename):
 def make_plugin(cleaned_data,filename):
     pluginzipfilehandler = zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED)
 
-    plugs = make_database2plug(cleaned_data)
+    plugs = all_database2plug(cleaned_data)
     plugsasstring = make_plugs2string(plugs)
     pluginzipfilehandler.writestr('botsindex.py',plugsasstring.encode('utf-8'))      #write index file to pluginfile
     botsglobal.logger.debug(u'    Write in index:\n %(index)s',{'index':plugsasstring})
@@ -303,58 +303,60 @@ def make_plugin(cleaned_data,filename):
 
     pluginzipfilehandler.close()
 
-def make_database2plug(cleaned_data):
+def all_database2plug(cleaned_data):
     ''' get all database objects, serialize these (to dict), adapt.'''
-    db_objects = []
+    plugs = []
     if cleaned_data['databaseconfiguration']:
-        db_objects += \
-            list(models.channel.objects.all()) + \
-            list(models.partner.objects.all()) + \
-            list(models.chanpar.objects.all()) + \
-            list(models.translate.objects.all()) +  \
-            list(models.routes.objects.all()) +  \
-            list(models.confirmrule.objects.all())
+        plugs += \
+            database2plug(models.channel) + \
+            database2plug(models.partner) + \
+            database2plug(models.chanpar) + \
+            database2plug(models.translate) +  \
+            database2plug(models.routes) +  \
+            database2plug(models.confirmrule)
     if cleaned_data['umlists']:
-        db_objects += \
-            list(models.ccodetrigger.objects.all()) + \
-            list(models.ccode.objects.all())
+        plugs += \
+            database2plug(models.ccodetrigger) + \
+            database2plug(models.ccode)
     if cleaned_data['databasetransactions']:
-        db_objects += \
-            list(models.uniek.objects.all()) + \
-            list(models.mutex.objects.all()) + \
-            list(models.ta.objects.all()) + \
-            list(models.filereport.objects.all()) + \
-            list(models.report.objects.all())
+        plugs += \
+            database2plug(models.uniek) + \
+            database2plug(models.mutex) + \
+            database2plug(models.ta) + \
+            database2plug(models.filereport) + \
+            database2plug(models.report)
             #~ list(models.persist.objects.all()) + \       #should persist object alos be included?
+    return plugs
+
+def database2plug(db_table):
     #serialize database objects
-    plugs = serializers.serialize("python", db_objects)
-    #adapt plugs
-    for plug in plugs:
-        app,tablename = plug['model'].split('.',1)
-        plug['fields']['plugintype'] = tablename
+    plugs = serializers.serialize("python", db_table.objects.all())
+    if plugs:
+        app,tablename = plugs[0]['model'].split('.',1)
         table = django.db.models.get_model(app,tablename)
         pk = table._meta.pk.name
-        if pk != 'id':
-            plug['fields'][pk] = plug['pk']
-        #convert for correct environment: replace botssys in channels[path, mpath]
-        if plug['fields']['plugintype'] == 'channel':
-            if 'path' in plug['fields'] and plug['fields']['path'].startswith(botsglobal.ini.get('directories','botssys_org')):
-                plug['fields']['path'] = plug['fields']['path'].replace(botsglobal.ini.get('directories','botssys_org'),'botssys',1)
-            if 'testpath' in plug['fields'] and plug['fields']['testpath'].startswith(botsglobal.ini.get('directories','botssys_org')):
-                plug['fields']['testpath'] = plug['fields']['testpath'].replace(botsglobal.ini.get('directories','botssys_org'),'botssys',1)
+        #adapt plugs
+        for plug in plugs:
+            plug['fields']['plugintype'] = tablename
+            if pk != 'id':
+                plug['fields'][pk] = plug['pk']
+            #convert for correct environment: replace botssys in channels[path, mpath]
+            if tablename == 'channel':
+                if 'path' in plug['fields'] and plug['fields']['path'].startswith(botsglobal.ini.get('directories','botssys_org')):
+                    plug['fields']['path'] = plug['fields']['path'].replace(botsglobal.ini.get('directories','botssys_org'),'botssys',1)
+                if 'testpath' in plug['fields'] and plug['fields']['testpath'].startswith(botsglobal.ini.get('directories','botssys_org')):
+                    plug['fields']['testpath'] = plug['fields']['testpath'].replace(botsglobal.ini.get('directories','botssys_org'),'botssys',1)
     return plugs
 
 def make_plugs2string(plugs):
     ''' return plugs (serialized objects) as unicode strings.
     '''
-    tmpbotsindex = [u'# -*- coding: utf-8 -*-',u'import datetime',"version = '%s'" % (botsglobal.version),'plugins = [']
-    for plug in plugs:
-        tmpbotsindex.append(plugout_database_entry_as_string(plug['fields']))
-        #check confirmrule: id is non-artifical key?
-    tmpbotsindex.append(u']\n')
-    return '\n'.join(tmpbotsindex)
+    lijst = [u'# -*- coding: utf-8 -*-',u'import datetime',"version = '%s'" % (botsglobal.version),'plugins = [']
+    lijst.extend([plug2string(plug['fields']) for plug in plugs])
+    lijst.append(u']\n')
+    return '\n'.join(lijst)
 
-def plugout_database_entry_as_string(plugdict):
+def plug2string(plugdict):
     ''' like repr() for a dict, but:
         - starts with 'plugintype'
         - other entries are sorted; this because of predictability
