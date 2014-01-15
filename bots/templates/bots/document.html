@@ -39,7 +39,7 @@
                             {% if row.incoming %} 
                                 <li><button class="botsheader" onclick="document.location.href='/detail/?inidta={{row.incoming}}'; return false;">{% trans 'View detail' %}</button></li>
                                 <li><button class="botsheader" onclick="window.open('/filer/?action=this&amp;idta={{row.incoming}}'); return false;">{% trans 'View incoming file' %}</button></li>
-                                <li><button class="botsheader" type="submit" name="retransmit" value="{{row.incoming}}" />{% trans 'Retransmit' %}</button></li>
+                                <li><button class="botsheader" type="submit" name="retransmit" value="{{row.incoming}}" />{% trans 'Rereceive' %}</button></li>
                             {% else %}
                                 <li><button class="botsheader" onclick="window.open('/filer/?action=this&amp;idta={{row.outgoing}}'); return false;">{% trans 'View outgoing file' %}</button></li>
                             {% endif %}
