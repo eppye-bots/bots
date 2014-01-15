@@ -577,13 +577,13 @@ def delete(request,*kw,**kwargs):
         if 'submit' in request.POST:
             form = forms.DeleteForm(request.POST)
             if form.is_valid():
+                from django.db import connection, transaction
                 if form.cleaned_data['delconfiguration'] or form.cleaned_data['delcodelists'] or form.cleaned_data['deluserscripts']:
                     #write backup plugin first
                     plugout_backup_core(request,*kw,**kwargs)        
                 botsglobal.logger.info(_(u'Start deleting in configuration.'))
                 if form.cleaned_data['deltransactions']:
-                    from django.db import connection, transaction
-                    #while testing with very big loads, deleting transaction when wrong. Using raw SQL solved this.
+                    #while testing with very big loads, deleting gave error. Using raw SQL solved this.
                     cursor = connection.cursor()
                     cursor.execute("DELETE FROM ta")
                     cursor.execute("DELETE FROM filereport")
@@ -631,8 +631,11 @@ def delete(request,*kw,**kwargs):
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['delcodelists']:
-                    models.ccode.objects.all().delete()
-                    models.ccodetrigger.objects.all().delete()
+                    #while testing with very big loads, deleting gave error. Using raw SQL solved this.
+                    cursor = connection.cursor()
+                    cursor.execute("DELETE FROM ccode")
+                    cursor.execute("DELETE FROM ccodetrigger")
+                    transaction.commit_unless_managed()
                     notification = _(u'User code lists are deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
