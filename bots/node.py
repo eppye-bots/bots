@@ -199,7 +199,7 @@ class Node(object):
                     return False
 
     def delete(self,*mpaths):
-        ''' delete the last record of mpath if found (first: find/identify, than delete. '''
+        ''' delete the last record of mpath if found (first: find/identify record, than delete).'''
         self._mpath_sanity_check(mpaths)
         if len(mpaths) == 1:
             raise botslib.MappingFormatError(_(u'Only one dict: not allowed. Use different solution: delete(%(mpath)s)'),{'mpath':mpaths})
