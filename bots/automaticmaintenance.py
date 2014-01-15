@@ -219,6 +219,8 @@ class Trace(object):
         '''
         def core(ta_object):
             if ta_object['status'] == FILEIN:   #get data for incoming email, not attachments
+                if not self.filesize2:
+                    self.filesize2 = ta_object['filesize']
                 if not self.incontenttype:
                     self.frommail = ta_object['frommail']
                     self.tomail = ta_object['tomail']
@@ -337,8 +339,11 @@ class Trace(object):
         self.errortext = ''
         self.divtext = ''
         self.rsrv1 = ''         #email subject
-        self.filesize = 0 
+        self.filesize = 0       #counts all PARSED files
+        self.filesize2 = 0      #pick up FILEIN; use if filesize is 0
         core(self.rootofinfile)
+        if not self.filesize:
+            self.filesize = self.filesize2
 
     def make_file_report(self):
         botslib.changeq(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
