@@ -210,7 +210,7 @@ class Trace(object):
             else:
                 return ERROR
         else:   #tacurrent.statust==OPEN: something is very wrong. Raise exception.
-            raise botslib.TraceError(_(u'Severe error: found statust (idta: %(idta)s).'),tacurrent)
+            raise botslib.TraceError(_(u'Severe error: found statust OPEN for idta: %(idta)s.'),tacurrent)
 
 
     def _collectdataforfilereport(self):
@@ -346,6 +346,9 @@ class Trace(object):
             self.filesize = self.filesize2
 
     def make_file_report(self):
+        #20140116: patch for MySQLdb version 1.2.5. This version seems to check all parameters - not just the ones actually used.
+        tmp_dict = self.__dict__.copy()
+        tmp_dict.pop('rootofinfile','nep')
         botslib.changeq(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
                                                     infilename,tochannel,frompartner,topartner,frommail,
                                                     tomail,ineditype,inmessagetype,outeditype,outmessagetype,
@@ -357,4 +360,4 @@ class Trace(object):
                                         %(incontenttype)s,%(outcontenttype)s,%(nrmessages)s,%(outfilename)s,%(errortext)s,
                                         %(divtext)s,%(outidta)s,%(rsrv1)s,%(filesize)s )
                                 ''',
-                                self.__dict__ )
+                                tmp_dict)
