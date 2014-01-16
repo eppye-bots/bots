@@ -23,7 +23,7 @@ from envelope import mergemessages
 from communication import run
 
 @botslib.log_session
-def translate(startstatus,endstatus,idroute,rootidta,command):
+def translate(startstatus,endstatus,routedict,rootidta):
     ''' main translation loop.
         get edifiles to be translated, than:
         -   read, lex, parse, make tree of nodes.
@@ -43,7 +43,7 @@ def translate(startstatus,endstatus,idroute,rootidta,command):
                                 AND status=%(status)s
                                 AND statust=%(statust)s
                                 AND idroute=%(idroute)s ''',
-                                {'status':startstatus,'statust':OK,'idroute':idroute,'rootidta':rootidta}):
+                                {'status':startstatus,'statust':OK,'idroute':routedict['idroute'],'rootidta':rootidta}):
         try:
             row = dict(rawrow)   #convert to real dictionary ()
             ta_fromfile = botslib.OldTransaction(row['idta'])
@@ -63,10 +63,13 @@ def translate(startstatus,endstatus,idroute,rootidta,command):
                                                 charset=row['charset'],
                                                 alt=row['alt'],
                                                 fromchannel=row['fromchannel'],
-                                                idroute=idroute,
-                                                command=command)
-            edifile.checkforerrorlist()
-            #if no exception: infile has been lexed and parsed OK.
+                                                idroute=routedict['idroute'],
+                                                command=routedict['command'])
+            edifile.checkforerrorlist() #if no exception: infile has been lexed and parsed OK.
+
+            if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm. 
+                raise botslib.GotoException('dummy')    
+            
             #edifile.ta_info contains info: QUERIES, charset etc
             for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile
                 try:
@@ -85,7 +88,7 @@ def translate(startstatus,endstatus,idroute,rootidta,command):
                                                                             alt=inn_splitup.ta_info['alt'])
                         if not tscript:       #no translation found in translate table; check if can find translation via user script
                             if userscript and hasattr(userscript,'gettranslation'):
-                                tscript,toeditype,tomessagetype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=idroute,message=inn_splitup)
+                                tscript,toeditype,tomessagetype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=routedict['idroute'],message=inn_splitup)
                             if not tscript:
                                 if post_mapping_mode:   #in post-mapping mode, not finding the (partern specific!) script is no problem: translation is done
                                     #there is no post-mapping script found (in other words, default mapping script is enough).
@@ -191,6 +194,11 @@ def translate(startstatus,endstatus,idroute,rootidta,command):
 
 
         #exceptions file_in-level
+        except botslib.GotoException:
+            ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)   #update with info from eg queries
+            ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
+            edifile.handleconfirm(ta_fromfile,error=False)
+            botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
         except botslib.MessageError:    #only non-fatal parse errors in incomign file; a list of these errors is build. Data from QUERIES is probably correct
             txt = botslib.txtexc()
             ta_parsed.update(statust=ERROR,errortext=txt,**edifile.ta_info)

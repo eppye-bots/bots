@@ -114,6 +114,7 @@ TRANSLATETYPES = (
     (0,_(u'Nothing')),
     (1,_(u'Translate')),
     (2,_(u'Pass-through')),
+    (3,_(u'Parse & Pass-through')),
     )
 CONFIRMTYPELIST = [DEFAULT_ENTRY] + CONFIRMTYPE
 EDITYPESLIST = [DEFAULT_ENTRY] + EDITYPES
@@ -424,6 +425,8 @@ class routes(models.Model):
             return '<img alt="%s" src="/media/admin/img/icon-yes.gif"></img>'%(self.get_translateind_display())
         elif self.translateind == 2:
             return '<img alt="%s" src="/media/images/icon-pass.gif"></img>'%(self.get_translateind_display())
+        elif self.translateind == 3:
+            return '<img alt="%s" src="/media/admin/img/tooltag-add_over.gif"></img>'%(self.get_translateind_display())
     translt.allow_tags = True
     translt.admin_order_field = 'translateind'
 

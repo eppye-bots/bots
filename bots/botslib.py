@@ -831,3 +831,5 @@ class TraceError(BotsError):
     pass
 class TranslationNotFoundError(BotsError):
     pass
+class GotoException(BotsError):     #sometimes it is simplest to raise an error, and catch it rightaway. Like a goto ;-)  
+    pass

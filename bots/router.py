@@ -132,14 +132,14 @@ class new(object):
                     preprocess.preprocess(routedict=routedict,function=preprocess.mailbag,rootidta=self.get_minta4query_routepart(),frommessagetype=routedict['frommessagetype'])
 
         #translate, merge, pass through: INFILE->MERGED
-        if int(routedict['translateind']) == 1:
+        if int(routedict['translateind']) in [1,3]:
             #translate: for files in route
             botslib.tryrunscript(self.userscript,self.userscript,'pretranslation',routedict=routedict)
             if routedict['command'] in ['rereceive',]:
                 rootidta = self.get_minta4query()
             else:
                 rootidta = self.get_minta4query_route()
-            transform.translate(startstatus=FILEIN,endstatus=TRANSLATED,idroute=routedict['idroute'],rootidta=rootidta,command=routedict['command'])
+            transform.translate(startstatus=FILEIN,endstatus=TRANSLATED,routedict=routedict,rootidta=rootidta)
             botslib.tryrunscript(self.userscript,self.userscript,'posttranslation',routedict=routedict)
             #**merge: for files in this route-part (the translated files)
             botslib.tryrunscript(self.userscript,self.userscript,'premerge',routedict=routedict)
