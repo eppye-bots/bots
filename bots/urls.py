@@ -13,6 +13,8 @@ run_permission = user_passes_test(lambda u: u.has_perm('bots.change_mutex'))
 urlpatterns = patterns('',
     (r'^login.*', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
     (r'^logout.*', 'django.contrib.auth.views.logout',{'next_page': '/'}),
+    (r'^password_change/$', 'django.contrib.auth.views.password_change'),
+    (r'^password_change/done/$', 'django.contrib.auth.views.password_change_done'),
     #login required
     (r'^home.*', login_required(views.home)),
     (r'^incoming_filename.*', login_required(views.incoming_filename)),

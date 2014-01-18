@@ -6,7 +6,7 @@
 		<li><a href="/home/">{% trans 'Home' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
 		<li><a href="http://code.google.com/p/bots/wiki/MonitorIntroduction">{% trans 'Help' %}</a></li>
 		<li><a href="/logout/">{% trans 'Log out' %}</a></li>
-		<li><a href="/admin/password_change/">{% trans 'Change password' %}</a></li>
+		<li><a href="/password_change/">{% trans 'Change password' %}</a></li>
 	</ul>
 	<ul>
 		<a {% if not bots_touchscreen %} href="/incoming/?lastrun=1" {% endif %} >{% trans 'Last run' %}</a>
