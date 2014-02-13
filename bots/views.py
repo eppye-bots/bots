@@ -118,11 +118,12 @@ def incoming(request,*kw,**kwargs):
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'delete' in request.POST:        #from ViewIncoming form using star delete
                 idta = int(request.POST[u'delete'])
-                #~ query = models.filereport.objects.filter(idta=int(idta)).all().delete()
+                #delete from filereport
                 models.filereport.objects.filter(idta=idta).delete()
+                #get ta_object
                 ta_object = models.ta.objects.get(idta=idta)
-                viewlib.gettrace(ta_object)
-                viewlib.trace2delete(ta_object)
+                #delete as much as possible in ta table
+                viewlib.delete_from_ta(ta_object)
             elif 'retransmit' in request.POST:        #from ViewIncoming form using star rereceive
                 idta = request.POST[u'retransmit']
                 filereport = models.filereport.objects.get(idta=int(idta))
@@ -393,7 +394,7 @@ def filer(request,*kw,**kwargs):
                 if currentta.parent:    #has a explicit parent
                     talijst = list(models.ta.objects.filter(idta=currentta.parent))
                 else:                   #get list of ta's referring to this idta as child
-                    talijst = list(models.ta.objects.filter(child=currentta.idta))
+                    talijst = list(models.ta.objects.filter(idta__range=(currentta.script,currentta.idta),child=currentta.idta))
             elif request.GET['action'] == 'this':
                 if currentta.status == EXTERNIN:        #EXTERNIN can not be displayed, so go to first FILEIN
                     talijst = list(models.ta.objects.filter(parent=currentta.idta))

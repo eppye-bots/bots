@@ -87,7 +87,7 @@ def django_trace_origin(idta,where):
             if ta_object.parent not in donelijst:   #search via parent
                 yield models.ta.objects.get(idta=ta_object.parent)
         else:
-            for parent in models.ta.objects.filter(child=ta_object.idta):
+            for parent in models.ta.objects.filter(idta__range=(ta_object.script,ta_object.idta),child=ta_object.idta):
                 if parent.idta in donelijst:
                     continue
                 yield parent
@@ -125,7 +125,7 @@ def trace_document(pquery):
             parent = models.ta.objects.get(idta=ta_object.parent)
         else:
             try:
-                parent = models.ta.objects.filter(child=ta_object.idta)[0]   #just get one parent
+                parent = models.ta.objects.filter(idta__range=(ta_object.script,ta_object.idta),child=ta_object.idta)[0]   #just get one parent
             except IndexError:
                 return    #no result, return
         if parent.confirmasked:
@@ -145,7 +145,9 @@ def trace_document(pquery):
 
 
 def gettrace(ta_object):
-    ''' recursive. Build trace (tree of ta_object's).'''
+    ''' recursive. Builds a tree of ta's (a trace) for parameter ta_object.
+        children are a list in ta.
+    '''
     if ta_object.child:  #has a explicit child
         ta_object.talijst = [models.ta.objects.get(idta=ta_object.child)]
     else:   #search in ta_object-table who is reffering to ta_object
@@ -153,28 +155,47 @@ def gettrace(ta_object):
     for child in ta_object.talijst:
         gettrace(child)
 
-def trace2delete(trace):
-    def gathermember(ta_object):
-        memberlist.append(ta_object)
-        for child in ta_object.talijst:
-            gathermember(child)
-    def gatherdelete(ta_object):
-        if ta_object.status == FILEOUT:
-            for includedta in models.ta.objects.filter(child=ta_object.idta,status=MERGED):    #select all db-ta_object's included in MERGED ta_object
-                if includedta not in memberlist:
-                    #~ print 'not found idta',includedta.idta, 'not to deletelist:',ta_object.idta
-                    return
-        deletelist.append(ta_object)
-        for child in ta_object.talijst:
-            gatherdelete(child)
-    memberlist = []
-    gathermember(trace)   #zet alle idta in memberlist
-    #~ printlijst(memberlist, 'memberlist')
-    #~ printlijst(deletelist, 'deletelist')
-    deletelist = []
-    gatherdelete(trace)     #zet alle te deleten idta in deletelijst
-    #~ printlijst(deletelist, 'deletelist')
-    for ta_object in deletelist:
+def delete_from_ta(ta_object):
+    ''' try to delete in ta table as much as possible.
+        until a MERGE, this is easy.
+        but a MERGE can contain messages from other infiles...
+        in that case, just leave the MERGE 
+    '''
+    def gather_tas_before_merge(ta_object):
+        ''' loop over ta tree untill MERGE.
+            put all ta status MERGE in one list, others in deletelist
+        '''
+        if ta_object.status == MERGED:
+            tas_merge.append(ta_object)
+            return
+        else:
+            tas_for_deletion.append(ta_object)
+        if ta_object.child:  #has a explicit child
+            tmp_list = [models.ta.objects.get(idta=ta_object.child)]
+        else:   #search in ta_object-table who is reffering to ta_object
+            tmp_list = list(models.ta.objects.filter(parent=ta_object.idta))
+        for child in tmp_list:
+            gather_tas_before_merge(child)
+    def gather_tas_after_merge(ta_object):
+        tas_for_deletion.append(ta_object)
+        if ta_object.child:  #has a explicit child
+            tmp_list = [models.ta.objects.get(idta=ta_object.child)]
+        else:   #search in ta_object-table who is reffering to ta_object
+            tmp_list = list(models.ta.objects.filter(parent=ta_object.idta))
+        for child in tmp_list:
+            gather_tas_after_merge(child)
+    tas_for_deletion = []
+    tas_merge = []
+    gather_tas_before_merge(ta_object)
+    tas_merge = list(set(tas_merge))        #one MERGE only once in list
+    for ta_merge in tas_merge:  #for each MERGE ta:
+        #if all included files in the MERGED file are to be deleted, MERGED can be deleted 
+        for includedta in models.ta.objects.filter(idta__range=(ta_merge.script,ta_merge.idta),child=ta_merge.idta):    #select all db-ta_object's included in MERGED ta_object
+            if includedta not in tas_for_deletion:
+                break
+        else:
+            gather_tas_after_merge(ta_merge)
+    for ta_object in tas_for_deletion:
         ta_object.delete()
 
 def trace2detail(ta_object):
