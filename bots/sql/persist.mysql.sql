@@ -7,4 +7,3 @@ content TEXT ,
 ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (domein, botskey)
 );
-
