@@ -40,6 +40,11 @@ class new(object):
         ''' for each route (as in self.routestorun).
             a route can have multiple parts (seq)
         '''
+        #is there a user routescript?
+        try:
+            self.userscript,self.scriptname = botslib.botsimport('routescripts',route)
+        except ImportError:      #routescript is not there; other errors like syntax errors are not catched
+            self.userscript = self.scriptname = None
         self.minta4query_route = botslib._Transaction.processlist[-1]     #the idta of route
         foundroute = False
         for row in botslib.query('''SELECT idroute     ,
@@ -69,11 +74,6 @@ class new(object):
             routedict['command'] = self.command     #this way command is passed to ohter functions.
             foundroute = True
             botsglobal.logger.info(_(u'Running route %(idroute)s %(seq)s'),routedict)
-            #is there a user routescript?
-            try:
-                self.userscript,self.userscript = botslib.botsimport('routescripts',routedict['idroute'])
-            except ImportError:      #routescript is not there; other errors like syntax errors are not catched
-                self.userscript = self.userscript = None
             self.routepart(routedict)
             #handle deferred-logic: mark if channel is deffered, umark if run
             self.keep_track_if_outchannel_deferred[routedict['tochannel']] = routedict['defer']
@@ -93,12 +93,12 @@ class new(object):
         self.minta4query_routepart = botslib._Transaction.processlist[-1]     #the idta of routepart
 
         #if routescript has function 'main': communication.run 'main' (and do nothing else)
-        if botslib.tryrunscript(self.userscript,self.userscript,'main',routedict=routedict):
+        if botslib.tryrunscript(self.userscript,self.scriptname,'main',routedict=routedict):
             return  #so: if function ' main' : communication.run only the routescript, nothing else.
         if not (self.userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']):
             raise botslib.ScriptError(_(u'Route "%(idroute)s" is empty: no routescript, not enough parameters.'),routedict)
 
-        botslib.tryrunscript(self.userscript,self.userscript,'start',routedict=routedict)
+        botslib.tryrunscript(self.userscript,self.scriptname,'start',routedict=routedict)
 
         #incoming part of route:
         #- incommunication
@@ -110,13 +110,13 @@ class new(object):
                 rootidta = self.get_minta4query()
             else:
                 rootidta = self.get_minta4query_routepart()
-            botslib.tryrunscript(self.userscript,self.userscript,'preincommunication',routedict=routedict)
+            botslib.tryrunscript(self.userscript,self.scriptname,'preincommunication',routedict=routedict)
             communication.run(idchannel=routedict['fromchannel'],command=routedict['command'],idroute=routedict['idroute'],rootidta=rootidta)  #communication.run incommunication
             #add attributes from route to the received files;
             where = {'statust':OK,'status':FILEIN,'fromchannel':routedict['fromchannel'],'idroute':routedict['idroute'],'rootidta':rootidta}
             change = {'editype':routedict['fromeditype'],'messagetype':routedict['frommessagetype'],'frompartner':routedict['frompartner'],'topartner':routedict['topartner'],'alt':routedict['alt']}
             nr_of_incoming_files_for_channel = botslib.updateinfo(change=change,where=where)
-            botslib.tryrunscript(self.userscript,self.userscript,'postincommunication',routedict=routedict)
+            botslib.tryrunscript(self.userscript,self.scriptname,'postincommunication',routedict=routedict)
             if nr_of_incoming_files_for_channel:
                 #unzip incoming files (if indicated)
                 if routedict['zip_incoming'] == 1:               #unzip incoming (non-zipped gives error).
@@ -134,17 +134,17 @@ class new(object):
         #translate, merge, pass through: INFILE->MERGED
         if int(routedict['translateind']) in [1,3]:
             #translate: for files in route
-            botslib.tryrunscript(self.userscript,self.userscript,'pretranslation',routedict=routedict)
+            botslib.tryrunscript(self.userscript,self.scriptname,'pretranslation',routedict=routedict)
             if routedict['command'] in ['rereceive',]:
                 rootidta = self.get_minta4query()
             else:
                 rootidta = self.get_minta4query_route()
             transform.translate(startstatus=FILEIN,endstatus=TRANSLATED,routedict=routedict,rootidta=rootidta)
-            botslib.tryrunscript(self.userscript,self.userscript,'posttranslation',routedict=routedict)
+            botslib.tryrunscript(self.userscript,self.scriptname,'posttranslation',routedict=routedict)
             #**merge: for files in this route-part (the translated files)
-            botslib.tryrunscript(self.userscript,self.userscript,'premerge',routedict=routedict)
+            botslib.tryrunscript(self.userscript,self.scriptname,'premerge',routedict=routedict)
             envelope.mergemessages(startstatus=TRANSLATED,endstatus=MERGED,idroute=routedict['idroute'],rootidta=self.get_minta4query_routepart())
-            botslib.tryrunscript(self.userscript,self.userscript,'postmerge',routedict=routedict)
+            botslib.tryrunscript(self.userscript,self.scriptname,'postmerge',routedict=routedict)
         elif routedict['translateind'] == 2:        #pass-through: pickup the incoming files and mark these as MERGED (==translation is finished)
             botslib.addinfo(change={'status':MERGED,'statust':OK},where={'status':FILEIN,'statust':OK,'idroute':routedict['idroute'],'rootidta':self.get_minta4query_route()})
         #NOTE: routedict['translateind'] == 0 than nothing will happen with the files in this route. 
@@ -195,7 +195,7 @@ class new(object):
                 else:
                     rootidta = self.get_minta4query_routepart()
                 if botslib.countoutfiles(idchannel=routedict['tochannel'],rootidta=rootidta):
-                    botslib.tryrunscript(self.userscript,self.userscript,'preoutcommunication',routedict=routedict)
+                    botslib.tryrunscript(self.userscript,self.scriptname,'preoutcommunication',routedict=routedict)
                     communication.run(idchannel=routedict['tochannel'],command=routedict['command'],idroute=routedict['idroute'],rootidta=rootidta)
                     #in communication several things can go wrong.
                     #all outgoing files should have same status; that way all recomnnunication can be handled the same:
@@ -203,9 +203,9 @@ class new(object):
                     #- status EXTERNOUT status ERROR (if file is not communicatied)
                     #to have the same status for all outgoing files some manipulation is needed, eg in case no connection could be made.
                     botslib.addinfo(change={'status':EXTERNOUT,'statust':ERROR},where={'status':FILEOUT,'statust':OK,'tochannel':routedict['tochannel'],'rootidta':rootidta})
-                    botslib.tryrunscript(self.userscript,self.userscript,'postoutcommunication',routedict=routedict)
+                    botslib.tryrunscript(self.userscript,self.scriptname,'postoutcommunication',routedict=routedict)
                 
-        botslib.tryrunscript(self.userscript,self.userscript,'end',routedict=routedict)
+        botslib.tryrunscript(self.userscript,self.scriptname,'end',routedict=routedict)
 
         
     def evaluate(self):
