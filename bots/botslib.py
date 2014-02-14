@@ -336,8 +336,8 @@ def log_session(func):
     return wrapper
 
 def txtexc(mention_exception_type=True):
-    ''' Process last exception to get (safe) errortext.
-        str().decode(): bytes->unicode
+    ''' Process last exception, get an errortext.
+        Errortext should be valid unicode.
     '''
     if botsglobal.ini and botsglobal.ini.getboolean('settings','debug',False):
         return safe_unicode(traceback.format_exc(limit=None))
@@ -347,19 +347,20 @@ def txtexc(mention_exception_type=True):
         if not mention_exception_type:
             terug = terug.partition(': ')[2]
         return terug
+
 def safe_unicode(value):
     ''' For errors: return best possible unicode...should never lead to errors.
     '''
     try:
-        if isinstance(value, unicode):
-            return value            #is already unicode
-        elif isinstance(value, str):
+        if isinstance(value, unicode):      #is already unicode, just return
+            return value            
+        elif isinstance(value, str):        #string, encoding unknown.   
             for charset in ['utf_8','latin_1']:
                 try:
                     return value.decode(charset, 'strict')  #decode strict
                 except:
                     continue
-            return value.decode('utf_8', 'ignore')  #decode as if it is utf-8, ignore errors
+            return value.decode('utf_8', 'ignore')  #decode as if it is utf-8, ignore errors.
         else:
             return unicode(value)
     except:
@@ -786,10 +787,11 @@ class BotsError(Exception):
     def __unicode__(self):
         try:
             return self.msg % self.xxx
-        except:
+        except Exception,e:
+            #print "-----",type(e),e
             return u'Error while displaying error'
-    __str__ = __unicode__
-    __repr__ = __unicode__
+    def __str__(self):
+        return self.__unicode__()
             
 class CodeConversionError(BotsError):
     pass
