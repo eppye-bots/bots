@@ -177,8 +177,11 @@ a.botslink	{
 	cursor:				pointer;
 	white-space:		nowrap;
 	text-decoration:	none;
-	color: 				#000000;
-	}
+    color:				#5b80b2;
+    }
+a.botslink:hover	{
+    color:				#036;
+    }
 .nowrap	{
 	white-space:		nowrap;
 	}
