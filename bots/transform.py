@@ -448,16 +448,8 @@ def truncate(maxpos,value):
         return value
 
 def concat(*args):
-    terug = ''
-    for arg in args:
-        if arg:
-            if terug:
-                terug += ' '
-            terug += arg
-    if terug:
-        return terug
-    else:
-        return None
+    terug = ''.join([arg for arg in args if arg])
+    return terug if terug else None
 
 #***lookup via database partner
 def partnerlookup(value,field,field_where_value_is_searched='idpartner',safe=False):
