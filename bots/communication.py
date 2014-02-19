@@ -1014,8 +1014,7 @@ class smtp(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row['idta'])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
-                addresslist = row['cc'].split(',')
-                addresslist.append(row['tomail'])
+                addresslist = row['tomail'].split(',') + row['cc'].split(',')
                 addresslist = [x.strip() for x in addresslist if x.strip()]
                 sendfile = botslib.opendata(row['filename'], 'rb')
                 msg = sendfile.read()
