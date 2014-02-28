@@ -761,6 +761,35 @@ def rreplace(org,old,new='',count=1):
     '''
     lijst = org.rsplit(old,count)
     return new.join(lijst)
+
+class Uri(object):
+    ''' generate uri from parts/components
+        - different forms of uri (eg with/without password)
+        - general layout like 'scheme://user:pass@hostname:80/path/filename?query=argument#fragment'
+        - checks: 1. what is required; 2. all parameters need to be valid
+        Notes:
+        - no filename: path ends with '/'
+        Usage: uri = Uri(scheme='http',username='hje',password='password',hostname='test.com',port='80', path='')
+        Usage: uri = Uri(scheme='http',hostname='test.com',port='80', path='test')
+    '''
+    def __init__(self, **kw):
+        self._uri = dict(scheme='',username='',password='',hostname='',port='', path='', filename='',query={},fragment='')
+        self.__call__(**kw)
+    def __call__( self, **kw):
+        self._uri.update(**kw)
+    def __str__(self):
+        scheme   = self._uri['scheme'] + ':' if self._uri['scheme'] else ''
+        password = ':' + self._uri['password'] if self._uri['password'] else ''
+        userinfo = self._uri['username'] + password + '@' if self._uri['username'] else ''
+        port     = ':' + str(self._uri['port']) if self._uri['port'] else ''
+        fullhost = self._uri['hostname'] + port if self._uri['hostname'] else ''
+        authority = '//' + userinfo + fullhost if fullhost else ''
+        if self._uri['path'] or self._uri['filename']:
+            terug = os.path.join(authority,self._uri['path'],self._uri['filename'])
+        else:
+            terug = authority
+        return scheme + terug
+
 #**********************************************************/**
 #**************  Exception classes ***************************
 #**********************************************************/**
