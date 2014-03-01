@@ -777,7 +777,8 @@ class Uri(object):
         self.__call__(**kw)
     def __call__( self, **kw):
         self._uri.update(**kw)
-    def __str__(self):
+    def __str__(self, **kw):
+        self.__call__(**kw)
         scheme   = self._uri['scheme'] + ':' if self._uri['scheme'] else ''
         password = ':' + self._uri['password'] if self._uri['password'] else ''
         userinfo = self._uri['username'] + password + '@' if self._uri['username'] else ''
@@ -789,7 +790,7 @@ class Uri(object):
         else:
             terug = authority
         return scheme + terug
-
+    uri = __str__
 #**********************************************************/**
 #**************  Exception classes ***************************
 #**********************************************************/**
