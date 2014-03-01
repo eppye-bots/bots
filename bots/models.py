@@ -65,6 +65,8 @@ CHANNELTYPE = (     #Note: in communication.py these channeltypes are converted 
     ('pop3', _(u'pop3')),
     ('pop3s', _(u'pop3s')),
     ('pop3apop', _(u'pop3apop')),
+    ('http', _(u'http')),
+    ('https', _(u'https')),
     ('imap4', _(u'imap4')),
     ('imap4s', _(u'imap4s')),
     ('ftp', _(u'ftp')),

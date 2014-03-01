@@ -822,7 +822,7 @@ class pop3(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 tofilename = str(ta_to.idta)
-                mailid = int(mail.split()[0])	#first 'word' is the message number/ID
+                mailid = int(mail.split()[0])  #first 'word' is the message number/ID
                 maillines = self.session.retr(mailid)[1]        #alt: (header, messagelines, octets) = popsession.retr(messageID)
                 tofile = botslib.opendata(tofilename, 'wb')
                 content = os.linesep.join(maillines)
@@ -1382,6 +1382,7 @@ class sftp(_comsession):
     def disconnect(self):
         self.session.close()
         self.transport.close()
+        
 
     @botslib.log_session
     def incommunicate(self):
@@ -1822,3 +1823,113 @@ class trash(_comsession):
             finally:
                 ta_from.update(statust=DONE)
 
+class http(_comsession):
+    scheme = 'http'     #scheme used for building url
+    headers = None      #used if specified; eg {'content-type': 'application/json'}, # A dictionary with header params
+    params = None      #used if specified; eg {'key1':'value1','key2':'value2'} -> http://server.com/path?key2=value2&key1=value1
+    
+    def connect(self):
+        self.requests = __import__('requests')
+        if self.channeldict['username'] and self.channeldict['secret']:
+            self.auth = (self.channeldict['username'], self.channeldict['secret'])
+        else:
+            self.auth = None
+        if self.channeldict['certfile'] and self.channeldict['keyfile']:
+            self.cert = (self.channeldict['certfile'], self.channeldict['keyfile'])
+        else:
+            self.cert = None
+        self.url = botslib.Uri(scheme=self.scheme,hostname=self.channeldict['host'],port=self.channeldict['port'],path=self.channeldict['path'])
+
+    @botslib.log_session
+    def incommunicate(self):
+        startdatetime = datetime.datetime.now()
+        while True:     #loop until no content is received or max communication time is expired
+            try:
+                #fetch via requests library
+                outResponse = self.requests.get(self.url.uri(),
+                                                auth=self.auth,
+                                                cert=self.cert,
+                                                params=self.params,
+                                                headers=self.headers)
+                if outResponse.status_code != self.requests.codes.ok: #communication not OK: exception
+                    raise botslib.CommunicationError(_(u'%(scheme)s receive error, response code: "%(status_code)s".'),{'scheme':self.scheme,'status_code':outResponse.status_code})
+                if not outResponse.content: #communication OK, but nothing received: break
+                    break
+                ta_from = botslib.NewTransaction(filename=self.url.uri(),
+                                                    status=EXTERNIN,
+                                                    fromchannel=self.channeldict['idchannel'],
+                                                    idroute=self.idroute)
+                ta_to =   ta_from.copyta(status=FILEIN)
+                tofilename = str(ta_to.idta)
+                tofile = botslib.opendata(tofilename, 'wb')
+                tofile.write(outResponse.content)
+                tofile.close()
+                filesize = len(outResponse.content)
+            except:
+                txt = botslib.txtexc()
+                botslib.ErrorProcess(functionname='http-incommunicate',errortext=txt,channeldict=self.channeldict)
+                if 'ta_from' in locals():
+                    ta_from.delete()
+                if 'ta_to' in locals():
+                    ta_to.delete()
+            else:
+                ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
+                ta_from.update(statust=DONE)
+            finally:
+                if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
+                    break
+            
+
+    @botslib.log_session
+    def outcommunicate(self):
+        '''not used now:
+            if send as 'body':
+                outResponse = requests.post(url, ..., data = filedata)
+            elif send as 'multipart':
+                outResponse = requests.post(url, ..., files={'file': filedata})
+        '''
+        for row in botslib.query('''SELECT idta,filename,numberofresends
+                                    FROM ta
+                                    WHERE idta>%(rootidta)s
+                                      AND status=%(status)s
+                                      AND statust=%(statust)s
+                                      AND tochannel=%(tochannel)s
+                                        ''',
+                                    {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
+                                    'status':FILEOUT,'statust':OK}):
+            try:
+                ta_from = botslib.OldTransaction(row['idta'])
+                ta_to = ta_from.copyta(status=EXTERNOUT)
+                fromfile = botslib.opendata(row['filename'], 'rb')
+                content = fromfile.read()
+                fromfile.close()
+                #communicate via requests library
+                outResponse = self.requests.post(self.url.uri(),
+                                                auth=self.auth,
+                                                cert=self.cert,
+                                                params=self.params,
+                                                headers=self.headers,
+                                                data=content)
+                if outResponse.status_code != self.requests.codes.ok:
+                    raise botslib.CommunicationError(_(u'%(scheme)s send error, response code: "%(status_code)s".'),{'scheme':self.scheme,'status_code':outResponse.status_code})
+            except:
+                txt = botslib.txtexc()
+                ta_to.update(statust=ERROR,errortext=txt,filename=self.url.uri(filename=row['filename']),numberofresends=row['numberofresends']+1)
+            else:
+                ta_to.update(statust=DONE,filename=self.url.uri(filename=row['filename']),numberofresends=row['numberofresends']+1)
+            finally:
+                ta_from.update(statust=DONE)
+
+    def disconnect(self):
+        pass
+
+
+class https(http):
+    scheme = 'https'   #scheme used for building url
+    caCert = None     #eg '/pathtocert/ca.pem', Specify if https server has an unrecognized CA
+    
+    def connect(self):
+        #option to set environement variable for requests library; use if https server has an unrecognized CA
+        if self.caCert:
+            os.environ["REQUESTS_CA_BUNDLE"] = self.caCert
+        super(https,self).connect()
