@@ -194,7 +194,7 @@ def translate(startstatus,endstatus,routedict,rootidta):
 
 
         #exceptions file_in-level
-        except botslib.GotoException:
+        except botslib.GotoException:   #edi-file is OK, file is passed-through after parsing.
             ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)   #update with info from eg queries
             ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
             edifile.handleconfirm(ta_fromfile,error=False)
