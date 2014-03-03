@@ -1482,8 +1482,8 @@ class xmlrpc(_comsession):
     def incommunicate(self):
         startdatetime = datetime.datetime.now()
         while True:
-            ta_from = ta_to = None
             try:
+                remove_ta = False
                 content = self.xmlrpc_call()
                 if content is None:
                     break   #nothing (more) to receive.
@@ -1492,6 +1492,7 @@ class xmlrpc(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
@@ -1500,9 +1501,8 @@ class xmlrpc(_comsession):
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
-                if ta_from is not None:
+                if remove_ta:
                     ta_from.delete()
-                if ta_to is not None:
                     ta_to.delete()
                 break   #break out of while loop (else this would be endless)
             else:
