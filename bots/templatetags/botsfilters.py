@@ -5,4 +5,8 @@ register = template.Library()
 
 @register.filter
 def shortpath(path):
-    return os.path.basename(path)   #use triple point (u'\u2026') to indicate soemthing?
+    terug = os.path.basename(path)
+    if terug:
+        return terug
+    else:
+        return '(file)'     #for soem cases there is no good filename.....
