@@ -1827,6 +1827,7 @@ class http(_comsession):
     scheme = 'http'     #scheme used for building url
     headers = None      #used if specified; eg {'content-type': 'application/json'}, # A dictionary with header params
     params = None      #used if specified; eg {'key1':'value1','key2':'value2'} -> http://server.com/path?key2=value2&key1=value1
+    verify = False       #True, False or name of CA-file
     
     def connect(self):
         self.requests = __import__('requests')
@@ -1834,10 +1835,7 @@ class http(_comsession):
             self.auth = (self.channeldict['username'], self.channeldict['secret'])
         else:
             self.auth = None
-        if self.channeldict['certfile'] and self.channeldict['keyfile']:
-            self.cert = (self.channeldict['certfile'], self.channeldict['keyfile'])
-        else:
-            self.cert = None
+        self.cert = None
         self.url = botslib.Uri(scheme=self.scheme,hostname=self.channeldict['host'],port=self.channeldict['port'],path=self.channeldict['path'])
 
     @botslib.log_session
@@ -1845,12 +1843,14 @@ class http(_comsession):
         startdatetime = datetime.datetime.now()
         while True:     #loop until no content is received or max communication time is expired
             try:
+                remove_ta = False
                 #fetch via requests library
                 outResponse = self.requests.get(self.url.uri(),
                                                 auth=self.auth,
                                                 cert=self.cert,
                                                 params=self.params,
-                                                headers=self.headers)
+                                                headers=self.headers,
+                                                verify=self.verify)
                 if outResponse.status_code != self.requests.codes.ok: #communication not OK: exception
                     raise botslib.CommunicationError(_(u'%(scheme)s receive error, response code: "%(status_code)s".'),{'scheme':self.scheme,'status_code':outResponse.status_code})
                 if not outResponse.content: #communication OK, but nothing received: break
@@ -1860,6 +1860,7 @@ class http(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 tofile.write(outResponse.content)
@@ -1868,10 +1869,10 @@ class http(_comsession):
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='http-incommunicate',errortext=txt,channeldict=self.channeldict)
-                if 'ta_from' in locals():
+                if remove_ta:
                     ta_from.delete()
-                if 'ta_to' in locals():
                     ta_to.delete()
+                break
             else:
                 ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
@@ -1909,7 +1910,8 @@ class http(_comsession):
                                                 cert=self.cert,
                                                 params=self.params,
                                                 headers=self.headers,
-                                                data=content)
+                                                data=content,
+                                                verify=self.verify)
                 if outResponse.status_code != self.requests.codes.ok:
                     raise botslib.CommunicationError(_(u'%(scheme)s send error, response code: "%(status_code)s".'),{'scheme':self.scheme,'status_code':outResponse.status_code})
             except:
@@ -1925,11 +1927,21 @@ class http(_comsession):
 
 
 class https(http):
+    ''' testing results:
+        - http server has self-signed certificate; caCert=None, verify='/pathtocert/ca.pem': OK, certificate is verified.
+        - http server has self-signed certificate; caCert points to same certificate, verify = None: OK, certificate is verified.
+        - http server has self-signed certificate; verify = True: OK, but certificate is not verified.
+    '''
     scheme = 'https'   #scheme used for building url
-    caCert = None     #eg '/pathtocert/ca.pem', Specify if https server has an unrecognized CA
+    verify = True     #verify host certificate: True, False or path to CA bundle eg '/pathtocert/ca.pem'
+    caCert = None     #None or path to CA bundle eg '/pathtocert/ca.pem', Specify if https server has an unrecognized CA. Looks like verify needs to be None in order to work(??)
     
     def connect(self):
         #option to set environement variable for requests library; use if https server has an unrecognized CA
+        super(https,self).connect()
         if self.caCert:
             os.environ["REQUESTS_CA_BUNDLE"] = self.caCert
-        super(https,self).connect()
+        if self.channeldict['certfile'] and self.channeldict['keyfile']:
+            self.cert = (self.channeldict['certfile'], self.channeldict['keyfile'])
+        else:
+            self.cert = None
