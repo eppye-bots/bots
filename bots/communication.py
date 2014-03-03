@@ -775,9 +775,9 @@ class file(_comsession):
                 shutil.copyfileobj(fromfile,tofile,1048576)
                 fromfile.close()
                 tofile.close()
-                #Rename filename over havign written the file.
-                #This is for save file writing: do not want another process to read the file while it is being written.
-                #Rename is atomic within same file system (network shares?)
+                #Rename filename after writing file.
+                #Function: safe file writing: do not want another process to read the file while it is being written.
+                #This is safe because file rename is atomic within same file system (?what about network shares?)
                 if self.channeldict['mdnchannel']:
                     tofilename_old = tofilename
                     tofilename = botslib.rreplace(tofilename_old,self.channeldict['mdnchannel'])
@@ -1187,6 +1187,8 @@ class ftp(_comsession):
                     fromfile = botslib.opendata(row['filename'], 'r')
                     self.session.storlines(mode + tofilename, fromfile)
                 fromfile.close()
+                #Rename filename after writing file.
+                #Function: safe file writing: do not want another process to read the file while it is being written.
                 if self.channeldict['mdnchannel']:
                     tofilename_old = tofilename
                     tofilename = botslib.rreplace(tofilename_old,self.channeldict['mdnchannel'])
@@ -1453,6 +1455,8 @@ class sftp(_comsession):
                 tofile.write(fromfile.read())
                 tofile.close()
                 fromfile.close()
+                #Rename filename after writing file.
+                #Function: safe file writing: do not want another process to read the file while it is being written.
                 if self.channeldict['mdnchannel']:
                     tofilename_old = tofilename
                     tofilename = botslib.rreplace(tofilename_old,self.channeldict['mdnchannel'])
