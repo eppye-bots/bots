@@ -42,7 +42,7 @@ class TestTranslate(unittest.TestCase):
         #~ self.assertEqual('scheme://username:password@hostname:80/path1/path2/filename',str(Uri(scheme='scheme',username='username',password='password',hostname='hostname',port=80,path='path1/path2',filename= 'filename')),'basis')
 
     def testcalls(self):
-        self.assertEqual('scheme:/path1/path2/filename',Uri(scheme='scheme',path='/path1/path2',filename='filename').uri(),'')
+        self.assertEqual('scheme:/path1/path2/filename2',Uri(scheme='scheme',path='/path1/path2',filename='filename').uri(filename='filename2'),'')
 
 
 if __name__ == '__main__':
