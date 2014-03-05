@@ -41,7 +41,7 @@ def generalinit(configdir):
             settings = botslib.botsbaseimport(importnameforsettings)
         except ImportError:     #set pythonpath to config directory first
             if not os.path.exists(configdir):    #check if configdir exists.
-                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "%(configdir)s".',{'configdir':configdir})
+                raise botslib.PanicError(u'In initilisation: path to configuration does not exists: "%(configdir)s".',{'configdir':configdir})
             addtopythonpath = os.path.abspath(os.path.dirname(configdir))
             #~ print 'add pythonpath for usersys',addtopythonpath
             moduletoimport = os.path.basename(configdir)
@@ -72,7 +72,7 @@ def generalinit(configdir):
             importedusersys = botslib.botsbaseimport(importnameforusersys)
         except ImportError:     #set pythonpath to usersys directory first
             if not os.path.exists(usersys):    #check if configdir exists.
-                raise botslib.BotsError(u'In initilisation: path to configuration does not exists: "%(usersys)s".',{'usersys':usersys})
+                raise botslib.PanicError(u'In initilisation: path to configuration does not exists: "%(usersys)s".',{'usersys':usersys})
             addtopythonpath = os.path.abspath(os.path.dirname(usersys))     #????
             moduletoimport = os.path.basename(usersys)
             #~ print 'add pythonpath for usersys',addtopythonpath
