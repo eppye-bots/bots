@@ -1184,7 +1184,10 @@ class x12(var):
                 raise botslib.InMessageError(_(u'[A61]: Edi file contains only whitespace.'))  #not with mailbag
             else:
                 raise botslib.InMessageError(_(u'[A62]: Expect X12 file but envelope is not right.'))
-        if version < '00403':  #not used before this version
+        #Note: reserve=repeating separator. 
+        #Since ISA version 00403 used as repeat sep. Some partners use ISA version above 00403 but do not use repeats. Than this char is eg 'U' (as in older ISA versions).
+        #This wrong usage is caugth by checking if the char is alfanumeric; if so assume wrong usage (and do not use repeat sep.)
+        if version < '00403' or self.ta_info['reserve'].isalnum():
             self.ta_info['reserve'] = ''    
         self.ta_info['skip_char'] = self.ta_info['skip_char'].replace(self.ta_info['record_sep'],'') #if <CR> is segment terminator: cannot be in the skip_char-string!
 
