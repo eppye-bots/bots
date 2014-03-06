@@ -65,7 +65,7 @@ def translate(startstatus,endstatus,routedict,rootidta):
                                                 fromchannel=row['fromchannel'],
                                                 idroute=routedict['idroute'],
                                                 command=routedict['command'])
-            edifile.checkforerrorlist() #if no exception: infile has been lexed and parsed OK.
+            edifile.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
 
             if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm. 
                 raise botslib.GotoException('dummy')    
@@ -199,15 +199,11 @@ def translate(startstatus,endstatus,routedict,rootidta):
             ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
             edifile.handleconfirm(ta_fromfile,error=False)
             botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
-        except botslib.MessageError:    #only non-fatal parse errors in incomign file; a list of these errors is build. Data from QUERIES is probably correct
+        except:
             txt = botslib.txtexc()
             ta_parsed.update(statust=ERROR,errortext=txt,**edifile.ta_info)
             ta_parsed.deletechildren()
-            botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
-        except:                         #fatal parse/lex errors in incoming file
-            txt = botslib.txtexc()
-            ta_parsed.update(statust=ERROR,errortext=txt)
-            ta_parsed.deletechildren()
+            edifile.handleconfirm(ta_fromfile,error=True)
             botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
         else:
             edifile.handleconfirm(ta_fromfile,error=False)

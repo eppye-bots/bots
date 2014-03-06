@@ -41,7 +41,7 @@ def parse_edi_file(**ta_info):
         raise botslib.InMessageError(_(u'Unknown editype for incoming message: %(editype)s'),ta_info)
     ediobject = classtocall(ta_info)
     #read, lex, parse the incoming edi file
-    #all errors are caught; these are 'fatal errors': processing has stopped.
+    #ALL errors are caught; these are 'fatal errors': processing has stopped.
     #get information from error/exception; format this into ediobject.errorfatal
     try:
         ediobject.initfromfile()
@@ -49,13 +49,14 @@ def parse_edi_file(**ta_info):
         start = msg.start - 10 if msg.start >= 10 else 0
         content = msg.object[start:msg.end+10]
         #msg.encoding should contain encoding, but does not (think this is not OK for UNOA, etc)
-        ediobject.errorfatal = unicode(botslib.InMessageError(_(u'[A59]: incoming file has not allowed characters at/after file-position %(pos)s: "%(content)s".'),
-                                        {'pos':msg.start,'content':content}))
+        ediobject.errorlist.append(unicode(botslib.InMessageError(_(u'[A59]: incoming file has not allowed characters at/after file-position %(pos)s: "%(content)s".'),
+                                        {'pos':msg.start,'content':content})))
     except:
-        #~ txt = botslib.txtexc(mention_exception_type=False)
         txt = botslib.txtexc()
-        ediobject.errorfatal = unicode(botslib.InMessageError(_(u'[Fatal]: incoming file has error: "%(txt)s".'),
-                                        {'txt':txt}))
+        ediobject.errorlist.append(unicode(botslib.InMessageError(_(u'[Fatal]: incoming file has error: "%(txt)s".'),
+                                        {'txt':txt})))
+    else:
+        ediobject.errorfatal = False
     return ediobject
 
 #*****************************************************************************
@@ -85,7 +86,7 @@ class Inmessage(message.Message):
         leftover = self._parse(structure_level=self.defmessage.structure,inode=self.root)
         if leftover:
             raise botslib.InMessageError(_(u'[A50] line %(line)s pos %(pos)s: Found non-valid data at end of edi file; probably a problem with separators or message structure.'),
-                                            {'line':leftover[0][LIN], 'pos':leftover[0][POS]})
+                                            {'line':leftover[0][LIN], 'pos':leftover[0][POS]})  #probably not reached with edifact/x12 because of mailbag processing.
         del self.lex_records
         #self.root is now root of a tree (of nodes).
 
@@ -831,7 +832,6 @@ class excel(csv):
                                             {'leftover':leftover})
         del self.lex_records
         self.checkmessage(self.root,self.defmessage)
-        self.checkforerrorlist()
 
     def read_xls(self,infilename):
         # Read excel first sheet into a 2-d array
@@ -1035,17 +1035,18 @@ class edifact(var):
             botsglobal.logmap.debug(u'Parsing edifact envelopes is OK')
 
     def handleconfirm(self,ta_fromfile,error):
-        ''' generates CONTRL messages.
-            done at end of edifact file handling.
-            for now: only called if no parser errors in interchange: no 'error'-CONTRL is generated.
-            AFAICS generating error-CONTRL would not be hard...
-            parameter 'error' is not used now.
+        ''' done at end of edifact file handling.
+            generates CONTRL messages (or not)
         '''
-        #first check if there are any 'send-edifact-CONTRL' confirmrules.
+        #for fatal errors there is no decent node tree
+        if self.errorfatal:
+            return
+        #check if there are any 'send-edifact-CONTRL' confirmrules.
         confirmtype = 'send-edifact-CONTRL'
         if not botslib.globalcheckconfirmrules(confirmtype):
             return
         editype = 'edifact' #self.__class__.__name__
+        AcknowledgeCode = '7' if not error else '4'
         for nodeunb in self.getloop({'BOTSID':'UNB'}):
             sender = nodeunb.get({'BOTSID':'UNB','S002.0004':None})
             receiver = nodeunb.get({'BOTSID':'UNB','S003.0010':None})
@@ -1084,7 +1085,7 @@ class edifact(var):
                 #default mapping script for CONTRL
                 #write UCI for UNB (envelope)
                 out.put({'BOTSID':'UNH','0062':reference,'S009.0065':'CONTRL','S009.0052':'2','S009.0054':'2','S009.0051':'UN','S009.0057':'EAN002'})
-                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':'7'})
+                out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0083':AcknowledgeCode})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','0020':nodeunb.get({'BOTSID':'UNB','0020':None})})
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0004':sender})     #not reverse!
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UCI','S002.0007':nodeunb.get({'BOTSID':'UNB','S002.0007':None})})
@@ -1097,7 +1098,7 @@ class edifact(var):
                 #write UCM for each UNH (message)
                 for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
                     lou = out.putloop({'BOTSID':'UNH'},{'BOTSID':'UCM'})
-                    lou.put({'BOTSID':'UCM','0083':'7'})
+                    lou.put({'BOTSID':'UCM','0083':AcknowledgeCode})
                     lou.put({'BOTSID':'UCM','0062':nodeunh.get({'BOTSID':'UNH','0062':None})})
                     lou.put({'BOTSID':'UCM','S009.0065':nodeunh.get({'BOTSID':'UNH','S009.0065':None})})
                     lou.put({'BOTSID':'UCM','S009.0052':nodeunh.get({'BOTSID':'UNH','S009.0052':None})})
@@ -1254,16 +1255,18 @@ class x12(var):
                     return
 
     def handleconfirm(self,ta_fromfile,error):
-        ''' end of edi file handling.
-            eg writing of confirmations etc.
-            send 997 messages
-            parameter 'error' is not used
+        ''' at end of edi file handling:
+            send 997 messages (or not)
         '''
-        #first check if there are any 'send-x12-997' confirmrules.
+        #for fatal errors there is no decent node tree
+        if self.errorfatal:
+            return
+        #check if there are any 'send-x12-997' confirmrules.
         confirmtype = 'send-x12-997'
         if not botslib.globalcheckconfirmrules(confirmtype):
             return
         editype = 'x12' #self.__class__.__name__
+        AcknowledgeCode = 'A' if not error else 'R'
         for nodegs in self.getloop({'BOTSID':'ISA'},{'BOTSID':'GS'}):
             sender = nodegs.get({'BOTSID':'GS','GS02':None})
             receiver = nodegs.get({'BOTSID':'GS','GS03':None})
@@ -1305,12 +1308,12 @@ class x12(var):
                 out.put({'BOTSID':'ST','ST01':'997','ST02':reference})
                 out.put({'BOTSID':'ST'},{'BOTSID':'AK1','AK101':nodegs.get({'BOTSID':'GS','GS01':None}),'AK102':nodegs.get({'BOTSID':'GS','GS06':None})})
                 gecount = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE01':None})
-                out.put({'BOTSID':'ST'},{'BOTSID':'AK9','AK901':'A','AK902':gecount,'AK903':gecount,'AK904':gecount})
+                out.put({'BOTSID':'ST'},{'BOTSID':'AK9','AK901':AcknowledgeCode,'AK902':gecount,'AK903':gecount,'AK904':gecount})
                 #write AK2 for each ST (message)
                 for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
                     lou = out.putloop({'BOTSID':'ST'},{'BOTSID':'AK2'})
                     lou.put({'BOTSID':'AK2','AK201':nodest.get({'BOTSID':'ST','ST01':None}),'AK202':nodest.get({'BOTSID':'ST','ST02':None})})
-                    lou.put({'BOTSID':'AK2'},{'BOTSID':'AK5','AK501':'A'})
+                    lou.put({'BOTSID':'AK2'},{'BOTSID':'AK5','AK501':AcknowledgeCode})
                 out.put({'BOTSID':'ST'},{'BOTSID':'SE','SE01':out.getcount()+1,'SE02':reference})  #last line (counts the segments produced in out-message)
                 #try to run the user mapping script fuction 'change' (after the default mapping); 'chagne' fucntion recieves the tree as written by default mapping, function can change tree.
                 if translationscript and hasattr(translationscript,'change'):

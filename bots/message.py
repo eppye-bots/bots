@@ -14,7 +14,7 @@ class Message(object):
     def __init__(self,ta_info):
         self.ta_info = ta_info      #here ta_info is only filled with parameters from db-ta
         self.errorlist = []         #collect non-fatal errors in the edi file; used in reporting errors.
-        self.errorfatal = ''        #store fatal errors: errors that stop the processing of the file
+        self.errorfatal = True     #store fatal errors: errors that stop the processing of the file
         self.messagetypetxt = ''    #used in reporting errors.
         self.messagecount = 0       #count messages in edi file; used in reporting errors.
 
@@ -31,11 +31,10 @@ class Message(object):
             pass
 
     def checkforerrorlist(self):
-        ''' examine the message-object.
+        ''' examine the message-object for errors; 
         '''
-        if self.errorfatal:
+        if self.errorfatal:     #for fatal errors: (try to) get information like partners for edi file
             self.try_to_retrieve_info()
-            raise botslib.MessageError(self.errorfatal)
         if self.errorlist:
             raise botslib.MessageError(u'%(errorlist)s',{'errorlist':''.join(self.errorlist)})
 
