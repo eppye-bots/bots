@@ -1160,8 +1160,8 @@ class x12(var):
                 self.ta_info['field_sep'] = char
                 if recordID != 'ISA':
                     raise botslib.InMessageError(_(u'[A60]: Expect "ISA", found "%(content)s". Probably no x12?'),
-                                                {'content':self.rawinput[:7]})   #not with mailbon
-            elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. Not when mailbag.
+                                                {'content':self.rawinput[:7]})   #not with mailbag
+            elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA.
                 if char != self.ta_info['field_sep']:
                     raise botslib.InMessageError(_(u'[A63]: Non-valid ISA header; position %(pos)s of ISA is "%(foundchar)s", expect here element separator "%(field_sep)s".'),
                                                     {'pos':str(count),'foundchar':char,'field_sep':self.ta_info['field_sep']})
