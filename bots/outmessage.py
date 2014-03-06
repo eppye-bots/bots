@@ -131,17 +131,19 @@ class Outmessage(message.Message):
         wrap_length = int(self.ta_info.get('wrap_length', 0))
         if wrap_length:
             try:
-                for i in range(0,len(value),wrap_length): # then split in fixed lengths
+                for i in range(0,len(value),wrap_length):  #split in fixed lengths
                     self._outstream.write(value[i:i+wrap_length] + '\r\n')
-            except UnicodeEncodeError:
+            except UnicodeError,msg:
+                content = botslib.get_relevant_text_for_UnicodeError(msg)
                 raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
-                                                {'char':self.ta_info['charset'],'content':value[i:i+wrap_length]})
+                                                {'char':self.ta_info['charset'],'content':content})
         else:
             try:
                 self._outstream.write(value)
-            except UnicodeEncodeError:  #, flup:    testing with 2.7: flup did not contain the content.
+            except UnicodeError,msg:
+                content = botslib.get_relevant_text_for_UnicodeError(msg)
                 raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
-                                                {'char':self.ta_info['charset'],'content':str(value)})
+                                                {'char':self.ta_info['charset'],'content':content})
 
     def tree2records(self,node_instance):
         self.lex_records = []                   #tree of nodes is flattened to these lex_records

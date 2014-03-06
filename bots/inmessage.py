@@ -46,8 +46,7 @@ def parse_edi_file(**ta_info):
     try:
         ediobject.initfromfile()
     except UnicodeError,msg:
-        start = msg.start - 10 if msg.start >= 10 else 0
-        content = msg.object[start:msg.end+10]
+        content = botslib.get_relevant_text_for_UnicodeError(msg)
         #msg.encoding should contain encoding, but does not (think this is not OK for UNOA, etc)
         ediobject.errorlist.append(unicode(botslib.InMessageError(_(u'[A59]: incoming file has not allowed characters at/after file-position %(pos)s: "%(content)s".'),
                                         {'pos':msg.start,'content':content})))
@@ -425,8 +424,7 @@ class fixed(Inmessage):
                         self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
         except UnicodeError,msg:
             rep_linenr = locals().get('linenr',0) + 1
-            start = msg.start - 10 if msg.start >= 10 else 0
-            content = msg.object[start:msg.end+10]
+            content = botslib.get_relevant_text_for_UnicodeError(msg)
             raise botslib.InMessageError(_(u'Characterset problem in file. At/after line %(line)s: "%(content)s"'),{'line':rep_linenr,'content':content})
 
     def _parsefields(self,lex_record,record_definition):

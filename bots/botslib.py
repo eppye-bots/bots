@@ -762,6 +762,12 @@ def rreplace(org,old,new='',count=1):
     lijst = org.rsplit(old,count)
     return new.join(lijst)
 
+def get_relevant_text_for_UnicodeError(msg):
+    ''' see python doc for details of UnicodeError'''
+    start = msg.start - 10 if msg.start >= 10 else 0
+    return unicode(msg.object[start:msg.end+35],errors='ignore')
+
+    
 class Uri(object):
     ''' generate uri from parts/components
         - different forms of uri (eg with/without password)
