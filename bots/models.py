@@ -239,25 +239,25 @@ class channel(models.Model):
     port = models.PositiveIntegerField(default=0,blank=True,null=True)
     username = StripCharField(max_length=35,blank=True)
     secret = StripCharField(max_length=35,blank=True,verbose_name=_(u'password'))
-    starttls = models.BooleanField(default=False,verbose_name='No check from-address',help_text=_(u"Do not check if an incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
-    apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if an incoming 'to' email addresses is known."))       #20110104: used as 'no check on "to:" email address'
-    remove = models.BooleanField(default=False,help_text=_(u"Delete incoming edi files after reading. Use this in production, else edi files are read over and over again."))
+    starttls = models.BooleanField(default=False,verbose_name='No check from-address',help_text=_(u"Do not check if incoming 'from' email addresses is known."))       #20091027: used as 'no check on "from:" email address'
+    apop = models.BooleanField(default=False,verbose_name='No check to-address',help_text=_(u"Do not check if incoming 'to' email addresses is known."))       #20110104: used as 'no check on "to:" email address'
+    remove = models.BooleanField(default=False,help_text=_(u"Delete incoming edi files after reading.<br>Use in production else files are read again and again."))
     path = StripCharField(max_length=256,blank=True)  #different from host - in ftp both host and path are used
-    filename = StripCharField(max_length=256,blank=True,help_text=_(u'Incoming: use wild-cards eg: "*.edi". <br>Outgoing: many options, see <a target="_blank" href="http://code.google.com/p/bots/wiki/Filenames">wiki</a>. Advised: use "*" in filename (is replaced by unique counter per channel); eg "D_*.edi" gives D_1.edi, D_2.edi, etc.'))
-    lockname = StripCharField(max_length=35,blank=True,help_text=_(u'Use directory locking: when reading or writing edi files use this file to indicate directory lock.'))
-    syslock = models.BooleanField(default=False,help_text=_(u'Use system file locking for reading or writing edi files (windows, *nix).'))
-    parameters = StripCharField(max_length=70,blank=True,help_text=_(u'For use in communication scripting.'))
+    filename = StripCharField(max_length=256,blank=True,help_text=_(u'Incoming: use wild-cards eg: "*.edi".<br>Outgoing: many options, see <a target="_blank" href="http://code.google.com/p/bots/wiki/Filenames">wiki</a>.<br>Advised: use "*" in filename (is replaced by unique counter per channel).<br>eg "D_*.edi" gives D_1.edi, D_2.edi, etc.'))
+    lockname = StripCharField(max_length=35,blank=True,verbose_name=_(u'Lock-file'),help_text=_(u'Directory locking: if lock-file exists in directory, directory is locked for reading/writing.'))
+    syslock = models.BooleanField(default=False,verbose_name=_(u'System locks'),help_text=_(u'Use system file locks for reading or writing edi files (windows, *nix).'))
+    parameters = StripCharField(max_length=70,blank=True,help_text=_(u'For use in user communication scripting.'))
     ftpaccount = StripCharField(max_length=35,blank=True,verbose_name=_(u'ftp account'),help_text=_(u'FTP account information; note that few systems implement this.'))
     ftpactive = models.BooleanField(default=False,verbose_name=_(u'ftp active mode'),help_text=_(u'Passive mode is used unless this is ticked.'))
     ftpbinary = models.BooleanField(default=False,verbose_name=_(u'ftp binary transfer mode'),help_text=_(u'File transfers are ASCII unless this is ticked.'))
     askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'))     #20100703: used to indicate mime-encoding
-    sendmdn = StripCharField(max_length=17,blank=True,choices=EDI_AS_ATTACHMENT,verbose_name=_(u'Edi file in email as'),help_text=_(u'Send edi-files in emails as attachment or in body?'))      #20120922: for email/mime: edi file as attachment or in body 
-    mdnchannel = StripCharField(max_length=35,blank=True,verbose_name=_(u'Tmp part of file name'),help_text=_(u'After writing a file, bots renames file without this tmp part. used for safer writing.'))           #not used anymore 20091019 #20140113:use as tmp part of file name
-    archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write edi files to an archive. See <a target="_blank" href="http://code.google.com/p/bots/wiki/Archiving">wiki</a>. Eg: "C:/edi/archive/mychannel".'))           #added 20091028
+    sendmdn = StripCharField(max_length=17,blank=True,choices=EDI_AS_ATTACHMENT,verbose_name=_(u'as body or attachment'))      #20120922: for email/mime: edi file as attachment or in body 
+    mdnchannel = StripCharField(max_length=35,blank=True,verbose_name=_(u'Tmp-part file name'),help_text=_(u'Write file than rename. Bots renames to filename without this tmp-part.<br>Eg first write "myfile.edi.tmp", tmp-part is ".tmp", rename to "myfile.edi".'))           #not used anymore 20091019 #20140113:use as tmp part of file name
+    archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write edi files to an archive.<br>See <a target="_blank" href="http://code.google.com/p/bots/wiki/Archiving">wiki</a>. Eg: "C:/edi/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True,verbose_name=_(u'Description'))
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
     rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds for in-communication channel to run. Purpose: limit incoming edi files; for large volumes it is better read more often than all files in one time.'))   #added 20100501. 20110906: max communication time.
-    rsrv3 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max days archive'),help_text=_(u'Max number of days files are kept in archive. Overrules global setting in bots.ini.'))   #added 20121030. #20131231: use as maxdaysarchive
+    rsrv3 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max days archive'),help_text=_(u'Max number of days files are kept in archive.<br>Overrules global setting in bots.ini.'))   #added 20121030. #20131231: use as maxdaysarchive
     keyfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Private key file'),help_text=_(u'Path to file that contains PEM formatted private key.'))          #added 20121201
     certfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Certificate chain file'),help_text=_(u'Path to file that contains PEM formatted certificate chain.'))          #added 20121201
     testpath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Acceptance test path'),help_text=_(u'Path used during acceptance tests, see <a target="_blank" href="http://code.google.com/p/bots/wiki/DeploymentAcceptance">wiki</a>.'))           #added 20120111
@@ -265,7 +265,7 @@ class channel(models.Model):
     def communicationscript(self):
         return script_link2(os.path.join(botsglobal.ini.get('directories','usersysabs'),'communicationscripts', self.idchannel + '.py'))
     communicationscript.allow_tags = True
-    communicationscript.short_description = 'Script'
+    communicationscript.short_description = 'User script'
 
     class Meta:
         ordering = ['idchannel']

@@ -54,7 +54,13 @@ class ChannelAdmin(BotsAdmin):
     readonly_fields = ('communicationscript',)
     search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath')
     fieldsets = (
-        (None,          {'fields': (('idchannel', 'inorout', 'type'), 'communicationscript', 'remove', ('host','port'), ('username', 'secret'), ('path'), ('filename','mdnchannel'), ('testpath'),('archivepath','rsrv3'), 'desc'),
+        (None,          {'fields':    (('idchannel', 'inorout', 'type'),
+                                        ('remove','communicationscript'),
+                                        ('host','port'),
+                                        ('username', 'secret'),
+                                        ('path','filename'),
+                                        ('archivepath','rsrv3'),
+                                        'desc'),
                          'classes': ('wide extrapretty',)
                         }),
         (_(u'Email specific'),{'fields': ('starttls', 'apop', 'askmdn', 'sendmdn' ),
@@ -63,7 +69,11 @@ class ChannelAdmin(BotsAdmin):
         (_(u'FTP specific'),{'fields': ('ftpactive', 'ftpbinary', 'ftpaccount' ),
                          'classes': ('collapse wide extrapretty',)
                         }),
-        (_(u'Advanced'),{'fields': ('rsrv2', 'syslock', 'lockname', 'keyfile', 'certfile', 'parameters'),
+        (_(u'Safe writing & file locking'),{'fields': ('mdnchannel','syslock', 'lockname'),
+                         'description': 'For more info see <a target="_blank" href="http://code.google.com/p/bots/wiki/ChannelFileLock">wiki</a><br>',
+                         'classes': ('collapse wide extrapretty',)
+                        }),
+        (_(u'Other'),{'fields': ('testpath','keyfile','certfile','rsrv2','parameters'),
                          'classes': ('collapse wide extrapretty',)
                         }),
     )
@@ -184,7 +194,7 @@ class RoutesAdmin(BotsAdmin):
     form = MyRouteAdminForm
     list_display = ('active','idroute','seq','routescript','fromchannel','fromeditype','frommessagetype','alt','frompartner','topartner','translt','tochannel','defer','toeditype','tomessagetype','frompartner_tochannel','topartner_tochannel','indefaultrun','testindicator','zip_incoming','zip_outgoing',)
     list_display_links = ('idroute',)
-    list_filter = ('idroute','active','fromeditype')
+    list_filter = ('active','notindefaultrun','idroute','fromeditype')
     ordering = ('idroute','seq')
     readonly_fields = ('routescript',)
     search_fields = ('idroute', 'fromchannel__idchannel','fromeditype', 'frommessagetype', 'alt', 'tochannel__idchannel','toeditype', 'tomessagetype')
