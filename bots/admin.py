@@ -15,7 +15,8 @@ class BotsAdmin(admin.ModelAdmin):
     list_per_page = botsglobal.ini.getint('settings','adminlimit',botsglobal.ini.getint('settings','limit',30))
     save_as = True
     def activate(self, request, queryset):
-        ''' admin action.'''
+        ''' handles the admin 'activate' action.'''
+        #much faster: queryset.update(active=not F('active')) but negation of F() object is not yet supported in django (20140307)
         for obj in queryset:
             obj.active = not obj.active
             obj.save()
