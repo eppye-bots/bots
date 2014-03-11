@@ -46,14 +46,17 @@ def parse_edi_file(**ta_info):
     try:
         ediobject.initfromfile()
     except UnicodeError,msg:
+        #~ raise botslib.MessageError('')      #UNITTEST_CORRECTION
         content = botslib.get_relevant_text_for_UnicodeError(msg)
         #msg.encoding should contain encoding, but does not (think this is not OK for UNOA, etc)
         ediobject.errorlist.append(unicode(botslib.InMessageError(_(u'[A59]: incoming file has not allowed characters at/after file-position %(pos)s: "%(content)s".'),
                                         {'pos':msg.start,'content':content})))
     except:
-        txt = botslib.txtexc()
-        ediobject.errorlist.append(unicode(botslib.InMessageError(_(u'[Fatal]: incoming file has error: "%(txt)s".'),
-                                        {'txt':txt})))
+        #~ raise botslib.MessageError('')      #UNITTEST_CORRECTION
+        txt = botslib.txtexc(mention_exception_type=False)
+        ediobject.errorlist.append(txt)
+        #~ ediobject.errorlist.append(unicode(botslib.InMessageError(_(u'[Fatal]: incoming file has error: "%(txt)s".'),
+                                        #~ {'txt':txt})))
     else:
         ediobject.errorfatal = False
     return ediobject
