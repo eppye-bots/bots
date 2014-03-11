@@ -11,6 +11,7 @@ import utilsunit
 ''' plugin unitformats 
     set bots.ini: max_number_errors = 1
     not an acceptance-test.
+    need special code in message.py
 '''
 #python 2.6 treats -0 different. in outmessage this is adapted, for inmessage: python 2.6 does this correct
 
@@ -23,7 +24,7 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.edi.ta_info['lengthnumericbare']=True
         self.edi.ta_info['decimaal']='.'
         tfield1 = ['TEST1','M',3,'R',True,0,       0,       'R']
-        #                    length    decimals minlength  format
+        #~ #                    length    decimals minlength  format
         self.assertEqual(self.edi._initfield(tfield1), '0','empty string')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy,nodedummy), '1', 'basic')
         self.assertEqual(self.edi._formatfield(' 1',tfield1,testdummy,nodedummy), '1', 'basic')
@@ -813,7 +814,7 @@ class TestFormatFieldInmessage(unittest.TestCase):
         self.edi.ta_info['lengthnumericbare']=True
         tfield1 = ['TEST1','M',3,'N',True,0,       0,       'R']
         #                    length    decimals minlength  format
-        #~ self.assertEqual(self.edi._formatfield('',tfield1,testdummy,nodedummy), '0', 'empty numeric string is accepted, is zero')
+        #~ #self.assertEqual(self.edi._formatfield('',tfield1,testdummy,nodedummy), '0', 'empty numeric string is accepted, is zero')
         self.assertEqual(self.edi._formatfield('1',tfield1,testdummy,nodedummy), '1', 'basic')
         self.assertEqual(self.edi._formatfield('0',tfield1,testdummy,nodedummy), '0','zero stays zero')
         self.assertEqual(self.edi._formatfield('-0',tfield1,testdummy,nodedummy), '-0','neg.zero stays neg.zero')
@@ -982,9 +983,9 @@ class TestFormatFieldInmessage(unittest.TestCase):
         self.assertEqual(self.edi._formatfield('',tfield1,testdummy,nodedummy), '','basic')
         self.assertEqual(self.edi._formatfield('',tfield1,testdummy,nodedummy), '','basic')
         #~ self.assertEqual(self.edi._formatfield('   ab',tfield1,testdummy,nodedummy), 'ab','basic')
-        #~ self.assertEqual(self.edi._formatfield('ab   ',tfield1,testdummy,nodedummy), 'ab','basic')
-        #~ self.assertEqual(self.edi._formatfield('	ab',tfield1,testdummy,nodedummy), 'ab','basic')
-        #~ self.assertEqual(self.edi._formatfield('ab	',tfield1,testdummy,nodedummy), 'ab','basic')
+        #~ #self.assertEqual(self.edi._formatfield('ab   ',tfield1,testdummy,nodedummy), 'ab','basic')
+        #~ #self.assertEqual(self.edi._formatfield('	ab',tfield1,testdummy,nodedummy), 'ab','basic')
+        #~ #self.assertEqual(self.edi._formatfield('ab	',tfield1,testdummy,nodedummy), 'ab','basic')
         self.assertEqual(self.edi._formatfield('a	b',tfield1,testdummy,nodedummy), 'a	b','basic')
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'abcdef',tfield1,testdummy,nodedummy)
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'ab    ',tfield1,testdummy,nodedummy)
@@ -992,56 +993,18 @@ class TestFormatFieldInmessage(unittest.TestCase):
         tfield1 = ['TEST1', 'M', 5,   'T', True,   0,      2,'A']
         #                    length            decimals minlength 
         self.assertEqual(self.edi._formatfield('abcde',tfield1,testdummy,nodedummy), 'abcde','basic')
-        #~ self.assertEqual(self.edi._formatfield('  ab',tfield1,testdummy,nodedummy), 'ab','basic')
-        #~ self.assertEqual(self.edi._formatfield('ab   ',tfield1,testdummy,nodedummy), 'ab','basic')
-        #~ self.assertEqual(self.edi._formatfield('	ab',tfield1,testdummy,nodedummy), 'ab','basic')
-        #~ self.assertEqual(self.edi._formatfield('ab	',tfield1,testdummy,nodedummy), 'ab','basic')
+        #~ #self.assertEqual(self.edi._formatfield('  ab',tfield1,testdummy,nodedummy), 'ab','basic')
+        #~ #self.assertEqual(self.edi._formatfield('ab   ',tfield1,testdummy,nodedummy), 'ab','basic')
+        #~ #self.assertEqual(self.edi._formatfield('	ab',tfield1,testdummy,nodedummy), 'ab','basic')
+        #~ #self.assertEqual(self.edi._formatfield('ab	',tfield1,testdummy,nodedummy), 'ab','basic')
         self.assertEqual(self.edi._formatfield('a	b',tfield1,testdummy,nodedummy), 'a	b','basic')
-        #~ self.assertEqual(self.edi._formatfield('  ',tfield1,testdummy,nodedummy), '','basic')
+        #~ #self.assertEqual(self.edi._formatfield('  ',tfield1,testdummy,nodedummy), '','basic')
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'a',tfield1,testdummy,nodedummy)
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'abcdef',tfield1,testdummy,nodedummy) 
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'ab    ',tfield1,testdummy,nodedummy) 
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'    ab',tfield1,testdummy,nodedummy) 
         self.assertRaises(botslib.MessageError,self.edi._formatfield,' ',tfield1,testdummy,nodedummy) 
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'',tfield1,testdummy,nodedummy) 
-
-    def testEdifact0402(self):
-        # old format test are run
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040201F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040202F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040203F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040204F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040205F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040206F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040207F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040208F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040209F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040210F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040211F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040212F.edi')
-        self.failUnless(inmessage.parse_edi_file(editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040214T.edi'), 'standaard test')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040215F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040217F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040218F.edi')
-        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',
-            messagetype='edifact',filename='botssys/infile/unitformats/040219F.edi')
-            #~ 
 
 
 if __name__ == '__main__':

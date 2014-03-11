@@ -196,10 +196,10 @@ if __name__=='__main__':
                                     {'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0,'filesize':333})
     #mailbag **********************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','mailbagtest'],
-                                    {'status':0,'lastreceived':18,'lasterror':0,'lastdone':18,'lastok':0,'lastopen':0,'send':44,'processerrors':0,'filesize':16163})
+                                    {'status':0,'lastreceived':18,'lasterror':0,'lastdone':18,'lastok':0,'lastopen':0,'send':44,'processerrors':0,'filesize':39344})
     #passthroughtest **********************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','passthroughtest'],
-                                    {'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0,'filesize':0})
+                                    {'status':0,'lastreceived':4,'lasterror':0,'lastdone':4,'lastok':0,'lastopen':0,'send':4,'processerrors':0,'filesize':7346})
     #botsidnr **********************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','test_botsidnr','test_changedelete'],
                                     {'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':4,'processerrors':0,'filesize':5813})
@@ -245,13 +245,13 @@ if __name__=='__main__':
     test_plugin()
     #csv_orders_inputtest (csv with records too big.small.not correct ending etc)********************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','csv_orders_inputtest'],
-                                    {'status':1,'lastreceived':5,'lasterror':2,'lastdone':3,'lastok':0,'lastopen':0,'send':3,'processerrors':0,'filesize':72})
+                                    {'status':1,'lastreceived':5,'lasterror':2,'lastdone':3,'lastok':0,'lastopen':0,'send':3,'processerrors':0,'filesize':131})
     #testextendedalt function****************************************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','testextendedalt'],
                                     {'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':3,'processerrors':0,'filesize':261})
     #testincomingmime ****************************************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','testincomingmime'],
-                                    {'status':1,'lastreceived':5,'lasterror':5,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0,'filesize':0})
+                                    {'status':1,'lastreceived':5,'lasterror':5,'lastdone':0,'lastok':0,'lastopen':0,'send':0,'processerrors':0,'filesize':22592})
     #****************************************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','testxml_outspecials'],
                                     {'status':0,'lastreceived':2,'lasterror':0,'lastdone':2,'lastok':0,'lastopen':0,'send':2,'processerrors':0,'filesize':1337})
