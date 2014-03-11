@@ -1409,10 +1409,7 @@ class xml(Inmessage):
                 parser.entity[key] = value
             etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
             etreeroot = etree.parse(filename, parser)
-        if self.ta_info.get('remove_empties_from_xml',True):
-            self._handle_empty(etreeroot)
-        else:
-            self._handle_empty_no_remove(etreeroot)  #remove_empties_from_xml: special handling for xml2botsgrammar
+        self._handle_empty(etreeroot)
         self.stackinit()
         self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
         self.checkmessage(self.root,self.defmessage)
@@ -1425,15 +1422,6 @@ class xml(Inmessage):
             xmlnode.attrib[key] = value.strip()
         for xmlchildnode in xmlnode:   #for every node in mpathtree
             self._handle_empty(xmlchildnode)
-            
-    def _handle_empty_no_remove(self,xmlnode):
-        if not xmlnode.text:
-            xmlnode.text = 'x'
-        for key,value in xmlnode.items():
-            if not value:
-                xmlnode.attrib[key] = 'x'
-        for xmlchildnode in xmlnode:   #for every node in mpathtree
-            self._handle_empty_no_remove(xmlchildnode)
             
     def _etree2botstree(self,xmlnode):
         ''' recursive. '''

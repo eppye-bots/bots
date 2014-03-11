@@ -1,6 +1,5 @@
 ''' converts xml file to a bots grammar.
-    Note: in usersys/grammars/xmlnocheck should be a file xmlnocheck
-    Usage: c:\python25\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
+    Usage: c:\python27\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
     Try to have a 'completely filled' xml file.
 '''
 import os
@@ -10,17 +9,107 @@ import copy
 import inmessage
 import outmessage
 import logging
+try:
+    import cElementTree as ET
+except ImportError:
+    try:
+        import elementtree.ElementTree as ET
+    except ImportError:
+        try:
+            from xml.etree import cElementTree as ET
+        except ImportError:
+            from xml.etree import ElementTree as ET
 import botslib
 import botsinit
 import botsglobal
+import node
+try:
+    from collections import OrderedDict as OrderedDict
+except:
+    from ordereddict import OrderedDict as OrderedDict    
 from botsconfig import *
 
+#**************************************************************************************
+#***classes used in inmessage for xml2botsgrammar.
+#***These classes are dynamically added to inmessage
+#**************************************************************************************
+class xmlforgrammar(inmessage.Inmessage):
+    ''' class for ediobjects in XML. Uses ElementTree'''
+    def initfromfile(self):
+        filename = botslib.abspathdata(self.ta_info['filename'])
+        self.ta_info['attributemarker'] = '__'
+        parser = ET.XMLParser()
+        etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
+        etreeroot = etree.parse(filename, parser)
+        self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
+            
+    def _use_botscontent(self,xmlnode):
+        if self._is_record(xmlnode):
+            if xmlnode.text is None:
+                return False
+            else:
+                return not xmlnode.text.isspace()
+        else:
+            return True
+            
+    def _etree2botstree(self,xmlnode):
+        newnode = node.Node(record=self._etreenode2botstreenode(xmlnode))
+        for xmlchildnode in xmlnode:   #for every node in mpathtree
+            if self._is_record(xmlchildnode):
+                newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
+            else: 
+                ## remark for generating grammars: empty strings should generate a field here
+                if self._use_botscontent(xmlchildnode):
+                    newnode.record[xmlchildnode.tag] = '1'      #add as a field
+                #convert the xml-attributes of this 'xml-field' to fields in dict with attributemarker.
+                newnode.record.update((xmlchildnode.tag + self.ta_info['attributemarker'] + key, value) for key,value in xmlchildnode.items())
+        return newnode
+
+    def _etreenode2botstreenode(self,xmlnode):
+        ''' build a OrderedDict from xml-node. Add BOTSID, xml-attributes (of 'record'), xmlnode.text as BOTSCONTENT.'''
+        build = OrderedDict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.items())   #convert xml attributes to fields.
+        build['BOTSID'] = xmlnode.tag
+        if self._use_botscontent(xmlnode):
+            build['BOTSCONTENT'] = '1'
+        return build
+
+    def _is_record(self,xmlchildnode):
+        return bool(len(xmlchildnode))
+
+
+class xmlforgrammar_allrecords(inmessage.Inmessage):
+    ''' class for ediobjects in XML. Uses ElementTree'''
+    def initfromfile(self):
+        filename = botslib.abspathdata(self.ta_info['filename'])
+        self.ta_info['attributemarker'] = '__'
+        parser = ET.XMLParser()
+        etree =  ET.ElementTree()   #ElementTree: lexes, parses, makes etree; etree is quite similar to bots-node trees but conversion is needed
+        etreeroot = etree.parse(filename, parser)
+        self.root = self._etree2botstree(etreeroot)  #convert etree to bots-nodes-tree
+            
+    def _etree2botstree(self,xmlnode):
+        newnode = node.Node(record=self._etreenode2botstreenode(xmlnode))
+        for xmlchildnode in xmlnode:   #for every node in mpathtree
+            newnode.append(self._etree2botstree(xmlchildnode))           #add as a node/record
+        return newnode
+
+    def _etreenode2botstreenode(self,xmlnode):
+        ''' build a OrderedDict from xml-node. Add BOTSID, xml-attributes (of 'record'), xmlnode.text as BOTSCONTENT.'''
+        build = OrderedDict((xmlnode.tag + self.ta_info['attributemarker'] + key,value) for key,value in xmlnode.items())   #convert xml attributes to fields.
+        build['BOTSID'] = xmlnode.tag
+        if not self._is_record(xmlnode):
+            build['BOTSCONTENT'] = '1'
+        return build
+
+    def _is_record(self,xmlchildnode):
+        return bool(len(xmlchildnode))
+
+#******************************************************************
 #***functions for mapping******************************************
 def map_treewalker(node_instance,mpath):
     ''' Generator function.
-        
     '''
-    mpath.append({'BOTSID':node_instance.record['BOTSID']})
+    mpath.append(OrderedDict({'BOTSID':node_instance.record['BOTSID']}))
     for childnode in node_instance.children:
         yield childnode,mpath[:]
         for terugnode,terugmpath in map_treewalker(childnode,mpath):
@@ -38,7 +127,8 @@ def map_writefields(node_out,node_in,mpath):
         mpath_with_all_fields[-1][key] = u'dummy'    #add key to the mpath
     node_out.put(*mpath_with_all_fields)            #write all fields.
 
-#***functions for generating grammar from tree******************************************
+#******************************************************************
+#***functions to convert out-tree to grammar*********************
 def tree2grammar(node_instance,structure,recorddefs):
     structure.append({ID:node_instance.record['BOTSID'],MIN:0,MAX:99999,LEVEL:[]})
     recordlist = []
@@ -51,41 +141,6 @@ def tree2grammar(node_instance,structure,recorddefs):
     for childnode in node_instance.children:
         tree2grammar(childnode,structure[-1][LEVEL],recorddefs)
 
-def recorddefs2string(recorddefs,sortedstructurelist):
-    recorddefsstring = "{\n"
-    for i in sorted(recorddefs):
-    #~ for key, value in recorddefs.items():
-        recorddefsstring += "    '%s':\n        [\n"%i
-        for field in recorddefs[i]:
-            if field[0] == 'BOTSID':
-                field[1] = 'M'
-                recorddefsstring += "        %s,\n"%field
-                break
-        for field in recorddefs[i]:
-            if field[0].startswith(i + '__'):
-                recorddefsstring += "        %s,\n"%field
-        for field in sorted(recorddefs[i]):
-            if field[0] not in ['BOTSID','BOTSIDnr','BOTSCONTENT'] and not field[0].startswith(i + '__'):
-                recorddefsstring += "        %s,\n"%field
-        recorddefsstring += "        ],\n"
-    recorddefsstring += "    }\n"
-    return recorddefsstring
-
-def structure2string(structure,level=0):
-    structurestring = ''
-    for i in structure:
-        structurestring += level*"    " + "{ID:'%s',MIN:%s,MAX:%s"%(i[ID],i[MIN],i[MAX])
-        recursivestructurestring = structure2string(i[LEVEL],level+1)
-        if recursivestructurestring:
-            structurestring += ",LEVEL:[\n" + recursivestructurestring + level*"    " + "]},\n"
-        else:
-            structurestring += "},\n"
-    return structurestring
-
-def structure2list(structure):
-    structurelist = structure2listcore(structure)
-    return removedoublesfromlist(structurelist)
-
 def removedoublesfromlist(orglist):
     list2return = []
     for member in orglist:
@@ -93,12 +148,57 @@ def removedoublesfromlist(orglist):
             list2return.append(member)
     return list2return
 
-def structure2listcore(structure):
-    structurelist = []
-    for i in structure:
-        structurelist.append(i[ID])
-        structurelist.extend(structure2listcore(i[LEVEL]))
-    return structurelist
+#******************************************************************
+#***functions to write grammar to file*****************************
+def recorddefs2string(recorddefs,targetNamespace):
+    result = ""
+    for tag in sorted(recorddefs):
+        result += "'%s%s':\n    [\n"%(targetNamespace,tag)
+        for field in recorddefs[tag]:
+            if field[0] in ['BOTSID','BOTSCONTENT']:
+                field[1] = 'M'
+                result +=  "    ['%s', '%s', %s, '%s'],\n"%(field[0],field[1],field[2],field[3])
+        for field in recorddefs[tag]:
+            if field[0].startswith(tag + '__'):
+                result +=  "    ['%s', '%s', %s, '%s'],\n"%(field[0],field[1],field[2],field[3])
+        for field in recorddefs[tag]:
+            if field[0] not in ['BOTSID','BOTSIDnr','BOTSCONTENT'] and not field[0].startswith(tag + '__'):
+                result += "    ['%s%s', '%s', %s, '%s'],\n"%(targetNamespace,field[0],field[1],field[2],field[3])
+        result += "    ],\n"
+    return result
+
+def structure2string(structure,targetNamespace,level=0):
+    result = ""
+    for segment in structure:
+        if LEVEL in segment and segment[LEVEL]:
+            result += level*'    ' + "{ID:'%s%s',MIN:%s,MAX:%s,LEVEL:[\n"%(targetNamespace,segment[ID],segment[MIN],segment[MAX])
+            result += structure2string(segment[LEVEL],targetNamespace,level+1)
+            result += level*'    ' + "]},\n"
+        else:
+            result += level*'    ' + "{ID:'%s%s',MIN:%s,MAX:%s},\n"%(targetNamespace,segment[ID],segment[MIN],segment[MAX])
+    return result
+
+def grammar2file(botsgrammarfilename,structure,recorddefs,targetNamespace):
+    if targetNamespace:
+        targetNamespace = '{' + targetNamespace + '}'
+    result = 'structure = [\n'
+    result += structure2string(structure,targetNamespace)
+    result += ']\n\n'
+    result += 'recorddefs = {\n'
+    result += recorddefs2string(recorddefs,targetNamespace)
+    result +=  "}\n"
+    
+    result2 = '#Generated by bots open source edi translator.\nfrom bots.botsconfig import *\n'
+    if targetNamespace:
+        shortNamespace = 'NS'
+        result2 += shortNamespace + " = '" + targetNamespace + "'\n\n"
+        result = result.replace("'" + targetNamespace,shortNamespace + "+'")
+    result2 += result
+    
+    f = open(botsgrammarfilename,'wb')
+    f.write(result2)
+    f.close()
+    print 'grammar file is written:',botsgrammarfilename
 
 
 def start():
@@ -110,19 +210,23 @@ def start():
         %(name)s  -c<directory>  <xml_file>  <xml_grammar_file>
     Options:
         -c<directory>      directory for configuration files (default: config).
+        -a                 all xml elements as records
         <xml_file>         name of the xml file to read
         <xml_grammar_file> name of the grammar file to write
     
     '''%{'name':os.path.basename(sys.argv[0]),'version':botsglobal.version}
     configdir = 'config'
     edifile =''
-    grammarfile = ''
+    botsgrammarfilename = ''
+    allrecords = False
     for arg in sys.argv[1:]:
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
                 print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
+        elif arg.startswith('-a'):
+            allrecords = True
         elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
             print usage
             sys.exit(0)
@@ -130,8 +234,8 @@ def start():
             if not edifile:
                 edifile = arg
             else:
-                grammarfile = arg
-    if not edifile or not grammarfile:
+                botsgrammarfilename = arg
+    if not edifile or not botsgrammarfilename:
         print 'Error: both edifile and grammarfile are required.'
         sys.exit(0)
     #***end handling command line arguments**************************
@@ -139,60 +243,44 @@ def start():
     process_name = 'xml2botsgrammar'
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
-    
-    #the xml file is parsed as an xmlnocheck message
-    editype = 'xmlnocheck'
-    messagetype = 'xmlnocheckxxxtemporaryforxml2grammar'
-    #a (temp) xmlnocheck grammar is needed (but needs not actual content. This file is not removed.
-    tmpgrammarfile = botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars',editype,messagetype+'.py')
-    filehandler = open(tmpgrammarfile,'w')
-    filehandler.close()
-    
+
+    targetNamespace = ''
+    #*******************************************************************
+    #***add classes for handling editype xml to inmessage
+    #*******************************************************************
+    if allrecords:
+        #~ editype = 'xmlforgrammar_allrecords'
+        inmessage.xmlforgrammar = xmlforgrammar_allrecords
+    else:
+        #~ editype = 'xmlforgrammar' 
+        inmessage.xmlforgrammar = xmlforgrammar
     #make inmessage object: read the xml file
-    inn = inmessage.parse_edi_file(editype=editype,messagetype=messagetype,filename=edifile,remove_empties_from_xml=False)
-    #make outmessage object; nothing is 'filled' yet.
-    out = outmessage.outmessage_init(editype=editype,messagetype=messagetype,filename='botssys/infile/unitnode/output/inisout03.edi',divtext='',topartner='')    
+    inn = inmessage.parse_edi_file(editype='xmlforgrammar',messagetype='',filename=edifile)
+    #make outmessage object; nothing is 'filled' yet. In mapping tree is filled; nothing is written to file.
+    out = outmessage.outmessage_init(editype='xmlnocheck',messagetype='',filename='',divtext='',topartner='')    
     
-    #***do the mapping***************************************************
-    #handle root
-    mpath_root = [{'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'}]
+    #***mapping: make 'normalised' out-tree suited for writing as a grammar***************************************************
+    mpath_root = [OrderedDict({'BOTSID':inn.root.record['BOTSID'],'BOTSIDnr':'1'})] #handle root
     out.put(*mpath_root)
     map_writefields(out,inn.root,mpath_root)
     
     #walk tree; write results to out-tree
     mpath_start = []
     for node_instance,mpath in map_treewalker(inn.root,mpath_start):
-        mpath.append({'BOTSID':node_instance.record['BOTSID']})
+        mpath.append(OrderedDict({'BOTSID':node_instance.record['BOTSID']}))
         if out.get(*mpath) is None:     #if node does not exist: write it.
             out.put(*mpath)
         map_writefields(out,node_instance,mpath)
+    #***mapping is done 
 
-    #***mapping is done; out-tree is finished; represents 'normalised' tree suited for writing as a grammar
+    #***convert out-tree to grammar
     structure = []
     recorddefs = {}
     tree2grammar(out.root,structure,recorddefs)
-    #~ for key,value in recorddefs.items():
-        #~ print key,value
-        #~ print '\n'
-    sortedstructurelist = structure2list(structure)
-    recorddefsstring = recorddefs2string(recorddefs,sortedstructurelist)
-    structurestring = structure2string(structure)
 
-    #write grammar file
-    grammar = open(grammarfile,'wb')
-    grammar.write('#grammar automatically generated by bots open source edi translator.')
-    grammar.write('\n')
-    grammar.write('from bots.botsconfig import *')
-    grammar.write('\n\n')
-    grammar.write('syntax = {}')
-    grammar.write('\n\n')
-    grammar.write('structure = [\n%s]\n'%(structurestring))
-    grammar.write('\n\n')
-    grammar.write('recorddefs = %s'%(recorddefsstring))
-    grammar.write('\n\n')
-    grammar.close()
-    print 'grammar file is written:',grammarfile
+    #***write grammar to file
+    grammar2file(botsgrammarfilename,structure,recorddefs,targetNamespace)
+    
 
 if __name__ == '__main__':
     start()
-
