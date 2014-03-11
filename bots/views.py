@@ -117,13 +117,18 @@ def incoming(request,*kw,**kwargs):
                 form = forms.SelectIncoming(formin.cleaned_data)
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'delete' in request.POST:        #from ViewIncoming form using star delete
-                idta = int(request.POST[u'delete'])
-                #delete from filereport
-                models.filereport.objects.filter(idta=idta).delete()
-                #get ta_object
-                ta_object = models.ta.objects.get(idta=idta)
-                #delete as much as possible in ta table
-                viewlib.delete_from_ta(ta_object)
+                if request.user.is_staff or request.user.is_superuser:
+                    idta = int(request.POST[u'delete'])
+                    #delete from filereport
+                    models.filereport.objects.filter(idta=idta).delete()
+                    #get ta_object
+                    ta_object = models.ta.objects.get(idta=idta)
+                    #delete as much as possible in ta table
+                    viewlib.delete_from_ta(ta_object)
+                else:
+                    notification = _(u'No rights for this operation.')
+                    botsglobal.logger.info(notification)
+                    messages.add_message(request, messages.INFO, notification)
             elif 'retransmit' in request.POST:        #from ViewIncoming form using star rereceive
                 idta = request.POST[u'retransmit']
                 filereport = models.filereport.objects.get(idta=int(idta))
