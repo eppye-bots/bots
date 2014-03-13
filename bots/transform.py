@@ -328,7 +328,7 @@ def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):   #depreciated, use 
     ''' as safe_ccode but reversed lookup.'''
     return reverse_ccode(ccodeid,rightcode,field,safe=True)
 
-#depreciated, kept for upward comp.
+#depreciated, kept for upward compatibility
 codetconversion = ccode     
 safecodetconversion = safe_ccode
 rcodetconversion = reverse_ccode
