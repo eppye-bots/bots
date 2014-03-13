@@ -158,16 +158,18 @@ def multiple_email_validator(value):
             raise ValidationError(_(u'Enter valid e-mail address(es) separated by commas.'), code='invalid')
 
 def script_link1(script,linktext):
-    # if script exists return a plain text name as link; else return "no" icon, plain text name
-    # used in translate (all scripts should exist, missing script is an error)
+    ''' if script exists return a plain text name as link; else return "no" icon, plain text name
+        used in translate (all scripts should exist, missing script is an error).
+    '''
     if os.path.exists(script):
         return '<a href="/srcfiler/?src=%s" target="_blank">%s</a>'%(urllib.quote(script),linktext)
     else:
         return '<img src="/media/admin/img/icon-no.gif"></img> %s'%linktext
 
 def script_link2(script):
-    # if script exists return "yes" icon + view link; else return "no" icon
-    # used in routes, channels (scripts are optional)
+    ''' if script exists return "yes" icon + view link; else return "no" icon
+        used in routes, channels (scripts are optional)
+    '''
     if os.path.exists(script):
         return '<a class="nowrap" href="/srcfiler/?src=%s" target="_blank"><img src="/media/admin/img/icon-yes.gif"></img> view</a>'%urllib.quote(script)
     else:
@@ -373,6 +375,8 @@ class translate(models.Model):
         ordering = ['fromeditype','frommessagetype','frompartner','topartner','alt']
     def __unicode__(self):
         return unicode(self.fromeditype) + u' ' + unicode(self.frommessagetype) + u' ' + unicode(self.alt) + u' ' + unicode(self.frompartner) + u' ' + unicode(self.topartner)
+
+
 class routes(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     idroute = StripCharField(max_length=35,db_index=True,help_text=_(u'Identification of route; a composite route consists of multiple parts having the same "idroute".'))
@@ -403,15 +407,11 @@ class routes(models.Model):
         return script_link2(os.path.join(botsglobal.ini.get('directories','usersysabs'),'routescripts', self.idroute + '.py'))
     routescript.allow_tags = True
     routescript.short_description = 'Script'
-
-    def indefaultrun(self):
-        # Opposite of notindefaultrun. Put column next to active. More logical than a "double negative"
-        if self.notindefaultrun:
-            return '<img src="/media/admin/img/icon-no.gif"></img>'
-        else:
-            return '<img src="/media/admin/img/icon-yes.gif"></img>'
-    indefaultrun.short_description = 'Default Run'
-    indefaultrun.allow_tags = True
+    
+    def indefaultrun(obj):
+        return not obj.notindefaultrun
+    indefaultrun.boolean = True
+    indefaultrun.short_description = 'Default run'
     
     class Meta:
         db_table = 'routes'
