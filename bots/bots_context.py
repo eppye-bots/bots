@@ -21,7 +21,9 @@ def set_context(request):
             my_context['custom_menus'] = [(key.title(),value) for key,value in botsglobal.ini.items('custommenus') if key != 'menuname']
 
     #in bots.ini can be indicated that all routes (in config->routes, if route is activated) can be run individually via menu
-    if botsglobal.ini.getboolean('webserver','menu_all_routes',False):
+    if botsglobal.ini.get('webserver','menu_all_routes','') == 'notindefaultrun':
+        my_context['menu_all_routes'] = list(models.routes.objects.values_list('idroute', flat=True).filter(active=True).filter(notindefaultrun=True).order_by('idroute').distinct())
+    elif botsglobal.ini.getboolean('webserver','menu_all_routes',False):
         my_context['menu_all_routes'] = list(models.routes.objects.values_list('idroute', flat=True).filter(active=True).order_by('idroute').distinct())
 
     #bots_http_path is used in name of browser-window; this is derived from url/path
