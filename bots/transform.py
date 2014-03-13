@@ -297,22 +297,16 @@ def ccode(ccodeid,leftcode,field='rightcode',safe=False):
                                 AND leftcode = %(leftcode)s''',
                                 {'ccodeid':ccodeid,'leftcode':leftcode}):
         return row[field]
-    if safe:
+    if safe is None:
+        return None
+    elif safe:
         return leftcode
     else:
         raise botslib.CodeConversionError(_(u'Value "%(value)s" not in code-conversion, user table "%(table)s".'),
                                             {'value':leftcode,'table':ccodeid})
-codetconversion = ccode
-
+                                            
 def safe_ccode(ccodeid,leftcode,field='rightcode'):   #depreciated, use ccode with safe=True
-    ''' converts code using a db-table.
-        converted value is returned, if not there return orginal code
-    '''
-    try:
-        return ccode(ccodeid,leftcode,field)
-    except botslib.CodeConversionError:
-        return leftcode
-safecodetconversion = safe_ccode
+    return ccode(ccodeid,leftcode,field,safe=True)
 
 def reverse_ccode(ccodeid,rightcode,field='leftcode',safe=False):
     ''' as ccode but reversed lookup.'''
@@ -322,19 +316,22 @@ def reverse_ccode(ccodeid,rightcode,field='leftcode',safe=False):
                                 AND rightcode = %(rightcode)s''',
                                 {'ccodeid':ccodeid,'rightcode':rightcode}):
         return row[field]
-    if safe:
+    if safe is None:
+        return None
+    elif safe:
         return rightcode
     else:
         raise botslib.CodeConversionError(_(u'Value "%(value)s" not in code-conversion, user table "%(table)s".'),
                                             {'value':rightcode,'table':ccodeid})
-rcodetconversion = reverse_ccode
 
 def safe_reverse_ccode(ccodeid,rightcode,field='leftcode'):   #depreciated, use reverse_ccode with safe=True
     ''' as safe_ccode but reversed lookup.'''
-    try:
-        return reverse_ccode(ccodeid,rightcode,field)
-    except botslib.CodeConversionError:
-        return rightcode
+    return reverse_ccode(ccodeid,rightcode,field,safe=True)
+
+#depreciated, kept for upward comp.
+codetconversion = ccode     
+safecodetconversion = safe_ccode
+rcodetconversion = reverse_ccode
 safercodetconversion = safe_reverse_ccode
 
 def getcodeset(ccodeid,leftcode,field='rightcode'):
