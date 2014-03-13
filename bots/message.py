@@ -25,7 +25,7 @@ class Message(object):
         if len(self.errorlist) < botsglobal.ini.getint('settings','max_number_errors',10):
             self.errorlist.append(self.messagetypetxt + errortxt)
         elif len(self.errorlist) == botsglobal.ini.getint('settings','max_number_errors',10):
-            self.errorlist.append((_(u'Found at least %(max_number_errors)s errors.'),
+            self.errorlist.append((_(u'Found at least %(max_number_errors)s errors.')%
                                         {'max_number_errors':len(self.errorlist)}))
         else:
             #more than max_number_errors: stop adding new errors to list.
