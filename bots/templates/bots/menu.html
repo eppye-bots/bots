@@ -76,6 +76,9 @@
         <li><hr/></li>
 		<li><a href="/runengine/?clparameter=--rereceive" >{% trans 'Run user-indicated rereceives' %}</a></li>
 		<li><a href="/runengine/?clparameter=--resend" >{% trans 'Run user-indicated resends' %}</a></li>
+        {% if menu_automaticretrycommunication %}
+			<li><a href="/runengine/?clparameter=--automaticretrycommunication" >{% trans 'Retry failed out-communications' %}</a></li>
+        {% endif %}
         {% if menu_all_routes %}
             <li><hr/></li>
             {% for route in menu_all_routes %}
