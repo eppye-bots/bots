@@ -49,14 +49,13 @@ class Message(object):
     def messagegrammarread(self,typeofgrammarfile='grammars'):
         ''' read grammar for a message/envelope.
         '''
+        #read grammar for message.
+        #starts with default values from grammar.py; values are overruled by envelope settings; values are overrules by messagetype setting.
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'],typeofgrammarfile)
         #write values from grammar to self.ta_info - unless these values are already set (eg by mappingscript)
-        #~ print 'point message.messagegrammarread1',self.ta_info
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)
         if not self.ta_info['charset']:
             self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
-        #~ print 'point message.messagegrammarread2',self.defmessage.syntax
-        #~ print 'point message.messagegrammarread3',self.ta_info
 
     @staticmethod
     def display(lex_records):
