@@ -646,7 +646,9 @@ def delete(request,*kw,**kwargs):
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['delpersist']:
-                    models.persist.objects.all().delete()
+                    cursor = connection.cursor()
+                    cursor.execute("DELETE FROM persist")
+                    transaction.commit_unless_managed()
                     notification = _(u'Persist data is deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
