@@ -689,7 +689,7 @@ class file(_comsession):
         startdatetime = datetime.datetime.now()
         for fromfilename in filelist:
             try:
-                reference = os.path.basename(fromfilename)
+                reference = os.path.basename(fromfilename)   #filename is saved as reference in ta
                 ta_from = botslib.NewTransaction(filename=fromfilename,
                                                 status=EXTERNIN,
                                                 reference=reference,
@@ -759,7 +759,7 @@ class file(_comsession):
                 ta_to =   ta_from.copyta(status=EXTERNOUT)
                 #open tofile, incl syslock if indicated
                 tofilename = self.filename_formatter(filename_mask,ta_from)
-                reference = tofilename
+                reference = tofilename      #filename is saved as reference in ta
                 tofilename = botslib.join(outputdir,tofilename)
                 tofile = open(tofilename, mode)
                 if self.channeldict['syslock']:
