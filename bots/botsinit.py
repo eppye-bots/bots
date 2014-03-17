@@ -111,13 +111,20 @@ def generalinit(configdir):
     #set environment for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
-    
+
+#**********************************************************************************
+#*** bots specific handling of character-sets (eg UNOA charset) *******************
 def initbotscharsets():
     '''set up right charset handling for specific charsets (UNOA, UNOB, UNOC, etc).'''
-    codecs.register(codec_search_function)  #tell python how to search a codec defined by bots. These are the codecs in usersys/charset
+    #tell python how to search a codec defined by bots. Bots searches for this in usersys/charset
+    codecs.register(codec_search_function)
+    #syntax has parameters checkcharsetin or checkcharsetout. These can have value 'botsreplace'
+    #eg: 'checkcharsetin':'botsreplace',  #strict, ignore or botsreplace
+    #in case of errors: the 'wrong' character is replaced with char as set in bots.ini. Default value in bots.ini is ' ' (space)
     botsglobal.botsreplacechar = unicode(botsglobal.ini.get('settings','botsreplacechar',u' '))
-    codecs.register_error('botsreplace', botscharsetreplace)    #define the ' botsreplace' error handling for codecs/charsets.
-    for key, value in botsglobal.ini.items('charsets'): #set aliases for charsets in bots.ini
+    codecs.register_error('botsreplace', botsreplacechar_handler)    #need to register the handler for botsreplacechar
+    #set aliases for the charsets in bots.ini
+    for key, value in botsglobal.ini.items('charsets'):
         encodings.aliases.aliases[key] = value
 
 def codec_search_function(encoding):
@@ -131,9 +138,11 @@ def codec_search_function(encoding):
         else:
             return None
 
-def botscharsetreplace(info):
-    '''replaces an char outside a charset by a user defined char. Useful eg for fixed records: recordlength does not change. Do not know if this works for eg UTF-8...'''
+def botsreplacechar_handler(info):
+    '''replaces an char outside a charset by a user defined char. Useful eg for fixed records: recordlength does not change.'''
     return (botsglobal.botsreplacechar, info.start+1)
+#*** end of bots specific handling of character-sets ******************************
+#**********************************************************************************
 
 def connect():
     ''' connect to database for non-django modules eg engine '''
@@ -171,7 +180,6 @@ def connect():
 #*******************************************************************
 #*** init logging **************************************************
 #*******************************************************************
-#~ logging.raiseExceptions = 0     #if errors occur in writing to log: ignore error. (leads to a missing log line, better than error;-).
 logging.addLevelName(25, 'STARTINFO')
 convertini2logger = {'DEBUG':logging.DEBUG,'INFO':logging.INFO,'WARNING':logging.WARNING,'ERROR':logging.ERROR,'CRITICAL':logging.CRITICAL,'STARTINFO':25}
 
