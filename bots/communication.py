@@ -113,7 +113,23 @@ class _comsession(object):
             if self.command == 'new': #only in-communicate for new run
                 #handle maxsecondsperchannel: use global value from bots.ini unless specified in channel. (In database this is field 'rsrv2'.)
                 self.maxsecondsperchannel = botsglobal.ini.getint('settings','maxsecondsperchannel',sys.maxint) if self.channeldict['rsrv2'] <= 0 else self.channeldict['rsrv2']
-                self.connect()
+                try:
+                    self.connect()
+                except:     #connection failed
+                    if self.channeldict['rsrv1'] is not None:
+                        domain = u'bots_communication_failure_' + self.channeldict['idchannel']
+                        nr_retry = botslib.unique(domain)  #update nr_retry in database
+                        if nr_retry >= int(self.channeldict['rsrv1']):
+                            botslib.uniquecore(domain,updatewith=0)    #set nr_retry to zero 
+                            raise
+                        else:
+                            return
+                    else:
+                        raise
+                else:
+                    if self.channeldict['rsrv1'] is not None:
+                        domain = u'bots_communication_failure_' + self.channeldict['idchannel']
+                        botslib.uniquecore(domain,updatewith=0)    #set nr_retry to zero 
                 self.incommunicate()
                 self.disconnect()
             self.postcommunicate()

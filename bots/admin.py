@@ -49,7 +49,7 @@ class CcodetriggerAdmin(BotsAdmin):
 admin.site.register(models.ccodetrigger,CcodetriggerAdmin)
 
 class ChannelAdmin(BotsAdmin):
-    list_display = ('idchannel', 'inorout', 'type', 'communicationscript', 'remove', 'host', 'port', 'username', 'secret', 'path', 'filename','mdnchannel','testpath','archivepath','rsrv3','rsrv2','syslock','parameters','starttls','apop','askmdn','sendmdn','ftpactive', 'ftpbinary')
+    list_display = ('idchannel', 'inorout', 'type', 'communicationscript', 'remove', 'host', 'port', 'username', 'secret', 'path', 'filename','mdnchannel','testpath','archivepath','rsrv3','rsrv2','rsrv1','syslock','parameters','starttls','apop','askmdn','sendmdn','ftpactive', 'ftpbinary')
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
     readonly_fields = ('communicationscript',)
@@ -74,7 +74,7 @@ class ChannelAdmin(BotsAdmin):
                          'description': 'For more info see <a target="_blank" href="http://code.google.com/p/bots/wiki/ChannelFileLock">wiki</a><br>',
                          'classes': ('collapse wide extrapretty',)
                         }),
-        (_(u'Other'),{'fields': ('testpath','keyfile','certfile','rsrv2','parameters'),
+        (_(u'Other'),{'fields': ('testpath','keyfile','certfile','rsrv2','rsrv1','parameters'),
                          'classes': ('collapse wide extrapretty',)
                         }),
     )

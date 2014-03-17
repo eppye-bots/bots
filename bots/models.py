@@ -6,10 +6,9 @@ import os
 import urllib
 from django.db import models
 from django.utils.translation import ugettext as _
-from django.core.validators import validate_email
+from django.core.validators import validate_email,validate_integer
 from django.core.exceptions import ValidationError
 import botsglobal
-
 #***Declare constants, mostly codelists.**********************************************
 DEFAULT_ENTRY = ('',"---------")
 STATUST = [
@@ -162,7 +161,7 @@ def script_link1(script,linktext):
         used in translate (all scripts should exist, missing script is an error).
     '''
     if os.path.exists(script):
-        return '<a href="/srcfiler/?src=%s" target="_blank">%s</a>'%(urllib.quote(script),linktext)
+        return '<a href="/srcfiler/?src=%s" target="_blank">%s</a>'%(urllib.quote(script.encode("utf-8")),linktext)
     else:
         return '<img src="/media/admin/img/icon-no.gif"></img> %s'%linktext
 
@@ -171,7 +170,7 @@ def script_link2(script):
         used in routes, channels (scripts are optional)
     '''
     if os.path.exists(script):
-        return '<a class="nowrap" href="/srcfiler/?src=%s" target="_blank"><img src="/media/admin/img/icon-yes.gif"></img> view</a>'%urllib.quote(script)
+        return '<a class="nowrap" href="/srcfiler/?src=%s" target="_blank"><img src="/media/admin/img/icon-yes.gif"></img> view</a>'%urllib.quote(script.encode("utf-8"))
     else:
         return '<img src="/media/admin/img/icon-no.gif"></img>'
 
@@ -179,6 +178,8 @@ def script_link2(script):
 class MultipleEmailField(models.CharField):
     default_validators = [multiple_email_validator]
     description = _('One or more e-mail address(es),separated by ",".')
+class TextAsInteger(models.CharField):
+    default_validators = [validate_integer]
 
 #***********************************************************************************
 #******** written by webserver ********************************************************
@@ -254,10 +255,10 @@ class channel(models.Model):
     ftpbinary = models.BooleanField(default=False,verbose_name=_(u'ftp binary transfer mode'),help_text=_(u'File transfers are ASCII unless this is ticked.'))
     askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_(u'mime encoding'))     #20100703: used to indicate mime-encoding
     sendmdn = StripCharField(max_length=17,blank=True,choices=EDI_AS_ATTACHMENT,verbose_name=_(u'as body or attachment'))      #20120922: for email/mime: edi file as attachment or in body 
-    mdnchannel = StripCharField(max_length=35,blank=True,verbose_name=_(u'Tmp-part file name'),help_text=_(u'Write file than rename. Bots renames to filename without this tmp-part.<br>Eg first write "myfile.edi.tmp", tmp-part is ".tmp", rename to "myfile.edi".'))           #not used anymore 20091019 #20140113:use as tmp part of file name
+    mdnchannel = StripCharField(max_length=35,blank=True,verbose_name=_(u'Tmp-part file name'),help_text=_(u'Write file than rename. Bots renames to filename without this tmp-part.<br>Eg first write "myfile.edi.tmp", tmp-part is ".tmp", rename to "myfile.edi".'))      #20140113:use as tmp part of file name
     archivepath = StripCharField(max_length=256,blank=True,verbose_name=_(u'Archive path'),help_text=_(u'Write edi files to an archive.<br>See <a target="_blank" href="http://code.google.com/p/bots/wiki/Archiving">wiki</a>. Eg: "C:/edi/archive/mychannel".'))           #added 20091028
     desc = models.TextField(max_length=256,null=True,blank=True,verbose_name=_(u'Description'))
-    rsrv1 = StripCharField(max_length=35,blank=True,null=True)      #added 20100501
+    rsrv1 = TextAsInteger(max_length=35,blank=True,null=True,verbose_name=_(u'Max failures'),help_text=_(u'Max number of connection failures of incommunication before this is reported as a processerror (default: direct report).'))      #added 20100501 #20140315: used as max_com
     rsrv2 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max seconds'),help_text=_(u'Max seconds for in-communication channel to run. Purpose: limit incoming edi files; for large volumes it is better read more often than all files in one time.'))   #added 20100501. 20110906: max communication time.
     rsrv3 = models.IntegerField(null=True,blank=True,verbose_name=_(u'Max days archive'),help_text=_(u'Max number of days files are kept in archive.<br>Overrules global setting in bots.ini.'))   #added 20121030. #20131231: use as maxdaysarchive
     keyfile = StripCharField(max_length=256,blank=True,null=True,verbose_name=_(u'Private key file'),help_text=_(u'Path to file that contains PEM formatted private key.'))          #added 20121201
