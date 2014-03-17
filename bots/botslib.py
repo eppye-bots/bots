@@ -10,6 +10,10 @@ import urllib
 import platform
 import collections
 import django
+try:
+    import importlib
+except:
+    import bots_importlib as importlib
 from django.utils.translation import ugettext as _
 #Bots-modules (no code)
 from botsconfig import *    #constants
@@ -235,6 +239,7 @@ def unique_runcounter(domain):
         unh_reference = unique_runcounter(<messagetype>_<topartner>)
     '''
     domain += 'bots_1_8_4_9_6'  #avoid using/mixing other values in botsglobal
+    domain = domain.encode('unicode-escape')
     terug = 1 + getattr(botsglobal,domain,0)
     setattr(botsglobal,domain,terug)
     return terug
@@ -399,7 +404,9 @@ def botsbaseimport(modulename):
     ''' Do a dynamic import.
         Errors/exceptions are handled in calling functions.
     '''
-    module = __import__(modulename)
+    t = importlib.import_module(modulename.encode(sys.getfilesystemencoding()))
+    return t
+    module = __import__(modulename.encode(sys.getfilesystemencoding()))
     components = modulename.split('.')
     for comp in components[1:]:
         module = getattr(module, comp)
