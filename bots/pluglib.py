@@ -374,12 +374,12 @@ def plugout_files(cleaned_data):
     ''' gather list of files for the plugin that is generated.
     '''
     files2return = []
-    usersys = botsglobal.ini.get('directories','usersysabs')
-    botssys = botsglobal.ini.get('directories','botssys')
+    usersys = unicode(botsglobal.ini.get('directories','usersysabs'))
+    botssys = unicode(botsglobal.ini.get('directories','botssys'))
     if cleaned_data['fileconfiguration']:       #gather from usersys
-        files2return.extend(plugout_files_bydir(usersys,'usersys'))
+        files2return.extend(plugout_files_bydir(usersys,u'usersys'))
         if not cleaned_data['charset']:     #if edifact charsets are not needed: remove them (are included in default bots installation).
-            charsetdirs = plugout_files_bydir(os.path.join(usersys,'charsets'),'usersys/charsets')
+            charsetdirs = plugout_files_bydir(os.path.join(usersys,u'charsets'),u'usersys/charsets')
             for charset in charsetdirs:
                 try:
                     index = files2return.index(charset)
@@ -388,17 +388,17 @@ def plugout_files(cleaned_data):
                     pass
     if cleaned_data['config']:
         config = botsglobal.ini.get('directories','config')
-        files2return.extend(plugout_files_bydir(config,'config'))
+        files2return.extend(plugout_files_bydir(config,u'config'))
     if cleaned_data['data']:
         data = botsglobal.ini.get('directories','data')
-        files2return.extend(plugout_files_bydir(data,'botssys/data'))
+        files2return.extend(plugout_files_bydir(data,u'botssys/data'))
     if cleaned_data['database']:
-        files2return.extend(plugout_files_bydir(os.path.join(botssys,'sqlitedb'),'botssys/sqlitedb.copy'))  #yeah...readign a plugin with a new database will cause a crash...do this manually...
+        files2return.extend(plugout_files_bydir(os.path.join(botssys,u'sqlitedb'),u'botssys/sqlitedb.copy'))  #yeah...readign a plugin with a new database will cause a crash...do this manually...
     if cleaned_data['infiles']:
-        files2return.extend(plugout_files_bydir(os.path.join(botssys,'infile'),'botssys/infile'))
+        files2return.extend(plugout_files_bydir(os.path.join(botssys,u'infile'),u'botssys/infile'))
     if cleaned_data['logfiles']:
         log_file = botsglobal.ini.get('directories','logging')
-        files2return.extend(plugout_files_bydir(log_file,'botssys/logging'))
+        files2return.extend(plugout_files_bydir(log_file,u'botssys/logging'))
     return files2return
 
 def plugout_files_bydir(dirname,defaultdirname):
