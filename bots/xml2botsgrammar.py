@@ -24,9 +24,9 @@ import botsinit
 import botsglobal
 import node
 try:
-    from collections import OrderedDict as OrderedDict
+    from collections import OrderedDict
 except:
-    from ordereddict import OrderedDict as OrderedDict    
+    from bots_ordereddict import OrderedDict    
 from botsconfig import *
 
 #**************************************************************************************
