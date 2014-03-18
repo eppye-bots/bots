@@ -1850,7 +1850,10 @@ class http(_comsession):
     verify = False       #True, False or name of CA-file
     
     def connect(self):
-        self.requests = __import__('requests')
+        try:
+            self.requests = __import__('requests')
+        except:
+            raise ImportError(_(u'Dependency failure: communicationtype "http(s)" requires python library "requests".'))
         if self.channeldict['username'] and self.channeldict['secret']:
             self.auth = (self.channeldict['username'], self.channeldict['secret'])
         else:
