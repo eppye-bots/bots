@@ -38,6 +38,8 @@ def set_context(request):
     else:
         bots_http_path = 'home'
     my_context['bots_http_path'] = bots_http_path
+    my_context['bots_minDate'] = 0 - botsglobal.ini.getint('settings','maxdays',30)
+
     
     #***variables are set now for template use, eg {{ bots_environment_text }}
     return my_context
