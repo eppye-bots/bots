@@ -429,7 +429,7 @@ class routes(models.Model):
         elif self.translateind == 2:
             return '<img alt="%s" src="/media/images/icon-pass.gif"></img>'%(self.get_translateind_display())
         elif self.translateind == 3:
-            return '<img alt="%s" src="/media/admin/img/tooltag-add_over.gif"></img>'%(self.get_translateind_display())
+            return '<img alt="%s" src="/media/images/icon-pass_parse.gif"></img>'%(self.get_translateind_display())
     translt.allow_tags = True
     translt.admin_order_field = 'translateind'
 
