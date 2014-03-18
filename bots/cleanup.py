@@ -41,8 +41,7 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
             botsglobal.logger.info(u'Vacuum database')
             _vacuum()
             # postcleanup user exit in botsengine script
-            if userscript and hasattr(userscript,'postcleanup'):
-                botslib.runscript(userscript,scriptname,'postcleanup',whencleanup=whencleanup)
+            botslib.tryrunscript(userscript,scriptname,'postcleanup',whencleanup=whencleanup)
             botsglobal.logger.info(u'Done full cleanup.')
         _cleanrunsnothingreceived()          #do this every run, but not logged
     except:

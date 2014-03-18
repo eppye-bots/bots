@@ -64,14 +64,10 @@ def start():
     if not commandstorun and not do_cleanup_parameter:   #if no command on command line, use new (default)
         commandstorun = ['--new']
     commandstorun = [command[2:] for command in commandspossible if command in commandstorun]   #sort commands
-    #***end handling command line arguments**************************
+    #***********end handling command line arguments**************************
+    
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
-    #set working directory to bots installation. 
-    #possible advantage: when using relative paths it is clear that this point paths within bots installation. 
-    #most of time not needed: 
-    #1. in production: do not use relative paths within bots directory
-    #2. in eg incoming messages path name is used via botslib.join, which makes an absulute path...
-    #use this as bots2.* always ad this; avoid breaking.
+    #set working directory to bots installation. advantage: when using relative paths it is clear that this point paths within bots installation. 
     os.chdir(botsglobal.ini.get('directories','botspath'))
 
     #**************check if another instance of bots-engine is running/if port is free******************************
@@ -137,27 +133,21 @@ def start():
     atexit.register(botslib.remove_database_lock)
     #**************run the routes**********************************************
     #commandstorun determines the type(s) of run. eg: ['automaticretrycommunication','new']
-    #for each command: run all routes
-    #    for each route: run all seq
     try:
-        #in acceptance tests: run a user script before running eg to clean output directories******************************
-        if acceptance_userscript:
-            if hasattr(acceptance_userscript,'pretest'):
-                botslib.runscript(acceptance_userscript,acceptance_scriptname,'pretest',routestorun=routestorun)
-        if userscript and hasattr(userscript,'pre'):
-            botslib.runscript(userscript,scriptname,'pre',commandstorun=commandstorun,routestorun=routestorun)
-
-
         botslib.prepare_confirmrules()
+        #in acceptance tests: run a user script before running eg to clean output directories******************************
+        botslib.tryrunscript(acceptance_userscript,acceptance_scriptname,'pretest',routestorun=routestorun)
+        botslib.tryrunscript(userscript,scriptname,'pre',commandstorun=commandstorun,routestorun=routestorun)
         errorinrun = 0      #detect if there has been some error. Only used for correct exit() code
         first_command_2_run = True
         for command in commandstorun:
+            #if multiple commands in run: reports etc are based on timestamp; so there needs to be at least one second between these runs.
             if first_command_2_run:
                 first_command_2_run = False
             else:
-                time.sleep(1)   #if multiple commands in run: reports etc are based on timestamp; so there needs to be at least one second between these runs.
+                time.sleep(1) 
             botsglobal.logger.info(_(u'Run "%(command)s".'),{'command':command})
-            #get list of routes to run
+            #************get list of routes to run*******************************
             if routestorun:
                 use_routestorun = routestorun[:]
                 botsglobal.logger.info(_(u'Run routes from command line: "%(routes)s".'),{'routes':str(use_routestorun)})
@@ -180,22 +170,17 @@ def start():
                                             {'active':True}):
                     use_routestorun.append(row['idroute'])
                 botsglobal.logger.info(_(u'Run all active routes from database: "%(routes)s".'),{'routes':str(use_routestorun)})
-            if userscript and hasattr(userscript,'pre' + command):
-                botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
+            #************run routes for this command******************************
+            botslib.tryrunscript(userscript,scriptname,'pre' + command,routestorun=use_routestorun)
             errorinrun += router.rundispatcher(command,use_routestorun)
-            if userscript and hasattr(userscript,'post' + command):
-                botslib.runscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
-        if userscript and hasattr(userscript,'post'):
-            botslib.runscript(userscript,scriptname,'post',commandstorun=commandstorun,routestorun=routestorun)
-        #in acceptance tests: run a user script that can do checks on results of acceptance test.******************************
-        #this is before the cleanup, but this is not critical 
-        if acceptance_userscript:
-            if hasattr(acceptance_userscript,'posttest'):
-                #no good reporting of errors/results in post-test script. Reason: this is after automaticmaintence.
-                try:
-                    botslib.runscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
-                except Exception,msg:
-                    print str(msg)
+            botslib.tryrunscript(userscript,scriptname,'post' + command,routestorun=use_routestorun)
+            #*********finished running routes for this command****************************
+        #*********finished all commands****************************************
+        botslib.tryrunscript(userscript,scriptname,'post',commandstorun=commandstorun,routestorun=routestorun)
+        try:    #in acceptance tests: run a user script. no good reporting of errors/results in post-test script. Reason: this is after automaticmaintence.
+            botslib.tryrunscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
+        except Exception,msg:
+            print str(msg)
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception,msg:
@@ -210,4 +195,3 @@ def start():
 
 if __name__ == '__main__':
     start()
-
