@@ -497,7 +497,7 @@ class csv(Grammar):
         'noBOTSID':False,           #allow csv records without record ID.
         'pass_all':True,            #(csv only) if only one recordtype and no nextmessageblock: would pass record for record to mapping. this fixes that.
         'quote_char':"'",
-        'record_sep':"\r\n",
+        'record_sep':"\r\n",        #better is  "\n" (got some strange errors for this?)
         'skip_char':'',
         'skip_firstline':False,     #often first line in CSV is fieldnames. Usage: either False/True, or number of lines. If True, number of lines is 1
         'triad':'',
