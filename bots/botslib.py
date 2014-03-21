@@ -249,11 +249,7 @@ def unique(domein):
         uses db to keep track of last generated number
         if domain not used before, initialize with 1.
     '''
-    nummer = uniquecore(domein)
-    if nummer > sys.maxint-2:
-        nummer = 1
-        changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':nummer})
-    return nummer
+    return uniquecore(domein)
 
 def uniquecore(domein,updatewith=None):
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
@@ -263,13 +259,15 @@ def uniquecore(domein,updatewith=None):
         try:
             cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
             nummer = cursor.fetchone()['nummer']
-        except TypeError: #if domein does not exist, fetchone returns None, so TypeError
-            cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,0)''',{'domein': domein})
-            nummer = 0
-        if updatewith is None:
             nummer += 1
-            updatewith = nummer
-        cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':updatewith})
+            if updatewith is None:
+                updatewith = nummer
+                if updatewith > sys.maxint-2:
+                    updatewith = 0
+            cursor.execute(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':updatewith})
+        except TypeError: #if domein does not exist, cursor.fetchone returns None, so TypeError
+            cursor.execute(u'''INSERT INTO uniek (domein,nummer) VALUES (%(domein)s,1)''',{'domein': domein})
+            nummer = 1
         botsglobal.db.commit()
         cursor.close()
         return nummer
