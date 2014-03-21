@@ -703,6 +703,7 @@ class file(_comsession):
         filelist = [filename for filename in glob.iglob(frompath) if os.path.isfile(filename)]
         filelist.sort()
         startdatetime = datetime.datetime.now()
+        remove_ta = False
         for fromfilename in filelist:
             try:
                 reference = os.path.basename(fromfilename)   #filename is saved as reference in ta
@@ -712,6 +713,7 @@ class file(_comsession):
                                                 fromchannel=self.channeldict['idchannel'],
                                                 idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 #open fromfile, syslock if indicated
                 fromfile = open(fromfilename,'rb')
                 filesize = os.fstat(fromfile.fileno()).st_size
@@ -732,14 +734,19 @@ class file(_comsession):
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='file-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
+                if remove_ta:
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
             else:
                 ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
                 if self.channeldict['remove']:
                     os.remove(fromfilename)
             finally:
+                remove_ta = False
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
 
@@ -831,12 +838,14 @@ class pop3(_comsession):
         self.listoftamarkedfordelete = []
         maillist = self.session.list()[1]     #get list of messages #alt: (response, messagelist, octets) = popsession.list()     #get list of messages
         startdatetime = datetime.datetime.now()
+        remove_ta = False
         for mail in maillist:
             try:
                 ta_from = botslib.NewTransaction(filename='pop3://'+self.channeldict['username']+'@'+self.channeldict['host'],
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 tofilename = str(ta_to.idta)
                 mailid = int(mail.split()[0])  #first 'word' is the message number/ID
                 maillines = self.session.retr(mailid)[1]        #alt: (header, messagelines, octets) = popsession.retr(messageID)
@@ -853,8 +862,12 @@ class pop3(_comsession):
             except:         #something went wrong for this mail.
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='pop3-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
+                if remove_ta:
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
                 #test connection. if connection is not OK stop fetching mails.
                 try:
                     self.session.noop()
@@ -865,6 +878,7 @@ class pop3(_comsession):
                 ta_to.update(statust=OK,filename=tofilename,filesize=filesize)
                 ta_from.update(statust=DONE)
             finally:
+                remove_ta = False
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
 
@@ -938,12 +952,14 @@ class imap4(_comsession):
 
         maillist = data[0].split()
         startdatetime = datetime.datetime.now()
+        remove_ta = False
         for mail in maillist:
             try:
                 ta_from = botslib.NewTransaction(filename='imap4://'+self.channeldict['username']+'@'+self.channeldict['host'],
                                                     status=EXTERNIN,
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 filename = str(ta_to.idta)
                 # Get the message (header and body)
                 response, msg_data = self.session.uid('fetch',mail, '(RFC822)')
@@ -955,8 +971,12 @@ class imap4(_comsession):
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='imap4-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
+                if remove_ta:
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
             else:
                 ta_to.update(statust=OK,filename=filename,filesize=filesize)
                 ta_from.update(statust=DONE)
@@ -964,6 +984,7 @@ class imap4(_comsession):
                     self.session.uid('store',mail, '+FLAGS', r'(\Deleted)')
                     self.session.expunge()
             finally:
+                remove_ta = False
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
 
@@ -1129,6 +1150,7 @@ class ftp(_comsession):
                 raise
 
         lijst = fnmatch.filter(files,self.channeldict['filename'])
+        remove_ta = False
         for fromfilename in lijst:  #fetch messages from ftp-server.
             try:
                 ta_from = botslib.NewTransaction(filename='ftp:/'+posixpath.join(self.dirpath,fromfilename),
@@ -1136,6 +1158,7 @@ class ftp(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 try:
@@ -1153,19 +1176,28 @@ class ftp(_comsession):
                 if not filesize:
                     raise botslib.BotsError(u'To be catched; directory (or empty file)')
             except botslib.BotsError:   #directory or empty file; handle exception but generate no error.
-                ta_from.delete()
-                ta_to.delete()
+                if remove_ta:
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='ftp-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
+                if remove_ta:
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
             else:
                 ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
                 if self.channeldict['remove']:
                     self.session.delete(fromfilename)
             finally:
+                remove_ta = False
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
 
@@ -1411,6 +1443,7 @@ class sftp(_comsession):
         startdatetime = datetime.datetime.now()
         files = self.session.listdir('.')
         lijst = fnmatch.filter(files,self.channeldict['filename'])
+        remove_ta = False
         for fromfilename in lijst:  #fetch messages from sftp-server.
             try:
                 ta_from = botslib.NewTransaction(filename='sftp:/'+posixpath.join(self.dirpath,fromfilename),
@@ -1418,6 +1451,7 @@ class sftp(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 tofilename = str(ta_to.idta)
                 fromfile = self.session.open(fromfilename, 'r')    # SSH treats all files as binary
                 content = fromfile.read()
@@ -1429,14 +1463,19 @@ class sftp(_comsession):
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='sftp-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
+                if remove_ta:
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
             else:
                 ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
                 if self.channeldict['remove']:
                     self.session.remove(fromfilename)
             finally:
+                remove_ta = False
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
 
@@ -1501,9 +1540,9 @@ class xmlrpc(_comsession):
     @botslib.log_session
     def incommunicate(self):
         startdatetime = datetime.datetime.now()
+        remove_ta = False
         while True:
             try:
-                remove_ta = False
                 content = self.xmlrpc_call()
                 if content is None:
                     break   #nothing (more) to receive.
@@ -1522,13 +1561,17 @@ class xmlrpc(_comsession):
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='xmlprc-incommunicate',errortext=txt,channeldict=self.channeldict)
                 if remove_ta:
-                    ta_from.delete()
-                    ta_to.delete()
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
                 break   #break out of while loop (else this would be endless)
             else:
                 ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
             finally:
+                remove_ta = False
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
 
@@ -1609,6 +1652,7 @@ class db(_comsession):
         if not isinstance(db_objects,(list,tuple)):
             db_objects = [db_objects]   #a list or tuple is expected: pack received object in a list (list with one member). 
 
+        remove_ta = False
         for db_object in db_objects:
             try:
                 ta_from = botslib.NewTransaction(filename=self.channeldict['path'],
@@ -1616,6 +1660,7 @@ class db(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],
                                                     idroute=self.idroute)
                 ta_to = ta_from.copyta(status=FILEIN)
+                remove_ta = True
                 tofilename = str(ta_to.idta)
                 tofile = botslib.opendata(tofilename,'wb')
                 pickle.dump(db_object, tofile)
@@ -1624,11 +1669,17 @@ class db(_comsession):
             except:
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='db-incommunicate',errortext=txt,channeldict=self.channeldict)
-                ta_from.delete()
-                ta_to.delete()
+                if remove_ta:
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
             else:
                 ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
+            finally:
+                remove_ta = False
 
     @botslib.log_session
     def outcommunicate(self):
@@ -1696,6 +1747,7 @@ class communicationscript(_comsession):
     def incommunicate(self):
         startdatetime = datetime.datetime.now()
         if hasattr(self.userscript,'main'): #process files one by one; communicationscript has to be a generator
+            remove_ta = False
             for fromfilename in botslib.runscriptyield(self.userscript,self.scriptname,'main',channeldict=self.channeldict):
                 try:
                     ta_from = botslib.NewTransaction(filename = fromfilename,
@@ -1703,6 +1755,7 @@ class communicationscript(_comsession):
                                                     fromchannel = self.channeldict['idchannel'],
                                                     idroute = self.idroute)
                     ta_to = ta_from.copyta(status = FILEIN)
+                    remove_ta = True
                     #open fromfile
                     fromfile = open(fromfilename, 'rb')
                     filesize = os.fstat(fromfile.fileno()).st_size
@@ -1716,20 +1769,26 @@ class communicationscript(_comsession):
                 except:
                     txt = botslib.txtexc()
                     botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
-                    ta_from.delete()
-                    ta_to.delete()
+                    if remove_ta:
+                        try:
+                            ta_from.delete()
+                            ta_to.delete()
+                        except:
+                            pass
                 else:
                     ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                     ta_from.update(statust=DONE)
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 finally:
+                    remove_ta = False
                     if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                         break
         else:   #all files have been set ready by external communicationscript using 'connect'.
             frompath = botslib.join(self.channeldict['path'], self.channeldict['filename'])
             filelist = [filename for filename in glob.iglob(frompath) if os.path.isfile(filename)]
             filelist.sort()
+            remove_ta = False
             for fromfilename in filelist:
                 try:
                     ta_from = botslib.NewTransaction(filename = fromfilename,
@@ -1737,6 +1796,7 @@ class communicationscript(_comsession):
                                                     fromchannel = self.channeldict['idchannel'],
                                                     idroute = self.idroute)
                     ta_to = ta_from.copyta(status = FILEIN)
+                    remove_ta = True
                     fromfile = open(fromfilename, 'rb')
                     tofilename = str(ta_to.idta)
                     tofile = botslib.opendata(tofilename, 'wb')
@@ -1748,14 +1808,19 @@ class communicationscript(_comsession):
                 except:
                     txt = botslib.txtexc()
                     botslib.ErrorProcess(functionname='communicationscript-incommunicate',errortext=txt,channeldict=self.channeldict)
-                    ta_from.delete()
-                    ta_to.delete()
+                    if remove_ta:
+                        try:
+                            ta_from.delete()
+                            ta_to.delete()
+                        except:
+                            pass
                 else:
                     ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                     ta_from.update(statust=DONE)
                     if self.channeldict['remove']:
                         os.remove(fromfilename)
                 finally:
+                    remove_ta = False
                     if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                         break
 
@@ -1864,9 +1929,9 @@ class http(_comsession):
     @botslib.log_session
     def incommunicate(self):
         startdatetime = datetime.datetime.now()
+        remove_ta = False
         while True:     #loop until no content is received or max communication time is expired
             try:
-                remove_ta = False
                 #fetch via requests library
                 outResponse = self.requests.get(self.url.uri(),
                                                 auth=self.auth,
@@ -1893,13 +1958,17 @@ class http(_comsession):
                 txt = botslib.txtexc()
                 botslib.ErrorProcess(functionname='http-incommunicate',errortext=txt,channeldict=self.channeldict)
                 if remove_ta:
-                    ta_from.delete()
-                    ta_to.delete()
+                    try:
+                        ta_from.delete()
+                        ta_to.delete()
+                    except:
+                        pass
                 break
             else:
                 ta_to.update(filename=tofilename,statust=OK,filesize=filesize)
                 ta_from.update(statust=DONE)
             finally:
+                remove_ta = False
                 if (datetime.datetime.now()-startdatetime).seconds >= self.maxsecondsperchannel:
                     break
             
