@@ -380,19 +380,16 @@ def addeancheckdigit(ean):
 #*********************************************************************
 #*** div utily functions for mappings
 #*********************************************************************
-def unique(domein):
-    ''' generate unique number within range domein.
+def unique(domein,updatewith=None):
+    ''' generate unique number per domain.
         uses db to keep track of last generated number.
-        if domein not used before, initialized with 1.
     '''
-    return str(botslib.unique(domein))
+    return str(botslib.unique(domein,updatewith))
     
-def unique_runcounter(domein):
-    ''' generate unique number within range domein.
-        uses db to keep track of last generated number.
-        if domein not used before, initialized with 1.
+def unique_runcounter(domein,updatewith=None):
+    ''' as unique, but per run of bots-engine.
     '''
-    return str(botslib.unique_runcounter(domein))
+    return str(botslib.unique_runcounter(domein,updatewith))
 
 def inn2out(inn,out):
     ''' copies inn-message to outmessage

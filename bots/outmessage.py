@@ -97,6 +97,7 @@ class Outmessage(message.Message):
             self._initwrite()
             self._write(self.root)
             self.nrmessagewritten = 1
+            self.ta_info['nrmessages'] = self.nrmessagewritten
             self._closewrite()
         elif not self.root.children:
             raise botslib.OutMessageError(_(u'No outgoing message'))    #then there is nothing to write...
@@ -631,27 +632,12 @@ class xml(Outmessage):
                     self._outstream.write(ET.tostring(processing_instruction) + indentstring) #do not use encoding here. gives double xml prolog; possibly because ET.ElementTree.write i used again by write()
         #indent the xml elements
         if self.ta_info['indented']:
-            self._botsindent(root)
+            botslib.indent_xml(root)
         #write tree to file; this is differnt for different python/elementtree versions
         if sys.version_info[1] < 7 and ET.VERSION < '1.3.0':
             xmltree.write(self._outstream,encoding=self.ta_info['charset'])
         else:
             xmltree.write(self._outstream,encoding=self.ta_info['charset'],xml_declaration=False)
-
-    def _botsindent(self,elem, level=0,indentstring='    '):
-        i = "\n" + level*indentstring
-        if len(elem):
-            if not elem.text or not elem.text.strip():
-                elem.text = i + indentstring
-            for e in elem:
-                self._botsindent(e, level+1)
-                if not e.tail or not e.tail.strip():
-                    e.tail = i + indentstring
-            if not e.tail or not e.tail.strip():
-                e.tail = i
-        else:
-            if level and (not elem.tail or not elem.tail.strip()):
-                elem.tail = i
 
     def _node2xml(self,node_instance):
         ''' recursive method.

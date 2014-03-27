@@ -120,7 +120,7 @@ class _comsession(object):
                         domain = u'bots_communication_failure_' + self.channeldict['idchannel']
                         nr_retry = botslib.unique(domain)  #update nr_retry in database
                         if nr_retry >= int(self.channeldict['rsrv1']):
-                            botslib.uniquecore(domain,updatewith=0)    #set nr_retry to zero 
+                            botslib.unique(domain,updatewith=0)    #set nr_retry to zero 
                             raise
                         else:
                             return
@@ -129,7 +129,7 @@ class _comsession(object):
                 else:
                     if self.channeldict['rsrv1'] is not None:
                         domain = u'bots_communication_failure_' + self.channeldict['idchannel']
-                        botslib.uniquecore(domain,updatewith=0)    #set nr_retry to zero 
+                        botslib.unique(domain,updatewith=0)    #set nr_retry to zero 
                 self.incommunicate()
                 self.disconnect()
             self.postcommunicate()
@@ -662,7 +662,7 @@ class _comsession(object):
                                                     {'format':format_spec})
         unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
         tofilename = filename_mask.replace('*',unique)           #filename_mask is filename in channel where '*' is replaced by idta
-        if '{' in tofilename and sys.version_info[1] != 5:    #only for python 2.6/7
+        if '{' in tofilename:    #only for python 2.6/7
             ta.synall()
             if '{infile' in tofilename:
                 ta_list = botslib.trace_origin(ta=ta,where={'status':EXTERNIN})
@@ -1082,11 +1082,7 @@ class smtps(smtp):
             certfile = self.channeldict['certfile']
         else:
             keyfile = certfile = None
-        if hasattr(smtplib,'SMTP_SSL'):
-            self.session = smtplib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile) #make connection
-        else:   #smtp_ssl not in standard lib for python<=2.5; if not, use 'own' smtps module.
-            import bots.smtpssllib as smtpssllib
-            self.session = smtpssllib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile) #make connection
+        self.session = smtplib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile) #make connection
         self.session.set_debuglevel(botsglobal.ini.getint('settings','smtpdebug',0))    #if used, gives information about session (on screen), for debugging smtp
         self.login()
 

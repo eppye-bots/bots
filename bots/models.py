@@ -149,6 +149,15 @@ class StripCharField(models.CharField):
             return value
 
 def multiple_email_validator(value):
+    ''' Problems with validating email adresses:
+        1. user part of email address can be quoted, within quotes ',' is allowed . (splitting goes wrong)
+        2. django's email validating is to strict: if quoted user part, space is not allowed. This is problem with ipmail/x400 addresses.
+        If space is needed in email-address:
+        in file django/core/validators.py, class EmailValidator(object) in regular expression for email address:
+        is:        r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*"$)', # quoted-string
+        should be: r'|^"([\001-\010\013\014\016-\037\040!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*"$)', # quoted-string
+        Another option is to disable email address validation.
+    '''
     emails = value.split(',')
     for email in emails:
         try:

@@ -160,7 +160,7 @@ class new(object):
                         'messagetype':routedict['tomessagetype'],
                         'testindicator':routedict['testindicator'],
                         }
-            towhere = dict([(key, value) for key,value in towhere.iteritems() if value])   #remove nul-values from dict
+            towhere = dict((key, value) for key,value in towhere.iteritems() if value)   #remove nul-values from dict
             wherestring = ' AND '.join([key+'=%('+key+')s ' for key in towhere])
             if routedict['frompartner_tochannel_id']:   #use frompartner_tochannel in where-clause of query (partner/group dependent outchannel
                 towhere['frompartner_tochannel_id'] = routedict['frompartner_tochannel_id']
@@ -305,7 +305,7 @@ class automaticretrycommunication(new):
         ''' reinjects files with failed communication.
         '''
         #bots keeps track of last time automaticretrycommunication was done; reason: performance
-        idta_lastretry = botslib.uniquecore('bots__automaticretrycommunication',updatewith=self.minta4query)
+        idta_lastretry = botslib.unique('bots__automaticretrycommunication',updatewith=self.minta4query)
         if idta_lastretry == 1:
             #this is the first time automaticretrycommunication is run.
             #do not do anything this run, in order to avoid sending older files. 

@@ -177,7 +177,7 @@ class csv(noenvelope):
             botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
             
             tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
-            headers = dict([(field[ID],field[ID]) for field in self.out.defmessage.structure[0][FIELDS]])
+            headers = dict((field[ID],field[ID]) for field in self.out.defmessage.structure[0][FIELDS])
             self.out.put(headers)
             self.out.tree2records(self.out.root)
             tofile.write(self.out.record2string(self.out.lex_records[0:1]))

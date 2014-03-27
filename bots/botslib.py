@@ -110,7 +110,7 @@ class OldTransaction(_Transaction):
 class NewTransaction(_Transaction):
     ''' Generate new transaction. '''
     def __init__(self,**ta_info):
-        updatedict = dict([(key,value) for key,value in ta_info.iteritems() if key in self.filterlist])     #filter ta_info
+        updatedict = dict((key,value) for key,value in ta_info.iteritems() if key in self.filterlist)     #filter ta_info
         updatedict['script'] = self.processlist[-1]
         namesstring = ','.join([key for key in updatedict])
         varsstring = ','.join(['%('+key+')s' for key in updatedict])
@@ -137,7 +137,7 @@ class NewProcess(NewTransaction):
 #**********************************************************/**
 #*************************Database***********************/**
 #**********************************************************/**
-def addinfocore(change,where,wherestring=''):
+def addinfocore(change,where,wherestring):
     ''' core function for add/changes information in db-ta's.
     '''
     wherestring = ' WHERE idta > %(rootidta)s AND ' + wherestring
@@ -148,7 +148,7 @@ def addinfocore(change,where,wherestring=''):
         ta_from.copyta(**change)     #make new ta from ta_from, using parameters from change
         ta_from.update(statust=DONE)    #update 'old' ta
     return counter
-
+    
 def addinfo(change,where):
     ''' change ta's to new phase: ta's are copied to new ta.
         returns the number of db-ta that have been changed.
@@ -232,26 +232,28 @@ def insertta(querystring,*args):
     cursor.close()
     return newidta
 
-def unique_runcounter(domain):
-    ''' generate unique counter within range domain during one run of bots.
-        if domain not used before, initialize as 1; for each subsequent call this is incremented with 1
-        usage example:
-        unh_reference = unique_runcounter(<messagetype>_<topartner>)
+def unique_runcounter(domain,updatewith=None):
+    ''' as unique, but per run of bots-engine.
     '''
     domain += 'bots_1_8_4_9_6'  #avoid using/mixing other values in botsglobal
     domain = domain.encode('unicode-escape')
-    terug = 1 + getattr(botsglobal,domain,0)
-    setattr(botsglobal,domain,terug)
-    return terug
+    nummer = getattr(botsglobal,domain,0)
+    if updatewith is None:
+        nummer += 1
+        updatewith = nummer
+        if updatewith > sys.maxint-2:
+            updatewith = 0
+    setattr(botsglobal,domain,updatewith)
+    return nummer
 
-def unique(domein):
-    ''' generate unique number within range domain.
-        uses db to keep track of last generated number
-        if domain not used before, initialize with 1.
+def unique(domein,updatewith=None):
+    ''' generate unique number within range domain. Uses db to keep track of last generated number.
+        3 use cases:
+        - in acceptance: use unique_runcounter
+        - if updatewith is not None: return current number, update database with updatewith
+        - if updatewith is None: return current number plus 1; update database with  current number plus 1
+            if domain not used before, initialize with 1.
     '''
-    return uniquecore(domein)
-
-def uniquecore(domein,updatewith=None):
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
         return unique_runcounter(domein)
     else:
@@ -259,8 +261,8 @@ def uniquecore(domein,updatewith=None):
         try:
             cursor.execute(u'''SELECT nummer FROM uniek WHERE domein=%(domein)s''',{'domein':domein})
             nummer = cursor.fetchone()['nummer']
-            nummer += 1
             if updatewith is None:
+                nummer += 1
                 updatewith = nummer
                 if updatewith > sys.maxint-2:
                     updatewith = 0
@@ -271,12 +273,12 @@ def uniquecore(domein,updatewith=None):
         botsglobal.db.commit()
         cursor.close()
         return nummer
-    
+
 def checkunique(domein, receivednumber):
     ''' to check if received number is sequential: value is compare with earlier received value.
         if domain not used before, initialize it . '1' is the first value expected.
     '''
-    earlierreceivednumber = uniquecore(domein,updatewith=receivednumber)
+    earlierreceivednumber = unique(domein,updatewith=receivednumber)
     if earlierreceivednumber+1  == receivednumber:
         return True
     else:
@@ -768,6 +770,21 @@ def get_relevant_text_for_UnicodeError(msg):
     ''' see python doc for details of UnicodeError'''
     start = msg.start - 10 if msg.start >= 10 else 0
     return msg.object[start:msg.end+35]
+
+def indent_xml(node, level=0,indentstring='    '):
+    text2indent = "\n" + level*indentstring
+    if len(node):
+        if not node.text or not node.text.strip():
+            node.text = text2indent + indentstring
+        for subnode in node:
+            indent_xml(subnode, level+1)
+            if not subnode.tail or not subnode.tail.strip():
+                subnode.tail = text2indent + indentstring
+        if not subnode.tail or not subnode.tail.strip():
+            subnode.tail = text2indent
+    else:
+        if level and (not node.tail or not node.tail.strip()):
+            node.tail = text2indent
 
     
 class Uri(object):
