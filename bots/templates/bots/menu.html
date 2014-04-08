@@ -82,7 +82,7 @@
         {% if menu_all_routes %}
             <li><hr/></li>
             {% for route in menu_all_routes %}
-                <li><a href="/runengine/?clparameter={{ route }}" >{{ route }}</a></li>
+                <li><a href="/runengine/?clparameter={{ route|urlencode:'' }}" >{{ route }}</a></li>
             {% endfor %}
         {% endif %}
     </ul>
