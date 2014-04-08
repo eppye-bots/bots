@@ -138,7 +138,15 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(False,transform.checkunique(newdomain,1),'seq should be 2')
         self.assertEqual(False,transform.checkunique(newdomain,3),'seq should be 2')
         self.assertEqual(True,transform.checkunique(newdomain,2),'next one')
-        
+
+        newdomain = 'test' + transform.unique('test')
+        self.assertEqual('1',transform.unique(newdomain),'init new domain')
+        self.assertEqual('2',transform.unique(newdomain,updatewith=999),'init new domain')
+        self.assertEqual('999',transform.unique(newdomain,updatewith=9999),'init new domain')
+        self.assertEqual('9999',transform.unique(newdomain,updatewith=9999),'init new domain')
+        self.assertEqual('9999',transform.unique(newdomain,updatewith=9999),'init new domain')
+
+
     def testean(self):
         self.assertEqual('123456789012',transform.addeancheckdigit('12345678901'),'UPC')
         self.assertEqual('2',transform.calceancheckdigit('12345678901'),'UPC')
