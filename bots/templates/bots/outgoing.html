@@ -20,7 +20,7 @@
             <tr>
                 <th></th>
                 <th><button class="botsheader" type="submit" name="order" value="statust" >{% trans 'Status' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="retransmit" title="Resend">{% trans 'Resend' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="retransmit" title="Resend" >{% trans 'Resend' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="numberofresends" >{% trans '#send' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="ts" >{% trans 'Date/time' %}</button></th>
                 <th><button class="botsheader" type="submit" name="order" value="filename" >{% trans 'File' %}</button></th>
@@ -42,10 +42,10 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><button class="botsheader" onclick="document.location.href='/detail/?outidta={{row.idta}}'; return false;">{% trans 'View detail' %}</button></li>
-                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}" />{% trans 'Resend' %}</button></li>
+                            <li><button class="botsheader" onclick="document.location.href='/detail/?outidta={{row.idta}}'; return false;" >{% trans 'View detail' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="retransmit" value="{{row.idta}}" >{% trans 'Resend' %}</button></li>
                             {% if row.statust == 1 %}
-                            <li><button class="botsheader" type="submit" name="noautomaticretry" value="{{row.idta}}" />{% trans 'No automatic retry' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="noautomaticretry" value="{{row.idta}}" >{% trans 'No automatic retry' %}</button></li>
                             {% endif %}
                         </ul>
                     </div>
@@ -54,7 +54,7 @@
                 <td><input disabled="True" type="checkbox" {% if row.retransmit %}checked{% endif %}/></td>
                 <td class="nowrap">{{row.numberofresends}}</td>
                 <td class="nowrap">{{row.ts|date:"Y-m-d H:i:s"}}</td>
-                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink" title="{{row.filename}}">{{row.filename|shortpath}}</a></td>
+                <td><a href="/filer/?action=this&amp;idta={{row.idta}}" target="_blank" class="botslink" title="{{row.filename}}" >{{row.filename|shortpath}}</a></td>
                 <td>{{row.nrmessages}}</td>
                 <td class="nowrap">{{row.editype}}</td>
                 <td class="nowrap">{{row.messagetype}}</td>

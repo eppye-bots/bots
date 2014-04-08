@@ -15,15 +15,15 @@
         <thead>
             <tr>
                 <th></th>
-                <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'State' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="type" />{% trans 'Type' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="lastreceived" />{% trans '#in' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="send" />{% trans '#out' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
-                <th><button class="botsheader"/>{% trans 'Size' %}</button></th>
-                <th><button class="botsheader" />{% trans 'Error' %}</button></th>
-                <th><button class="botsheader" />{% trans 'Commandline' %}</button></th>
-                <th><button class="botsheader" />{% trans 'Acceptance' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="status" >{% trans 'State' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="type" >{% trans 'Type' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="lastreceived" >{% trans '#in' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="send" >{% trans '#out' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" >{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" >{% trans 'Size' %}</button></th>
+                <th><button class="botsheader" >{% trans 'Error' %}</button></th>
+                <th><button class="botsheader" >{% trans 'Commandline' %}</button></th>
+                <th><button class="botsheader" >{% trans 'Acceptance' %}</button></th>
             </tr>
         </thead>
         <tbody>
@@ -32,11 +32,11 @@
                 <td>
                     <div class="dropdown"><img class="action" src="/media/images/star.png" />
                         <ul>
-                            <li><button class="botsheader" type="submit" name="report2incoming" value="{{row.idta}}" />{% trans 'View incoming' %}</button></li>
-                            <li><button class="botsheader" type="submit" name="report2outgoing" value="{{row.idta}}" />{% trans 'View outgoing' %}</button></li>
-                            <li><button class="botsheader" type="submit" name="report2process" value="{{row.idta}}" />{% trans 'View process errors' %}</button></li>
-                            <li><button class="botsheader" type="submit" name="report2errors" value="{{row.idta}}" />{% trans 'View file errors' %}</button></li>
-                            <li><button class="botsheader" type="submit" name="report2commerrors" value="{{row.idta}}" />{% trans 'View out-communication errors' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2incoming" value="{{row.idta}}" >{% trans 'View incoming' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2outgoing" value="{{row.idta}}" >{% trans 'View outgoing' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2process" value="{{row.idta}}" >{% trans 'View process errors' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2errors" value="{{row.idta}}" >{% trans 'View file errors' %}</button></li>
+                            <li><button class="botsheader" type="submit" name="report2commerrors" value="{{row.idta}}" >{% trans 'View out-communication errors' %}</button></li>
                         </ul>
                     </div>
                 </td>

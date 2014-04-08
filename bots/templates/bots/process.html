@@ -16,20 +16,22 @@
         <thead>
             <tr>
                 <th></th>
-                <th><button class="botsheader" type="submit" name="order" value="status" />{% trans 'State' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="idroute" />{% trans 'Route' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="ts" />{% trans 'Date/time' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="fromchannel" />{% trans 'FromChannel' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="tochannel" />{% trans 'ToChannel' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="filename" />{% trans 'Process' %}</button></th>
-                <th><button class="botsheader" type="submit" name="order" value="errortext" />{% trans 'Error' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="status" >{% trans 'State' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="idroute" >{% trans 'Route' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="ts" >{% trans 'Date/time' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="fromchannel" >{% trans 'FromChannel' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="tochannel" >{% trans 'ToChannel' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="filename" >{% trans 'Process' %}</button></th>
+                <th><button class="botsheader" type="submit" name="order" value="errortext" >{% trans 'Error' %}</button></th>
             </tr>
         </thead>
         <tbody>
         {% for row in queryset.object_list %}
             <tr class="{% cycle 'row1' 'row2' %}">
                 <td>
-                    <div class="dropdown"><img class="action" src="/media/images/star.png" />
+                    <div class="dropdown">
+                        <img class="action" src="/media/images/star.png" />
+                    </div>
                 </td>
                 <td>{{row.get_statust_display}}</td>
                 <td>{{row.idroute}}</td>
