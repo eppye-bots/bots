@@ -361,9 +361,12 @@ def indent_x12(content):
     if sep.isalnum() or sep.isspace():
         return content
     return content.replace(sep,sep + '\n')
-        
+
+EDIFACT_INDENT = re.compile('''
+    (?<!\?)     #if no preceding escape (?)
+    '           #apostrophe
+    (?![\n\r])  #if no following CR of LF
+    ''',re.VERBOSE)
 def indent_edifact(content):
-    if content.count('\n') > 4:
-        return content
-        #parse file for segment terminator
-    return content.replace("'","'\n")
+    return EDIFACT_INDENT.sub("'\n", content)
+
