@@ -5,7 +5,7 @@
 import os
 import urllib
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _     #djnago 1.7: have to use ugettext_lazy here
 from django.core.validators import validate_email,validate_integer
 from django.core.exceptions import ValidationError
 import botsglobal

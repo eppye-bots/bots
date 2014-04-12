@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import sys
 import os
+import django
 from django.core.handlers.wsgi import WSGIHandler
 from django.utils.translation import ugettext as _
 import cherrypy
 from cherrypy import wsgiserver
-#~ import botslib
 import botsglobal
 import botsinit
 

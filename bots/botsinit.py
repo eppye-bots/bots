@@ -8,6 +8,7 @@ import logging, logging.handlers
 import botsglobal
 import botslib
 
+
 class BotsConfig(ConfigParser.RawConfigParser):
     ''' As ConfigParser, but with defaults.
     '''
@@ -111,6 +112,9 @@ def generalinit(configdir):
     #set environment for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
+    import django
+    if django.VERSION[1]>= 7:
+        django.setup()
 
 #**********************************************************************************
 #*** bots specific handling of character-sets (eg UNOA charset) *******************
