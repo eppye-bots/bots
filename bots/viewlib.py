@@ -1,6 +1,7 @@
 import sys
 import copy
 import datetime
+import re
 import django
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.utils.translation import ugettext as _
