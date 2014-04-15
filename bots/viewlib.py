@@ -286,6 +286,11 @@ def filterquery(query , org_cleaned_data, incoming=False):
         query = frompartnerquery(query,cleaned_data.pop('frompartner'))
     if 'topartner' in cleaned_data and cleaned_data['topartner']:
         query = topartnerquery(query,cleaned_data.pop('topartner'))
+    ## Test select by filename
+    if 'infilename' in cleaned_data and cleaned_data['infilename']:
+        query = query.filter(infilename__contains=cleaned_data.pop('infilename'))
+    if 'filename' in cleaned_data and cleaned_data['filename']:
+        query = query.filter(filename__contains=cleaned_data.pop('filename'))
     for key,value in cleaned_data.items():
         if not value:
             del cleaned_data[key]
@@ -323,6 +328,10 @@ def filterquery2(query , org_cleaned_data, incoming=False):
         query = frompartnerquery(query,cleaned_data.pop('frompartner'))
     if 'topartner' in cleaned_data and cleaned_data['topartner']:
         query = topartnerquery(query,cleaned_data.pop('topartner'))
+    if 'infilename' in cleaned_data and cleaned_data['infilename']:
+        query = query.filter(infilename__contains=cleaned_data.pop('infilename'))
+    if 'filename' in cleaned_data and cleaned_data['filename']:
+        query = query.filter(filename__contains=cleaned_data.pop('filename'))
     for key,value in cleaned_data.items():
         if not value:
             del cleaned_data[key]

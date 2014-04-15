@@ -17,7 +17,6 @@ urlpatterns = patterns('',
     (r'^password_change/done/$', 'django.contrib.auth.views.password_change_done'),
     #login required
     (r'^home.*', login_required(views.home)),
-    (r'^incoming_filename.*', login_required(views.incoming_filename)),
     (r'^incoming.*', login_required(views.incoming)),
     (r'^detail.*', login_required(views.detail)),
     (r'^process.*', login_required(views.process)),

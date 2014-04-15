@@ -31,24 +31,6 @@ class ViewReports(View):
     action = '/reports/'
     status = django.forms.IntegerField(required=False,initial='',widget=HIDDENINPUT())
 
-class SelectInfilename(Select):
-    template = 'bots/selectform.html'
-    action = '/incoming_filename/'
-    idroute = django.forms.ChoiceField([],required=False,initial='')
-    fromchannel = django.forms.ChoiceField([],required=False)
-    reference = django.forms.CharField(required=False,label='Filename',max_length=70)
-    def __init__(self, *args, **kwargs):
-        super(SelectInfilename, self).__init__(*args, **kwargs)
-        self.fields['idroute'].choices = models.getroutelist()
-        self.fields['fromchannel'].choices = models.getfromchannels()
-
-class ViewInfilename(View):
-    template = 'bots/incoming.html'
-    action = '/incoming/'
-    idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
-    reference = django.forms.CharField(required=False,widget=HIDDENINPUT())
-    fromchannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
-
 class SelectIncoming(Select):
     template = 'bots/selectform.html'
     action = '/incoming/'
@@ -61,6 +43,7 @@ class SelectIncoming(Select):
     inmessagetype = django.forms.ChoiceField([],required=False)
     outeditype = django.forms.ChoiceField(models.EDITYPESLIST,required=False)
     outmessagetype = django.forms.ChoiceField([],required=False)
+    infilename = django.forms.CharField(required=False,label='Filename',max_length=70)
     lastrun = django.forms.BooleanField(required=False,initial=False)
     def __init__(self, *args, **kwargs):
         super(SelectIncoming, self).__init__(*args, **kwargs)
@@ -76,15 +59,15 @@ class ViewIncoming(View):
     action = '/incoming/'
     statust = django.forms.IntegerField(required=False,initial='',widget=HIDDENINPUT())
     idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    fromchannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
     frompartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
     topartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
     ineditype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     inmessagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     outeditype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     outmessagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    infilename = django.forms.CharField(required=False,widget=HIDDENINPUT(),max_length=256)
     lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
-    reference = django.forms.CharField(required=False,widget=HIDDENINPUT())
-    fromchannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class SelectDocument(Select):
     template = 'bots/selectform.html'
@@ -126,8 +109,8 @@ class SelectOutgoing(Select):
     topartner = django.forms.ChoiceField([],required=False)
     editype = django.forms.ChoiceField(models.EDITYPESLIST,required=False)
     messagetype = django.forms.ChoiceField(required=False)
+    filename = django.forms.CharField(required=False,label='Filename',max_length=256)
     lastrun = django.forms.BooleanField(required=False,initial=False)
-    reference = django.forms.CharField(required=False,label='Filename',max_length=70)
     def __init__(self, *args, **kwargs):
         super(SelectOutgoing, self).__init__(*args, **kwargs)
         self.fields['idroute'].choices = models.getroutelist()
@@ -141,13 +124,13 @@ class ViewOutgoing(View):
     action = '/outgoing/'
     statust = django.forms.IntegerField(required=False,initial='',widget=HIDDENINPUT())
     idroute = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    tochannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
     frompartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
     topartner = django.forms.CharField(required=False,widget=HIDDENINPUT())
     editype = django.forms.CharField(required=False,widget=HIDDENINPUT())
     messagetype = django.forms.CharField(required=False,widget=HIDDENINPUT())
+    filename = django.forms.CharField(required=False,widget=HIDDENINPUT())
     lastrun = django.forms.BooleanField(required=False,initial=False,widget=HIDDENINPUT())
-    tochannel = django.forms.CharField(required=False,widget=HIDDENINPUT())
-    reference = django.forms.CharField(required=False,widget=HIDDENINPUT())
 
 class SelectProcess(Select):
     template = 'bots/selectform.html'
