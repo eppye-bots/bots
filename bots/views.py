@@ -138,7 +138,7 @@ def incoming(request,*kw,**kwargs):
             elif 'rereceiveall' in request.POST:        #from ViewIncoming form using button 'rereceive all'
                 #select all objects with parameters and set retransmit
                 query = models.filereport.objects.all()
-                incomingfiles = viewlib.filterquery2(query,formin.cleaned_data)
+                incomingfiles = viewlib.filterquery(query,formin.cleaned_data,paginate=False)
                 for incomingfile in incomingfiles:   #for resend files fromchannel has no value. (do not rereceive resend items)
                     if incomingfile.fromchannel:
                         incomingfile.retransmit = not incomingfile.retransmit
@@ -189,7 +189,7 @@ def outgoing(request,*kw,**kwargs):
             elif 'resendall' in request.POST:        #from ViewOutgoing form using button 'resend all'
                 #select all objects with parameters and set retransmit
                 query = models.ta.objects.filter(status=EXTERNOUT)
-                outgoingfiles = viewlib.filterquery2(query,formin.cleaned_data)
+                outgoingfiles = viewlib.filterquery(query,formin.cleaned_data,paginate=False)
                 for outgoingfile in outgoingfiles:       #can only resend last file
                     if outgoingfile.statust != RESEND:
                         outgoingfile.retransmit = not outgoingfile.retransmit

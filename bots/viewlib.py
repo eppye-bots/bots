@@ -262,58 +262,16 @@ def handlepagination(requestpost,cleaned_data):
 def getidtalastrun():
     return models.filereport.objects.all().aggregate(django.db.models.Max('reportidta'))['reportidta__max']
 
-def filterquery(query , org_cleaned_data, incoming=False):
-    ''' use the data of the form (mostly in hidden fields) to do the query.'''
-    #~ print 'filterquery',org_cleaned_data
-    #~ sortedasc2str =
-    cleaned_data = copy.copy(org_cleaned_data)    #copy because it it destroyed in setting up query
-    page = cleaned_data.pop('page')     #do not use this in query, use in paginator
+def filterquery(query , org_cleaned_data, incoming=False, paginate=True):
+    ''' filter query using the data of the form (mostly in hidden fields).
+        parameter 'paginate' controls if pagination is used or not.
+    '''
+    cleaned_data = copy.copy(org_cleaned_data)  #copy because it it destroyed in setting up query
+    page = cleaned_data.pop('page')             #do not use this in query, use in paginator
     if 'dateuntil' in cleaned_data:
         query = query.filter(ts__lt=cleaned_data.pop('dateuntil'))
     if 'datefrom' in cleaned_data:
         query = query.filter(ts__gte=cleaned_data.pop('datefrom'))
-    if 'sortedby' in cleaned_data:
-        query = query.order_by({True:'',False:'-'}[cleaned_data.pop('sortedasc')] + cleaned_data.pop('sortedby'))
-    if 'lastrun' in cleaned_data:
-        if cleaned_data.pop('lastrun'):
-            idtalastrun = getidtalastrun()
-            if idtalastrun:     #if no result (=None): there are no filereports.
-                if incoming:    #detect if incoming; do other selection
-                    query = query.filter(reportidta=idtalastrun)
-                else:
-                    query = query.filter(idta__gt=idtalastrun)
-    if 'frompartner' in cleaned_data and cleaned_data['frompartner']:
-        query = frompartnerquery(query,cleaned_data.pop('frompartner'))
-    if 'topartner' in cleaned_data and cleaned_data['topartner']:
-        query = topartnerquery(query,cleaned_data.pop('topartner'))
-    ## Test select by filename
-    if 'infilename' in cleaned_data and cleaned_data['infilename']:
-        query = query.filter(infilename__contains=cleaned_data.pop('infilename'))
-    if 'filename' in cleaned_data and cleaned_data['filename']:
-        query = query.filter(filename__contains=cleaned_data.pop('filename'))
-    for key,value in cleaned_data.items():
-        if not value:
-            del cleaned_data[key]
-    query = query.filter(**cleaned_data)
-    paginator = Paginator(query, botsglobal.ini.getint('settings','limit',30))
-    try:
-        return paginator.page(page)
-    except (EmptyPage, InvalidPage):  #page does not exist: use last page
-        lastpage = paginator.num_pages
-        org_cleaned_data['page'] = lastpage  #change value in form as well!!
-        return paginator.page(lastpage)
-
-def filterquery2(query , org_cleaned_data, incoming=False):
-    ''' use the data of the form (mostly in hidden fields) to do the query.
-        is like 'filterquery' , but does not use paginator. Just return the resulting (filtered) query.'''
-    cleaned_data = copy.copy(org_cleaned_data)    #copy because it it destroyed in setting up query
-    cleaned_data.pop('page')                      #pop this because it is not used (and give an error) 
-    if 'dateuntil' in cleaned_data:
-        query = query.filter(ts__lt=cleaned_data.pop('dateuntil'))
-    if 'datefrom' in cleaned_data:
-        query = query.filter(ts__gte=cleaned_data.pop('datefrom'))
-    if 'botskey' in cleaned_data and cleaned_data['botskey']:
-        query = query.filter(botskey__exact=cleaned_data.pop('botskey'))
     if 'sortedby' in cleaned_data:
         query = query.order_by({True:'',False:'-'}[cleaned_data.pop('sortedasc')] + cleaned_data.pop('sortedby'))
     if 'lastrun' in cleaned_data:
@@ -335,7 +293,17 @@ def filterquery2(query , org_cleaned_data, incoming=False):
     for key,value in cleaned_data.items():
         if not value:
             del cleaned_data[key]
-    return query.filter(**cleaned_data)
+    query = query.filter(**cleaned_data)
+    if paginate:
+        paginator = Paginator(query, botsglobal.ini.getint('settings','limit',30))
+        try:
+            return paginator.page(page)
+        except (EmptyPage, InvalidPage):  #page does not exist: use last page
+            lastpage = paginator.num_pages
+            org_cleaned_data['page'] = lastpage  #change value in form as well
+            return paginator.page(lastpage)
+    else:   #do not use paginator; return everything
+        return query
 
 def frompartnerquery(query,idpartner):
     # return the appropriate query according to partner type
