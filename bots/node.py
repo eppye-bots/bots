@@ -13,7 +13,7 @@ class Node(object):
     '''
     #slots: python optimalisation to preserve memory. Disadv.: no dynamic attr in this class
     #in tests: for normal translations less memory and faster; no effect fo one-on-one translations.
-    __slots__ = ('record','children','_queries','linpos_info','structure','checklevel')
+    __slots__ = ('record','children','_queries','linpos_info','structure')
     def __init__(self,record=None,linpos_info=None):
         if record and 'BOTSIDnr' not in record:
             record['BOTSIDnr'] = u'1'
@@ -22,7 +22,6 @@ class Node(object):
         self.linpos_info = linpos_info
         self._queries = None
         self.structure = None
-        self.checklevel = 0
 
     def linpos(self):
         if self.linpos_info:
@@ -54,6 +53,7 @@ class Node(object):
                 botslib.updateunlessset(self._queries,updatequeries)
 
     queries = property(_getquerie,_updatequerie)
+
     def processqueries(self,queries,maxlevel):
         ''' copies values for queries 'down the tree' untill right level.
             So when edi file is split up in messages,
@@ -235,7 +235,7 @@ class Node(object):
             if more than one value can be found: first one is returned
             starts searching in current node, then deeper
         '''
-        if self.checklevel:
+        if Node.checklevel:
             self._mpath_sanity_check(mpaths[:-1])
             #sanity check of last part of mpaths: None only allowed in last section of Mpath; check last part
             if not isinstance(mpaths[-1],dict):
@@ -255,23 +255,11 @@ class Node(object):
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        if self.checklevel == 2:
+        if Node.checklevel == 2:
             self._mpath_grammar_check(mpaths)
         terug =  self._getcore(mpaths)
         botsglobal.logmap.debug(u'"%(terug)s" for get%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
         return terug
-
-    def get_nogrammarcheck(self,*mpaths):
-        ''' like get, without grammarcheck.
-            this is used in 'sort'. 
-        '''
-        remember = self.checklevel
-        self.checklevel = 0
-        try:
-            terug = self.get(*mpaths)
-            return terug
-        finally:
-            self.checklevel = remember
 
     def _getcore(self,mpaths):
         if len(mpaths) != 1:    #node is not end-node
@@ -325,12 +313,12 @@ class Node(object):
     def getloop(self,*mpaths):
         ''' generator. Returns one by one the nodes as indicated in mpath
         '''
-        if self.checklevel:
+        if Node.checklevel:
             self._mpath_sanity_check(mpaths)
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        if self.checklevel == 2:
+        if Node.checklevel == 2:
             self._mpath_grammar_check(mpaths)
         for terug in self._getloopcore(mpaths):
             botsglobal.logmap.debug(u'getloop %(mpaths)s returns "%(record)s".',{'mpaths':mpaths,'record':terug.record})
@@ -472,7 +460,7 @@ class Node(object):
         ''' sort nodes. eg in mappingscript:     inn.sort({'BOTSID':'UNH'},{'BOTSID':'LIN','C212.7140':None})
             This will sort the LIN segments by article number.
         '''
-        if self.checklevel:
+        if Node.checklevel:
             self._mpath_sanity_check(mpaths[:-1])
             #sanity check of last part of mpaths: None only allowed in last section of Mpath; check last part
             if not isinstance(mpaths[-1],dict):
@@ -492,10 +480,16 @@ class Node(object):
         for part in mpaths:
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
-        if self.checklevel == 2:
+        if Node.checklevel == 2:
             self._mpath_grammar_check(mpaths)
         comparekey = mpaths[1:]
-        self.children.sort(key=lambda s: s.get_nogrammarcheck(*comparekey))
+        #does not work with checklevel == 2, so temporary set checklevel to 0 
+        remember = Node.checklevel
+        Node.checklevel = 0
+        try:
+            self.children.sort(key=lambda s: s.get(*comparekey))
+        finally:
+            Node.checklevel = remember
     #********************************************************
     #*** utility functions **********************************
     #********************************************************

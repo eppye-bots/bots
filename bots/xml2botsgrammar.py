@@ -6,8 +6,6 @@ import os
 import sys
 import atexit
 import copy
-import inmessage
-import outmessage
 import logging
 try:
     import cElementTree as ET
@@ -19,14 +17,16 @@ except ImportError:
             from xml.etree import cElementTree as ET
         except ImportError:
             from xml.etree import ElementTree as ET
-import botslib
-import botsinit
-import botsglobal
-import node
 try:
     from collections import OrderedDict
 except:
     from bots_ordereddict import OrderedDict    
+import botslib
+import botsinit
+import botsglobal
+import inmessage
+import outmessage
+import node
 from botsconfig import *
 
 #**************************************************************************************

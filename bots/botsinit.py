@@ -7,7 +7,7 @@ import logging, logging.handlers
 #Bots-modules
 import botsglobal
 import botslib
-
+import node
 
 class BotsConfig(ConfigParser.RawConfigParser):
     ''' As ConfigParser, but with defaults.
@@ -115,6 +115,7 @@ def generalinit(configdir):
     import django
     if django.VERSION[1]>= 7:
         django.setup()
+    node.Node.checklevel = botsglobal.ini.getint('settings','get_checklevel',1)
 
 #**********************************************************************************
 #*** bots specific handling of character-sets (eg UNOA charset) *******************
