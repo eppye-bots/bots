@@ -134,16 +134,15 @@ def mailbag(ta_from,endstatus,frommessagetype,**argv):
                 if nr_interchanges:    #found interchanges, but remainder is not valid
                     raise botslib.InMessageError(_(u'[M50]: Found data not in a valid interchange at position %(pos)s.'),{'pos':startpos})                
                 else:   #no interchanges found, content is not a valid edifact/x12/tradacoms interchange
-                    #guess if this is an xml file.....
-                    sniffxml = edifile[:25]
-                    sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first ' real' data; some char are because of BOM, UTF-16 etc
-                    if sniffxml and sniffxml[0] == '<':
-                        #is a xml file; inmessage.py can determine the right xml messagetype via xpath. 
-                        filesize = len(edifile)
-                        ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag',filesize=filesize)
-                        return
-                    else:
-                        raise botslib.InMessageError(_(u'[M51]: Edi file does not start with a valid interchange.'))
+                    if frommessagetype == 'mailbag':    #if indicated 'mailbag': guess if this is an xml file.....
+                        sniffxml = edifile[:25]
+                        sniffxml = sniffxml.lstrip(' \t\n\r\f\v\xFF\xFE\xEF\xBB\xBF\x00')       #to find first ' real' data; some char are because of BOM, UTF-16 etc
+                        if sniffxml and sniffxml[0] == '<':
+                            #is a xml file; inmessage.py can determine the right xml messagetype via xpath. 
+                            filesize = len(edifile)
+                            ta_to = ta_from.copyta(status=endstatus,statust=OK,filename=ta_from.filename,editype='xml',messagetype='mailbag',filesize=filesize)
+                            return
+                    raise botslib.InMessageError(_(u'[M51]: Edi file does not start with a valid interchange.'))
             else:   #no parseble content
                 if nr_interchanges:    #OK: there are interchanges, but no new interchange is found.
                     return
