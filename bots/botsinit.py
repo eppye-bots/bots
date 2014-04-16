@@ -49,13 +49,10 @@ def generalinit(configdir):
             sys.path.append(addtopythonpath)
             importnameforsettings = os.path.normpath(os.path.join(moduletoimport,'settings')).replace(os.sep,'.')
             settings = botslib.botsbaseimport(importnameforsettings)
-    #settings are accessed using botsglobal
-    botsglobal.settings = settings
-    if hasattr(settings,'DATABASE_ENGINE'):      #check for old django settings.py
-        print u'You use an old settings.py. Please change settings.py first. See migration instructions in wiki: http://code.google.com/p/bots/wiki/Migrate'
-        sys.exit(0)
+    #now we know where to find settings.py: importnameforsettings
     #Find pathname configdir using imported settings.py.
     configdirectory = os.path.abspath(os.path.dirname(settings.__file__))
+    #note: the imported settings.py itself is NOT used, this is doen via django.conf.settings
 
     #Read configuration-file bots.ini.
     botsglobal.ini = BotsConfig()
@@ -95,27 +92,27 @@ def generalinit(configdir):
     botssys = botsglobal.ini.get('directories','botssys','botssys')
     botsglobal.ini.set('directories','botssys_org',botssys)             #store original botssys setting
     botsglobal.ini.set('directories','botssys',botslib.join(botssys))
-
     botsglobal.ini.set('directories','data',botslib.join(botssys,'data'))
-    botslib.dirshouldbethere(botsglobal.ini.get('directories','data'))
-
     botsglobal.ini.set('directories','logging',botslib.join(botssys,'logging'))
-    botslib.dirshouldbethere(botsglobal.ini.get('directories','logging'))
     botsglobal.ini.set('directories','templates',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/template/templates'))
     botsglobal.ini.set('directories','templateshtml',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/templatehtml/templates'))
 
+    #other inits
     if botsglobal.ini.get('webserver','environment','development') != 'development':   #values in bots.ini are also used in setting up cherrypy
         logging.raiseExceptions = 0     # during production: if errors occurs in writing to log: ignore error. (leads to a missing log line, better than error;-).
+    botslib.dirshouldbethere(botsglobal.ini.get('directories','data'))
+    botslib.dirshouldbethere(botsglobal.ini.get('directories','logging'))
+    initbotscharsets()  #initialise bots charsets
+    node.Node.checklevel = botsglobal.ini.getint('settings','get_checklevel',1)
+    botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
 
-    #initialise bots charsets
-    initbotscharsets()
     #set environment for django to start***************************************************************************************************
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
-    botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
     import django
-    if django.VERSION[1]>= 7:
+    if django.VERSION[1] >= 7:
         django.setup()
-    node.Node.checklevel = botsglobal.ini.getint('settings','get_checklevel',1)
+    botsglobal.settings = django.conf.settings      #settings are accessed using botsglobal 
+
 
 #**********************************************************************************
 #*** bots specific handling of character-sets (eg UNOA charset) *******************
