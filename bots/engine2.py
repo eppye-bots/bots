@@ -1,23 +1,22 @@
 #!/usr/bin/env python
-''' Start bots-engine.'''
+''' Start bots-engine2: do not use database for logging and configuration. (so: no GUI).'''
 import sys
 import os
 import atexit
 import logging
-#~ import socket
 from django.utils.translation import ugettext as _
 #bots-modules
 import botslib
 import botsglobal
 import botsinit
-#~ import cleanup
 
 def abspathdata(filename):
-    ''' abspathdata if filename incl dir: return absolute path; else (only filename): return absolute path (datadir)'''
+    ''' abspathdata if filename incl dir: return absolute path; else (only filename): return absolute path (datadir).
+        for engine2 the current abspathdata is overwritten, as this uses subdirectories.
+    '''
     if '/' in filename: #if filename already contains path
         return botslib.join(filename)
     else:
-        #~ directory = botsglobal.ini.get('directories','data')
         return botslib.join(data_storage,filename)
 botslib.abspathdata = abspathdata
 
@@ -72,8 +71,7 @@ def start():
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
-
-        
+    #import global scripts for bots-engine
     try:
         userscript,scriptname = botslib.botsimport('routescripts','botsengine')
     except ImportError:      #userscript is not there; other errors like syntax errors are not catched
@@ -106,11 +104,7 @@ def start():
 
 import glob
 import shutil
-import inmessage
-import outmessage
-import transform
 import datetime
-import envelope
 try:
     import cElementTree as ET
 except ImportError:
@@ -121,29 +115,29 @@ except ImportError:
             from xml.etree import cElementTree as ET
         except ImportError:
             from xml.etree import ElementTree as ET
+import inmessage
+import outmessage
+import transform
+import envelope
 from botsconfig import *
 
-'''
-information in:
-- infile:
-    - path
-    - filename (suited for globbing)
-- translate:
-    (like translate table)
-- outfile:
-    - path
-    - filename   #including * and  {}options
-
-information out:
-- infile: path, error
-- outfile: path, editype, messagetype, frompartner, topartner, [infile path (list)]
-
-Translation:
-list of dicts.
-
-'''
 data_storage = 'botssys/data2'
 
+
+def engine2_run():
+    #~ botsglobal.ini.set('directories','data',botslib.join(data_storage))
+    print datetime.datetime.now()
+    botslib.dirshouldbethere(data_storage)
+    run = get_control_information()
+    read_incoming(run)
+    translate(run)
+    mergemessages(run)
+    write_outgoing(run)
+    trace(run)
+    report(run)
+    cleanup(run)
+    print datetime.datetime.now()
+    return run.errorinrun
 
 class Run(object):
     inpath = None
@@ -153,27 +147,20 @@ class Run(object):
     outgoing = []  #as enveloped & outgoing
     errorinrun = 0
 
-def engine2_run():
-    botslib.dirshouldbethere(data_storage)
-    
-    run = get_control_information()
-    read_incoming(run)
-    translate(run)
-    mergemessages(run)
-    write_outgoing(run)
-    trace(run)
-    report(run)
-    cleanup(run)
-    return run.errorinrun
-
-
 def get_control_information():
+    ''' information from:
+        - command line parameters
+        - parsing xml file
+        - via http: via url?
+        For the moment: hard-coded
+    '''
     run = Run()
-    run.inpath = 'botssys/infile/edifact_xml/xml'
+    run.inpath = 'botssys/infile/edifact_xml/edifact'
     run.infilename = '*'
     run.outpath = 'botssys/outfile'
-    run.outfilename = '{editype}_{infile:name}_{datetime:%Y%m%d}_*.edi'
-    run.translation = dict(editype='xml',messagetype = 'invoice')
+    run.outfilename = '{messagetype}_{infile:name}_{datetime:%Y%m%d}_*.{editype}'
+    run.translation = dict(editype='edifact',messagetype='edifact')     #no tscript etc: will do lookup in translate-table
+    #~ run.translation = dict(editype='edifact',messagetype='edifact',tscript='orders_edifact2xml',toeditype='xml',tomessagetype='orders')
     return run
 
 def read_incoming(run):
@@ -187,9 +174,10 @@ def read_incoming(run):
             shutil.copy(infilename,abs_filename)          #move if to be delted
         except:
             txt = botslib.txtexc()
-            run.incoming.append({'infilename':infilename,'filename':filename,'error':txt})
         else:
-            run.incoming.append({'infilename':infilename,'filename':filename,'error':''})
+            txt = ''    #no errors
+        finally:
+            run.incoming.append({'infilename':infilename,'filename':filename,'error':txt,'editype':run.translation['editype'],'messagetype':run.translation['messagetype']})
                 
 def translate(run):
     for messagedict in run.incoming:
@@ -207,7 +195,6 @@ def translate(run):
                                                 idroute='',
                                                 command='')
             edifile.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
-            #~ print 'parsed file',messagedict['internal_in_filename']
 
             #~ if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm. 
                 #~ raise botslib.GotoException('dummy')
@@ -220,16 +207,20 @@ def translate(run):
                     number_of_loops_with_same_alt = 0
                     while 1:    #continue as long as there are (alt-)translations
                         #lookup the translation************************
-                        #~ tscript,toeditype,tomessagetype = 'invoice_xml2edifact' ,'edifact','INVOICD96AUNEAN008'
-                        tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=inn_splitup.ta_info['editype'],
-                                                                            frommessagetype=inn_splitup.ta_info['messagetype'],
-                                                                            frompartner=inn_splitup.ta_info['frompartner'],
-                                                                            topartner=inn_splitup.ta_info['topartner'],
-                                                                            alt=inn_splitup.ta_info['alt'])
+                        tscript,toeditype,tomessagetype = 'orders_edifact2xml' ,'xml','orders'
+                        if 'tscript' in run.translation:
+                            tscript = run.translation['tscript']
+                            toeditype = run.translation['toeditype']
+                            tomessagetype = run.translation['tomessagetype']
+                        else:
+                            tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=inn_splitup.ta_info['editype'],
+                                                                                frommessagetype=inn_splitup.ta_info['messagetype'],
+                                                                                frompartner=inn_splitup.ta_info['frompartner'],
+                                                                                topartner=inn_splitup.ta_info['topartner'],
+                                                                                alt=inn_splitup.ta_info['alt'])
                             
                         #run mapping script************************
                         filename_translated = transform.unique('bots_file_name')
-                        #~ print 'outfile',filename_translated
                         out_translated = outmessage.outmessage_init(editype=toeditype,
                                                                     messagetype=tomessagetype,
                                                                     filename=filename_translated,
@@ -258,8 +249,8 @@ def translate(run):
                             out_translated.writeall()   #write result of translation.
                             #make translated record (if all is OK)
                             translated_dict = inn_splitup.ta_info.copy()
-                            translated_dict.update(out_translated.ta_info)
                             translated_dict.update(messagedict)
+                            translated_dict.update(out_translated.ta_info)
                             run.translated.append(translated_dict)
                             del out_translated
                             break   #break out of while loop
@@ -355,7 +346,7 @@ def mergemessages(run):
         ta_info = dict(zip(names_envelope_criteria,env_criteria))
         ta_info['filename'] = transform.unique('bots_file_name')   #create filename for enveloped message
         ta_info['nrmessages'] = rest_of_info[2]
-        ta_info['infiles'] = rest_of_info[1]      #for reference: list of infilenames
+        ta_info['infilename'] = rest_of_info[1]      #for reference: list of infilenames
         ta_info['error'] = ''
         try:
             envelope.envelope(ta_info,rest_of_info[0])
@@ -366,7 +357,7 @@ def mergemessages(run):
             run.outgoing.append(ta_info)
     for ta_info,filenames,infilenames in merge_no:
         ta_info['filename'] = transform.unique('bots_file_name')   #create filename for enveloped message
-        ta_info['infiles'] = infilenames      #for reference: list of infilenames
+        ta_info['infilename'] = infilenames      #for reference: list of infilenames
         ta_info['error'] = ''
         try:
             envelope.envelope(ta_info,filenames)
@@ -415,7 +406,7 @@ def filename_formatter(filename_mask,ta_info):
             datetime_object = datetime.datetime.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")
         else:
             datetime_object = datetime.datetime.now()
-        infilename = infilestr(os.path.basename(ta_info['infiles'][0])) #there is always an infile!
+        infilename = infilestr(os.path.basename(ta_info['infilename'][0])) #there is always an infile!
         tofilename = tofilename.format(infile=infilename,datetime=datetime_object,**ta_info)
     return tofilename
 
@@ -430,7 +421,7 @@ def trace(run):
         if run.outgoing:    #if no translation is done
             found = False
             for outgoing in run.outgoing:
-                if incoming['infilename'] in outgoing['infiles']:
+                if incoming['infilename'] in outgoing['infilename']:
                     found = True
                     if outgoing['error']:
                         incoming['error'] += outgoing['error']
@@ -446,6 +437,8 @@ def trace(run):
     run.outgoing = newlist
         
 def dict2xml(d):
+    ''' convert python dictionary to xml.
+    '''
     def makenode(tag,content):
         node = ET.Element(tag)
         if not content:
@@ -453,7 +446,7 @@ def dict2xml(d):
         elif isinstance(content, basestring):
             node.text = content
         elif isinstance(content, list):
-            node.tag = tag + '_list'    #change node tag
+            node.tag = tag + 's'    #change node tag
             for element in content:
                 node.append(makenode(tag, element))
         elif isinstance(content, dict):
@@ -472,34 +465,16 @@ def filter(lijst,names):
     return [dict((k,v) for k,v in d.items() if k in names) for d in lijst]
     
 def report(run):
-    in_filter = ('infilename','error')
-    out_filter = ('outfilename','editype','messagetype','frompartner','topartner','infiles','nrmessages')
-    #~ print '\nFound',run.errorinrun,'errors.'
-    #~ print '\nIncoming:'
-    #~ for incoming in filter(run.incoming,in_filter):
-        #~ for name,value in incoming.items():
-            #~ print name,':',value,' ',
-        #~ print
-    #~ print '\nOutgoing:'
-    #~ for outgoing in run.outgoing:
-        #~ for name in out_filter:
-            #~ print name,':',outgoing.get(name),
-        #~ print
-        #~ print '    from files:',outgoing.get('infiles')
-    
-    #~ print '\nEngine is done.\n'
-    xml_string = dict2xml({'root':{'errors':run.errorinrun,'incoming':filter(run.incoming,in_filter),'outgoing':filter(run.outgoing,out_filter)}})
+    in_filter = ('infilename','error','editype','messagetype')
+    out_filter = ('outfilename','editype','messagetype','frompartner','topartner','infilename','nrmessages')
+    xml_string = dict2xml({'root':{'nr_errors':run.errorinrun,'incoming':filter(run.incoming,in_filter),'outgoing':filter(run.outgoing,out_filter)}})
     print xml_string
 
 def cleanup(run):
     shutil.rmtree(data_storage,ignore_errors=True)
 
-
-if __name__ == '__main__':
-    start()
-
 '''
-experiemtn with translation rule:
+experiment with translation rule:
 
 l = [{'alt': u'', 'fromeditype': u'edifact', 'frommessagetype': u'ORDERSD96AUNEAN008', 'frompartner': None, 'topartner': None, 'toeditype': u'xml', 'tomessagetype': u'orders', 'tscript': u'orders_edifact2xml'},
     {'alt': u'', 'fromeditype': u'edifact', 'frommessagetype': u'ORDERSD96AUNEAN008', 'frompartner': None, 'topartner': None, 'toeditype': u'xml', 'tomessagetype': u'orders', 'tscript': u'orders_edifact2xml'},
