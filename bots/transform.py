@@ -413,7 +413,7 @@ def dateformat(date):
         return '203'
     if len(date) == 16:
         return '718'
-    return None
+    raise botslib.BotsError(_(u'No valid edifact date format for "%(date)s".'),{'date':date})
 
 def datemask(value,frommask,tomask):
     ''' value is formatted according as in frommask;
