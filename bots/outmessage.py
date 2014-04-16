@@ -134,14 +134,14 @@ class Outmessage(message.Message):
             try:
                 for i in range(0,len(value),wrap_length):  #split in fixed lengths
                     self._outstream.write(value[i:i+wrap_length] + '\r\n')
-            except UnicodeError,msg:
+            except UnicodeError as msg:
                 content = botslib.get_relevant_text_for_UnicodeError(msg)
                 raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
                                                 {'char':self.ta_info['charset'],'content':content})
         else:
             try:
                 self._outstream.write(value)
-            except UnicodeError,msg:
+            except UnicodeError as msg:
                 content = botslib.get_relevant_text_for_UnicodeError(msg)
                 raise botslib.OutMessageError(_(u'[F50]: Characters not in character-set "%(char)s": %(content)s'),
                                                 {'char':self.ta_info['charset'],'content':content})

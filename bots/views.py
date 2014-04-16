@@ -442,7 +442,7 @@ def plugin(request,*kw,**kwargs):
                 try:
                     if pluglib.read_plugin(request.FILES['file'].temporary_file_path()):
                         messages.add_message(request, messages.INFO, _(u'Overwritten existing files.'))
-                except Exception,msg:
+                except Exception as msg:
                     notification = u'Error reading plugin: "%s".' % str(msg)
                     botsglobal.logger.error(notification)
                     messages.add_message(request, messages.INFO, notification)
@@ -466,7 +466,7 @@ def plugin_index(request,*kw,**kwargs):
             #read the plugin
             try:
                 pluglib.read_index('index')
-            except Exception,msg:
+            except Exception as msg:
                 notification = u'Error reading configuration index file: "%s".' % str(msg)
                 botsglobal.logger.error(notification)
                 messages.add_message(request, messages.INFO, notification)
@@ -483,7 +483,7 @@ def plugout_index(request,*kw,**kwargs):
         try:
             dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':botsglobal.ini.getboolean('settings','codelists_in_plugin',True),'databasetransactions':False}
             pluglib.make_index(dummy_for_cleaned_data,filename)
-        except Exception,msg:
+        except Exception as msg:
             notification = _(u'Error writing configuration index file: "%s".')%str(msg)
             botsglobal.logger.error(notification)
             messages.add_message(request, messages.INFO, notification)
@@ -514,7 +514,7 @@ def plugout_backup_core(request,*kw,**kwargs):
                                     'database':False,
                                     }
         pluglib.make_plugin(dummy_for_cleaned_data,filename)
-    except Exception,msg:
+    except Exception as msg:
         notification = u'Error writing backup plugin: "%s".' % str(msg)
         botsglobal.logger.error(notification)
         messages.add_message(request, messages.INFO, notification)
@@ -535,7 +535,7 @@ def plugout(request,*kw,**kwargs):
                 botsglobal.logger.info(_(u'Start writing plugin "%(file)s".'),{'file':filename})
                 try:
                     pluglib.make_plugin(form.cleaned_data,filename)
-                except botslib.PluginError, msg:
+                except botslib.PluginError as msg:
                     botsglobal.logger.error(str(msg))
                     messages.add_message(request,messages.INFO,str(msg))
                 else:
@@ -688,7 +688,7 @@ def runengine(request,*kw,**kwargs):
             #run engine
             try:
                 terug = subprocess.Popen(lijst).pid
-            except Exception,msg:
+            except Exception as msg:
                 notification = _(u'Errors while trying to run bots-engine: "%s".')%msg
                 messages.add_message(request, messages.INFO, notification)
                 botsglobal.logger.info(notification)

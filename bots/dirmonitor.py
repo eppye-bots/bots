@@ -19,7 +19,7 @@ import job2queue
 if os.name == 'nt':
     try:
         import win32file, win32con
-    except Exception, msg: 
+    except Exception as msg: 
         raise ImportError(u'Dependency failure: bots directory monitoring requires python library "Python Win32 Extensions" on windows.')
    
     def windows_event_handler(logger,dir_watch,cond,tasks):
@@ -76,7 +76,7 @@ else:
     #linux specific ###########################################################################################
     try:
         import pyinotify
-    except Exception, msg: 
+    except Exception as msg: 
         raise ImportError(u'Dependency failure: bots directory monitoring requires python library "pyinotify" on linux.')
     
     class LinuxEventHandler(pyinotify.ProcessEvent):
@@ -209,7 +209,7 @@ def start():
                         for task in tasks:
                             logger.info(u'Send to queue "%(path)s %(config)s %(task)s".',{'path':botsenginepath,'config':'-c' + configdir,'task':task})
                             job2queue.send_job_to_jobqueue([sys.executable,botsenginepath,'-c' + configdir,task])
-                    except Exception, msg:
+                    except Exception as msg:
                         logger.info(u'Error in running task: "%(msg)s".',{'msg':msg})
                     tasks.clear()
                     active_receiving = False

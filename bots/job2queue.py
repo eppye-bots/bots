@@ -24,7 +24,7 @@ def send_job_to_jobqueue(task_args,priority=5):
     try:
         remote_server = xmlrpclib.ServerProxy('http://localhost:' + str(botsglobal.ini.getint('jobqueue','port',28082)))
         return remote_server.addjob(task_args,priority)
-    except socket.error,msg:
+    except socket.error as msg:
         print 'socket.error',msg
         return 1    #jobqueueserver server not active
 

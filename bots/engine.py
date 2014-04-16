@@ -88,7 +88,7 @@ def start():
     #**************connect to database**********************************
     try:
         botsinit.connect()
-    except Exception,msg:
+    except Exception as msg:
         botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(1)
     else:
@@ -179,11 +179,11 @@ def start():
         botslib.tryrunscript(userscript,scriptname,'post',commandstorun=commandstorun,routestorun=routestorun)
         try:    #in acceptance tests: run a user script. no good reporting of errors/results in post-test script. Reason: this is after automaticmaintence.
             botslib.tryrunscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
-        except Exception,msg:
+        except Exception as msg:
             print str(msg)
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
-    except Exception,msg:
+    except Exception as msg:
         botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':str(msg)})    #of course this 'should' not happen.
         sys.exit(1)
     else:

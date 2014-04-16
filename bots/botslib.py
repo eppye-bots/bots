@@ -301,7 +301,7 @@ def sendbotserrorreport(subject,reporttext):
         from django.core.mail import mail_managers
         try:
             mail_managers(subject, reporttext)
-        except Exception,msg:
+        except Exception as msg:
             botsglobal.logger.warning(u'Error in sending error report: %(msg)s',{'msg':msg})
 
 def sendbotsemail(partner,subject,reporttext):
@@ -315,7 +315,7 @@ def sendbotsemail(partner,subject,reporttext):
             recipient_list = row['mail'].split(',') + row['cc'].split(',')
             try:
                 send_mail(subject, reporttext, botsglobal.settings.SERVER_EMAIL, recipient_list)
-            except Exception,msg:
+            except Exception as msg:
                 botsglobal.logger.warning(u'Error sending email: %(msg)s',{'msg':msg})
 
 def log_session(func):
@@ -843,8 +843,8 @@ class BotsError(Exception):
     def __unicode__(self):
         try:
             return self.msg % self.xxx
-        except Exception,e:
-            #print "-----",type(e),e
+        except Exception as msg:
+            #print "-----",type(msg),msg
             return u'Error while displaying error'
     def __str__(self):
         return self.__unicode__()

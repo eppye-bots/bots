@@ -143,7 +143,7 @@ class Trace(object):
         self._buildtreeoftransactions(self.rootofinfile)
         try:
             self.statust = self._getstatusfortreeoftransactions(self.rootofinfile)
-        except Exception,msg:
+        except Exception as msg:
             botsglobal.logger.exception(_(u'Error in automatic maintenance: "%(msg)s".'),{'msg':msg})
             self.statust = OPEN
         self._collectdataforfilereport()

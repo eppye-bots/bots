@@ -69,7 +69,7 @@ def start():
     #**************connect to database**********************************
     try:
         botsinit.connect()
-    except Exception,msg:
+    except Exception as msg:
         botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(1)
     else:
@@ -95,7 +95,7 @@ def start():
         botslib.tryrunscript(acceptance_userscript,acceptance_scriptname,'pretest')
         botslib.tryrunscript(userscript,scriptname,'pre')
         errorinrun = engine2_run()
-    except Exception,msg:
+    except Exception as msg:
         botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':str(msg)})    #of course this 'should' not happen.
         sys.exit(1)
     else:

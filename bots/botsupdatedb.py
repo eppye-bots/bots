@@ -321,7 +321,7 @@ def start():
     #**************connect to database**********************************
     try:
         botsinit.connect()
-    except Exception,msg:
+    except Exception as msg:
         botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(3)
     else:

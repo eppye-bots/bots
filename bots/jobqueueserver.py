@@ -87,7 +87,7 @@ def launcher(logger,port,lauchfrequency,maxruntime):
                 result = subprocess.call(task_to_run,stdin=open(os.devnull,'r'),stdout=open(os.devnull,'w'),stderr=open(os.devnull,'w'))
                 time_taken = datetime.timedelta(seconds=(datetime.datetime.now() - starttime).seconds)
                 logger.info(u'Finished job %(job)s, elapsed time %(time_taken)s, result %(result)s',{'job':jobnumber,'time_taken':time_taken,'result':result})
-            except Exception, msg:
+            except Exception as msg:
                 logger.error(u'Error starting job %(job)s: %(msg)s',{'job':jobnumber,'msg':msg})
                 botslib.sendbotserrorreport(u'[Bots Job Queue] - Error starting job',
                                             u'Error starting job %(job)s:\n %(task)s\n\n %(msg)s' % {'job':jobnumber,'task':task_to_run,'msg':msg})

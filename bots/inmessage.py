@@ -45,7 +45,7 @@ def parse_edi_file(**ta_info):
     #get information from error/exception; format this into ediobject.errorfatal
     try:
         ediobject.initfromfile()
-    except UnicodeError,msg:
+    except UnicodeError as msg:
         #~ raise botslib.MessageError('')      #UNITTEST_CORRECTION
         content = botslib.get_relevant_text_for_UnicodeError(msg)
         #msg.encoding should contain encoding, but does not (think this is not OK for UNOA, etc)
@@ -425,7 +425,7 @@ class fixed(Inmessage):
                     if not line.isspace():
                         line = line.rstrip('\r\n')
                         self.lex_records.append([{VALUE:line[startrecordid:endrecordid].strip(),LIN:linenr,POS:0,FIXEDLINE:line},])    #append record to recordlist
-        except UnicodeError,msg:
+        except UnicodeError as msg:
             rep_linenr = locals().get('linenr',0) + 1
             content = botslib.get_relevant_text_for_UnicodeError(msg)
             raise botslib.InMessageError(_(u'Characterset problem in file. At/after line %(line)s: "%(content)s"'),{'line':rep_linenr,'content':content})
@@ -974,7 +974,7 @@ class edifact(var):
         except LookupError:
             raise botslib.InMessageError(_(u'[A58]: Edifact file has unknown characterset "%(charset)s".'),
                                             {'charset':found_charset})
-        #~ except UnicodeDecodeError, msg:
+        #~ except UnicodeDecodeError as msg:
             #~ raise botslib.InMessageError(_(u'[A59]: Edifact file has not allowed characters at/after file-position %(content)s.'),
                                             #~ {'content':msg[2]})
         if self.ta_info['version'] < '4':     #repeat char only for version >= 4
