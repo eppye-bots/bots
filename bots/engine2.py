@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-''' Start bots-engine2: do not use database for logging and configuration. (so: no GUI).'''
+''' Start bots-engine2: do not use database for logging and configuration. (so: no GUI).
+    Parameters are hard-coded for now (inpath, infilename, outpath, outfilename, editype, messagetype)
+    Translation information (as from translation table: mapping script, outgoing editype etc) is eithr hard-coded now, or via translate table.
+'''
+
 import sys
 import os
 import atexit
