@@ -3,7 +3,8 @@ import os
 import encodings
 import codecs
 import ConfigParser
-import logging, logging.handlers
+import logging
+import logging.handlers
 #Bots-modules
 import botsglobal
 import botslib
@@ -31,12 +32,13 @@ class BotsConfig(ConfigParser.RawConfigParser):
             return default
 
 def generalinit(configdir):
-    #Set Configdir
+    ##########################################################################
+    #Configdir: settings.py & bots.ini#########################################
     #Configdir MUST be importable. So configdir is relative to PYTHONPATH. Try several options for this import.
-    try:                        #configdir outside bots-directory: import configdir.settings.py
+    try:                        #first check if is configdir outside bots-directory: import configdir.settings.py
         importnameforsettings = os.path.normpath(os.path.join(configdir,'settings')).replace(os.sep,'.')
         settings = botslib.botsbaseimport(importnameforsettings)
-    except ImportError:         #configdir is in bots directory: import bots.configdir.settings.py
+    except ImportError:         #normal: configdir is in bots directory: import bots.configdir.settings.py
         try:
             importnameforsettings = os.path.normpath(os.path.join('bots',configdir,'settings')).replace(os.sep,'.')
             settings = botslib.botsbaseimport(importnameforsettings)
@@ -44,21 +46,25 @@ def generalinit(configdir):
             if not os.path.exists(configdir):    #check if configdir exists.
                 raise botslib.PanicError(u'In initilisation: path to configuration does not exists: "%(configdir)s".',{'configdir':configdir})
             addtopythonpath = os.path.abspath(os.path.dirname(configdir))
-            #~ print 'add pythonpath for usersys',addtopythonpath
             moduletoimport = os.path.basename(configdir)
             sys.path.append(addtopythonpath)
             importnameforsettings = os.path.normpath(os.path.join(moduletoimport,'settings')).replace(os.sep,'.')
             settings = botslib.botsbaseimport(importnameforsettings)
-    #now we know where to find settings.py: importnameforsettings
-    #Find pathname configdir using imported settings.py.
-    configdirectory = os.path.abspath(os.path.dirname(settings.__file__))
+    #settings is imported, so now we know where to find settings.py: importnameforsettings
     #note: the imported settings.py itself is NOT used, this is doen via django.conf.settings
-
+    configdirectory = os.path.abspath(os.path.dirname(settings.__file__))
     #Read configuration-file bots.ini.
     botsglobal.ini = BotsConfig()
     botsglobal.ini.read(os.path.join(configdirectory,'bots.ini'))
-
-    #Set usersys.
+    # 'directories','botspath': absolute path for bots directory
+    botsglobal.ini.set('directories','botspath',os.path.abspath(os.path.dirname(__file__)))
+    # 'directories','config': absolute path for config directory
+    botsglobal.ini.set('directories','config',configdirectory)
+    #set config as originally received; used in starting engine via bots-monitor
+    botsglobal.ini.set('directories','config_org',configdir)
+    
+    ############################################################################
+    #Usersys####################################################################
     #usersys MUST be importable. So usersys is relative to PYTHONPATH. Try several options for this import.
     usersys = botsglobal.ini.get('directories','usersys','usersys')
     try:                        #usersys outside bots-directory: import usersys
@@ -73,31 +79,25 @@ def generalinit(configdir):
                 raise botslib.PanicError(u'In initilisation: path to configuration does not exists: "%(usersys)s".',{'usersys':usersys})
             addtopythonpath = os.path.abspath(os.path.dirname(usersys))     #????
             moduletoimport = os.path.basename(usersys)
-            #~ print 'add pythonpath for usersys',addtopythonpath
             sys.path.append(addtopythonpath)
             importnameforusersys = os.path.normpath(usersys).replace(os.sep,'.')
             importedusersys = botslib.botsbaseimport(importnameforusersys)
-
-    #set directory settings in bots.ini************************************************************
-    # 'directories','botspath': absolute path for bots directory
-    botsglobal.ini.set('directories','botspath',settings.PROJECT_PATH)
-    # 'directories','config': absolute path for config directory
-    botsglobal.ini.set('directories','config',configdirectory)
-    botsglobal.ini.set('directories','config_org',configdir)            #set config as originally received.
     # 'directories','usersysabs': absolute path for config usersysabs
     botsglobal.ini.set('directories','usersysabs',os.path.abspath(os.path.dirname(importedusersys.__file__)))    #???Find pathname usersys using imported usersys
     # botsglobal.usersysimportpath: used for imports from usersys
     botsglobal.usersysimportpath = importnameforusersys
+    botsglobal.ini.set('directories','templates',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/template/templates'))
+    botsglobal.ini.set('directories','templateshtml',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/templatehtml/templates'))
+    ############################################################################
+    #Botssys####################################################################
     # 'directories','botssys': absolute path for config botssys
     botssys = botsglobal.ini.get('directories','botssys','botssys')
     botsglobal.ini.set('directories','botssys_org',botssys)             #store original botssys setting
-    botsglobal.ini.set('directories','botssys',botslib.join(botssys))
+    botsglobal.ini.set('directories','botssys',botslib.join(botssys))   #use absolute path
     botsglobal.ini.set('directories','data',botslib.join(botssys,'data'))
     botsglobal.ini.set('directories','logging',botslib.join(botssys,'logging'))
-    botsglobal.ini.set('directories','templates',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/template/templates'))
-    botsglobal.ini.set('directories','templateshtml',botslib.join(botsglobal.ini.get('directories','usersysabs'),'grammars/templatehtml/templates'))
-
-    #other inits
+    ############################################################################
+    #other inits##############################################################
     if botsglobal.ini.get('webserver','environment','development') != 'development':   #values in bots.ini are also used in setting up cherrypy
         logging.raiseExceptions = 0     # during production: if errors occurs in writing to log: ignore error. (leads to a missing log line, better than error;-).
     botslib.dirshouldbethere(botsglobal.ini.get('directories','data'))
@@ -105,14 +105,14 @@ def generalinit(configdir):
     initbotscharsets()  #initialise bots charsets
     node.Node.checklevel = botsglobal.ini.getint('settings','get_checklevel',1)
     botslib.settimeout(botsglobal.ini.getint('settings','globaltimeout',10))
-
-    #set environment for django to start***************************************************************************************************
+    ############################################################################
+    #Init django#################################################################################
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     import django
     if django.VERSION[1] >= 7:
         django.setup()
-    botsglobal.settings = django.conf.settings      #settings are accessed using botsglobal 
-
+    from django.conf import settings
+    botsglobal.settings = settings      #settings are accessed using botsglobal 
 
 #**********************************************************************************
 #*** bots specific handling of character-sets (eg UNOA charset) *******************
