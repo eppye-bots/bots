@@ -119,6 +119,8 @@ class _comsession(object):
                     if self.channeldict['rsrv1'] is not None:
                         domain = u'bots_communication_failure_' + self.channeldict['idchannel']
                         nr_retry = botslib.unique(domain)  #update nr_retry in database
+                        if not self.channeldict['rsrv1']:   #prevent error
+                            self.channeldict['rsrv1'] = 0
                         if nr_retry >= int(self.channeldict['rsrv1']):
                             botslib.unique(domain,updatewith=0)    #set nr_retry to zero 
                             raise
