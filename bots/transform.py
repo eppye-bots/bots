@@ -172,6 +172,9 @@ def translate(startstatus,endstatus,routedict,rootidta):
                     ta_splitup.deletechildren()
                 else:
                     ta_splitup.update(statust=DONE, **inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
+                finally:
+                    del inn_splitup     #does reduce memory.
+                    #~ del ta_splitup   #no impact on memory.
 
 
         #exceptions file_in-level
@@ -197,6 +200,8 @@ def translate(startstatus,endstatus,routedict,rootidta):
             botsglobal.logger.debug(_(u'Translated input file "%(filename)s".'),row)
         finally:
             ta_fromfile.update(statust=DONE)
+            del edifile      #does reduce memory.
+            #~ del ta_parsed   #no impact on memory.
 
 
 def handle_out_message(out_translated,ta_translated):
