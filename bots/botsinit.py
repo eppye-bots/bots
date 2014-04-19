@@ -109,7 +109,7 @@ def generalinit(configdir):
     #Init django#################################################################################
     os.environ['DJANGO_SETTINGS_MODULE'] = importnameforsettings
     import django
-    if django.VERSION[1] >= 7:
+    if hasattr(django,'setup'):
         django.setup()
     from django.conf import settings
     botsglobal.settings = settings      #settings are accessed using botsglobal 
