@@ -4,7 +4,6 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-import copy
 import collections
 from django.utils.translation import ugettext as _
 #bots-modules
@@ -380,7 +379,7 @@ def unique_runcounter(domein,updatewith=None):
 def inn2out(inn,out):
     ''' copies inn-message to outmessage
     '''
-    out.root = copy.deepcopy(inn.root)
+    out.root = inn.root
 
 def useoneof(*args):
     for arg in args:
