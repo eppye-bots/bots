@@ -77,7 +77,6 @@ def translate(startstatus,endstatus,routedict,rootidta):
                     #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
                     inn_splitup.ta_info['idta'] = ta_splitup.idta     #for confirmations in userscript; used to give idta of 'confirming message'
-                    post_mapping_mode = False       #if post_mapping: reuse out-object, if no translation is found no error
                     number_of_loops_with_same_alt = 0
                     while 1:    #continue as long as there are (alt-)translations
                         #lookup the translation************************
@@ -90,24 +89,14 @@ def translate(startstatus,endstatus,routedict,rootidta):
                             if userscript and hasattr(userscript,'gettranslation'):
                                 tscript,toeditype,tomessagetype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=routedict['idroute'],message=inn_splitup)
                             if not tscript:
-                                if post_mapping_mode:   #in post-mapping mode, not finding the (partern specific!) script is no problem: translation is done
-                                    #there is no post-mapping script found (in other words, default mapping script is enough).
-                                    #all OK, handle the generated out-file and continue with next message
-                                    botsglobal.logger.debug(_(u'Found no "post-mapping" translation for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
-                                                                inn_splitup.ta_info)
-                                    handle_out_message(out_translated,ta_translated)
-                                    del out_translated
-                                    break   #break out of while loop
-                                else:
-                                    raise botslib.TranslationNotFoundError(_(u'Translation not found for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
-                                                                                inn_splitup.ta_info)
+                                raise botslib.TranslationNotFoundError(_(u'Translation not found for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
+                                                                            inn_splitup.ta_info)
 
                         inn_splitup.ta_info['divtext'] = tscript     #ifor reporting used mapping script to database (for display in GUI).
-                        if not post_mapping_mode:
-                            #initialize new out-object*************************
-                            ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
-                            filename_translated = str(ta_translated.idta)
-                            out_translated = outmessage.outmessage_init(editype=toeditype,messagetype=tomessagetype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
+                        #initialize new out-object*************************
+                        ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
+                        filename_translated = str(ta_translated.idta)
+                        out_translated = outmessage.outmessage_init(editype=toeditype,messagetype=tomessagetype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                             
                         #run mapping script************************
                         botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
@@ -159,14 +148,6 @@ def translate(startstatus,endstatus,routedict,rootidta):
                                 handle_out_message(out_translated,ta_translated)
                                 del out_translated
                                 inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
-                            elif doalttranslation['type'] == u'post_mapping':
-                                #do chained  (post)translation: same inn and out-objects.
-                                #in other words, the post-translation continue where is 'default' mapping ended.
-                                #use case: default mapping (for all partners), partner-specific post-translation
-                                #note: this is easier via import defaultmapping in a partner specific mapping. Please use that method!
-                                post_mapping_mode = True       #translation is done; reset post_mapping_mode
-                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
-                                #~ inn_splitup.ta_info.pop('statust')
                             else:   #there is nothing else
                                 raise botslib.BotsError(_(u'Mappingscript returned dict with an unknown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
                         else:  #note: this includes alt '' (empty string)
