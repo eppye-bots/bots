@@ -21,14 +21,10 @@ from botslib import addinfo,updateinfo,changestatustinfo,checkunique,changeq,sen
 from envelope import mergemessages
 from communication import run
 
+
 @botslib.log_session
 def translate(startstatus,endstatus,routedict,rootidta):
-    ''' main translation loop.
-        get edifiles to be translated, than:
-        -   read, lex, parse, make tree of nodes.
-        -   split up files into messages (using 'nextmessage' of grammar)
-        -   get mappingscript, start mappingscript.
-        -   write the results of translation (no enveloping yet)
+    ''' query edifiles to be translated.
         status: FILEIN--PARSED-<SPLITUP--TRANSLATED
     '''
     try:    #see if there is a userscript that can determine the translation
@@ -43,165 +39,166 @@ def translate(startstatus,endstatus,routedict,rootidta):
                                 AND statust=%(statust)s
                                 AND idroute=%(idroute)s ''',
                                 {'status':startstatus,'statust':OK,'idroute':routedict['idroute'],'rootidta':rootidta}):
-        try:
-            row = dict(rawrow)   #convert to real dictionary ()
-            ta_fromfile = botslib.OldTransaction(row['idta'])
-            ta_parsed = ta_fromfile.copyta(status=PARSED)       #make PARSED ta
-            if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
-                ta_parsed.update(filesize=row['filesize'])
-                raise botslib.FileTooLarge(_(u'File size of %(filesize)s is too big; option "maxfilesizeincoming" in bots.ini is %(maxfilesizeincoming)s.'),
-                                                {'filesize':row['filesize'],'maxfilesizeincoming':botsglobal.ini.getint('settings','maxfilesizeincoming',5000000)})
-            botsglobal.logger.debug(_(u'Start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),row)
-            #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
-            edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
-                                                topartner=row['topartner'],
-                                                filename=row['filename'],
-                                                messagetype=row['messagetype'],
-                                                testindicator=row['testindicator'],
-                                                editype=row['editype'],
-                                                charset=row['charset'],
-                                                alt=row['alt'],
-                                                fromchannel=row['fromchannel'],
-                                                idroute=routedict['idroute'],
-                                                command=routedict['command'])
-            edifile.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
+            row = dict(rawrow)   #convert to real dictionary
+            _translate_one_file(row,routedict,endstatus,userscript,scriptname)
 
-            if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm. 
-                raise botslib.GotoException('dummy')    
-            
-            #edifile.ta_info contains info: QUERIES, charset etc
-            for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile
-                try:
-                    ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
-                    #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
-                    inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
-                    inn_splitup.ta_info['idta'] = ta_splitup.idta     #for confirmations in userscript; used to give idta of 'confirming message'
-                    number_of_loops_with_same_alt = 0
-                    while 1:    #continue as long as there are (alt-)translations
-                        #lookup the translation************************
-                        tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=inn_splitup.ta_info['editype'],
-                                                                            frommessagetype=inn_splitup.ta_info['messagetype'],
-                                                                            frompartner=inn_splitup.ta_info['frompartner'],
-                                                                            topartner=inn_splitup.ta_info['topartner'],
-                                                                            alt=inn_splitup.ta_info['alt'])
-                        if not tscript:       #no translation found in translate table; check if can find translation via user script
-                            if userscript and hasattr(userscript,'gettranslation'):
-                                tscript,toeditype,tomessagetype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=routedict['idroute'],message=inn_splitup)
-                            if not tscript:
-                                raise botslib.TranslationNotFoundError(_(u'Translation not found for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
-                                                                            inn_splitup.ta_info)
+def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
+    ''' -   read, lex, parse, make tree of nodes.
+        -   split up files into messages (using 'nextmessage' of grammar)
+        -   get mappingscript, start mappingscript.
+        -   write the results of translation (no enveloping yet)
+    '''
+    try:
+        ta_fromfile = botslib.OldTransaction(row['idta'])
+        ta_parsed = ta_fromfile.copyta(status=PARSED)
+        if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
+            ta_parsed.update(filesize=row['filesize'])
+            raise botslib.FileTooLarge(_(u'File size of %(filesize)s is too big; option "maxfilesizeincoming" in bots.ini is %(maxfilesizeincoming)s.'),
+                                            {'filesize':row['filesize'],'maxfilesizeincoming':botsglobal.ini.getint('settings','maxfilesizeincoming',5000000)})
+        botsglobal.logger.debug(_(u'Start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),row)
+        #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
+        edifile = inmessage.parse_edi_file(frompartner=row['frompartner'],
+                                            topartner=row['topartner'],
+                                            filename=row['filename'],
+                                            messagetype=row['messagetype'],
+                                            testindicator=row['testindicator'],
+                                            editype=row['editype'],
+                                            charset=row['charset'],
+                                            alt=row['alt'],
+                                            fromchannel=row['fromchannel'],
+                                            idroute=routedict['idroute'],
+                                            command=routedict['command'])
+        edifile.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
 
-                        inn_splitup.ta_info['divtext'] = tscript     #ifor reporting used mapping script to database (for display in GUI).
-                        #initialize new out-object*************************
-                        ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
-                        filename_translated = str(ta_translated.idta)
-                        out_translated = outmessage.outmessage_init(editype=toeditype,messagetype=tomessagetype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
-                            
-                        #run mapping script************************
-                        botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
-                                                {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
-                        translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'],tscript) #get the mappingscript
-                        alt_from_previous_run = inn_splitup.ta_info['alt']      #needed to check for infinite loop
-                        doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
-                        botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
+        if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm.
+            edifile = None
+            raise botslib.GotoException('dummy')    
+        
+        #edifile.ta_info contains info: QUERIES, charset etc
+        for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile
+            try:
+                ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
+                #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
+                inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
+                inn_splitup.ta_info['idta'] = ta_splitup.idta     #for confirmations in userscript; used to give idta of 'confirming message'
+                number_of_loops_with_same_alt = 0
+                while 1:    #continue as long as there are (alt-)translations
+                    #lookup the translation************************
+                    tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=inn_splitup.ta_info['editype'],
+                                                                        frommessagetype=inn_splitup.ta_info['messagetype'],
+                                                                        frompartner=inn_splitup.ta_info['frompartner'],
+                                                                        topartner=inn_splitup.ta_info['topartner'],
+                                                                        alt=inn_splitup.ta_info['alt'])
+                    if not tscript:       #no translation found in translate table; check if can find translation via user script
+                        if userscript and hasattr(userscript,'gettranslation'):
+                            tscript,toeditype,tomessagetype = botslib.runscript(userscript,scriptname,'gettranslation',idroute=routedict['idroute'],message=inn_splitup)
+                        if not tscript:
+                            raise botslib.TranslationNotFoundError(_(u'Translation not found for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
+                                                                        inn_splitup.ta_info)
+
+                    inn_splitup.ta_info['divtext'] = tscript     #ifor reporting used mapping script to database (for display in GUI).
+                    #initialize new out-object*************************
+                    ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
+                    filename_translated = str(ta_translated.idta)
+                    out_translated = outmessage.outmessage_init(editype=toeditype,messagetype=tomessagetype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                         
-                        #manipulate for some attributes after mapping script
-                        if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
-                            out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
-                        if 'botskey' in inn_splitup.ta_info:
-                            inn_splitup.ta_info['reference'] = inn_splitup.ta_info['botskey']
-                        if 'botskey' in out_translated.ta_info:    #out_translated does not contain values from ta......
-                            out_translated.ta_info['reference'] = out_translated.ta_info['botskey']
-                            
-                        #check the value received from the mappingscript to determine what to do in this while-loop. Handling of chained trasnlations.
-                        if doalttranslation is None:    
-                            #translation(s) are done; handle out-message 
+                    #run mapping script************************
+                    botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
+                                            {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
+                    translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'],tscript) #get the mappingscript
+                    alt_from_previous_run = inn_splitup.ta_info['alt']      #needed to check for infinite loop
+                    doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
+                    botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
+                    
+                    #manipulate for some attributes after mapping script
+                    if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
+                        out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
+                    if 'botskey' in inn_splitup.ta_info:
+                        inn_splitup.ta_info['reference'] = inn_splitup.ta_info['botskey']
+                    if 'botskey' in out_translated.ta_info:    #out_translated does not contain values from ta......
+                        out_translated.ta_info['reference'] = out_translated.ta_info['botskey']
+                        
+                    #check the value received from the mappingscript to determine what to do in this while-loop. Handling of chained trasnlations.
+                    if doalttranslation is None:    
+                        #translation(s) are done; handle out-message 
+                        handle_out_message(out_translated,ta_translated)
+                        break   #break out of while loop
+                    elif isinstance(doalttranslation,dict):
+                        #some extended cases; a dict is returned that contains 'instructions' for some type of chained translations
+                        if 'type' not in doalttranslation or 'alt' not in doalttranslation:
+                            raise botslib.BotsError(_(u"Mappingscript returned '%(alt)s'. This dict should not have 'type' and 'alt'."),{'alt':doalttranslation})
+                        if alt_from_previous_run == doalttranslation['alt']:
+                            number_of_loops_with_same_alt += 1
+                        else:
+                            number_of_loops_with_same_alt = 0
+                        if doalttranslation['type'] == u'out_as_inn':
+                            #do chained translation: use the out-object as inn-object, new out-object
+                            #use case: detected error in incoming file; use out-object to generate warning email
                             handle_out_message(out_translated,ta_translated)
-                            del out_translated
-                            break   #break out of while loop
-                        elif isinstance(doalttranslation,dict):
-                            #some extended cases; a dict is returned that contains 'instructions' for some type of chained translations
-                            if 'type' not in doalttranslation or 'alt' not in doalttranslation:
-                                raise botslib.BotsError(_(u"Mappingscript returned '%(alt)s'. This dict should not have 'type' and 'alt'."),{'alt':doalttranslation})
-                            if alt_from_previous_run == doalttranslation['alt']:
-                                number_of_loops_with_same_alt += 1
-                            else:
-                                number_of_loops_with_same_alt = 0
-                            if doalttranslation['type'] == u'out_as_inn':
-                                #do chained translation: use the out-object as inn-object, new out-object
-                                #use case: detected error in incoming file; use out-object to generate warning email
-                                handle_out_message(out_translated,ta_translated)
-                                inn_splitup = out_translated    #out-object is now inn-object
-                                if isinstance(inn_splitup,outmessage.fixed):    #for fixed: strip all values in node
-                                    inn_splitup.root.stripnode()
-                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
-                                if not 'frompartner' in inn_splitup.ta_info:
-                                    inn_splitup.ta_info['frompartner'] = ''
-                                if not 'topartner' in inn_splitup.ta_info:
-                                    inn_splitup.ta_info['topartner'] = ''
-                                inn_splitup.ta_info.pop('statust')
-                            elif doalttranslation['type'] == u'no_check_on_infinite_loop':
-                                #do chained translation: allow many loops wit hsame alt-value.
-                                #mapping script will have to handle this correctly.
-                                number_of_loops_with_same_alt = 0
-                                handle_out_message(out_translated,ta_translated)
-                                del out_translated
-                                inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
-                            else:   #there is nothing else
-                                raise botslib.BotsError(_(u'Mappingscript returned dict with an unknown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
-                        else:  #note: this includes alt '' (empty string)
-                            if alt_from_previous_run == doalttranslation:
-                                number_of_loops_with_same_alt += 1
-                            else:
-                                number_of_loops_with_same_alt = 0
-                            #do normal chained translation: same inn-object, new out-object
+                            inn_splitup = out_translated    #out-object is now inn-object
+                            if isinstance(inn_splitup,outmessage.fixed):    #for fixed: strip all values in node
+                                inn_splitup.root.stripnode()
+                            inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
+                            if not 'frompartner' in inn_splitup.ta_info:
+                                inn_splitup.ta_info['frompartner'] = ''
+                            if not 'topartner' in inn_splitup.ta_info:
+                                inn_splitup.ta_info['topartner'] = ''
+                            inn_splitup.ta_info.pop('statust')
+                        elif doalttranslation['type'] == u'no_check_on_infinite_loop':
+                            #do chained translation: allow many loops wit hsame alt-value.
+                            #mapping script will have to handle this correctly.
+                            number_of_loops_with_same_alt = 0
                             handle_out_message(out_translated,ta_translated)
-                            del out_translated
-                            inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chained translation
-                        if number_of_loops_with_same_alt > 10:
-                            raise botslib.BotsError(_(u'Mappingscript returns same alt value over and over again (infinite loop?). Alt: "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
-                    #end of while-loop (trans**********************************************************************************
-                #exceptions file_out-level: exception in mappingscript or writing of out-file
-                except:
-                    #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mappingscript/outfile only affect that branche
-                    if botsglobal.ini.getboolean('settings','oldmessageerrors',False):
-                        raise
-                    txt = botslib.txtexc()
-                    ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
-                    ta_splitup.deletechildren()
-                else:
-                    ta_splitup.update(statust=DONE, **inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
-                finally:
-                    del inn_splitup     #does reduce memory.
-                    #~ del ta_splitup   #no impact on memory.
+                            inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
+                        else:   #there is nothing else
+                            raise botslib.BotsError(_(u'Mappingscript returned dict with an unknown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
+                    else:  #note: this includes alt '' (empty string)
+                        if alt_from_previous_run == doalttranslation:
+                            number_of_loops_with_same_alt += 1
+                        else:
+                            number_of_loops_with_same_alt = 0
+                        #do normal chained translation: same inn-object, new out-object
+                        handle_out_message(out_translated,ta_translated)
+                        inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chained translation
+                    if number_of_loops_with_same_alt > 10:
+                        raise botslib.BotsError(_(u'Mappingscript returns same alt value over and over again (infinite loop?). Alt: "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
+                #end of while-loop (trans**********************************************************************************
+            #exceptions file_out-level: exception in mappingscript or writing of out-file
+            except:
+                #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mappingscript/outfile only affect that branche
+                if botsglobal.ini.getboolean('settings','oldmessageerrors',False):
+                    raise
+                txt = botslib.txtexc()
+                ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
+                ta_splitup.deletechildren()
+            else:
+                ta_splitup.update(statust=DONE, **inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
 
-
-        #exceptions file_in-level
-        except botslib.GotoException:   #edi-file is OK, file is passed-through after parsing.
-            ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)   #update with info from eg queries
-            ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
-            edifile.handleconfirm(ta_fromfile,error=False)
-            botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
-        except botslib.FileTooLarge:
-            txt = botslib.txtexc()
-            ta_parsed.update(statust=ERROR,errortext=txt)
-            ta_parsed.deletechildren()
-            botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
-        except:
-            txt = botslib.txtexc()
-            ta_parsed.update(statust=ERROR,errortext=txt,**edifile.ta_info)
-            ta_parsed.deletechildren()
-            edifile.handleconfirm(ta_fromfile,error=True)
-            botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
-        else:
-            edifile.handleconfirm(ta_fromfile,error=False)
-            ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)
-            botsglobal.logger.debug(_(u'Translated input file "%(filename)s".'),row)
-        finally:
-            ta_fromfile.update(statust=DONE)
-            del edifile      #does reduce memory.
-            #~ del ta_parsed   #no impact on memory.
-
+    #exceptions file_in-level
+    except botslib.GotoException:   #edi-file is OK, file is passed-through after parsing.
+        ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)   #update with info from eg queries
+        ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
+        edifile.handleconfirm(ta_fromfile,error=False)
+        botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
+    except botslib.FileTooLarge:
+        txt = botslib.txtexc()
+        ta_parsed.update(statust=ERROR,errortext=txt)
+        ta_parsed.deletechildren()
+        botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
+    except:
+        txt = botslib.txtexc()
+        print txt
+        ta_parsed.update(statust=ERROR,errortext=txt,**edifile.ta_info)
+        ta_parsed.deletechildren()
+        edifile.handleconfirm(ta_fromfile,error=True)
+        botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
+    else:
+        edifile.handleconfirm(ta_fromfile,error=False)
+        ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)
+        botsglobal.logger.debug(_(u'Translated input file "%(filename)s".'),row)
+    finally:
+        ta_fromfile.update(statust=DONE)
+    
 
 def handle_out_message(out_translated,ta_translated):
     if out_translated.ta_info['statust'] == DONE:    #if indicated in mappingscript the message should be discarded
