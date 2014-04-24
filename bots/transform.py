@@ -424,8 +424,9 @@ def truncate(maxpos,value):
     else:
         return value
 
-def concat(*args):
-    terug = ''.join([arg for arg in args if arg])
+def concat(*args,**kwargs):
+    sep = kwargs.get('sep', '')     #default is '': no seperator.
+    terug = sep.join([arg for arg in args if arg])
     return terug if terug else None
 
 #***lookup via database partner
