@@ -357,7 +357,7 @@ def filer(request,*kw,**kwargs):
                 
             currentta = list(models.ta.objects.filter(idta=idta))[0]
             if request.GET['action'] == 'downl':
-                response = django.http.HttpResponse(mimetype=currentta.contenttype)
+                response = django.http.HttpResponse(content_type=currentta.contenttype)
                 if currentta.contenttype == 'text/html':
                     dispositiontype = 'inline'
                 else:
