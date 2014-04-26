@@ -404,13 +404,7 @@ def botsbaseimport(modulename):
     ''' Do a dynamic import.
         Errors/exceptions are handled in calling functions.
     '''
-    t = importlib.import_module(modulename.encode(sys.getfilesystemencoding()))
-    return t
-    module = __import__(modulename.encode(sys.getfilesystemencoding()))
-    components = modulename.split('.')
-    for comp in components[1:]:
-        module = getattr(module, comp)
-    return module
+    return importlib.import_module(modulename.encode(sys.getfilesystemencoding()))
 
 def botsimport(*args):
     ''' import modules from usersys.
