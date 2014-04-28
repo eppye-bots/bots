@@ -74,8 +74,6 @@ class Grammar(object):
         The information in a grammar is checked and manipulated by bots.
         if a structure or recorddef has already been read, Bots skips most of the checks.
     '''
-    _checkstructurerequired = True
-
     def __init__(self,typeofgrammarfile,editype,grammarname):
         self.module,self.grammarname = botslib.botsimport(typeofgrammarfile,editype,grammarname)
         #get syntax from grammar file
@@ -99,7 +97,7 @@ class Grammar(object):
             if self.nextmessageblock is not None:
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s": nextmessageblock and nextmessage not both allowed.'),
                                             {'grammar':self.grammarname})
-        if self._checkstructurerequired:
+        if self._get_fromsyntax_or_defaultsyntax('has_structure'):
             try:
                 self._dorecorddefs()
             except:
@@ -297,7 +295,7 @@ class Grammar(object):
         elif MPATH in self.structure[0]:
             return      # grammar has been read before, with no errors. Do no checks.
         self._checkstructure(self.structure,[])
-        if self.syntax.get('checkcollision') or self.__class__.defaultsyntax.get('checkcollision'):
+        if self._get_fromsyntax_or_defaultsyntax('checkcollision'):
             self._checkbackcollision(self.structure)
             self._checknestedcollision(self.structure)
         self._checkbotscollision(self.structure)
@@ -465,17 +463,21 @@ class Grammar(object):
         except KeyError:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s", record "%(record)s", field "%(field)s": format "%(format)s" has to be one of "%(keys)s".'),
                                         {'grammar':self.grammarname,'record':recordid,'field':field[ID],'format':field[FORMAT],'keys':self.formatconvert.keys()})
+                                        
+    def _get_fromsyntax_or_defaultsyntax(self,value):
+        return self.syntax.get(value) or self.__class__.defaultsyntax.get(value)
 
 #grammar subclasses. contain the defaultsyntax
 class test(Grammar):
     ''' For unit tests '''
     defaultsyntax = {
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':True,
         'noBOTSID':False,
         }
 class csv(Grammar):
     def extracheck(self):
-        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
+        if self._get_fromsyntax_or_defaultsyntax('noBOTSID') and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
                                             {'grammar':self.grammarname})
         if self.nextmessageblock is not None and len(self.recorddefs) != 1:
@@ -508,6 +510,7 @@ class csv(Grammar):
         'reserve':'',
         'sfield_sep':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':True,
         'lengthnumericbare':False,
         'stripfield_sep':False,
@@ -516,7 +519,7 @@ class excel(csv):
     pass
 class fixed(Grammar):
     def extracheck(self):
-        if (self.syntax.get('noBOTSID') or self.__class__.defaultsyntax.get('noBOTSID')) and len(self.recorddefs) != 1:
+        if self._get_fromsyntax_or_defaultsyntax('noBOTSID') and len(self.recorddefs) != 1:
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": if syntax["noBOTSID"]: there can be only one record in recorddefs.'),
                                             {'grammar':self.grammarname})
         if self.nextmessageblock is not None and len(self.recorddefs) != 1:
@@ -563,6 +566,7 @@ class fixed(Grammar):
         'sfield_sep':'',
         'skip_char':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':True,
         'lengthnumericbare':False,
         'stripfield_sep':False,
@@ -641,7 +645,7 @@ class idoc(fixed):
         }
 class xml(Grammar):
     def extracheck(self):
-        if not (self.syntax.get('envelope') or self.__class__.defaultsyntax.get('envelope')) and (self.syntax.get('merge') or self.__class__.defaultsyntax.get('merge')):
+        if not self._get_fromsyntax_or_defaultsyntax('envelope') and self._get_fromsyntax_or_defaultsyntax('merge'):
             raise botslib.GrammarError(_(u'Grammar "%(grammar)s": in this xml grammar merge is "True" but no (user) enveloping is specified. This will lead to invalid xml files'),
                                             {'grammar':self.grammarname})
     defaultsyntax = {
@@ -677,12 +681,12 @@ class xml(Grammar):
         'sfield_sep':'',
         'skip_char':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':False,
         'lengthnumericbare':False,
         'stripfield_sep':False,
         }
 class xmlnocheck(xml):
-    _checkstructurerequired = False
     defaultsyntax = {
         'attributemarker':'__',
         'charset':'utf-8',
@@ -716,43 +720,12 @@ class xmlnocheck(xml):
         'sfield_sep':'',
         'skip_char':'',
         #bots internal, never change/overwrite
-        'checkcollision':False,
-        'lengthnumericbare':False,
-        'stripfield_sep':False,
-        }
-class template(Grammar):
-    #20120101 depreciated. use class templatehtml
-    _checkstructurerequired = False
-    defaultsyntax = {
-        'charset':'utf-8',
-        'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'checkcharsetout':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
-        'contenttype':'text/xml',
-        'decimaal':'.',
-        'envelope':'template',
-        'envelope-template':'',
-        'merge':True,
-        'output':'xhtml-strict',
-        #settings needed as defaults, but not useful for this editype 
-        'add_crlfafterrecord_sep':'',
-        'checkunknownentities': True,
-        'escape':'',
-        'field_sep':'',
-        'forcequote':0, #csv only
-        'quote_char':"",
-        'record_sep':"",
-        'record_tag_sep':"",    #Tradacoms/GTDI
-        'reserve':'',
-        'sfield_sep':'',
-        'skip_char':'',
-        'triad':'',
-        #bots internal, never change/overwrite
+        'has_structure':False,   #is True, read structure, recorddef, check these
         'checkcollision':False,
         'lengthnumericbare':False,
         'stripfield_sep':False,
         }
 class templatehtml(Grammar):
-    _checkstructurerequired = False
     defaultsyntax = {
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
@@ -762,7 +735,6 @@ class templatehtml(Grammar):
         'envelope':'templatehtml',
         'envelope-template':'',
         'merge':True,
-        'output':'xhtml-strict',
         #settings needed as defaults, but not useful for this editype 
         'add_crlfafterrecord_sep':'',
         'checkunknownentities': True,
@@ -770,6 +742,7 @@ class templatehtml(Grammar):
         'field_sep':'',
         'forcequote':0, #csv only
         'quote_char':"",
+        'print_as_row':[],  #to indicate what should be printed as a table with 1 row per record (instead of 1 record->1 table)
         'record_sep':"",
         'record_tag_sep':"",    #Tradacoms/GTDI
         'reserve':'',
@@ -777,6 +750,7 @@ class templatehtml(Grammar):
         'skip_char':'',
         'triad':'',
         #bots internal, never change/overwrite
+        'has_structure':False,   #is True, read structure, recorddef, check these
         'checkcollision':False,
         'lengthnumericbare':False,
         'stripfield_sep':False,
@@ -821,6 +795,7 @@ class edifact(Grammar):
         'record_tag_sep':"",    #Tradacoms/GTDI
         'triad':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':True,
         'lengthnumericbare':True,
         'stripfield_sep':True,
@@ -866,6 +841,7 @@ class x12(Grammar):
         'record_tag_sep':"",    #Tradacoms/GTDI
         'triad':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':True,
         'lengthnumericbare':True,
         'stripfield_sep':True,
@@ -921,12 +897,12 @@ class json(Grammar):
         'sfield_sep':'',
         'skip_char':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':False,
         'lengthnumericbare':False,
         'stripfield_sep':False,
         }
 class jsonnocheck(json):
-    _checkstructurerequired = False
     defaultsyntax = {
         'charset':'utf-8',
         'checkcharsetin':'strict', #strict, ignore or botsreplace (replace with char as set in bots.ini).
@@ -951,6 +927,7 @@ class jsonnocheck(json):
         'sfield_sep':'',
         'skip_char':'',
         #bots internal, never change/overwrite
+        'has_structure':False,   #is True, read structure, recorddef, check these
         'checkcollision':False,
         'lengthnumericbare':False,
         'stripfield_sep':False,
@@ -985,6 +962,7 @@ class tradacoms(Grammar):
         'skip_char':'\r\n',
         'triad':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':True,
         'lengthnumericbare':True,
         'stripfield_sep':True,

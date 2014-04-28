@@ -45,7 +45,6 @@ EDITYPES = [
     ('jsonnocheck', _(u'jsonnocheck')),
     ('mailbag', _(u'mailbag')),
     ('raw', _(u'raw')),
-    ('template', _(u'template (old)')),
     ('templatehtml', _(u'template-html')),
     ('tradacoms', _(u'tradacoms')),
     ('xml', _(u'xml')),

@@ -93,6 +93,8 @@ class Message(object):
             - xml, json:
             root.record filled, root.children filled: outgoing messages.
         '''
+        if not self.ta_info['has_structure']:
+            return
         if node_instance.record:        #root record contains information; write whole tree in one time
             self._checkonemessage(node_instance,defmessage,subtranslation)
         else:

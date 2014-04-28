@@ -570,3 +570,21 @@ class Node(object):
                 self.record[key] = value.strip()
         for child in self.children:
             child.stripnode()
+
+    def collectlines(self,print_as_row):
+        ''' for new edifax routine: collect same nodes in Node.children in a list; for table-row printing.
+        ''' 
+        new = []        #new list
+        for childnode in self.children:
+            if childnode.structure[MPATH] in print_as_row:
+                if not new:     #if new is still empty
+                    new.append([childnode])
+                elif isinstance(new[-1],list) and new[-1][0].record['BOTSID'] == childnode.record['BOTSID']:
+                    new[-1].append(childnode)       #append in tabel-row-list
+                else:           #other recordID, also print as table-row
+                    new.append([childnode])
+            else:               #just append, no change
+                new.append(childnode)
+                childnode.collectlines(print_as_row)   #go recursive
+        self.children = new
+

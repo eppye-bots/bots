@@ -689,9 +689,6 @@ class xml(Outmessage):
 
 
 class xmlnocheck(xml):
-    def checkmessage(self,node_instance,defmessage,subtranslation=False):
-        pass
-
     def _node2xmlfields(self,noderecord):
         ''' write record as xml-record-entity plus xml-field-entities within the xml-record-entity.
             output is sorted alfabetically, attributes alfabetically. Empty xml-entities comes as last.
@@ -800,49 +797,7 @@ class json(Outmessage):
         return newdict
 
 class jsonnocheck(json):
-    def checkmessage(self,node_instance,defmessage,subtranslation=False):
-        pass
-
-class template(Outmessage):
-    ''' uses Kid library for templating.
-        #20120101 depreciated. use class templatehtml
-    '''
-    class TemplateData(object):
-        pass
-    def __init__(self,ta_info):
-        super(template,self).__init__(ta_info)
-        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
-
-    def writeall(self):
-        ''' Very different writeall:
-            there is no tree of nodes; there is no grammar.structure/recorddefs; kid opens file by itself.
-        '''
-        try:
-            import kid
-        except ImportError:
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid".'))
-        #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
-        self.messagegrammarread()
-        templatefile = botslib.abspath(u'templates',self.ta_info['template'])
-        try:
-            botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
-            ediprint = kid.Template(file=templatefile, data=self.data)
-        except:
-            txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
-                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
-        try:
-            filehandler = botslib.opendata(self.ta_info['filename'],'wb')
-            ediprint.write(filehandler,
-                            encoding=self.ta_info['charset'],
-                            output=self.ta_info['output'],    #output is specific parameter for class; init from grammar.syntax
-                            fragment=self.ta_info['merge'])
-        except:
-            txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While templating "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
-                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
-        botsglobal.logger.debug(_(u'End writing to file "%(filename)s".'),self.ta_info)
-
+    pass
 
 class templatehtml(Outmessage):
     ''' uses Genshi library for templating. Genshi is very similar to Kid, and is the fork/follow-up of Kid.
@@ -850,27 +805,27 @@ class templatehtml(Outmessage):
         Templates for Genshi are like Kid templates. Changes:
         - other namespace: xmlns:py="http://genshi.edgewall.org/" instead of xmlns:py="http://purl.org/kid/ns#"
         - enveloping is different: <xi:include href="${message}" /> instead of <div py:replace="document(message)"/>
+        2 modes:
+        1. use self.data, a class that can contain any python object (older way of working)
+        2. use structure, recordedefs, write node tree. This is more like normal way of working; output is checked etc.
+            the procided template can handle msot things, change only css of envelope.
     '''
     class TemplateData(object):
         pass
-    def __init__(self,ta_info):
-        super(templatehtml,self).__init__(ta_info)
-        self.data = template.TemplateData() #self.data is used by mappingscript as container for content
 
-    def writeall(self):
-        ''' Very different writeall:
-            there is no tree of nodes; there is no grammar.structure/recorddefs; Genshi opens file by itself.
-        '''
+    def __init__(self,ta_info):
         try:
-            from genshi.template import TemplateLoader
-        except ImportError:
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi".'))
-        #for template-grammar: only syntax is used. Section 'syntax' has to have 'template'
-        self.messagegrammarread()
-        templatefile = botslib.abspath(u'templateshtml',self.ta_info['template'])
+            self.template = botslib.botsbaseimport('genshi.template')
+        except ImportError as msg:
+            raise ImportError(_(u'Dependency failure: editype "%(editype)s" requires python library "genshi".'),{'editype':self.__class__.__name__})
+        super(templatehtml,self).__init__(ta_info)
+        self.data = templatehtml.TemplateData()     #self.data can be used by mappingscript as container for content
+
+    def _write(self,node_instance):
+        templatefile = botslib.abspath(self.__class__.__name__,self.ta_info['template'])
         try:
             botsglobal.logger.debug(u'Start writing to file "%(filename)s".',self.ta_info)
-            loader = TemplateLoader(auto_reload=False)
+            loader = self.template.TemplateLoader(auto_reload=False)
             tmpl = loader.load(templatefile)
         except:
             txt = botslib.txtexc()
@@ -878,7 +833,12 @@ class templatehtml(Outmessage):
                                             {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
         try:
             filehandler = botslib.opendata(self.ta_info['filename'],'wb')
-            stream = tmpl.generate(data=self.data)
+            if self.ta_info['has_structure']:   #new way of working
+                if self.ta_info['print_as_row']:
+                    node_instance.collectlines(self.ta_info['print_as_row'])
+                stream = tmpl.generate(node=node_instance)
+            else:
+                stream = tmpl.generate(data=self.data)
             stream.render(method='xhtml',encoding=self.ta_info['charset'],out=filehandler)
         except:
             txt = botslib.txtexc()
@@ -886,7 +846,12 @@ class templatehtml(Outmessage):
                                             {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
         botsglobal.logger.debug(_(u'End writing to file "%(filename)s".'),self.ta_info)
 
+    def writeall(self):
+        if not self.root.record:
+            self.root.record = {'BOTSID':'dummy'}   #dummy, is not used but needed for writeall of base class
+        super(templatehtml,self).writeall()
 
+        
 class db(Outmessage):
     ''' For database connector. 
         out.root is pickled, and saved.

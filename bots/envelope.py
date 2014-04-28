@@ -298,60 +298,23 @@ class tradacoms(Envelope):
         tofile.close()
 
 
-class template(Envelope):
-    def run(self):
-        ''' class for template enveloping; delevers a valid html-file.
-            Uses a kid-template for the enveloping/merging.
-            use kid to write; no envelope grammar is used
-            #20120101 depreciated. use class templatehtml
-        '''
-        try:
-            import kid
-        except:
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "kid".'))
-        self._openoutenvelope()
-        self.ta_info.update(self.out.ta_info)
-        botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
-        if not self.ta_info['envelope-template']:
-            raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s": syntax option "envelope-template" not filled; is required.'),
-                                            self.ta_info)
-        templatefile = botslib.abspath('templates',self.ta_info['envelope-template'])
-        ta_list = self.filelist2absolutepaths()
-        try:
-            botsglobal.logger.debug(u'Start writing envelope to file "%(filename)s".',self.ta_info)
-            ediprint = kid.Template(file=templatefile, data=ta_list) #init template; pass list with filenames
-        except:
-            txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
-                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
-        try:
-            filehandler = botslib.opendata(self.ta_info['filename'],'wb')
-            ediprint.write(filehandler,
-                            encoding=self.ta_info['charset'],
-                            output=self.ta_info['output'])
-        except:
-            txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
-                                            {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
-
-
 class templatehtml(Envelope):
+    ''' class for outputting edi as html (browser, email).
+        Uses a genshi-template for the enveloping/merging.
+    '''
     def run(self):
-        ''' class for (test) orderprint; delevers a valid html-file.
-            Uses a kid-template for the enveloping/merging.
-            use kid to write; no envelope grammar is used
-        '''
         try:
             from genshi.template import TemplateLoader
         except:
-            raise ImportError(_(u'Dependency failure: editype "template" requires python library "genshi".'))
+            raise ImportError(_(u'Dependency failure: editype "%(editype)s" requires python library "genshi".'),
+                                {'editype':self.ta_info['editype']})
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         if not self.ta_info['envelope-template']:
             raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s": syntax option "envelope-template" not filled; is required.'),
                                             self.ta_info)
-        templatefile = botslib.abspath('templateshtml',self.ta_info['envelope-template'])
+        templatefile = botslib.abspath(self.__class__.__name__,self.ta_info['envelope-template'])
         ta_list = self.filelist2absolutepaths()
         try:
             botsglobal.logger.debug(u'Start writing envelope to file "%(filename)s".',self.ta_info)
@@ -369,7 +332,6 @@ class templatehtml(Envelope):
             txt = botslib.txtexc()
             raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
                                         {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
-
 
 class x12(Envelope):
     ''' Generate envelope segments; fill with appropriate data, write to interchange-file.'''
