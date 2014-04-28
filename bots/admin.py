@@ -1,5 +1,9 @@
 ''' Bots configuration for django's admin site.'''
 from django import forms
+try:
+    from django.forms import util as django_forms_util
+except:
+    from django.forms import utils as django_forms_util
 from django.utils.translation import ugettext as _
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -89,19 +93,19 @@ class MyConfirmruleAdminForm(forms.ModelForm):
         super(MyConfirmruleAdminForm, self).clean()
         if self.cleaned_data['ruletype'] == 'route':
             if not self.cleaned_data['idroute']:
-                raise forms.util.ValidationError(_(u'For ruletype "route" it is required to indicate a route.'))
+                raise django_forms_util.ValidationError(_(u'For ruletype "route" it is required to indicate a route.'))
         elif self.cleaned_data['ruletype'] == 'channel':
             if not self.cleaned_data['idchannel']:
-                raise forms.util.ValidationError(_(u'For ruletype "channel" it is required to indicate a channel.'))
+                raise django_forms_util.ValidationError(_(u'For ruletype "channel" it is required to indicate a channel.'))
         elif self.cleaned_data['ruletype'] == 'frompartner':
             if not self.cleaned_data['frompartner']:
-                raise forms.util.ValidationError(_(u'For ruletype "frompartner" it is required to indicate a frompartner.'))
+                raise django_forms_util.ValidationError(_(u'For ruletype "frompartner" it is required to indicate a frompartner.'))
         elif self.cleaned_data['ruletype'] == 'topartner':
             if not self.cleaned_data['topartner']:
-                raise forms.util.ValidationError(_(u'For ruletype "topartner" it is required to indicate a topartner.'))
+                raise django_forms_util.ValidationError(_(u'For ruletype "topartner" it is required to indicate a topartner.'))
         elif self.cleaned_data['ruletype'] == 'messagetype':
             if not self.cleaned_data['messagetype']:
-                raise forms.util.ValidationError(_(u'For ruletype "messagetype" it is required to indicate a messagetype.'))
+                raise django_forms_util.ValidationError(_(u'For ruletype "messagetype" it is required to indicate a messagetype.'))
         return self.cleaned_data
 
 class ConfirmruleAdmin(BotsAdmin):
@@ -187,7 +191,7 @@ class MyRouteAdminForm(forms.ModelForm):
     def clean(self):
         super(MyRouteAdminForm, self).clean()
         if self.cleaned_data['fromchannel'] and self.cleaned_data['translateind'] != 2 and (not self.cleaned_data['fromeditype'] or not self.cleaned_data['frommessagetype']):
-            raise forms.util.ValidationError(_(u'When using an inchannel and not pass-through, both "fromeditype" and "frommessagetype" are required.'))
+            raise django_forms_util.ValidationError(_(u'When using an inchannel and not pass-through, both "fromeditype" and "frommessagetype" are required.'))
         return self.cleaned_data
 
 class RoutesAdmin(BotsAdmin):
@@ -224,7 +228,7 @@ class MyTranslateAdminForm(forms.ModelForm):
                                             frompartner=self.cleaned_data['frompartner'],
                                             topartner=self.cleaned_data['topartner'])
         if blub and (self.instance.pk is None or self.instance.pk != blub[0].id):
-            raise forms.util.ValidationError(_(u'Combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists.'))
+            raise django_forms_util.ValidationError(_(u'Combination of fromeditype,frommessagetype,alt,frompartner,topartner already exists.'))
         return self.cleaned_data
 
 class TranslateAdmin(BotsAdmin):
