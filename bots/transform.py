@@ -187,7 +187,6 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
     except:
         txt = botslib.txtexc()
-        print txt
         ta_parsed.update(statust=ERROR,errortext=txt,**edifile.ta_info)
         ta_parsed.deletechildren()
         edifile.handleconfirm(ta_fromfile,error=True)
