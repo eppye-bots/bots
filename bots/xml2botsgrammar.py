@@ -256,6 +256,7 @@ def start():
         inmessage.xmlforgrammar = xmlforgrammar
     #make inmessage object: read the xml file
     inn = inmessage.parse_edi_file(editype='xmlforgrammar',messagetype='',filename=edifile)
+    inn.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
     #make outmessage object; nothing is 'filled' yet. In mapping tree is filled; nothing is written to file.
     out = outmessage.outmessage_init(editype='xmlnocheck',messagetype='',filename='',divtext='',topartner='')    
     
