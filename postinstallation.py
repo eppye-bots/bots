@@ -88,7 +88,7 @@ def start():
 #***    shortcuts       *******************************************************
 #******************************************************************************
     scriptpath = join(sys.prefix,'Scripts')
-    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots3.2rc')
+    shortcutdir = join(get_special_folder_path('CSIDL_COMMON_PROGRAMS'),'Bots3.2rc2')
     try:
         os.mkdir(shortcutdir)
     except: 
