@@ -71,7 +71,6 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         edifile.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
 
         if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm.
-            edifile = None
             raise botslib.GotoException('dummy')    
         
         #edifile.ta_info contains info: QUERIES, charset etc
@@ -180,11 +179,10 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
         edifile.handleconfirm(ta_fromfile,error=False)
         botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
-    except botslib.FileTooLarge:
-        txt = botslib.txtexc()
-        ta_parsed.update(statust=ERROR,errortext=txt)
+    except botslib.FileTooLarge as msg:
+        ta_parsed.update(statust=ERROR,errortext=str(msg))
         ta_parsed.deletechildren()
-        botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
+        botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':msg})
     except:
         txt = botslib.txtexc()
         ta_parsed.update(statust=ERROR,errortext=txt,**edifile.ta_info)
