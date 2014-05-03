@@ -639,6 +639,7 @@ class idoc(fixed):
         'skip_char':'',
         'triad':'',
         #bots internal, never change/overwrite
+        'has_structure':True,   #is True, read structure, recorddef, check these
         'checkcollision':True,
         'lengthnumericbare':False,
         'stripfield_sep':False,
