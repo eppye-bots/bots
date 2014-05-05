@@ -109,8 +109,10 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(None,transform.dateformat(''),'test dateformat')
         self.assertEqual(None,transform.dateformat(None),'test dateformat')
         self.assertEqual(u'102',transform.dateformat('12345678'),'test dateformat')
-        self.assertEqual(None,transform.dateformat('123456789'),'test dateformat')
-        self.assertEqual(None,transform.dateformat('1234567'),'test dateformat')
+        #~ self.assertEqual(None,transform.dateformat('123456789'),'test dateformat')
+        self.assertRaises(botslib.BotsError,transform.dateformat,'123456789') 
+        #~ self.assertEqual(None,transform.dateformat('1234567'),'test dateformat')
+        self.assertRaises(botslib.BotsError,transform.dateformat,'1234567') 
         self.assertEqual(u'203',transform.dateformat('123456789012'),'test dateformat')
         self.assertEqual(u'718',transform.dateformat('1234567890123456'),'test dateformat')
         
@@ -126,25 +128,39 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(u'artikel',transform.concat('artikel',None),'test concatenate')
         self.assertEqual(u'artikel',transform.concat(None,'artikel'),'test concatenate')
         self.assertEqual(u'artikel',transform.concat('','artikel'),'test concatenate')
-        self.assertEqual(u'artikel1 artikel2',transform.concat('artikel1','artikel2'),'test concatenate')
-        
+        self.assertEqual(u'artikel1artikel2',transform.concat('artikel1','artikel2'),'test concatenate')
+        self.assertEqual(u'artikel1 artikel2',transform.concat('artikel1','artikel2', sep=' '),'test concatenate')
+        self.assertEqual(u'artikel1\nartikel2',transform.concat('artikel1','artikel2', sep='\n'),'test concatenate')
+        self.assertEqual(u'artikel1<br>artikel2<br>artikel3',transform.concat('artikel1','artikel2','artikel3', sep='<br>'),'test concatenate')
+
     def testunique(self):
         newdomain = 'test' + transform.unique('test')
         self.assertEqual('1',transform.unique(newdomain),'init new domain')
         self.assertEqual('2',transform.unique(newdomain),'next one')
+        self.assertEqual('3',transform.unique(newdomain),'next one')
+        self.assertEqual('4',transform.unique(newdomain),'next one')
         
         newdomain = 'test' + transform.unique('test')
         self.assertEqual(True,transform.checkunique(newdomain,1),'init new domain')
         self.assertEqual(False,transform.checkunique(newdomain,1),'seq should be 2')
         self.assertEqual(False,transform.checkunique(newdomain,3),'seq should be 2')
         self.assertEqual(True,transform.checkunique(newdomain,2),'next one')
+        self.assertEqual(True,transform.checkunique(newdomain,3),'next one')
+        self.assertEqual(True,transform.checkunique(newdomain,4),'next one')
+        self.assertEqual(False,transform.checkunique(newdomain,4),'next one')
+        self.assertEqual(False,transform.checkunique(newdomain,6),'next one')
+        self.assertEqual(True,transform.checkunique(newdomain,5),'next one')
 
         newdomain = 'test' + transform.unique('test')
         self.assertEqual('1',transform.unique(newdomain),'init new domain')
-        self.assertEqual('2',transform.unique(newdomain,updatewith=999),'init new domain')
+        self.assertEqual('1',transform.unique(newdomain,updatewith=999),'init new domain')
         self.assertEqual('999',transform.unique(newdomain,updatewith=9999),'init new domain')
         self.assertEqual('9999',transform.unique(newdomain,updatewith=9999),'init new domain')
-        self.assertEqual('9999',transform.unique(newdomain,updatewith=9999),'init new domain')
+        self.assertEqual('9999',transform.unique(newdomain,updatewith=20140404),'init new domain')
+        self.assertEqual('20140404',transform.unique(newdomain,updatewith=20140405),'init new domain')
+        self.assertEqual('20140405',transform.unique(newdomain,updatewith=20140406),'init new domain')
+        self.assertEqual('20140406',transform.unique(newdomain,updatewith=20140407),'init new domain')
+        self.assertEqual('20140407',transform.unique(newdomain,updatewith=20140408),'init new domain')
 
 
     def testean(self):
