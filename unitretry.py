@@ -11,10 +11,10 @@ import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
 from bots.botsconfig import *
 
-'''plugin unitretry.zip'''
-#20120917: retry command is no more ;-))
+'''plugin unitretry.zip
 #activate routes
 #not an acceptance test
+#ftp server needs to be activated (palin ftp, port 21)
 ''' input: mime (complex structure); 2 different edi attachments, and ' tekst' attachemnt
     some user scripts are written in this unit test; so one runs errors will occur; write user script which prevents error in next run
     before running: delete all transactions.
