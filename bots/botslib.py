@@ -275,18 +275,18 @@ def unique(domein,updatewith=None):
         return nummer
 
 def checkunique(domein, receivednumber):
-    ''' to check if received number is sequential: value is compare with earlier received value.
+    ''' to check if received number is sequential: value is compare with new generated number.
         if domain not used before, initialize it . '1' is the first value expected.
     '''
-    earlierreceivednumber = unique(domein,updatewith=receivednumber)
-    if earlierreceivednumber+1  == receivednumber:
+    newnumber = unique(domein)
+    if newnumber  == receivednumber:
         return True
     else:
-        #set back number
+        #received number is not OK. Reset counter in database to previous value.  
         if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
             return False     #TODO: set the unique_runcounter
         else:
-            changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':earlierreceivednumber})
+            changeq(u'''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':newnumber-1})
             return False
 
 #**********************************************************/**
