@@ -115,27 +115,29 @@ class _comsession(object):
                 self.maxsecondsperchannel = botsglobal.ini.getint('settings','maxsecondsperchannel',sys.maxint) if self.channeldict['rsrv2'] <= 0 else self.channeldict['rsrv2']
                 try:
                     self.connect()
-                except:     #connection failed
-                    if self.channeldict['rsrv1'] is not None:
+                except:     #in-connection failed. note that no files are received yet. useful if scheduled quite often, and you do nto want error-report eg when server is down. 
+                    #max_nr_retry : get this from channel. should be integer, but only textfields where left. so might be ''/None->use 0
+                    max_nr_retry = int(self.channeldict['rsrv1']) if self.channeldict['rsrv1'] else 0
+                    if max_nr_retry:
                         domain = u'bots_communication_failure_' + self.channeldict['idchannel']
                         nr_retry = botslib.unique(domain)  #update nr_retry in database
-                        if not self.channeldict['rsrv1']:   #prevent error
-                            self.channeldict['rsrv1'] = 0
-                        if nr_retry >= int(self.channeldict['rsrv1']):
-                            botslib.unique(domain,updatewith=0)    #set nr_retry to zero 
-                            raise
+                        if nr_retry >= max_nr_retry:
+                            botslib.unique(domain,updatewith=0)    #reset nr_retry to zero
+                            #raises exception
                         else:
-                            return
-                    else:
-                        raise
-                else:
-                    if self.channeldict['rsrv1'] is not None:
+                            return  #just return if max_nr_retry is not reached
+                    raise
+                else:   #in-connection OK
+                    #max_nr_retry : get this from channel. should be integer, but only textfields where left. so might be ''/None->use 0
+                    max_nr_retry = int(self.channeldict['rsrv1']) if self.channeldict['rsrv1'] else 0
+                    if max_nr_retry:
                         domain = u'bots_communication_failure_' + self.channeldict['idchannel']
                         botslib.unique(domain,updatewith=0)    #set nr_retry to zero 
                 self.incommunicate()
                 self.disconnect()
             self.postcommunicate()
             self.archive()
+
 
     def archive(self):
         ''' after the communication channel has ran, archive received of send files.
