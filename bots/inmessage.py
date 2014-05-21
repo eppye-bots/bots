@@ -583,12 +583,6 @@ class var(Inmessage):
         valuepos    = 1    #record position of token in line
         countline   = 1    #count number of lines; start with 1
         countpos    = 0    #count position/number of chars within line
-        #csv files can be tab-delimited. that leads to errors when first field is not filled:
-        if isinstance(self,csv) and self.ta_info['field_sep'].isspace():        #and: is tab-delimited
-            use_mode_inrecord = False
-        else:
-            use_mode_inrecord = True
-
         sep = field_sep + sfield_sep + record_sep + escape + rep_sep
 
         for char in self.rawinput:    #get next char
@@ -624,8 +618,12 @@ class var(Inmessage):
             if not mode_inrecord:
                 #handle char 'between' records. 
                 if char.isspace():  #if space: ignor char, get next char. note: whitespace = ' \t\n\r\v\f'
-                    continue
-                mode_inrecord = 1   #not whitespace so a new record is started
+                    #exception for tab-delimited csv files, where first field is not filled: first TAB is ignored. Patch this:
+                    if char in field_sep and isinstance(self,csv):
+                        pass        #do not ignore TAB
+                    else:
+                        continue    #ignore character; continue for-loop with next character
+                mode_inrecord = 1   #not whitespace - a new record has started
             if char in skip_char:
                 #char is skipped. In csv these chars could be in a quote; in eg edifact chars will be skipped, even if after escape sign.
                 continue
@@ -661,12 +659,9 @@ class var(Inmessage):
                 lex_record.append({VALUE:value,SFIELD:sfield,LIN:valueline,POS:valuepos})    #write current value to lex_record
                 self.lex_records.append(lex_record)                 #write lex_record to self.lex_records
                 lex_record = []
-                if use_mode_inrecord:
-                    mode_inrecord = 0    #we are not in a record
-                else:
-                    mode_inrecord = 1    #for tab-delimited csv: we are still in a record
                 value = u''
                 sfield = 0      #new token is field 
+                mode_inrecord = 0    #we are not in a record
                 continue
             if char == escape:
                 mode_escape = 1
