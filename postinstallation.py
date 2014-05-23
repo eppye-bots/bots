@@ -119,3 +119,12 @@ if __name__ == '__main__':
         else:
             print
             print 'Bots installation succeeded.'
+    #avoid strange errors when UAC is off. 
+    try:
+        sys.stdout.flush()
+    except IOError:
+        pass
+    try:
+        sys.stderr.flush()
+    except IOError:
+        pass
