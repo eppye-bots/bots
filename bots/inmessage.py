@@ -1429,29 +1429,8 @@ class xml(Inmessage):
                 #convert the xml-attributes of this 'xml-filed' to fields in dict with attributemarker.
                 newnode.record.update((xmlchildnode.tag + self.ta_info['attributemarker'] + key, value) for key,value in xmlchildnode.items() if value)
             elif entitytype == 1:  #childnode is a record according to grammar
-                if SUBTRANSLATION in self.stack[-1] :   #changed that
-                    messagetype = newnode.enhancedget(self.stack[-1][SUBTRANSLATION])
-                    if not messagetype:
-                        raise botslib.TranslationNotFoundError(_(u'Could not find SUBTRANSLATION "%(sub)s" in (sub)message.'),
-                                                              {'sub':structure_level[structure_index][SUBTRANSLATION]})
-                    #~ messagetype = self._manipulatemessagetype(messagetype,xmlnode)      #probably not useful for xml
-                    try:
-                        defmessage = grammar.grammarread(self.__class__.__name__,messagetype)
-                    except ImportError:
-                        raise botslib.TranslationNotFoundError(_(u'No (valid) grammar for editype "%(editype)s" messagetype "%(messagetype)s".'),
-                                                            {'editype':self.__class__.__name__,'messagetype':messagetype})
-                    self.messagecount += 1
-                    self.messagetypetxt = _(u'Message nr %(count)s, type %(type)s, '%{'count':self.messagecount,'type':messagetype})
-                    self.stack[-1] = defmessage.structure[0]
-                    subTranNode = self._etree2botstree(xmlchildnode)
-                    newnode.append(subTranNode)
-                    newnode.queries = {'messagetype':messagetype}       #copy messagetype into 1st segment of subtranslation (eg UNH, ST)
-                    self.checkmessage(subTranNode,defmessage,subtranslation=True)      #check the results of the subtranslation
-                    self.stack.pop()
-                    self.messagetypetxt = ''
-                else: 
-                    newnode.append(self._etree2botstree(xmlchildnode))           #go recursive and add child (with children) as a node/record
-                    self.stack.pop()    #handled the xmlnode, so remove it from the stack
+                newnode.append(self._etree2botstree(xmlchildnode))           #go recursive and add child (with children) as a node/record
+                self.stack.pop()    #handled the xmlnode, so remove it from the stack
             else:   #is a record, but not in grammar
                 if self.ta_info['checkunknownentities']:
                     self.add2errorlist(_(u'[S02]%(linpos)s: Unknown xml-tag "%(recordunkown)s" (within "%(record)s") in message.\n')%
