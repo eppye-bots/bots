@@ -544,7 +544,7 @@ class ta(models.Model):
     frommail = StripCharField(max_length=256)
     tomail = StripCharField(max_length=256)
     charset = StripCharField(max_length=35)
-    statuse = models.IntegerField()                     #obsolete 20091019 but still used by intercommit comm. module
+    statuse = models.IntegerField()                     #obsolete 20091019
     retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
     errortext = models.TextField()                    #20120921: unlimited length
