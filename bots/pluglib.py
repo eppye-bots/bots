@@ -276,7 +276,7 @@ def read_index2database(orgpluglist):
 
 
 #*********************************************
-#* make a plugin (generate)*******************
+#* plugout / make a plugin (generate)*********
 #*********************************************
 def make_index(cleaned_data,filename):
     ''' generate only the index file of the plugin.
@@ -386,6 +386,9 @@ def plugout_files(cleaned_data):
                     files2return.pop(index)
                 except ValueError:
                     pass
+    else:
+        if cleaned_data['charset']:     #if edifact charsets are not needed: remove them (are included in default bots installation).
+            files2return.extend(plugout_files_bydir(os.path.join(usersys,u'charsets'),u'usersys/charsets'))
     if cleaned_data['config']:
         config = botsglobal.ini.get('directories','config')
         files2return.extend(plugout_files_bydir(config,u'config'))
