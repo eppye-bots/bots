@@ -138,7 +138,7 @@ def start():
     launcher_thread.start()
     logger.info(u'Jobqueue launcher started.')
 
-    # this main thread is the jobqserver (the xmlrpc server for handling jobqueue)
+    #the main thread is the xmlrpc server: all adding, getting etc for jobqueue is done via xmlrpc.
     logger.info(u'Jobqueue server started.')
     server = SimpleXMLRPCServer(('localhost', port),logRequests=False)        
     server.register_instance(Jobqueue(logger))
