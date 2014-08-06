@@ -37,8 +37,7 @@ class Message(object):
         if self.errorfatal:     #for fatal errors: (try to) get information like partners for edi file
             self.try_to_retrieve_info()
         if self.errorlist:
-            raise botslib.MessageError(u'%(errorlist)s',{'errorlist':''.join(self.errorlist)})
-
+            raise botslib.MessageError(u''.join(self.errorlist))
 
     def try_to_retrieve_info(self):
         ''' when edi-file is not correct, (try to) get info about eg partnerID's in message

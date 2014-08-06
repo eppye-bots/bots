@@ -13,6 +13,7 @@ from django.utils.translation import ugettext as _
 import botslib
 import botsglobal
 import botsinit
+import warnings
 
 def abspathdata(filename):
     ''' abspathdata if filename incl dir: return absolute path; else (only filename): return absolute path (datadir).
@@ -75,6 +76,9 @@ def start():
     else:
         botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
+
+    warnings.simplefilter('error', UnicodeWarning)
+        
     #import global scripts for bots-engine
     try:
         userscript,scriptname = botslib.botsimport('routescripts','botsengine')
@@ -96,7 +100,7 @@ def start():
         botslib.tryrunscript(userscript,scriptname,'pre')
         errorinrun = engine2_run()
     except Exception as msg:
-        botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':str(msg)})    #of course this 'should' not happen.
+        botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':unicode(msg)})    #of course this 'should' not happen.
         sys.exit(1)
     else:
         if errorinrun:
@@ -393,8 +397,8 @@ def filename_formatter(filename_mask,ta_info):
         ''' class for the infile-string that handles the specific format-options'''
         def __format__(self, format_spec):
             if not format_spec:
-                return str(self)
-            name,ext = os.path.splitext(str(self))
+                return unicode(self)
+            name,ext = os.path.splitext(unicode(self))
             if format_spec == 'ext':
                 if ext.startswith('.'):
                     ext = ext[1:]
@@ -403,7 +407,7 @@ def filename_formatter(filename_mask,ta_info):
                 return name 
             raise botslib.CommunicationOutError(_(u'Error in format of "{filename}": unknown format: "%(format)s".'),
                                                 {'format':format_spec})
-    unique = str(botslib.unique('bots_outgoing_file_name'))   #create unique part for filename
+    unique = unicode(botslib.unique('bots_outgoing_file_name'))   #create unique part for filename
     tofilename = filename_mask.replace('*',unique)           #filename_mask is filename in channel where '*' is replaced by idta
     if '{' in tofilename :
         if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):

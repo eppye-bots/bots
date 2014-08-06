@@ -68,7 +68,7 @@ def maxruntimeerror(logger,maxruntime,jobnumber,task_to_run):
 
 #-------------------------------------------------------------------------------
 def launcher(logger,port,lauchfrequency,maxruntime):
-    xmlrpcclient = xmlrpclib.ServerProxy('http://localhost:' + str(port))
+    xmlrpcclient = xmlrpclib.ServerProxy(u'http://localhost:' + unicode(port))
     maxseconds = maxruntime*60
     time.sleep(3)   #to allow jobqserver to start
     while True:

@@ -25,9 +25,10 @@ def server_error(request, template_name='500.html'):
         str().decode(): bytes->unicode
     '''
     exc_info = traceback.format_exc(None).decode('utf-8','ignore')
-    botsglobal.logger.info(_(u'Ran into server error: "%(error)s"'),{'error':str(exc_info)})
+    botsglobal.logger.info(_(u'Ran into server error: "%(error)s"'),{'error':exc_info})
     temp = django.template.loader.get_template(template_name)  #You need to create a 500.html template.
     return django.http.HttpResponseServerError(temp.render(django.template.Context({'exc_info':exc_info})))
+    
 
 def index(request,*kw,**kwargs):
     ''' when using eg http://localhost:8080
@@ -53,21 +54,21 @@ def reports(request,*kw,**kwargs):
                 return django.shortcuts.render(request, formin.template, {'form': formin})
             #go to default report-query using parameters from select screen
         elif 'report2incoming' in request.POST:       #from ViewReports form using star view incoming
-            request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2incoming']))
+            request.POST = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2incoming']))
             return incoming(request)
         elif 'report2outgoing' in request.POST:       #from ViewReports form using star view outgoing
-            request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2outgoing']))
+            request.POST = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2outgoing']))
             return outgoing(request)
         elif 'report2process' in request.POST:       #from ViewReports form using star view process errors
-            request.POST = viewlib.preparereport2view(request.POST,int(request.POST['report2process']))
+            request.POST = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2process']))
             return process(request)
         elif 'report2errors' in request.POST:       #from ViewReports form using star file errors
-            newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2errors']))
+            newpost = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2errors']))
             newpost['statust'] = ERROR
             request.POST = newpost
             return incoming(request)
         elif 'report2commerrors' in request.POST:       #from ViewReports form using star communcation errors
-            newpost = viewlib.preparereport2view(request.POST,int(request.POST['report2commerrors']))
+            newpost = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2commerrors']))
             newpost['statust'] = ERROR
             request.POST = newpost
             return outgoing(request)
@@ -93,7 +94,7 @@ def incoming(request,*kw,**kwargs):
             form = forms.SelectIncoming()
             return django.shortcuts.render(request, form.template, {'form': form})    #go to the SelectIncoming form
         else:                                  #from menu:run->incoming
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))} #go to default incoming-query using these default parameters
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.save_int(request.GET.get('lastrun',0)))} #go to default incoming-query using these default parameters
     else: #request.method == 'POST'
         if 'fromselect' in request.POST:        #from SelectIncoming form
             formin = forms.SelectIncoming(request.POST)
@@ -118,7 +119,7 @@ def incoming(request,*kw,**kwargs):
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'delete' in request.POST:        #from ViewIncoming form using star delete
                 if request.user.is_staff or request.user.is_superuser:
-                    idta = int(request.POST[u'delete'])
+                    idta = viewlib.save_int(request.POST[u'delete'])
                     #delete from filereport
                     models.filereport.objects.filter(idta=idta).delete()
                     #get ta_object
@@ -131,7 +132,7 @@ def incoming(request,*kw,**kwargs):
                     messages.add_message(request, messages.INFO, notification)
             elif 'retransmit' in request.POST:        #from ViewIncoming form using star rereceive
                 idta = request.POST[u'retransmit']
-                filereport = models.filereport.objects.get(idta=int(idta))
+                filereport = models.filereport.objects.get(idta=viewlib.save_int(idta))
                 if filereport.fromchannel:   #for resend files fromchannel has no value. (do not rereceive resend items)
                     filereport.retransmit = not filereport.retransmit
                     filereport.save()
@@ -158,7 +159,7 @@ def outgoing(request,*kw,**kwargs):
             form = forms.SelectOutgoing()
             return django.shortcuts.render(request, form.template, {'form': form})
         else:                                  #from menu:run->outgoing
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))} #go to default outgoing-query using these default parameters
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.save_int(request.GET.get('lastrun',0)))} #go to default outgoing-query using these default parameters
     else: #request.method == 'POST'
         if 'fromselect' in request.POST:        #from SelectOutgoing form
             formin = forms.SelectOutgoing(request.POST)
@@ -182,7 +183,7 @@ def outgoing(request,*kw,**kwargs):
                 form = forms.SelectOutgoing(formin.cleaned_data)
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'retransmit' in request.POST:  #from ViewOutgoing form using star resend
-                ta_object = models.ta.objects.get(idta=int(request.POST[u'retransmit']))
+                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST[u'retransmit']))
                 if ta_object.statust != RESEND:     #can only resend last file
                     ta_object.retransmit = not ta_object.retransmit
                     ta_object.save()
@@ -195,7 +196,7 @@ def outgoing(request,*kw,**kwargs):
                         outgoingfile.retransmit = not outgoingfile.retransmit
                         outgoingfile.save()
             elif 'noautomaticretry' in request.POST:        #from ViewOutgoing form using star 'no automaticretry'
-                ta_object = models.ta.objects.get(idta=int(request.POST[u'noautomaticretry']))
+                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST[u'noautomaticretry']))
                 if ta_object.statust == ERROR:
                     ta_object.statust = NO_RETRY
                     ta_object.save()
@@ -215,8 +216,8 @@ def document(request,*kw,**kwargs):
             return django.shortcuts.render(request, form.template, {'form': form})
         else:                                   #from menu:run->document
             cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
-            cleaned_data['lastrun'] = bool(int(request.GET.get('lastrun',0)))
-            cleaned_data['status'] = int(request.GET.get('status',0))
+            cleaned_data['lastrun'] = bool(viewlib.save_int(request.GET.get('lastrun',0)))
+            cleaned_data['status'] = viewlib.save_int(request.GET.get('status',0))
              #go to default document-query using these default parameters
     else: #request.method == 'POST'
         if 'fromselect' in request.POST:         #from SelectDocument form
@@ -233,7 +234,7 @@ def document(request,*kw,**kwargs):
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'retransmit' in request.POST:        #coming from ViewDocument, no reportidta
                 idta = request.POST[u'retransmit']
-                filereport = models.filereport.objects.get(idta=int(idta))
+                filereport = models.filereport.objects.get(idta=viewlib.save_int(idta))
                 filereport.retransmit = not filereport.retransmit
                 filereport.save()
             else:                                    #coming from ViewDocument, next page etc
@@ -252,7 +253,7 @@ def process(request,*kw,**kwargs):
             form = forms.SelectProcess()
             return django.shortcuts.render(request, form.template, {'form': form})
         else:                                   #from menu:run->process
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(int(request.GET.get('lastrun',0)))}
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.save_int(request.GET.get('lastrun',0)))}
              #go to default process-query using these default parameters
     else: #request.method == 'POST'
         if 'fromselect' in request.POST:         #from SelectProcess form
@@ -292,9 +293,9 @@ def detail(request,*kw,**kwargs):
     '''
     if request.method == 'GET':
         if 'inidta' in request.GET: #from incoming screen
-            rootta = models.ta.objects.get(idta=int(request.GET['inidta']))
+            rootta = models.ta.objects.get(idta=viewlib.save_int(request.GET['inidta']))
         else:                       #from outgoing screen: trace back to EXTERNIN first
-            rootta = viewlib.django_trace_origin(int(request.GET['outidta']),{'status':EXTERNIN})[0]
+            rootta = viewlib.django_trace_origin(viewlib.save_int(request.GET['outidta']),{'status':EXTERNIN})[0]
         viewlib.gettrace(rootta)
         detaillist = viewlib.trace2detail(rootta)
         return django.shortcuts.render(request,'bots/detail.html',{'detaillist':detaillist,'rootta':rootta})
@@ -319,7 +320,7 @@ def confirm(request,*kw,**kwargs):
             request.POST = viewlib.changepostparameters(request.POST,soort='confirm2out')
             return outgoing(request)
         elif 'confirm' in request.POST:        #coming ViewConfirm, using star 'Manual confirm'
-            ta_object = models.ta.objects.get(idta=int(request.POST[u'confirm']))
+            ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST[u'confirm']))
             if ta_object.confirmed == False and ta_object.confirmtype.startswith('ask'):
                 ta_object.confirmed = True
                 ta_object.confirmidta = '-1'   # to indicate a manual confirmation
@@ -443,7 +444,7 @@ def plugin(request,*kw,**kwargs):
                     if pluglib.read_plugin(request.FILES['file'].temporary_file_path()):
                         messages.add_message(request, messages.INFO, _(u'Overwritten existing files.'))
                 except Exception as msg:
-                    notification = u'Error reading plugin: "%s".' % str(msg)
+                    notification = -(u'Error reading plugin: "%s".')%unicode(msg)
                     botsglobal.logger.error(notification)
                     messages.add_message(request, messages.INFO, notification)
                 else:
@@ -467,7 +468,7 @@ def plugin_index(request,*kw,**kwargs):
             try:
                 pluglib.read_index('index')
             except Exception as msg:
-                notification = u'Error reading configuration index file: "%s".' % str(msg)
+                notification = -(u'Error reading configuration index file: "%s".')%unicode(msg)
                 botsglobal.logger.error(notification)
                 messages.add_message(request, messages.INFO, notification)
             else:
@@ -484,7 +485,7 @@ def plugout_index(request,*kw,**kwargs):
             dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':botsglobal.ini.getboolean('settings','codelists_in_plugin',True),'databasetransactions':False}
             pluglib.make_index(dummy_for_cleaned_data,filename)
         except Exception as msg:
-            notification = _(u'Error writing configuration index file: "%s".')%str(msg)
+            notification = _(u'Error writing configuration index file: "%s".')%unicode(msg)
             botsglobal.logger.error(notification)
             messages.add_message(request, messages.INFO, notification)
         else:
@@ -515,7 +516,7 @@ def plugout_backup_core(request,*kw,**kwargs):
                                     }
         pluglib.make_plugin(dummy_for_cleaned_data,filename)
     except Exception as msg:
-        notification = u'Error writing backup plugin: "%s".' % str(msg)
+        notification = u'Error writing backup plugin: "%s".'%unicode(msg)
         botsglobal.logger.error(notification)
         messages.add_message(request, messages.INFO, notification)
     else:
@@ -536,8 +537,8 @@ def plugout(request,*kw,**kwargs):
                 try:
                     pluglib.make_plugin(form.cleaned_data,filename)
                 except botslib.PluginError as msg:
-                    botsglobal.logger.error(str(msg))
-                    messages.add_message(request,messages.INFO,str(msg))
+                    botsglobal.logger.error(unicode(msg))
+                    messages.add_message(request,messages.INFO,unicode(msg))
                 else:
                     botsglobal.logger.info(_(u'Plugin "%(file)s" created successful.'),{'file':filename})
                     response = django.http.HttpResponse(open(filename, 'rb').read(), content_type='application/zip')
@@ -674,7 +675,7 @@ def runengine(request,*kw,**kwargs):
             messages.add_message(request, messages.INFO, job2queue.JOBQUEUEMESSAGE2TXT[terug])
             botsglobal.logger.info(job2queue.JOBQUEUEMESSAGE2TXT[terug])
         else:                                                       #run bots-engine direct.; reports back if bots-engien is started succesful. **not reported: problems with running.
-            botsglobal.logger.info(_(u'Run bots-engine with parameters: "%(parameters)s"'),{'parameters':str(lijst)})
+            botsglobal.logger.info(_(u'Run bots-engine with parameters: "%(parameters)s"'),{'parameters':unicode(lijst)})
             #first check if another instance of bots-engine is running/if port is free
             try:
                 engine_socket = botslib.check_if_other_engine_is_running()

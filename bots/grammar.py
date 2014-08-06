@@ -339,7 +339,7 @@ class Grammar(object):
                                             {'grammar':self.grammarname,'mpath':mpath,'record':i})
             if i[MIN] > i[MAX]:
                 raise botslib.GrammarError(_(u'Grammar "%(grammar)s", in structure, at "%(mpath)s": record where MIN > MAX: "%(record)s".'),
-                                            {'grammar':self.grammarname,'mpath':mpath,'record':str(i)[:100]})
+                                            {'grammar':self.grammarname,'mpath':mpath,'record':unicode(i)[:100]})
             i[MPATH] = mpath + [i[ID]]
             if LEVEL in i:
                 self._checkstructure(i[LEVEL],i[MPATH])
@@ -385,7 +385,7 @@ class Grammar(object):
         for i in structure:
             if i[ID] in collision:
                 #~ raise botslib.GrammarError(_(u'Grammar "%(grammar)s", in structure: bots-collision detected at record "%(mpath)s".'),{'grammar':self.grammarname,'mpath':i[MPATH]})
-                i[BOTSIDNR] = str(collision[i[ID]] + 1)
+                i[BOTSIDNR] = unicode(collision[i[ID]] + 1)
                 collision[i[ID]] = collision[i[ID]] + 1
             else:
                 i[BOTSIDNR] = u'1'

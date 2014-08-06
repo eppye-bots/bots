@@ -1069,9 +1069,9 @@ class edifact(var):
             else:
                 translationscript,scriptfilename = botslib.botsimport('mappings',editype,tscript)  #import the mappingscript
             #generate CONTRL-message. One received interchange->one CONTRL-message
-            reference = str(botslib.unique('messagecounter'))
+            reference = unicode(botslib.unique('messagecounter'))
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED)
-            filename = str(ta_confirmation.idta)
+            filename = unicode(ta_confirmation.idta)
             out = outmessage.outmessage_init(editype=editype,messagetype=tomessagetype,filename=filename,reference=reference,statust=OK)    #make outmessage object
             out.ta_info['frompartner'] = receiver   #reverse!
             out.ta_info['topartner'] = sender       #reverse!
@@ -1162,7 +1162,7 @@ class x12(var):
             elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA.
                 if char != self.ta_info['field_sep']:
                     raise botslib.InMessageError(_(u'[A63]: Non-valid ISA header; position %(pos)s of ISA is "%(foundchar)s", expect here element separator "%(field_sep)s".'),
-                                                    {'pos':str(count),'foundchar':char,'field_sep':self.ta_info['field_sep']})
+                                                    {'pos':unicode(count),'foundchar':char,'field_sep':self.ta_info['field_sep']})
             elif count == 83:
                 self.ta_info['reserve'] = char
             elif count < 85:
@@ -1293,9 +1293,9 @@ class x12(var):
             else:
                 translationscript,scriptfilename = botslib.botsimport('mappings',editype,tscript)  #import the mappingscript
             #generate CONTRL-message. One received interchange->one CONTRL-message
-            reference = str(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
+            reference = unicode(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED)
-            filename = str(ta_confirmation.idta)
+            filename = unicode(ta_confirmation.idta)
             out = outmessage.outmessage_init(editype=editype,messagetype=tomessagetype,filename=filename,reference=reference,statust=OK)    #make outmessage object
             out.ta_info['frompartner'] = receiver   #reverse!
             out.ta_info['topartner'] = sender       #reverse!
@@ -1540,12 +1540,12 @@ class json(Inmessage):
             elif isinstance(value,list):
                 thisnode.children.extend(self._dojsonlist(value,key))
             elif isinstance(value,(int,long,float)):  #json field; map to field in node.record
-                thisnode.record[key] = str(value)
+                thisnode.record[key] = unicode(value)
             else:
                 if self.ta_info['checkunknownentities']:
                     raise botslib.InMessageError(_(u'[J55]: Key "%(key)s" value "%(value)s": is not string, list or dict.'),
                                                     {'key':key,'value':value})
-                thisnode.record[key] = str(value)
+                thisnode.record[key] = unicode(value)
         if len(thisnode.record)==2 and not thisnode.children:
             return None #node is empty...
         #~ thisnode.record['BOTSID']=name

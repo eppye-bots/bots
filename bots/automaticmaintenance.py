@@ -79,8 +79,8 @@ def email_error_report(rootidtaofrun):
         break
     else:
         raise botslib.PanicError(_(u'In generate report: could not find report?'))
-    subject = _(u'[Bots Error Report] %(time)s')%{'time':str(results['ts'])[:16]}
-    reporttext = _(u'Bots Report; type: %(type)s, time: %(time)s\n')%{'type':results['type'],'time':str(results['ts'])[:19]}
+    subject = _(u'[Bots Error Report] %(time)s')%{'time':unicode(results['ts'])[:16]}
+    reporttext = _(u'Bots Report; type: %(type)s, time: %(time)s\n')%{'type':results['type'],'time':unicode(results['ts'])[:19]}
     reporttext += _(u'    %d files received/processed in run.\n')%(results['lastreceived'])
     if results['lastdone']:
         reporttext += _(u'    %d files without errors,\n')%(results['lastdone'])

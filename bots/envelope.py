@@ -31,7 +31,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
             ta_info = dict(row)
             ta_fromfile = botslib.OldTransaction(ta_info['idta'])    #edi message to envelope
             ta_tofile = ta_fromfile.copyta(status=endstatus)  #edifile for enveloped message; attributes of not-enveloped message are copied...
-            ta_info['filename'] = str(ta_tofile.idta)   #create filename for enveloped message
+            ta_info['filename'] = unicode(ta_tofile.idta)   #create filename for enveloped message
             botsglobal.logger.debug(u'Envelope 1 message editype: %(editype)s, messagetype: %(messagetype)s.',ta_info)
             envelope(ta_info,[row['filename']])
             ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
@@ -57,7 +57,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
         try:
             ta_info = dict(row)
             ta_tofile = botslib.NewTransaction(status=endstatus,idroute=idroute)  #edifile for enveloped messages
-            ta_info.update({'idroute':idroute,'merge':False,'filename':str(ta_tofile.idta)})       #SELECT/GROUP BY gives only values that are the grouped
+            ta_info.update({'idroute':idroute,'merge':False,'filename':unicode(ta_tofile.idta)})       #SELECT/GROUP BY gives only values that are the grouped
             filename_list = []
             #gather individual idta and filenames
             #explicitly allow formpartner/topartner to be None/NULL
@@ -207,9 +207,9 @@ class edifact(Envelope):
 
         #UNB reference is counter is per sender or receiver
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
-            self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['topartner']))
+            self.ta_info['reference'] = unicode(botslib.unique('unbcounter_' + self.ta_info['topartner']))
         else:
-            self.ta_info['reference'] = str(botslib.unique('unbcounter_' + self.ta_info['frompartner']))
+            self.ta_info['reference'] = unicode(botslib.unique('unbcounter_' + self.ta_info['frompartner']))
         #testindicator is more complex:
         if self.ta_info['testindicator'] and self.ta_info['testindicator'] != '0':    #first check value from ta; do not use default
             testindicator = '1'
@@ -262,9 +262,9 @@ class tradacoms(Envelope):
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         #prepare data for envelope
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
-            self.ta_info['reference'] = str(botslib.unique('stxcounter_' + self.ta_info['topartner']))
+            self.ta_info['reference'] = unicode(botslib.unique('stxcounter_' + self.ta_info['topartner']))
         else:
-            self.ta_info['reference'] = str(botslib.unique('stxcounter_' + self.ta_info['frompartner']))
+            self.ta_info['reference'] = unicode(botslib.unique('stxcounter_' + self.ta_info['frompartner']))
         #build the envelope segments (that is, the tree from which the segments will be generated)
         self.out.put({'BOTSID':'STX',
                         'STDS1':self.ta_info['STX.STDS1'],
@@ -352,9 +352,9 @@ class x12(Envelope):
             testindicator = self.ta_info['ISA15']
         #~ print self.ta_info['messagetype'], 'grammar:',self.ta_info['ISA15'],'ta:',self.ta_info['testindicator'],'out:',testindicator
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
-            self.ta_info['reference'] = str(botslib.unique('isacounter_' + self.ta_info['topartner']))
+            self.ta_info['reference'] = unicode(botslib.unique('isacounter_' + self.ta_info['topartner']))
         else:
-            self.ta_info['reference'] = str(botslib.unique('isacounter_' + self.ta_info['frompartner']))
+            self.ta_info['reference'] = unicode(botslib.unique('isacounter_' + self.ta_info['frompartner']))
         #ISA06 and GS02 can be different; eg ISA06 is a service provider.
         #ISA06 and GS02 can be in the syntax....
         isa06sender = self.ta_info.get('ISA06',self.ta_info['frompartner'])

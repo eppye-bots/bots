@@ -277,7 +277,7 @@ class _comsession(object):
                         reference = '123message-ID email should be unique123'
                         email_datetime = email.Utils.formatdate(timeval=time.mktime(time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")),localtime=True)
                     else:
-                        reference = email.Utils.make_msgid(str(ta_to.idta))    #use transaction idta in message id.
+                        reference = email.Utils.make_msgid(unicode(ta_to.idta))    #use transaction idta in message id.
                         email_datetime = email.Utils.formatdate(localtime=True)
                     message.add_header('Message-ID',reference)
                     message.add_header("Date",email_datetime)
@@ -291,7 +291,10 @@ class _comsession(object):
                         confirmasked = True
 
                     #set subject
-                    subject = str(row['idta'])
+                    if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+                        subject = u'12345678'
+                    else:
+                        subject = unicode(row['idta'])
                     content = botslib.readdata(row['filename'])     #get attachment from data file
                     if self.userscript and hasattr(self.userscript,'subject'):    #user exit to determine subject
                         subject = botslib.runscript(self.userscript,self.scriptname,'subject',channeldict=self.channeldict,ta=ta_to,subjectstring=subject,content=content)
@@ -320,7 +323,7 @@ class _comsession(object):
                         email.encoders.encode_base64(message)
 
                     #*******write email to file***************************
-                    outfilename = str(ta_to.idta)
+                    outfilename = unicode(ta_to.idta)
                     outfile = botslib.opendata(outfilename, 'wb')
                     generator = email.Generator.Generator(outfile, mangle_from_=False, maxheaderlen=78)
                     generator.flatten(message,unixfrom=False)
@@ -375,7 +378,7 @@ class _comsession(object):
                         return 0
                 filesize = len(content)
                 ta_file = ta_from.copyta(status=FILEIN)
-                outfilename = str(ta_file.idta)
+                outfilename = unicode(ta_file.idta)
                 outfile = botslib.opendata(outfilename, 'wb')
                 outfile.write(content)
                 outfile.close()
@@ -446,12 +449,12 @@ class _comsession(object):
                 mdn_reference = '123message-ID email should be unique123'
                 mdn_datetime = email.Utils.formatdate(timeval=time.mktime(time.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")),localtime=True)
             else:
-                mdn_reference = email.Utils.make_msgid(str(ta_mdn.idta))    #we first have to get the mda-ta to make this reference
+                mdn_reference = email.Utils.make_msgid(unicode(ta_mdn.idta))    #we first have to get the mda-ta to make this reference
                 mdn_datetime = email.Utils.formatdate(localtime=True)
             message.add_header('Date',mdn_datetime)
             message.add_header('Message-ID', mdn_reference)
             
-            mdnfilename = str(ta_mdn.idta)
+            mdnfilename = unicode(ta_mdn.idta)
             mdnfile = botslib.opendata(mdnfilename, 'wb')
             generator = email.Generator.Generator(mdnfile, mangle_from_=False, maxheaderlen=78)
             generator.flatten(message,unixfrom=False)
@@ -654,8 +657,8 @@ class _comsession(object):
             ''' class for the infile-string that handles the specific format-options'''
             def __format__(self, format_spec):
                 if not format_spec:
-                    return str(self)
-                name,ext = os.path.splitext(str(self))
+                    return unicode(self)
+                name,ext = os.path.splitext(unicode(self))
                 if format_spec == 'ext':
                     if ext.startswith('.'):
                         ext = ext[1:]
@@ -664,7 +667,7 @@ class _comsession(object):
                     return name 
                 raise botslib.CommunicationOutError(_(u'Error in format of "{filename}": unknown format: "%(format)s".'),
                                                     {'format':format_spec})
-        unique = str(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
+        unique = unicode(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
         tofilename = filename_mask.replace('*',unique)           #filename_mask is filename in channel where '*' is replaced by idta
         if '{' in tofilename:    #only for python 2.6/7
             ta.synall()
@@ -727,7 +730,7 @@ class file(_comsession):
                     else:
                         raise botslib.LockedFileError(_(u'Can not do a systemlock on this platform'))
                 #open tofile
-                tofilename = str(ta_to.idta)
+                tofilename = unicode(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 #copy
                 shutil.copyfileobj(fromfile,tofile,1048576)
@@ -847,7 +850,7 @@ class pop3(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 remove_ta = True
-                tofilename = str(ta_to.idta)
+                tofilename = unicode(ta_to.idta)
                 mailid = int(mail.split()[0])  #first 'word' is the message number/ID
                 maillines = self.session.retr(mailid)[1]        #alt: (header, messagelines, octets) = popsession.retr(messageID)
                 tofile = botslib.opendata(tofilename, 'wb')
@@ -961,7 +964,7 @@ class imap4(_comsession):
                                                     fromchannel=self.channeldict['idchannel'],idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 remove_ta = True
-                filename = str(ta_to.idta)
+                filename = unicode(ta_to.idta)
                 # Get the message (header and body)
                 response, msg_data = self.session.uid('fetch',mail, '(RFC822)')
                 filehandler = botslib.opendata(filename, 'wb')
@@ -1143,7 +1146,7 @@ class ftp(_comsession):
         try:            #some ftp servers give errors when directory is empty; catch these errors here
             files = self.session.nlst()
         except (ftplib.error_perm,ftplib.error_temp) as msg:
-            if str(msg)[:3] not in ['550','450']:
+            if unicode(msg)[:3] not in [u'550',u'450']:
                 raise
 
         lijst = fnmatch.filter(files,self.channeldict['filename'])
@@ -1156,7 +1159,7 @@ class ftp(_comsession):
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 remove_ta = True
-                tofilename = str(ta_to.idta)
+                tofilename = unicode(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 try:
                     if self.channeldict['ftpbinary']:
@@ -1164,7 +1167,7 @@ class ftp(_comsession):
                     else:
                         self.session.retrlines("RETR " + fromfilename, lambda s, w=tofile.write: w(s+"\n"))
                 except ftplib.error_perm as msg:
-                    if str(msg)[:3] in ['550',]:     #we are trying to download a directory...
+                    if unicode(msg)[:3] in [u'550',]:     #we are trying to download a directory...
                         raise botslib.BotsError(u'To be catched')
                     else:
                         raise
@@ -1449,7 +1452,7 @@ class sftp(_comsession):
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 remove_ta = True
-                tofilename = str(ta_to.idta)
+                tofilename = unicode(ta_to.idta)
                 fromfile = self.session.open(fromfilename, 'r')    # SSH treats all files as binary
                 content = fromfile.read()
                 filesize = len(content)
@@ -1549,7 +1552,7 @@ class xmlrpc(_comsession):
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 remove_ta = True
-                tofilename = str(ta_to.idta)
+                tofilename = unicode(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 simplejson.dump(content, tofile, skipkeys=False, ensure_ascii=False, check_circular=False)
                 tofile.close()
@@ -1658,7 +1661,7 @@ class db(_comsession):
                                                     idroute=self.idroute)
                 ta_to = ta_from.copyta(status=FILEIN)
                 remove_ta = True
-                tofilename = str(ta_to.idta)
+                tofilename = unicode(ta_to.idta)
                 tofile = botslib.opendata(tofilename,'wb')
                 pickle.dump(db_object, tofile)
                 tofile.close()
@@ -1757,7 +1760,7 @@ class communicationscript(_comsession):
                     fromfile = open(fromfilename, 'rb')
                     filesize = os.fstat(fromfile.fileno()).st_size
                     #open tofile
-                    tofilename = str(ta_to.idta)
+                    tofilename = unicode(ta_to.idta)
                     tofile = botslib.opendata(tofilename, 'wb')
                     #copy
                     shutil.copyfileobj(fromfile,tofile,1048576)
@@ -1795,7 +1798,7 @@ class communicationscript(_comsession):
                     ta_to = ta_from.copyta(status = FILEIN)
                     remove_ta = True
                     fromfile = open(fromfilename, 'rb')
-                    tofilename = str(ta_to.idta)
+                    tofilename = unicode(ta_to.idta)
                     tofile = botslib.opendata(tofilename, 'wb')
                     content = fromfile.read()
                     filesize = len(content)
@@ -1946,7 +1949,7 @@ class http(_comsession):
                                                     idroute=self.idroute)
                 ta_to =   ta_from.copyta(status=FILEIN)
                 remove_ta = True
-                tofilename = str(ta_to.idta)
+                tofilename = unicode(ta_to.idta)
                 tofile = botslib.opendata(tofilename, 'wb')
                 tofile.write(outResponse.content)
                 tofile.close()

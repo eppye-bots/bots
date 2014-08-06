@@ -282,7 +282,7 @@ class channel(models.Model):
         ordering = ['idchannel']
         db_table = 'channel'
     def __unicode__(self):
-        return self.idchannel + ' (' + self.type + ')'
+        return self.idchannel + u' (' + self.type + u')'
 class partner(models.Model):
     idpartner = StripCharField(max_length=35,primary_key=True,verbose_name=_(u'partner identification'))
     active = models.BooleanField(default=False)
@@ -318,7 +318,7 @@ class partner(models.Model):
         ordering = ['idpartner']
         db_table = 'partner'
     def __unicode__(self):
-        return unicode(self.idpartner) + ' (' + unicode(self.name) + ')'
+        return unicode(self.idpartner) + u' (' + unicode(self.name) + u')'
     def save(self, *args, **kwargs):
         if isinstance(self,partnergroep):
             self.isgroup = True
@@ -347,7 +347,7 @@ class chanpar(models.Model):
         verbose_name = _(u'email address per channel')
         verbose_name_plural = _(u'email address per channel')
     def __unicode__(self):
-        return str(self.idpartner) + ' ' + str(self.idchannel) + ' ' + str(self.mail)
+        return unicode(self.idpartner) + u' ' + unicode(self.idchannel) + u' ' + unicode(self.mail)
 class translate(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)

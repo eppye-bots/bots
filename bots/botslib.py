@@ -359,18 +359,17 @@ def safe_unicode(value):
     try:
         if isinstance(value, unicode):      #is already unicode, just return
             return value            
-        elif isinstance(value, str):        #string, encoding unknown.   
-            for charset in ['utf_8','latin_1']:
-                try:
-                    return value.decode(charset, 'strict')  #decode strict
-                except:
-                    continue
-            return value.decode('utf_8', 'ignore')  #decode as if it is utf-8, ignore errors.
+        elif isinstance(value, str):        #string/bytecode, encoding unknown.   
+            try:
+                return value.decode('utf_8', 'strict')  #try to decode as utf_8 strict
+                return value.decode('latin_1', 'strict') #try to decode as latin_1 strict
+            except:
+                return value.decode('utf_8', 'ignore')  #decode as if it is utf-8, ignore errors.
         else:
             return unicode(value)
     except:
         try:
-            return repr(value)
+            return unicode(repr(value))
         except:
             return u'Error while displaying error'
 
@@ -792,7 +791,7 @@ class Uri(object):
         Usage: uri = Uri(scheme='http',hostname='test.com',port='80', path='test')
     '''
     def __init__(self, **kw):
-        self._uri = dict(scheme='',username='',password='',hostname='',port='', path='', filename='',query={},fragment='')
+        self._uri = dict(scheme=u'',username=u'',password=u'',hostname=u'',port=u'', path=u'', filename=u'',query={},fragment=u'')
         self.update(**kw)
     def update( self, **kw):
         self._uri.update(**kw)
@@ -800,12 +799,12 @@ class Uri(object):
         self.update(**kw)
         return self.__str__()
     def __str__(self):
-        scheme   = self._uri['scheme'] + ':' if self._uri['scheme'] else ''
-        password = ':' + self._uri['password'] if self._uri['password'] else ''
-        userinfo = self._uri['username'] + password + '@' if self._uri['username'] else ''
-        port     = ':' + str(self._uri['port']) if self._uri['port'] else ''
-        fullhost = self._uri['hostname'] + port if self._uri['hostname'] else ''
-        authority = '//' + userinfo + fullhost if fullhost else ''
+        scheme   = self._uri['scheme'] + u':' if self._uri['scheme'] else u''
+        password = u':' + self._uri['password'] if self._uri['password'] else u''
+        userinfo = self._uri['username'] + password + u'@' if self._uri['username'] else u''
+        port     = u':' + unicode(self._uri['port']) if self._uri['port'] else u''
+        fullhost = self._uri['hostname'] + port if self._uri['hostname'] else u''
+        authority = u'//' + userinfo + fullhost if fullhost else u''
         if self._uri['path'] or self._uri['filename']:
             terug = os.path.join(authority,self._uri['path'],self._uri['filename'])
         else:
@@ -835,13 +834,9 @@ class BotsError(Exception):
         for key,value in xxx.iteritems():
             self.xxx[safe_unicode(key)] = safe_unicode(value)
     def __unicode__(self):
-        try:
-            return self.msg % self.xxx
-        except Exception as msg:
-            #print "-----",type(msg),msg
-            return u'Error while displaying error'
+        return self.msg % self.xxx
     def __str__(self):
-        return self.__unicode__()
+        return (self.msg%self.xxx).encode('utf-8','ignore')
             
 class CodeConversionError(BotsError):
     pass
@@ -885,5 +880,5 @@ class TranslationNotFoundError(BotsError):
     pass
 class GotoException(BotsError):     #sometimes it is simplest to raise an error, and catch it rightaway. Like a goto ;-)  
     pass
-class FileTooLarge(BotsError):     #sometimes it is simplest to raise an error, and catch it rightaway. Like a goto ;-)  
+class FileTooLargeError(BotsError):     #sometimes it is simplest to raise an error, and catch it rightaway. Like a goto ;-)  
     pass

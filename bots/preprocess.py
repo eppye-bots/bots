@@ -162,7 +162,7 @@ def mailbag(ta_from,endstatus,frommessagetype,**argv):
                 elif count in [7,18,21,32,35,51,54,70]:   #extra checks for fixed ISA. 
                     if char != field_sep:
                         raise botslib.InMessageError(_(u'[M53]: Non-valid ISA header at position %(pos)s; position %(pos_element)s of ISA is "%(foundchar)s", expect here element separator "%(field_sep)s".'),
-                                                        {'pos':headpos,'pos_element':str(count),'foundchar':char,'field_sep':field_sep})
+                                                        {'pos':headpos,'pos_element':unicode(count),'foundchar':char,'field_sep':field_sep})
                 elif count == 106:
                     record_sep = char
                     break
@@ -248,7 +248,7 @@ def mailbag(ta_from,endstatus,frommessagetype,**argv):
         #so: found an interchange (from headerpos until endpos)
         endpos = headpos + foundtrailer.end()
         ta_to = ta_from.copyta(status=endstatus)  #make transaction for translated message; gets ta_info of ta_frommes
-        tofilename = str(ta_to.idta)
+        tofilename = unicode(ta_to.idta)
         filesize = len(edifile[headpos:endpos])
         tofile = botslib.opendata(tofilename,'wb')
         tofile.write(edifile[headpos:endpos])
@@ -287,7 +287,7 @@ def botsunzip(ta_from,endstatus,password=None,pass_non_zip=False,**argv):
         if info_file_in_zip.filename[-1] == '/':    #check if this is a dir; if so continue
             continue
         ta_to = ta_from.copyta(status=endstatus)
-        tofilename = str(ta_to.idta)
+        tofilename = unicode(ta_to.idta)
         content = myzipfile.read(info_file_in_zip.filename)    #read file in zipfile
         filesize = len(content)
         tofile = botslib.opendata(tofilename,'wb')
@@ -302,7 +302,7 @@ def botszip(ta_from,endstatus,**argv):
         editype & messagetype are unchanged.
     '''
     ta_to = ta_from.copyta(status=endstatus)
-    tofilename = str(ta_to.idta)
+    tofilename = unicode(ta_to.idta)
     pluginzipfilehandler = zipfile.ZipFile(botslib.abspathdata(filename=tofilename), 'w', zipfile.ZIP_DEFLATED)
     pluginzipfilehandler.write(botslib.abspathdata(filename=ta_from.filename),ta_from.filename)
     pluginzipfilehandler.close()
@@ -392,7 +392,7 @@ def extractpdf(ta_from,endstatus,**argv):
     try:
         pdf_stream = botslib.opendata(ta_from.filename, 'rb')
         ta_to = ta_from.copyta(status=endstatus)
-        tofilename = str(ta_to.idta)
+        tofilename = unicode(ta_to.idta)
         csv_stream = botslib.opendata(tofilename,'wb')
         csvout = csv.writer(csv_stream, quotechar=quotechar, delimiter=field_sep, doublequote=doublequote, escapechar=escape)
 

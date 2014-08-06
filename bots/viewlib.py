@@ -9,6 +9,12 @@ import models
 import botsglobal
 from botsconfig import *
 
+def save_int(value):
+    try:
+        return int(value)
+    except:
+        return 0
+
 def preparereport2view(post,runidta):
     terugpost = post.copy()
     thisrun = models.report.objects.get(idta=runidta)

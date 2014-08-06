@@ -53,7 +53,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         ta_parsed = ta_fromfile.copyta(status=PARSED)
         if row['filesize'] > botsglobal.ini.getint('settings','maxfilesizeincoming',5000000):
             ta_parsed.update(filesize=row['filesize'])
-            raise botslib.FileTooLarge(_(u'File size of %(filesize)s is too big; option "maxfilesizeincoming" in bots.ini is %(maxfilesizeincoming)s.'),
+            raise botslib.FileTooLargeError(_(u'File size of %(filesize)s is too big; option "maxfilesizeincoming" in bots.ini is %(maxfilesizeincoming)s.'),
                                             {'filesize':row['filesize'],'maxfilesizeincoming':botsglobal.ini.getint('settings','maxfilesizeincoming',5000000)})
         botsglobal.logger.debug(_(u'Start translating file "%(filename)s" editype "%(editype)s" messagetype "%(messagetype)s".'),row)
         #read whole edi-file: read, parse and made into a inmessage-object. Message is represented as a tree (inmessage.root is the root of the tree).
@@ -98,7 +98,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
                     inn_splitup.ta_info['divtext'] = tscript     #ifor reporting used mapping script to database (for display in GUI).
                     #initialize new out-object*************************
                     ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
-                    filename_translated = str(ta_translated.idta)
+                    filename_translated = unicode(ta_translated.idta)
                     out_translated = outmessage.outmessage_init(editype=toeditype,messagetype=tomessagetype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                         
                     #run mapping script************************
@@ -179,8 +179,8 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
         edifile.handleconfirm(ta_fromfile,error=False)
         botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
-    except botslib.FileTooLarge as msg:
-        ta_parsed.update(statust=ERROR,errortext=str(msg))
+    except botslib.FileTooLargeError as msg:
+        ta_parsed.update(statust=ERROR,errortext=unicode(msg))
         ta_parsed.deletechildren()
         botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':msg})
     except:
@@ -257,7 +257,7 @@ def persist_lookup(domein,botskey):
                                 WHERE domein=%(domein)s
                                 AND botskey=%(botskey)s''',
                                 {'domein':domein,'botskey':botskey}):
-        return pickle.loads(str(row['content']))
+        return pickle.loads(unicode(row['content']))
     return None
 
 #*********************************************************************
@@ -336,7 +336,7 @@ def calceancheckdigit(ean):
     except AttributeError:
         raise botslib.EanError(_(u'GTIN "%(ean)s" should be string, but is a "%(type)s".'),{'ean':ean,'type':type(ean)})
     sum1 = sum([int(x)*3 for x in ean[-1::-2]]) + sum([int(x) for x in ean[-2::-2]])
-    return str((1000-sum1)%10)
+    return unicode((1000-sum1)%10)
 
 def calceancheckdigit2(ean):
     ''' just for fun: slightly different algoritm for calculating the ean checkdigit. same results; is 10% faster.
@@ -346,7 +346,7 @@ def calceancheckdigit2(ean):
     for i in ean[-1::-1]:
         sum1 += int(i) * factor
         factor = 4 - factor         #factor flip-flops between 3 and 1...
-    return str(((1000 - sum1) % 10))
+    return unicode(((1000 - sum1) % 10))
 
 def checkean(ean):
     ''' input: EAN; returns: True (valid EAN) of False (EAN not valid)'''
@@ -363,12 +363,12 @@ def unique(domein,updatewith=None):
     ''' generate unique number per domain.
         uses db to keep track of last generated number.
     '''
-    return str(botslib.unique(domein,updatewith))
+    return unicode(botslib.unique(domein,updatewith))
     
 def unique_runcounter(domein,updatewith=None):
     ''' as unique, but per run of bots-engine.
     '''
-    return str(botslib.unique_runcounter(domein,updatewith))
+    return unicode(botslib.unique_runcounter(domein,updatewith))
 
 def inn2out(inn,out):
     ''' copies inn-message to outmessage

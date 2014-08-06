@@ -13,6 +13,7 @@ import botsinit
 import botsglobal
 import router
 import cleanup
+import warnings
 
 
 def start():
@@ -131,6 +132,9 @@ def start():
         botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),warn)
         commandstorun.insert(0,'crashrecovery')         #there is a database lock. Add a crashrecovery as first command to run.
     atexit.register(botslib.remove_database_lock)
+
+    warnings.simplefilter('error', UnicodeWarning)
+
     #**************run the routes**********************************************
     #commandstorun determines the type(s) of run. eg: ['automaticretrycommunication','new']
     try:
@@ -150,7 +154,7 @@ def start():
             #************get list of routes to run*******************************
             if routestorun:
                 use_routestorun = routestorun[:]
-                botsglobal.logger.info(_(u'Run routes from command line: "%(routes)s".'),{'routes':str(use_routestorun)})
+                botsglobal.logger.info(_(u'Run routes from command line: "%(routes)s".'),{'routes':unicode(use_routestorun)})
             elif command == 'new':  #fetch all active routes from database unless 'not in default run' or not active.
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
@@ -160,7 +164,7 @@ def start():
                                             ORDER BY idroute ''',
                                             {'active':True,'notindefaultrun':False}):
                     use_routestorun.append(row['idroute'])
-                botsglobal.logger.info(_(u'Run active routes from database that are in default run: "%(routes)s".'),{'routes':str(use_routestorun)})
+                botsglobal.logger.info(_(u'Run active routes from database that are in default run: "%(routes)s".'),{'routes':unicode(use_routestorun)})
             else:   #for command other than 'new': use all active routes.
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
@@ -169,7 +173,7 @@ def start():
                                             ORDER BY idroute ''',
                                             {'active':True}):
                     use_routestorun.append(row['idroute'])
-                botsglobal.logger.info(_(u'Run all active routes from database: "%(routes)s".'),{'routes':str(use_routestorun)})
+                botsglobal.logger.info(_(u'Run all active routes from database: "%(routes)s".'),{'routes':unicode(use_routestorun)})
             #************run routes for this command******************************
             botslib.tryrunscript(userscript,scriptname,'pre' + command,routestorun=use_routestorun)
             errorinrun += router.rundispatcher(command,use_routestorun)
@@ -180,11 +184,11 @@ def start():
         try:    #in acceptance tests: run a user script. no good reporting of errors/results in post-test script. Reason: this is after automaticmaintence.
             botslib.tryrunscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
         except Exception as msg:
-            print str(msg)
+            print unicode(msg)
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception as msg:
-        botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':str(msg)})    #of course this 'should' not happen.
+        botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':unicode(msg)})    #of course this 'should' not happen.
         sys.exit(1)
     else:
         if errorinrun:

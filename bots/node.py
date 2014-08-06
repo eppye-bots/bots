@@ -135,7 +135,7 @@ class Node(object):
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         terug =  self._getrecordcore(mpaths)
-        botsglobal.logmap.debug(u'"%(terug)s" for getrecord%(mpaths)s',{'terug':str(terug),'mpaths':str(mpaths)})
+        botsglobal.logmap.debug(u'"%(terug)s" for getrecord%(mpaths)s',{'terug':unicode(terug),'mpaths':unicode(mpaths)})
         return terug
 
     def _getrecordcore(self,mpaths):
@@ -176,7 +176,7 @@ class Node(object):
                 raise botslib.MappingFormatError(_(u'Values in "change" must be strings or "None": change(where=%(where)s,change=%(change)s)'),
                                                     {'where':where,'change':change})
         terug =  self._changecore(where,change)
-        botsglobal.logmap.debug(u'"%(terug)s" for change(where=%(where)s,change=%(change)s)',{'terug':terug,'where':str(where),'change':str(change)})
+        botsglobal.logmap.debug(u'"%(terug)s" for change(where=%(where)s,change=%(change)s)',{'terug':terug,'where':unicode(where),'change':unicode(change)})
         return terug
 
     def _changecore(self,where,change):
@@ -207,7 +207,7 @@ class Node(object):
             if 'BOTSIDnr' not in part:
                 part['BOTSIDnr'] = u'1'
         terug =  bool(self._deletecore(mpaths))
-        botsglobal.logmap.debug(u'"%(terug)s" for delete%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
+        botsglobal.logmap.debug(u'"%(terug)s" for delete%(mpaths)s',{'terug':terug,'mpaths':unicode(mpaths)})
         return terug  #return False if not removed, return True if removed
 
     def _deletecore(self,mpaths):
@@ -258,7 +258,7 @@ class Node(object):
         if Node.checklevel == 2:
             self._mpath_grammar_check(mpaths)
         terug =  self._getcore(mpaths)
-        botsglobal.logmap.debug(u'"%(terug)s" for get%(mpaths)s',{'terug':terug,'mpaths':str(mpaths)})
+        botsglobal.logmap.debug(u'"%(terug)s" for get%(mpaths)s',{'terug':terug,'mpaths':unicode(mpaths)})
         return terug
 
     def _getcore(self,mpaths):
@@ -376,14 +376,14 @@ class Node(object):
                 raise botslib.MappingFormatError(_(u'Section without "BOTSID": put(%(mpath)s)'),{'mpath':mpaths})
             for key,value in part.iteritems():
                 if value is None:
-                    botsglobal.logmap.debug(u'"None" in put %(mpaths)s.',{'mpaths':str(mpaths)})
+                    botsglobal.logmap.debug(u'"None" in put %(mpaths)s.',{'mpaths':unicode(mpaths)})
                     return False
                 if not isinstance(key,basestring):
                     raise botslib.MappingFormatError(_(u'Keys must be strings: put(%(mpath)s)'),{'mpath':mpaths})
                 if isinstance(value,list):
                     #empty is not useful, drop it (like None)
                     if not value:
-                        botsglobal.logmap.debug(u'Empty list in put %(mpaths)s.',{'mpaths':str(mpaths)})
+                        botsglobal.logmap.debug(u'Empty list in put %(mpaths)s.',{'mpaths':unicode(mpaths)})
                         return False
                 else:
                     if kwargs.get('strip',True):
@@ -397,7 +397,7 @@ class Node(object):
             self._putcore(mpaths[1:])
         else:
             raise botslib.MappingRootError(_(u'Error in root put "%(mpath)s".'),{'mpath':mpaths[0]})
-        botsglobal.logmap.debug(u'"True" for put %(mpaths)s',{'mpaths':str(mpaths)})
+        botsglobal.logmap.debug(u'"True" for put %(mpaths)s',{'mpaths':unicode(mpaths)})
         return True
 
     def _putcore(self,mpaths):
