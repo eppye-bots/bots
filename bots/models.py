@@ -4,11 +4,14 @@
 '''
 import os
 import urllib
+import re
 from django.db import models
 from django.utils.translation import ugettext_lazy as _     #djnago 1.7: have to use ugettext_lazy here
-from django.core.validators import validate_email,validate_integer
+#~ from django.core.validators import validate_email
+from django.core.validators import validate_integer
 from django.core.exceptions import ValidationError
 import botsglobal
+import validate_email
 #***Declare constants, mostly codelists.**********************************************
 DEFAULT_ENTRY = ('',"---------")
 STATUST = [
@@ -149,20 +152,15 @@ class StripCharField(models.CharField):
 
 def multiple_email_validator(value):
     ''' Problems with validating email adresses:
-        1. user part of email address can be quoted, within quotes ',' is allowed . (splitting goes wrong)
-        2. django's email validating is to strict: if quoted user part, space is not allowed. This is problem with ipmail/x400 addresses.
-        If space is needed in email-address:
-        in file django/core/validators.py, class EmailValidator(object) in regular expression for email address:
-        is:        r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*"$)', # quoted-string
-        should be: r'|^"([\001-\010\013\014\016-\037\040!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*"$)', # quoted-string
-        Another option is to disable email address validation.
+        django's email validating is to strict. (eg if quoted user part, space is not allowed).
+        use case: x400 via IPmail (x400 addresses are used in email-addresses).
+        Use re-expressions to get this better/conform email standards.
     '''
-    emails = value.split(',')
-    for email in emails:
-        try:
-            validate_email(email.strip())
-        except ValidationError:
-            raise ValidationError(_(u'Enter valid e-mail address(es) separated by commas.'), code='invalid')
+    if botsglobal.ini.getboolean('webserver','use_email_address_validation',True):      #tric to disable email validation via bots.ini
+        emails = re.split(',(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)',value)    #split emails
+        for email in emails:
+            if not validate_email.validate_email_address(email):
+                raise ValidationError(_(u'Enter valid e-mail address(es) separated by commas.'), code='invalid')
 
 def script_link1(script,linktext):
     ''' if script exists return a plain text name as link; else return "no" icon, plain text name
