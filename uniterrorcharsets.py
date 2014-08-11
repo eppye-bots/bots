@@ -35,6 +35,9 @@ def testraise(expect,msg2,*args,**kwargs):
 def testrun():
     print '\n'
     #normal, valid handling
+    testraise('','',{'test1':'test1','test2':'test2','test3':'test3'})
+    testraise('0test','0test',{'test1':'test1','test2':'test2','test3':'test3'})
+    testraise('0test test1 test2','0test %(test1)s %(test2)s %(test4)s',{'test1':'test1','test2':'test2','test3':'test3'})
     testraise('1test test1 test2 test3','1test %(test1)s %(test2)s %(test3)s',{'test1':'test1','test2':'test2','test3':'test3'})
     testraise(u'2test test1 test2 test3',u'2test %(test1)s %(test2)s %(test3)s',{u'test1':u'test1',u'test2':u'test2',u'test3':u'test3'})
     #different inputs in BotsError
