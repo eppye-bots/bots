@@ -389,17 +389,6 @@ class ErrorProcess(NewTransaction):
 #**********************************************************/**
 #*************************import ***********************/**
 #**********************************************************/**
-def isa_direct_importerror():
-    ''' check if module itself is not there, or if there is an import error in the module.
-        this avoid hard-to-find errors/problems.
-    '''
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    #test if direct or indirect import error
-    tracebacklist = traceback.extract_tb(exc_traceback,limit=2)
-    if tracebacklist[-1][2] == u'botsbaseimport':
-        return True
-    return False
-    
 def botsbaseimport(modulename):
     ''' Do a dynamic import.
         Errors/exceptions are handled in calling functions.
@@ -413,24 +402,17 @@ def botsimport(*args):
     '''
     modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
     modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
-    if modulepath in botsglobal.not_import:
+    if modulepath in botsglobal.not_import:     #check if previous import failed (no need to try again).This eliminates eg lots of partner specific imports.
         raise ImportError(u'No import of module "%(modulefile)s".' % {'modulefile':modulefile})
     try:
         module = botsbaseimport(modulepath)
-    except ImportError:
+    except ImportError, msg:
         botsglobal.not_import.add(modulepath)
-        if isa_direct_importerror():
-            #the module is not found
-            botsglobal.logger.debug(u'No import of module "%(modulefile)s".',{'modulefile':modulefile})
-            raise
-        else:
-            #the module is found, but has errors (eg python syntax errors)
-            txt = txtexc()
-            raise ScriptImportError(_(u'Import error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
-    except:
-        #other errors
-        txt = txtexc()
-        raise ScriptImportError(_(u'Error in "%(modulefile)s", error:\n%(txt)s'),{'modulefile':modulefile,'txt':txt})
+        botsglobal.logger.debug(u'No import of module "%(modulefile)s": %(txt)s.',{'modulefile':modulefile,'txt':msg})
+        raise ImportError(u'No import of module "%(modulefile)s": %(txt)s' % {'modulefile':modulefile,'txt':msg})
+    except Exception, msg:
+        botsglobal.logger.debug(u'Error in import of module "%(modulefile)s": %(txt)s.',{'modulefile':modulefile,'txt':msg})
+        raise ScriptImportError(_(u'Error in import of module "%(modulefile)s":\n%(txt)s'),{'modulefile':modulefile,'txt':msg})
     else:
         botsglobal.logger.debug(u'Imported "%(modulefile)s".',{'modulefile':modulefile})
         return module,modulefile
