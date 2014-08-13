@@ -360,11 +360,12 @@ def safe_unicode(value):
         if isinstance(value, unicode):      #is already unicode, just return
             return value            
         elif isinstance(value, str):        #string/bytecode, encoding unknown.   
-            try:
-                return value.decode('utf_8', 'strict')  #try to decode as utf_8 strict
-                return value.decode('latin_1', 'strict') #try to decode as latin_1 strict
-            except:
-                return value.decode('utf_8', 'ignore')  #decode as if it is utf-8, ignore errors.
+            for charset in ['utf_8','latin_1']:
+                try:
+                    return value.decode(charset, 'strict')  #decode strict
+                except:
+                    continue
+            return value.decode('utf_8', 'ignore')  #decode as if it is utf-8, ignore errors.
         else:
             return unicode(value)
     except:
@@ -834,9 +835,15 @@ class BotsError(Exception):
         for key,value in xxx.iteritems():
             self.xxx[safe_unicode(key)] = safe_unicode(value)
     def __unicode__(self):
-        return self.msg % self.xxx
+        try:
+            return self.msg%self.xxx    #this is already unicode
+        except:
+            return self.msg             #errors in self.msg; non supported format codes. Don't think this happen...
     def __str__(self):
-        return (self.msg%self.xxx).encode('utf-8','ignore')
+        try:
+            return (self.msg%self.xxx).encode('utf-8','ignore')
+        except:
+            return self.msg.encode('utf-8','ignore')            #errors in self.msg; non supported format codes. Don't think this happen...
             
 class CodeConversionError(BotsError):
     pass
