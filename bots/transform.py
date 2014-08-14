@@ -178,7 +178,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)   #update with info from eg queries
         ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
         edifile.handleconfirm(ta_fromfile,error=False)
-        botsglobal.logger.debug(u'Parse & passthrough for input file "%(filename)s".',row)
+        botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
     except botslib.FileTooLargeError as msg:
         ta_parsed.update(statust=ERROR,errortext=unicode(msg))
         ta_parsed.deletechildren()
@@ -192,7 +192,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
     else:
         edifile.handleconfirm(ta_fromfile,error=False)
         ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)
-        botsglobal.logger.debug(u'Translated input file "%(filename)s".',row)
+        botsglobal.logger.debug(_(u'Translated input file "%(filename)s".'),row)
     finally:
         ta_fromfile.update(statust=DONE)
     
