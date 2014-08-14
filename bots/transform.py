@@ -29,7 +29,7 @@ def translate(startstatus,endstatus,routedict,rootidta):
     '''
     try:    #see if there is a userscript that can determine the translation
         userscript,scriptname = botslib.botsimport('mappings','translation')
-    except ImportError:       #userscript is not there; other errors like syntax errors are not catched
+    except botslib.BotsImportError:       #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
     #select edifiles to translate
     for rawrow in botslib.query(u'''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,filesize
@@ -178,7 +178,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)   #update with info from eg queries
         ta_parsed.copyta(status=MERGED,statust=OK)          #original file goes straight to MERGED
         edifile.handleconfirm(ta_fromfile,error=False)
-        botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
+        botsglobal.logger.debug(u'Parse & passthrough for input file "%(filename)s".',row)
     except botslib.FileTooLargeError as msg:
         ta_parsed.update(statust=ERROR,errortext=unicode(msg))
         ta_parsed.deletechildren()
@@ -192,7 +192,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
     else:
         edifile.handleconfirm(ta_fromfile,error=False)
         ta_parsed.update(statust=DONE,filesize=row['filesize'],**edifile.ta_info)
-        botsglobal.logger.debug(_(u'Translated input file "%(filename)s".'),row)
+        botsglobal.logger.debug(u'Translated input file "%(filename)s".',row)
     finally:
         ta_fromfile.update(statust=DONE)
     

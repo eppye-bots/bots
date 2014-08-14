@@ -43,7 +43,7 @@ class new(object):
         #is there a user routescript?
         try:
             self.userscript,self.scriptname = botslib.botsimport('routescripts',route)
-        except ImportError:      #routescript is not there; other errors like syntax errors are not catched
+        except botslib.BotsImportError:      #routescript is not there; other errors like syntax errors are not catched
             self.userscript = self.scriptname = None
         self.minta4query_route = botslib._Transaction.processlist[-1]     #the idta of route
         foundroute = False

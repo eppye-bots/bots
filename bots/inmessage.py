@@ -261,7 +261,7 @@ class Inmessage(message.Message):
                 messagetype = self._manipulatemessagetype(messagetype,inode)
                 try:
                     defmessage = grammar.grammarread(self.__class__.__name__,messagetype)
-                except ImportError:
+                except botslib.BotsImportError:
                     raisenovalidmapping_error = True
                     if hasattr(self.defmessage.module,'getmessagetype'):
                         messagetype2 = botslib.runscript(self.defmessage.module,self.defmessage.grammarname,'getmessagetype',editype=self.__class__.__name__,messagetype=messagetype)
@@ -269,7 +269,7 @@ class Inmessage(message.Message):
                             try:
                                 defmessage = grammar.grammarread(self.__class__.__name__,messagetype2)
                                 raisenovalidmapping_error = False
-                            except ImportError:
+                            except botslib.BotsImportError:
                                 pass
                     if raisenovalidmapping_error:
                         raise botslib.TranslationNotFoundError(_(u'No (valid) grammar for editype "%(editype)s" messagetype "%(messagetype)s".'),
@@ -1369,7 +1369,7 @@ class xml(Inmessage):
             except AttributeError:
                 botsglobal.logger.error(u'Missing mailbagsearch in mailbag definitions for xml.')
                 raise
-            except ImportError:
+            except botslib.BotsImportError:
                 botsglobal.logger.error(u'Missing mailbag definitions for xml, should be there.')
                 raise
             parser = ET.XMLParser()

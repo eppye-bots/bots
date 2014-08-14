@@ -398,19 +398,19 @@ def botsbaseimport(modulename):
 def botsimport(*args):
     ''' import modules from usersys.
         return: imported module, filename imported module;
-        if could not be found or error in module: raise
+        if not found or error in module: raise
     '''
     modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
     modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
     if modulepath in botsglobal.not_import:     #check if previous import failed (no need to try again).This eliminates eg lots of partner specific imports.
-        raise ImportError(u'No import of module "%(modulefile)s".' % {'modulefile':modulefile})
+        raise BotsImportError(_(u'No import of module "%(modulefile)s".'),{'modulefile':modulefile})
     try:
         module = botsbaseimport(modulepath)
-    except ImportError, msg:
+    except ImportError as msg:
         botsglobal.not_import.add(modulepath)
         botsglobal.logger.debug(u'No import of module "%(modulefile)s": %(txt)s.',{'modulefile':modulefile,'txt':msg})
-        raise ImportError(u'No import of module "%(modulefile)s": %(txt)s' % {'modulefile':modulefile,'txt':msg})
-    except Exception, msg:
+        raise BotsImportError(_(u'No import of module "%(modulefile)s": %(txt)s'),{'modulefile':modulefile,'txt':msg})
+    except Exception as msg:
         botsglobal.logger.debug(u'Error in import of module "%(modulefile)s": %(txt)s.',{'modulefile':modulefile,'txt':msg})
         raise ScriptImportError(_(u'Error in import of module "%(modulefile)s":\n%(txt)s'),{'modulefile':modulefile,'txt':msg})
     else:
@@ -859,7 +859,9 @@ class PersistError(BotsError):
     pass
 class PluginError(BotsError):
     pass
-class ScriptImportError(BotsError):    #can not find userscript; not for errors in a userscript
+class BotsImportError(BotsError):    #import script or recursivly imported scripts not there
+    pass
+class ScriptImportError(BotsError):    #import errors in userscript; userscript is there
     pass
 class ScriptError(BotsError):          #runtime errors in a userscript
     pass
@@ -869,5 +871,5 @@ class TranslationNotFoundError(BotsError):
     pass
 class GotoException(BotsError):     #sometimes it is simplest to raise an error, and catch it rightaway. Like a goto ;-)  
     pass
-class FileTooLargeError(BotsError):     #sometimes it is simplest to raise an error, and catch it rightaway. Like a goto ;-)  
+class FileTooLargeError(BotsError):
     pass

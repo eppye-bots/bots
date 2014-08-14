@@ -70,7 +70,7 @@ def run(idchannel,command,idroute,rootidta=None):
 
         try:
             userscript,scriptname = botslib.botsimport('communicationscripts',channeldict['idchannel'])
-        except ImportError:       #communicationscript is not there; other errors like syntax errors are not catched
+        except botslib.BotsImportError:       #communicationscript is not there; other errors like syntax errors are not catched
             userscript = scriptname = None
         #get the communication class to use:
         if userscript and hasattr(userscript,channeldict['type']):          #check communication class in userscript (sub classing)
@@ -1618,8 +1618,8 @@ class db(_comsession):
     '''
     def connect(self):
         if self.userscript is None:
-            raise ImportError(_(u'Channel "%(idchannel)s" is type "db", but no communicationscript exists.' %
-                                {'idchannel':self.channeldict['idchannel']}))
+            raise botslib.BotsImportError(_(u'Channel "%(idchannel)s" is type "db", but no communicationscript exists.'),
+                                {'idchannel':self.channeldict['idchannel']})
         #check functions bots assumes to be present in userscript:
         if not hasattr(self.userscript,'connect'):
             raise botslib.ScriptImportError(_(u'No function "connect" in imported communicationscript "%(communicationscript)s".'),
@@ -1739,8 +1739,8 @@ class communicationscript(_comsession):
     ''' 
     def connect(self):
         if self.userscript is None or not botslib.tryrunscript(self.userscript,self.scriptname,'connect',channeldict=self.channeldict):
-            raise ImportError(_(u'Channel "%(idchannel)s" is type "communicationscript", but no communicationscript exists.' %
-                                {'idchannel':self.channeldict}))
+            raise botslib.BotsImportError(_(u'Channel "%(idchannel)s" is type "communicationscript", but no communicationscript exists.') ,
+                                {'idchannel':self.channeldict})
 
 
     @botslib.log_session

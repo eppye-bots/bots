@@ -82,7 +82,7 @@ def start():
     #import global scripts for bots-engine
     try:
         userscript,scriptname = botslib.botsimport('routescripts','botsengine')
-    except ImportError:      #userscript is not there; other errors like syntax errors are not catched
+    except botslib.BotsImportError:      #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
     #***acceptance tests: initialiase acceptance user script******************************
     acceptance_userscript = acceptance_scriptname = None
@@ -90,7 +90,7 @@ def start():
         botsglobal.logger.info(_(u'This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
         try:
             acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','bots_acceptancetest')
-        except ImportError:
+        except botslib.BotsImportError:
             botsglobal.logger.info(_(u'In acceptance test there is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
 
     try:

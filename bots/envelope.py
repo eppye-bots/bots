@@ -120,7 +120,7 @@ def envelope(ta_info,ta_list):
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'], ta_info['envelope'])
             #check if there is a user scripted class with name ta_info['envelope'].
             classtocall = getattr(userscript,ta_info['envelope'],None)
-        except ImportError:     #no user enveloping.
+        except botslib.BotsImportError:     #no user enveloping.
             pass
         if classtocall is None:
             try:
@@ -306,8 +306,7 @@ class templatehtml(Envelope):
         try:
             from genshi.template import TemplateLoader
         except:
-            raise ImportError(_(u'Dependency failure: editype "%(editype)s" requires python library "genshi".'),
-                                {'editype':self.ta_info['editype']})
+            raise ImportError(u'Dependency failure: editype "templatehtml" requires python library "genshi".')
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)

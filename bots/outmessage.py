@@ -75,13 +75,13 @@ class Outmessage(message.Message):
             try:
                 partnersyntax = grammar.grammarread(self.ta_info['editype'],self.ta_info['frompartner'],typeofgrammarfile='partners')
                 self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
-            except ImportError:
+            except botslib.BotsImportError:
                 pass        #No partner specific syntax found (is not an error).
         if self.ta_info.get('topartner'):   
             try:
                 partnersyntax = grammar.grammarread(self.ta_info['editype'],self.ta_info['topartner'],typeofgrammarfile='partners')
                 self.ta_info.update(partnersyntax.syntax) #partner syntax overrules!
-            except ImportError:
+            except botslib.BotsImportError:
                 pass        #No partner specific syntax found (is not an error).
 
     def writeall(self):
@@ -815,9 +815,10 @@ class templatehtml(Outmessage):
 
     def __init__(self,ta_info):
         try:
-            self.template = botslib.botsbaseimport('genshi.template')
+            import genshi
         except ImportError as msg:
-            raise ImportError(_(u'Dependency failure: editype "%(editype)s" requires python library "genshi".'),{'editype':self.__class__.__name__})
+            raise ImportError(u'Dependency failure: editype "templatehtml" requires python library "genshi".')
+        self.template = genshi.template
         super(templatehtml,self).__init__(ta_info)
         self.data = templatehtml.TemplateData()     #self.data can be used by mappingscript as container for content
 
