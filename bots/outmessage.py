@@ -815,10 +815,9 @@ class templatehtml(Outmessage):
 
     def __init__(self,ta_info):
         try:
-            import genshi
-        except ImportError as msg:
-            raise ImportError(u'Dependency failure: editype "templatehtml" requires python library "genshi".')
-        self.template = genshi.template
+            self.template = botslib.botsbaseimport('genshi.template')
+        except ImportError:
+            raise ImportError(_(u'Dependency failure: editype "templatehtml" requires python library "genshi".'))
         super(templatehtml,self).__init__(ta_info)
         self.data = templatehtml.TemplateData()     #self.data can be used by mappingscript as container for content
 

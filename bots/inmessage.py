@@ -785,7 +785,7 @@ class excel(csv):
             file is first converted to csv using python module xlrd
         '''
         try:
-            self.xlrd = __import__('xlrd')
+            self.xlrd = botslib.botsbaseimport('xlrd')
         except ImportError:
             raise ImportError(_(u'Dependency failure: editype "excel" requires python library "xlrd".'))
         import csv as csvlib

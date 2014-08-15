@@ -1916,8 +1916,8 @@ class http(_comsession):
     
     def connect(self):
         try:
-            self.requests = __import__('requests')
-        except:
+            self.requests = botslib.botsbaseimport('requests')
+        except ImportError:
             raise ImportError(_(u'Dependency failure: communicationtype "http(s)" requires python library "requests".'))
         if self.channeldict['username'] and self.channeldict['secret']:
             self.auth = (self.channeldict['username'], self.channeldict['secret'])
