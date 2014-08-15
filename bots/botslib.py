@@ -403,15 +403,16 @@ def botsimport(*args):
     modulepath = '.'.join((botsglobal.usersysimportpath,) + args)             #assemble import string
     modulefile = join(botsglobal.ini.get('directories','usersysabs'),*args)   #assemble abs filename for errortexts; note that 'join' is function in this script-file.
     if modulepath in botsglobal.not_import:     #check if previous import failed (no need to try again).This eliminates eg lots of partner specific imports.
+        botsglobal.logger.debug(_(u'No import of module "%(modulefile)s".'),{'modulefile':modulefile})
         raise BotsImportError(_(u'No import of module "%(modulefile)s".'),{'modulefile':modulefile})
     try:
         module = botsbaseimport(modulepath)
     except ImportError as msg:
         botsglobal.not_import.add(modulepath)
-        botsglobal.logger.debug(u'No import of module "%(modulefile)s": %(txt)s.',{'modulefile':modulefile,'txt':msg})
+        botsglobal.logger.debug(_(u'No import of module "%(modulefile)s": %(txt)s.'),{'modulefile':modulefile,'txt':msg})
         raise BotsImportError(_(u'No import of module "%(modulefile)s": %(txt)s'),{'modulefile':modulefile,'txt':msg})
     except Exception as msg:
-        botsglobal.logger.debug(u'Error in import of module "%(modulefile)s": %(txt)s.',{'modulefile':modulefile,'txt':msg})
+        botsglobal.logger.debug(_(u'Error in import of module "%(modulefile)s": %(txt)s.'),{'modulefile':modulefile,'txt':msg})
         raise ScriptImportError(_(u'Error in import of module "%(modulefile)s":\n%(txt)s'),{'modulefile':modulefile,'txt':msg})
     else:
         botsglobal.logger.debug(u'Imported "%(modulefile)s".',{'modulefile':modulefile})
