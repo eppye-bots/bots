@@ -17,14 +17,14 @@ class TestGrammar(unittest.TestCase):
     def testgeneralgrammarerrors(self):
         self.assertRaises(botslib.GrammarError,grammar.grammarread,'flup','edifact') #not eexisting editype
         self.assertRaises(botslib.GrammarError,grammar.grammarread,'flup','edifact','partner') #not eexisting editype
-        self.assertRaises(ImportError,grammar.grammarread,'edifact','flup')   #not existing messagetype
-        self.assertRaises(ImportError,grammar.grammarread,'edifact','flup','partner')   #not existing messagetype
+        self.assertRaises(botslib.BotsImportError,grammar.grammarread,'edifact','flup')   #not existing messagetype
+        self.assertRaises(botslib.BotsImportError,grammar.grammarread,'edifact','flup','partner')   #not existing messagetype
         self.assertRaises(botslib.GrammarError,grammar.grammarread,'test','test3')  #no structure
-        self.assertRaises(ImportError,grammar.grammarread,'test','test4')  #No tabel - Reference to not-existing tabel
+        self.assertRaises(botslib.BotsImportError,grammar.grammarread,'test','test4')  #No tabel - Reference to not-existing tabel
         self.assertRaises(botslib.ScriptImportError,grammar.grammarread,'test','test5')  #Error in tabel: structure is not valid python list (syntax-error)
         self.assertRaises(botslib.GrammarError,grammar.grammarread,'test','test6')  #Error in tabel: record in structure not in recorddefs
-        self.assertRaises(ImportError,grammar.grammarread,'edifact','test7')   #error in syntax
-        self.assertRaises(ImportError,grammar.grammarread,'edifact','test7','partner')   #error in syntax
+        self.assertRaises(botslib.BotsImportError,grammar.grammarread,'edifact','test7')   #error in syntax
+        self.assertRaises(botslib.BotsImportError,grammar.grammarread,'edifact','test7','partner')   #error in syntax
 
     def testgramfieldedifact_and_general(self):
         tabel = grammar.grammarread('edifact','edifact')
