@@ -352,5 +352,11 @@ EDIFACT_INDENT = re.compile('''
     (?![\n\r])  #if no following CR of LF
     ''',re.VERBOSE)
 def indent_edifact(content):
+    ''' three options:
+        1 is already indented (each segment on separate line)
+        2 block mode: lines of fixed lengths eg 80 chars
+        3 one string, one line
+    '''
+    if content.count('\n') > 4:
+        return content
     return EDIFACT_INDENT.sub("'\n", content)
-
