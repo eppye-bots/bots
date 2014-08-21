@@ -212,10 +212,15 @@ def handle_out_message(out_translated,ta_translated):
 #*** utily functions for persist: store things in the bots database.
 #*** this is intended as a memory stretching across messages.
 #*********************************************************************
+#pickle returns a byte stream.
+#db connection expects unicode (storage field is text)
+#so pickle output is turned into unicode first, using 'neutral' iso-8859-1
+#when unpickling, have to encode again of course.
+#this is upward compatible; if stored as in bots <= 3.1 is OK.
 def persist_add(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value)
+    content = pickle.dumps(value).decode('iso-8859-1')
     try:
         botslib.changeq(u''' INSERT INTO persist (domein,botskey,content)
                             VALUES   (%(domein)s,%(botskey)s,%(content)s)''',
@@ -227,7 +232,7 @@ def persist_add(domein,botskey,value):
 def persist_update(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value)
+    content = pickle.dumps(value).decode('iso-8859-1')
     botslib.changeq(u''' UPDATE persist
                         SET content=%(content)s
                         WHERE domein=%(domein)s
@@ -257,7 +262,7 @@ def persist_lookup(domein,botskey):
                                 WHERE domein=%(domein)s
                                 AND botskey=%(botskey)s''',
                                 {'domein':domein,'botskey':botskey}):
-        return pickle.loads(unicode(row['content']))
+        return pickle.loads(row['content'].encode('iso-8859-1'))
     return None
 
 #*********************************************************************
