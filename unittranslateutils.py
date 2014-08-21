@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pickle
 import unittest
 import utilsunit
@@ -17,28 +18,28 @@ class TestTranslate(unittest.TestCase):
         pass
 
     def testpersist(self):
-        #~ inn = inmessage.parse_edi_file(editype='edifact',messagetype='orderswithenvelope',filename='botssys/infile/tests/inisout02.edi')
-        domein=u'test'
-        botskey=u'test'
-        value= u'xxxxxxxxxxxxxxxxx'
-        value2= u'IEFJUKAHE*FMhrt4hr f.wch shjeriw'
-        value3= u'1'*3024
+        # inn = inmessage.parse_edi_file(editype='edifact',messagetype='orderswithenvelope',filename='botssys/infile/tests/inisout02.edi')
+        domein='test'
+        botskey='test'
+        value= 'xxxxxxxxxxxxxxxxx'
+        value2= 'IEFJUKAHE*FMhrt4hr f.wch shjeriw'
+        value3= '1'*3024
         transform.persist_delete(domein,botskey)
-        #~ self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value3)   #content is too long
+        # self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value3)   #content is too long
         transform.persist_add(domein,botskey,value)
         self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value)   #is already present
         self.assertEqual(value,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value2)
         self.assertEqual(value2,transform.persist_lookup(domein,botskey),'basis')
-        #~ self.assertRaises(botslib.PersistError,transform.persist_update,domein,botskey,value3)   #content is too long
+        # self.assertRaises(botslib.PersistError,transform.persist_update,domein,botskey,value3)   #content is too long
         transform.persist_delete(domein,botskey)
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #test-tet is not there. gives no error...
 
     def testpersistunicode(self):
         domein=u'test'
-        botskey=u'1235:\ufb52\ufb66\ufedb'
-        botskey3=u'135:\ufb52\ufb66\ufedb'
+        botskey=u'ëö1235:\ufb52\ufb66\ufedb'
+        botskey3=u'ëö135:\ufb52\ufb66\ufedb'
         value= u'xxxxxxxxxxxxxxxxx'
         value2= u'IEFJUKAHE*FMhr\u0302\u0267t4hr f.wch shjeriw'
         value3= u'1/2/d'*3024
@@ -51,7 +52,28 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(value,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value2)
         self.assertEqual(value2,transform.persist_lookup(domein,botskey),'basis')
-        #~ self.assertRaises(botslib.PersistError,transform.persist_update,domein,botskey,value3)   #content is too long
+        # self.assertRaises(botslib.PersistError,transform.persist_update,domein,botskey,value3)   #content is too long
+        transform.persist_delete(domein,botskey)
+        self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
+        transform.persist_update(domein,botskey,value)   #is not there. gives no error...
+
+    def testpersistunicode_two(self):
+        domein=u'test'
+        botskey=u'éëèêíïìîóöòõôúüùûáäàãâ\ufb52\ufb66\ufedb'
+        botskey3=u'ëéèõöóòñýÿÖÓÒÕ'
+        value= u'éëèêíïìîóöòõôúüùûáäàãâ\ufb52\ufb66\ufedbñýÿÖÓÒÕ'
+        value2= u'ëéèõöóò'
+        value3= u'1/2/dñýÿÖÓÒÕ'*3024
+        transform.persist_delete(domein,botskey)
+        transform.persist_delete(domein,botskey3)
+        transform.persist_add(domein,botskey3,value3)
+        self.assertEqual(value3,transform.persist_lookup(domein,botskey3),'basis')
+        transform.persist_add(domein,botskey,value)
+        self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value)   #is already present
+        self.assertEqual(value,transform.persist_lookup(domein,botskey),'basis')
+        transform.persist_update(domein,botskey,value2)
+        self.assertEqual(value2,transform.persist_lookup(domein,botskey),'basis')
+        #~ #self.assertRaises(botslib.PersistError,transform.persist_update,domein,botskey,value3)   #content is too long
         transform.persist_delete(domein,botskey)
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #is not there. gives no error...
@@ -109,9 +131,9 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(None,transform.dateformat(''),'test dateformat')
         self.assertEqual(None,transform.dateformat(None),'test dateformat')
         self.assertEqual(u'102',transform.dateformat('12345678'),'test dateformat')
-        #~ self.assertEqual(None,transform.dateformat('123456789'),'test dateformat')
+        #~ #self.assertEqual(None,transform.dateformat('123456789'),'test dateformat')
         self.assertRaises(botslib.BotsError,transform.dateformat,'123456789') 
-        #~ self.assertEqual(None,transform.dateformat('1234567'),'test dateformat')
+        #~ #self.assertEqual(None,transform.dateformat('1234567'),'test dateformat')
         self.assertRaises(botslib.BotsError,transform.dateformat,'1234567') 
         self.assertEqual(u'203',transform.dateformat('123456789012'),'test dateformat')
         self.assertEqual(u'718',transform.dateformat('1234567890123456'),'test dateformat')
