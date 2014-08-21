@@ -11,17 +11,29 @@ import bots.transform as transform
 '''plugin unittranslateutils.zip 
 in bots.ini:  runacceptancetest = False
 '''
-#as the max length is 
+
+class MyObject(object):
+    c = u'c_éëèêíïìîóöòõôúüùûáäàãâñýÿÖÓÒÕ'
+    def __init__(self,a,b):
+        self.a = a
+        self.b = b
+        
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__)
+            and self.__dict__ == other.__dict__)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class TestTranslate(unittest.TestCase):
     def setUp(self):
         pass
 
-    def testpersist(self):
+    def testpersist_strings(self):
         # inn = inmessage.parse_edi_file(editype='edifact',messagetype='orderswithenvelope',filename='botssys/infile/tests/inisout02.edi')
         domein='test'
         botskey='test'
-        value= 'xxxxxxxxxxxxxxxxx'
+        value= 'abcdedfgh'
         value2= 'IEFJUKAHE*FMhrt4hr f.wch shjeriw'
         value3= '1'*3024
         transform.persist_delete(domein,botskey)
@@ -36,7 +48,7 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #test-tet is not there. gives no error...
 
-    def testpersistunicode(self):
+    def testpersist_unicode(self):
         domein=u'test'
         botskey=u'ëö1235:\ufb52\ufb66\ufedb'
         botskey3=u'ëö135:\ufb52\ufb66\ufedb'
@@ -57,7 +69,7 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #is not there. gives no error...
 
-    def testpersistunicode_two(self):
+    def testpersist_moreunicode(self):
         domein=u'test'
         botskey=u'éëèêíïìîóöòõôúüùûáäàãâ\ufb52\ufb66\ufedb'
         botskey3=u'ëéèõöóòñýÿÖÓÒÕ'
@@ -77,6 +89,18 @@ class TestTranslate(unittest.TestCase):
         transform.persist_delete(domein,botskey)
         self.assertEqual(None,transform.persist_lookup(domein,botskey),'basis')
         transform.persist_update(domein,botskey,value)   #is not there. gives no error...
+
+    def testpersist_object(self):
+        ''' use objects for pickling
+        '''
+        domein=u'test'
+        botskey=u'éëèêíïìîóöòõôúüùûáäàãâ\ufb52\ufb66\ufedb'
+        myobject = MyObject('a_éëèêíïìîóöòõôúüùûáäàãâñýÿÖÓÒÕ','b_éëèêíïìîóöòõôúüùûáäàãâñýÿÖÓÒÕ')
+        myobject.d = '1_éëèêíïìîóöòõôúüùûáäàãâñýÿÖÓÒÕ'
+        myobject.e = 12345
+        transform.persist_delete(domein,botskey)
+        transform.persist_add(domein,botskey,myobject)
+        self.assertEqual(myobject,transform.persist_lookup(domein,botskey),'basis')
 
     def testcodeconversion(self):
         #codeconversion via tabel ccode OLD functionnames: 
