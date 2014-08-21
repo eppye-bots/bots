@@ -522,7 +522,7 @@ class TestInmessage(unittest.TestCase):
             self.failUnless(utilsunit.comparenode(in1node.root,in2node.root),'compare')
             self.failUnless(utilsunit.comparenode(in1node.root,in3node.root),'compare')
         
-        #self.assertRaises(botslib.InMessageError,inmessage.parse_edi_file,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi')  #needs UNOA regular
+        #~ self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi')  #needs UNOA regular
         in1= inmessage.parse_edi_file(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi') #needs UNOA extended; add (and delete later)
         
         in7= inmessage.parse_edi_file(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040304.edi')  #UNOB-regular
