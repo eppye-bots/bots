@@ -588,3 +588,10 @@ class Node(object):
                 childnode.collectlines(print_as_row)   #go recursive
         self.children = new
 
+    def copynode(self):
+        ''' make a 'safe' copy of node; return the new node
+        '''
+        new_node = Node(record=dict(self.record))
+        for childnode in self.children:
+            new_node.append(childnode.copynode())
+        return new_node

@@ -377,8 +377,15 @@ def unique_runcounter(domein,updatewith=None):
 
 def inn2out(inn,out):
     ''' copies inn-message to outmessage
+        option 1: out.root = inn.root
+                   works, super fast, no extra memory used....but not always safe (changing/deleting in inn or out changes the other
+                   for most cases this works as a superfast method (if performance is a thing)
+        option 2: out.root = copy.deepcopy(inn.root)
+                   works, but quite slow and uses a lot of memory
+        option3: use roll your own method to 'deepcopy' node tree.
+                   much faster, way less memory, and safe.
     '''
-    out.root = inn.root
+    out.root = inn.root.copynode()
 
 def useoneof(*args):
     for arg in args:
