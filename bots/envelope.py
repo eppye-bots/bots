@@ -25,6 +25,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                 AND statust=%(statust)s
                                 AND merge=%(merge)s
                                 AND idroute=%(idroute)s
+                                ORDER BY idta
                                 ''',
                                 {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':False,'idroute':idroute}):
         try:
@@ -52,6 +53,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                 AND merge=%(merge)s
                                 AND idroute=%(idroute)s
                                 GROUP BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3
+                                ORDER BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3
                                 ''',
                                 {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,'idroute':idroute}):
         try:
@@ -73,6 +75,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                             AND (topartner=%(topartner)s OR topartner IS NULL)
                                             AND testindicator=%(testindicator)s
                                             AND charset=%(charset)s
+                                            ORDER BY idta
                                             ''',
                                             {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,
                                             'editype':ta_info['editype'],'messagetype':ta_info['messagetype'],'frompartner':ta_info['frompartner'],

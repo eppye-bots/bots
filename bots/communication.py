@@ -780,6 +780,7 @@ class file(_comsession):
                                         AND status=%(status)s
                                         AND statust=%(statust)s
                                         AND tochannel=%(tochannel)s
+                                        ORDER BY idta
                                         ''',
                                     {'tochannel':self.channeldict['idchannel'],'rootidta':self.rootidta,
                                     'status':FILEOUT,'statust':OK}):
