@@ -591,7 +591,10 @@ class Node(object):
     def copynode(self):
         ''' make a 'safe' copy of node; return the new node
         '''
-        new_node = Node(record=dict(self.record))
+        if self.record is None:
+            new_node = Node(record=None)
+        else:
+            new_node = Node(record=dict(self.record))
         for childnode in self.children:
             new_node.append(childnode.copynode())
         return new_node
