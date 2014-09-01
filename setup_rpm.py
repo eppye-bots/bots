@@ -50,7 +50,7 @@ for dirpath, dirnames, filenames in os.walk('bots'):
 
 setup(
     name = 'bots',
-    version = '3.2.0rc2',
+    version = '3.2.0',
     author = 'hjebbers',
     author_email = 'hjebbers@gmail.com',
     url = 'http://bots.sourceforge.net/',
