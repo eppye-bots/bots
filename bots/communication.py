@@ -568,6 +568,7 @@ class _comsession(object):
                         
     def mailaddress2idpartner(self,mailaddress):
         ''' lookup email address to see if know in configuration. '''
+        mailaddress_lower = mailaddress.lower()
         #first check in chanpar email-addresses for this channel
         for row in botslib.query(u'''SELECT chanpar.idpartner_id as idpartner
                                     FROM chanpar,channel,partner
@@ -576,14 +577,14 @@ class _comsession(object):
                                     AND partner.active=%(active)s
                                     AND chanpar.idchannel_id=%(idchannel)s
                                     AND LOWER(chanpar.mail)=%(mail)s''',
-                                    {'active':True,'idchannel':self.channeldict['idchannel'],'mail':mailaddress.lower()}):
+                                    {'active':True,'idchannel':self.channeldict['idchannel'],'mail':mailaddress_lower}):
             return row['idpartner']
-        #if not found, check in partner-tabel (is less specific)
+        #if not found, check in partner-tabel (is less specific). Also test if in CC field.
         for row in botslib.query(u'''SELECT idpartner
                                     FROM partner
                                     WHERE active=%(active)s
-                                    AND LOWER(mail)=%(mail)s''',
-                                    {'active':True,'mail':mailaddress.lower()}):
+                                    AND ( LOWER(mail) = %(mail)s OR LOWER(cc) LIKE %(maillike)s )''',
+                                    {'active':True,'mail':mailaddress_lower,'maillike': '%' + mailaddress_lower + '%'}):
             return row['idpartner']
         return None     #indicate email address is unknown
 
