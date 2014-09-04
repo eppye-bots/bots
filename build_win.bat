@@ -4,9 +4,9 @@ DEL /Q "C:\Users\hje\Documents\Bots\botsdev\MANIFEST"
 RMDIR /s /q "C:\Users\hje\Documents\Bots\botsdev\bots.egg-info"
 
 
-MOVE /Y "C:\Users\hje\Documents\Bots\botsdev\bots\config\bots.ini"         "C:\Users\hje\Documents\Bots\botsdev\abots"
-MOVE /Y "C:\Users\hje\Documents\Bots\botsdev\bots\config\settings.py"      "C:\Users\hje\Documents\Bots\botsdev\abots"
-MOVE /Y "C:\Users\hje\Documents\Bots\botsdev\bots\botssys\sqlitedb\botsdb" "C:\Users\hje\Documents\Bots\botsdev\abots"
+MOVE /Y "C:\Users\hje\Documents\Bots\botsdev\bots\config\bots.ini"         "C:\Users\hje\Documents\Bots\abots"
+MOVE /Y "C:\Users\hje\Documents\Bots\botsdev\bots\config\settings.py"      "C:\Users\hje\Documents\Bots\abots"
+MOVE /Y "C:\Users\hje\Documents\Bots\botsdev\bots\botssys\sqlitedb\botsdb" "C:\Users\hje\Documents\Bots\abots"
 
 
 ECHO build exe
