@@ -23,8 +23,8 @@ def read_index(filename):
     try:
         importedbotsindex,scriptname = botslib.botsimport('index')
         pluglist = importedbotsindex.plugins[:]
-        if 'botsindex' in sys.modules:
-            del sys.modules['botsindex']
+        if importedbotsindex.__name__ in sys.modules:
+            del sys.modules[importedbotsindex.__name__]
     except:
         txt = botslib.txtexc()
         raise botslib.PluginError(_(u'Error in configuration index file. Nothing is written. Error:\n%(txt)s'),{'txt':txt})
