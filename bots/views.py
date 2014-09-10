@@ -444,7 +444,7 @@ def plugin(request,*kw,**kwargs):
                     if pluglib.read_plugin(request.FILES['file'].temporary_file_path()):
                         messages.add_message(request, messages.INFO, _(u'Overwritten existing files.'))
                 except Exception as msg:
-                    notification = -(u'Error reading plugin: "%s".')%unicode(msg)
+                    notification = _(u'Error reading plugin: "%s".')%unicode(msg)
                     botsglobal.logger.error(notification)
                     messages.add_message(request, messages.INFO, notification)
                 else:
@@ -468,7 +468,7 @@ def plugin_index(request,*kw,**kwargs):
             try:
                 pluglib.read_index('index')
             except Exception as msg:
-                notification = -(u'Error reading configuration index file: "%s".')%unicode(msg)
+                notification = _(u'Error reading configuration index file: "%s".')%unicode(msg)
                 botsglobal.logger.error(notification)
                 messages.add_message(request, messages.INFO, notification)
             else:
