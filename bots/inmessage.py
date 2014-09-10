@@ -171,7 +171,7 @@ class Inmessage(message.Message):
                 self.add2errorlist(_(u'[F09]%(linpos)s: Record "%(record)s" field "%(field)s" contains exponent: "%(content)s".\n')%
                                     {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
             if field_definition[BFORMAT] == 'R':
-                lendecimal = lendecimal = len(value.partition('.')[2])
+                lendecimal = len(value.partition('.')[2])
                 try:    #convert to decimal in order to check validity
                     valuedecimal = float(value)
                     value = '%.*F'%(lendecimal,valuedecimal)
