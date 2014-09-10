@@ -38,7 +38,7 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.assertEqual(self.edi._formatfield('0.10',tfield1,testdummy,nodedummy), '0.10','keep zeroes after last dec.digit')
         self.assertEqual(self.edi._formatfield('-1.23',tfield1,testdummy,nodedummy), '-1.23','numeric field at max with minus and decimal sign')
         self.assertEqual(self.edi._formatfield('0001',tfield1,testdummy,nodedummy), '1','strips leading zeroes if possobel')
-        self.assertEqual(self.edi._formatfield('+123',tfield1,testdummy,nodedummy), '123','strips leading zeroes if possobel')
+        self.assertEqual(self.edi._formatfield('+123',tfield1,testdummy,nodedummy), '123','strip + sign')
         self.edi.ta_info['decimaal']=','
         self.assertEqual(self.edi._formatfield('1.23',tfield1,testdummy,nodedummy), '1,23','other dec.sig, replace')
         self.edi.ta_info['decimaal']='.'
@@ -48,8 +48,8 @@ class TestFormatFieldVariableOutmessage(unittest.TestCase):
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'1-3',tfield1,testdummy,nodedummy)    #'-' in middel of number
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'123-',tfield1,testdummy,nodedummy)    #'-' at end of number
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'1,3',tfield1,testdummy,nodedummy)    #',', where ',' is not traid sep.
-        self.assertRaises(botslib.MessageError,self.edi._formatfield,'1+3',tfield1,testdummy,nodedummy)    #'+' in middle of number (no exp)
-        self.assertRaises(botslib.MessageError,self.edi._formatfield,'1E3',tfield1,testdummy,nodedummy)    #'+' in middle of number (no exp)
+        self.assertRaises(botslib.MessageError,self.edi._formatfield,'1+3',tfield1,testdummy,nodedummy)    #'+' in middle of number
+        self.assertRaises(botslib.MessageError,self.edi._formatfield,'1E3',tfield1,testdummy,nodedummy)    #exponent
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'13+',tfield1,testdummy,nodedummy)    #'+' at end
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'0.100',tfield1,testdummy,nodedummy)   #field too big
         self.assertRaises(botslib.MessageError,self.edi._formatfield,'.',tfield1,testdummy,nodedummy)   #no num
