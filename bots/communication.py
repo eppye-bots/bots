@@ -595,12 +595,12 @@ class _comsession(object):
                                     AND LOWER(chanpar.mail)=%(mail)s''',
                                     {'active':True,'idchannel':self.channeldict['idchannel'],'mail':mailaddress_lower}):
             return row[str('idpartner')]
-        #if not found, check in partner-tabel (is less specific). Also test if in CC field.
+        #if not found, check in partner-tabel (is less specific).
         for row in botslib.query('''SELECT idpartner
                                     FROM partner
                                     WHERE active=%(active)s
-                                    AND ( LOWER(mail) = %(mail)s OR LOWER(cc) LIKE %(maillike)s )''',
-                                    {'active':True,'mail':mailaddress_lower,'maillike': '%' + mailaddress_lower + '%'}):
+                                    AND LOWER(mail) = %(mail)s ''',
+                                    {'active':True,'mail':mailaddress_lower}):
             return row[str('idpartner')]
         return None     #indicate email address is unknown
 
