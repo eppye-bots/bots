@@ -1,11 +1,15 @@
+from __future__ import unicode_literals
+import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
 import os
 import shutil
 from django.utils.translation import ugettext as _
 #bots-modules
-import botslib
-import botsglobal
-import outmessage
-from botsconfig import *
+from . import botslib
+from . import botsglobal
+from . import outmessage
+from .botsconfig import *
 
                                 
 def mergemessages(startstatus,endstatus,idroute,rootidta=None):
@@ -18,7 +22,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
     if rootidta is None:
         rootidta = botsglobal.currentrun.get_minta4query()
     #**********for messages only to envelope (no merging)
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,nrmessages,idroute,merge,idta,filename,rsrv3
+    for row in botslib.query('''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,nrmessages,idroute,merge,idta,filename,rsrv3
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
@@ -33,8 +37,8 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
             ta_fromfile = botslib.OldTransaction(ta_info['idta'])    #edi message to envelope
             ta_tofile = ta_fromfile.copyta(status=endstatus)  #edifile for enveloped message; attributes of not-enveloped message are copied...
             ta_info['filename'] = unicode(ta_tofile.idta)   #create filename for enveloped message
-            botsglobal.logger.debug(u'Envelope 1 message editype: %(editype)s, messagetype: %(messagetype)s.',ta_info)
-            envelope(ta_info,[row['filename']])
+            botsglobal.logger.debug('Envelope 1 message editype: %(editype)s, messagetype: %(messagetype)s.',ta_info)
+            envelope(ta_info,[row[str('filename')]])
             ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
         except:
             txt = botslib.txtexc()
@@ -45,7 +49,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
             ta_fromfile.update(statust=DONE)
 
     #**********for messages to merge & envelope
-    for row in botslib.query(u'''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3,sum(nrmessages) as nrmessages
+    for row in botslib.query('''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3,sum(nrmessages) as nrmessages
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
@@ -63,7 +67,7 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
             filename_list = []
             #gather individual idta and filenames
             #explicitly allow formpartner/topartner to be None/NULL
-            for row2 in botslib.query(u'''SELECT idta, filename
+            for row2 in botslib.query('''SELECT idta, filename
                                             FROM ta
                                             WHERE idta>%(rootidta)s
                                             AND status=%(status)s
@@ -81,10 +85,10 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                             'editype':ta_info['editype'],'messagetype':ta_info['messagetype'],'frompartner':ta_info['frompartner'],
                                             'topartner':ta_info['topartner'],'testindicator':ta_info['testindicator'],'charset':ta_info['charset'],
                                             'rsrv3':ta_info['rsrv3']}):
-                ta_fromfile = botslib.OldTransaction(row2['idta'])      #edi message to be merged/envelope
+                ta_fromfile = botslib.OldTransaction(row2[str('idta')])      #edi message to be merged/envelope
                 ta_fromfile.update(child=ta_tofile.idta,statust=DONE)                #st child because of n->1 relation
-                filename_list.append(row2['filename'])
-            botsglobal.logger.debug(u'Merge and envelope: editype: %(editype)s, messagetype: %(messagetype)s, %(nrmessages)s messages',ta_info)
+                filename_list.append(row2[str('filename')])
+            botsglobal.logger.debug('Merge and envelope: editype: %(editype)s, messagetype: %(messagetype)s, %(nrmessages)s messages',ta_info)
             envelope(ta_info,filename_list)
             ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
         except:
@@ -129,7 +133,7 @@ def envelope(ta_info,ta_list):
             try:
                 classtocall = globals()[ta_info['editype']]
             except KeyError:
-                raise botslib.OutMessageError(_(u'Not found envelope "%(envelope)s" for editype "%(editype)s".'),ta_info)
+                raise botslib.OutMessageError(_('Not found envelope "%(envelope)s" for editype "%(editype)s".'),ta_info)
     env = classtocall(ta_info,ta_list,userscript,scriptname)
     env.run()
 
@@ -193,7 +197,7 @@ class edifact(Envelope):
     ''' Generate UNB and UNZ segment; fill with data, write to interchange-file.'''
     def run(self):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
-            raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
+            raise botslib.OutMessageError(_('In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
                                             {'ta_info':self.ta_info})
 
         self._openoutenvelope()
@@ -258,7 +262,7 @@ class tradacoms(Envelope):
     ''' Generate STX and END segment; fill with appropriate data, write to interchange file.'''
     def run(self):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
-            raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
+            raise botslib.OutMessageError(_('In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
                                             {'ta_info':self.ta_info})
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
@@ -309,37 +313,39 @@ class templatehtml(Envelope):
         try:
             from genshi.template import TemplateLoader
         except:
-            raise ImportError(u'Dependency failure: editype "templatehtml" requires python library "genshi".')
+            raise ImportError('Dependency failure: editype "templatehtml" requires python library "genshi".')
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
         if not self.ta_info['envelope-template']:
-            raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s": syntax option "envelope-template" not filled; is required.'),
+            raise botslib.OutMessageError(_('While enveloping in "%(editype)s.%(messagetype)s": syntax option "envelope-template" not filled; is required.'),
                                             self.ta_info)
         templatefile = botslib.abspath(self.__class__.__name__,self.ta_info['envelope-template'])
         ta_list = self.filelist2absolutepaths()
         try:
-            botsglobal.logger.debug(u'Start writing envelope to file "%(filename)s".',self.ta_info)
+            botsglobal.logger.debug('Start writing envelope to file "%(filename)s".',self.ta_info)
             loader = TemplateLoader(auto_reload=False)
             tmpl = loader.load(templatefile)
         except:
             txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
+            raise botslib.OutMessageError(_('While enveloping in "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
                                         {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
         try:
-            filehandler = botslib.opendata(self.ta_info['filename'],'wb')
+            filehandler = botslib.opendata_bin(self.ta_info['filename'],'wb')
             stream = tmpl.generate(data=ta_list)
             stream.render(method='xhtml',encoding=self.ta_info['charset'],out=filehandler)
         except:
             txt = botslib.txtexc()
-            raise botslib.OutMessageError(_(u'While enveloping in "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
+            raise botslib.OutMessageError(_('While enveloping in "%(editype)s.%(messagetype)s", error:\n%(txt)s'),
                                         {'editype':self.ta_info['editype'],'messagetype':self.ta_info['messagetype'],'txt':txt})
+        finally:
+            filehandler.close()
 
 class x12(Envelope):
     ''' Generate envelope segments; fill with appropriate data, write to interchange-file.'''
     def run(self):
         if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
-            raise botslib.OutMessageError(_(u'In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
+            raise botslib.OutMessageError(_('In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
                                             {'ta_info':self.ta_info})
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
@@ -352,7 +358,6 @@ class x12(Envelope):
             testindicator = self.ta_info['testindicator']
         else:
             testindicator = self.ta_info['ISA15']
-        #~ print self.ta_info['messagetype'], 'grammar:',self.ta_info['ISA15'],'ta:',self.ta_info['testindicator'],'out:',testindicator
         if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
             self.ta_info['reference'] = unicode(botslib.unique('isacounter_' + self.ta_info['topartner']))
         else:

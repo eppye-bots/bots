@@ -1,39 +1,41 @@
-# changed hje 20140624:
-# - only do matching with regular expressions
-# - do not use assert statement 
-# RFC 2822 - style email validation for Python
-# (c) 2012 Syrus Akbary <me@syrusakbary.com>
-# Extended from (c) 2011 Noel Bush <noel@aitools.org>
-# for support of mx and user check
-# This code is made available to you under the GNU LGPL v3.
-#
-# This module provides a single method, valid_email_address(),
-# which returns True or False to indicate whether a given address
-# is valid according to the 'addr-spec' part of the specification
-# given in RFC 2822.  Ideally, we would like to find this
-# in some other library, already thoroughly tested and well-
-# maintained.  The standard Python library email.utils
-# contains a parse_addr() function, but it is not sufficient
-# to detect many malformed addresses.
-#
-# This implementation aims to be faithful to the RFC, with the
-# exception of a circular definition (see comments below), and
-# with the omission of the pattern components marked as "obsolete".
-
-# All we are really doing is comparing the input string to one
-# gigantic regular expression.  But building that regexp, and
-# ensuring its correctness, is made much easier by assembling it
-# from the "tokens" defined by the RFC.  Each of these tokens is
-# tested in the accompanying unit test file.
-#
-# The section of RFC 2822 from which each pattern component is
-# derived is given in an accompanying comment.
-#
-# (To make things simple, every string below is given as 'raw',
-# even when it's not strictly necessary.  This way we don't forget
-# when it is necessary.)
-#
+from __future__ import unicode_literals
 import re
+'''
+changed hje 20140624:
+- only do matching with regular expressions
+- do not use assert statement 
+RFC 2822 - style email validation for Python
+(c) 2012 Syrus Akbary <me@syrusakbary.com>
+Extended from (c) 2011 Noel Bush <noel@aitools.org>
+for support of mx and user check
+This code is made available to you under the GNU LGPL v3.
+
+This module provides a single method, valid_email_address(),
+which returns True or False to indicate whether a given address
+is valid according to the 'addr-spec' part of the specification
+given in RFC 2822.  Ideally, we would like to find this
+in some other library, already thoroughly tested and well-
+maintained.  The standard Python library email.utils
+contains a parse_addr() function, but it is not sufficient
+to detect many malformed addresses.
+
+This implementation aims to be faithful to the RFC, with the
+exception of a circular definition (see comments below), and
+with the omission of the pattern components marked as "obsolete".
+
+All we are really doing is comparing the input string to one
+gigantic regular expression.  But building that regexp, and
+ensuring its correctness, is made much easier by assembling it
+from the "tokens" defined by the RFC.  Each of these tokens is
+tested in the accompanying unit test file.
+
+The section of RFC 2822 from which each pattern component is
+derived is given in an accompanying comment.
+
+(To make things simple, every string below is given as 'raw',
+even when it's not strictly necessary.  This way we don't forget
+when it is necessary.)
+'''
 
 WSP = r'[ \t]'                                       # see 2.2.2. Structured Header Field Bodies
 CRLF = r'(?:\r\n)'                                   # see 2.2.3. Long Header Fields
@@ -88,6 +90,6 @@ def validate_email_address(email_address):
         return False
     return True
 
-#~ usage:
-#~ print validate_email_address('"/C=NL/A=400NET/P=XXXXXX/O=XXXXXXXXXXXXXXXXXXXX XXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/"@xgateprod.400net.nl')
-#~ print validate_email_address('/C=NL/A=400NET/P=XXXXX/O=XXXXXXXXXX XXXXXXXXXXXXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/@xgateprod.400net.nl')
+# usage:
+# print(validate_email_address('"/C=NL/A=400NET/P=XXXXXX/O=XXXXXXXXXXXXXXXXXXXX XXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/"@xgateprod.400net.nl'))
+# print(validate_email_address('/C=NL/A=400NET/P=XXXXX/O=XXXXXXXXXX XXXXXXXXXXXXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/@xgateprod.400net.nl'))

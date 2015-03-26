@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import copy
 import sys
 import os
@@ -9,15 +11,20 @@ import bots.botslib as botslib
 import bots.botsglobal as botsglobal
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+    b = lambda my_str: my_str
+else:
+    b = lambda my_str: str(my_str)
 
 
 def comparenode(node1,node2org):
     node2 = copy.deepcopy(node2org)
     if node1.record is not None and node2.record is None:
-        print 'node2 is "None"'
+        print('node2 is "None"')
         return False
     if node1.record is None and node2.record is not None:
-        print 'node1 is "None"'
+        print('node1 is "None"')
         return False
     return comparenodecore(node1,node2)
     
@@ -27,20 +34,20 @@ def comparenodecore(node1,node2):
     else:
         for key,value in node1.record.items():
             if key not in node2.record:
-                print 'key not in node2', key,value
+                print('key not in node2', key,value)
                 return False
             elif node2.record[key]!=value:
-                print 'unequal attr', key,value,node2.record[key]
+                print('unequal attr', key,value,node2.record[key])
                 return False
         for key,value in node2.record.items():
             if key not in node1.record:
-                print 'key not in node1', key,value
+                print('key not in node1', key,value)
                 return False
             elif node1.record[key]!=value:
-                print 'unequal attr', key,value,node1.record[key]
+                print('unequal attr', key,value,node1.record[key])
                 return False
     if len(node1.children) != len(node2.children):
-        print 'number of children not equal'
+        print('number of children not equal')
         return False
     for child1 in node1.children:
         for i,child2 in enumerate(node2.children):
@@ -50,7 +57,7 @@ def comparenodecore(node1,node2):
                 del node2.children[i:i+1]
                 break
         else:
-            print 'Found no matching record in node2 for',child1.record
+            print('Found no matching record in node2 for',child1.record)
             return False
     return True
 
@@ -102,7 +109,7 @@ def geterrorlastrun():
                             FROM    filereport
                             ORDER BY idta DESC
                             '''):
-        return row['errortext']
+        return row[b('errortext')]
     raise Exception('no filereport')
     
 def getlastta(status):
@@ -116,7 +123,7 @@ def getlastta(status):
 
 def comparedicts(dict1,dict2):
     for key,value in dict1.items():
-        if value != dict2[key]:
+        if value != dict2[b(key)]:
             raise Exception('error comparing "%s": should be %s but is %s (in db),'%(key,value,dict2[key]))
 
 def removeWS(str):

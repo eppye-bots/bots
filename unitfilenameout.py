@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import unittest
 import shutil
 import os
@@ -10,6 +12,11 @@ import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
 import bots.communication as communication
 from bots.botsconfig import *
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+    b = lambda my_str: my_str
+else:
+    b = lambda my_str: str(my_str)
 
 '''
 plugin unitfilenameout.zip
@@ -33,7 +40,7 @@ class TestMain(unittest.TestCase):
                                 {'status':520,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
             count += 1
             sub_unique = botslib.unique('dutchic_desadv_out')
-            ta = botslib.OldTransaction(row['idta'])
+            ta = botslib.OldTransaction(row[b('idta')])
 
             self.assertEqual(comclass.filename_formatter('*.edi',ta), str(sub_unique+1)+'.edi','')
             self.assertEqual(comclass.filename_formatter('*.edi',ta), str(sub_unique+2)+'.edi','')
@@ -45,7 +52,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(comclass.filename_formatter('{infile}',ta), 'desadv1.edi','')
             self.assertEqual(comclass.filename_formatter('{infile:name}.txt',ta), 'desadv1.txt','')
             self.assertEqual(comclass.filename_formatter('{infile:name}.{infile:ext}',ta), 'desadv1.edi','')
-            print 'expect: <idta>.edi                          ', comclass.filename_formatter('{idta}.edi',ta)
+            print('expect: <idta>.edi                          ', comclass.filename_formatter('{idta}.edi',ta))
             self.assertRaises(botslib.CommunicationOutError,comclass.filename_formatter,'{tada}',ta)
             self.assertRaises(botslib.CommunicationOutError,comclass.filename_formatter,'{infile:test}',ta)
             if count == 1:  #test only 1 incoming files
@@ -54,7 +61,7 @@ class TestMain(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    pythoninterpreter = 'python'
+    pythoninterpreter = 'python3.4'
     newcommand = [pythoninterpreter,'bots-engine.py',]
     subprocess.call(newcommand)
     

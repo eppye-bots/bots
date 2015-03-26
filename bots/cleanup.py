@@ -1,3 +1,7 @@
+from __future__ import unicode_literals
+import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
 import os
 import glob
 import time
@@ -5,9 +9,9 @@ import datetime
 import stat
 import shutil
 from django.utils.translation import ugettext as _
-#bots modules
-import botslib
-import botsglobal
+#bots-modules
+from . import botslib
+from . import botsglobal
 #~ from botsconfig import *
 
 
@@ -31,21 +35,21 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
         do_full_cleanup = False
     try:
         if do_full_cleanup:
-            botsglobal.logger.info(u'Cleanup files')
+            botsglobal.logger.info('Cleanup files')
             _cleandatafile()
             _cleanarchive()
-            botsglobal.logger.info(u'Cleanup database')
+            botsglobal.logger.info('Cleanup database')
             _cleanupsession()
             _cleanpersist()
             _cleantransactions()
-            botsglobal.logger.info(u'Vacuum database')
+            botsglobal.logger.info('Vacuum database')
             _vacuum()
             # postcleanup user exit in botsengine script
             botslib.tryrunscript(userscript,scriptname,'postcleanup',whencleanup=whencleanup)
-            botsglobal.logger.info(u'Done full cleanup.')
+            botsglobal.logger.info('Done full cleanup.')
         _cleanrunsnothingreceived()          #do this every run, but not logged
     except:
-        botsglobal.logger.exception(u'Cleanup error.')
+        botsglobal.logger.exception('Cleanup error.')
 
 
 def _vacuum():
@@ -64,12 +68,12 @@ def _cleanarchive():
     ''' delete all archive directories older than maxdaysarchive days. Errors are ignored.'''
     vanaf_default = (datetime.date.today()-datetime.timedelta(days=botsglobal.ini.getint('settings','maxdaysarchive',180))).strftime('%Y%m%d')
     for row in botslib.query('''SELECT archivepath,rsrv3 FROM channel WHERE archivepath != '' '''):
-        if row['rsrv3']:
-            vanaf = (datetime.date.today()-datetime.timedelta(days=row['rsrv3'])).strftime('%Y%m%d')
+        if row[str('rsrv3')]:
+            vanaf = (datetime.date.today()-datetime.timedelta(days=row[str('rsrv3')])).strftime('%Y%m%d')
         else:
             vanaf = vanaf_default
-        vanafdir = botslib.join(row['archivepath'],vanaf)
-        for entry in glob.iglob(botslib.join(row['archivepath'],'*')):
+        vanafdir = botslib.join(row[str('archivepath')],vanaf)
+        for entry in glob.iglob(botslib.join(row[str('archivepath')],'*')):
             if entry < vanafdir:
                 if entry.endswith('.zip'):
                     try:
@@ -91,7 +95,7 @@ def _cleandatafile():
             try:
                 os.remove(filename) #remove files - should be no files in root of data dir
             except:
-                botsglobal.logger.exception(_(u'Cleanup could not remove file'))
+                botsglobal.logger.exception(_('Cleanup could not remove file'))
         elif statinfo.st_mtime > vanaf :
             continue #directory is newer than maxdays, which is also true for the data files in it. Skip it.
         else:   #check files in dir and remove all older than maxdays
@@ -105,12 +109,12 @@ def _cleandatafile():
                     try:
                         os.remove(filename2)
                     except:
-                        botsglobal.logger.exception(_(u'Cleanup could not remove file'))
+                        botsglobal.logger.exception(_('Cleanup could not remove file'))
             if emptydir:
                 try:
                     os.rmdir(filename)
                 except:
-                    botsglobal.logger.exception(_(u'Cleanup could not remove directory'))
+                    botsglobal.logger.exception(_('Cleanup could not remove directory'))
 
 
 def _cleanpersist():
@@ -125,7 +129,7 @@ def _cleantransactions():
     '''
     vanaf = datetime.datetime.today() - datetime.timedelta(days=botsglobal.ini.getint('settings','maxdays',30))
     for row in botslib.query('''SELECT MAX(idta) as max_idta FROM report WHERE ts < %(vanaf)s''',{'vanaf':vanaf}):
-        maxidta = row['max_idta']
+        maxidta = row[str('max_idta')]
     if maxidta is None:   #if there is no maxidta to delete, do nothing
         return
     botslib.changeq('''DELETE FROM report WHERE idta < %(maxidta)s''',{'maxidta':maxidta})

@@ -1,5 +1,6 @@
-import botsglobal
-import models
+from __future__ import unicode_literals
+from . import botsglobal
+from . import models
 
 my_context = {}     #save vars initialised at startup
 
@@ -11,11 +12,11 @@ def set_context(request):
         #most context vars are from bots.ini or database. initialise these at startup
         my_context['bots_environment_text'] = botsglobal.ini.get('webserver','environment_text',' ')
         my_context['bots_environment_text_color'] = botsglobal.ini.get('webserver','environment_text_color','#000000')
-        my_context['botslogo'] = botsglobal.ini.get('webserver','botslogo',"bots/botslogo.html")
+        my_context['botslogo'] = botsglobal.ini.get('webserver','botslogo','bots/botslogo.html')
         my_context['bots_touchscreen'] = botsglobal.ini.getboolean('webserver','bots_touchscreen',False)
         my_context['bots_mindate'] = 0 - botsglobal.ini.getint('settings','maxdays',30)
         my_context['menu_automaticretrycommunication'] = botsglobal.ini.getboolean('webserver','menu_automaticretrycommunication',False)
-        #in bots.ini it is possible to add custom menu's
+        #in bots.ini it is possible to add custom menus
         if botsglobal.ini.has_section('custommenus'):
             my_context['custom_menuname'] = botsglobal.ini.get('custommenus','menuname','Custom')
             my_context['custom_menus'] = [(key.title(),value) for key,value in botsglobal.ini.items('custommenus') if key != 'menuname']

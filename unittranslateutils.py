@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+#~ from __future__ import unicode_literals  #python2: gives problems; this module contains unicode strings; in function ccode ascii strings are needed (for field).
+import sys
 import pickle
 import unittest
 import utilsunit
@@ -7,6 +10,12 @@ import bots.botslib as botslib
 import bots.botsinit as botsinit
 import bots.inmessage as inmessage
 import bots.transform as transform
+import bots.validate_email as validate_email
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+    b = lambda my_str: my_str
+else:
+    b = lambda my_str: str(my_str)
 
 '''plugin unittranslateutils.zip 
 in bots.ini:  runacceptancetest = False
@@ -208,7 +217,6 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual('20140406',transform.unique(newdomain,updatewith=20140407),'init new domain')
         self.assertEqual('20140407',transform.unique(newdomain,updatewith=20140408),'init new domain')
 
-
     def testean(self):
         self.assertEqual('123456789012',transform.addeancheckdigit('12345678901'),'UPC')
         self.assertEqual('2',transform.calceancheckdigit('12345678901'),'UPC')
@@ -245,6 +253,37 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(True,transform.checkean('123456789012345675'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345670'),'UPC')
         self.assertEqual(False,transform.checkean('123456789012345677'),'UPC')
+
+    def testvalidate_email(self):
+        self.assertEqual(True,validate_email.validate_email_address('test@gmail.com'),'')
+        self.assertEqual(True,validate_email.validate_email_address('niceandsimple@example.com'),'')
+        self.assertEqual(True,validate_email.validate_email_address('a.little.lengthy.but.fine@dept.example.com'),'')
+        self.assertEqual(True,validate_email.validate_email_address('disposable.style.email.with+symbol@example.com'),'')
+        self.assertEqual(True,validate_email.validate_email_address('other.email-with-dash@example.com'),'')
+        self.assertEqual(True,validate_email.validate_email_address('"much.more unusual"@example.com'),'')
+        self.assertEqual(True,validate_email.validate_email_address('"very.unusual.@.unusual.com"@example.com'),'')
+        #~ self.assertEqual(True,validate_email.validate_email_address('''"very.(),:;<>[]\".VERY.\"very@\\ \"very\".unusual"@strange.example.com'''),'')
+        self.assertEqual(True,validate_email.validate_email_address('admin@mailserver1'),'')
+        self.assertEqual(True,validate_email.validate_email_address('''#!$%&'*+-/=?^_`{}|~@example.org'''),'')
+        self.assertEqual(True,validate_email.validate_email_address('''"()<>[]:,;@\\\"!#$%&'*+-/=?^_`{}| ~.a"@example.org'''),'')
+        self.assertEqual(True,validate_email.validate_email_address('" "@example.org'),'')
+        self.assertEqual(True,validate_email.validate_email_address('üñîçøðé@example.com'),'')  #does work in 3.4, not in 2.7
+        self.assertEqual(True,validate_email.validate_email_address('test@üñîçøðé.com'),'')  #does work in 3.4, not in 2.7
+        self.assertEqual(True,validate_email.validate_email_address('"test@test"@gmail.com'),'')
+        
+        self.assertEqual(False,validate_email.validate_email_address('test.gmail.com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('test@test@gmail.com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('a"b(c)d,e:f;g<h>i[j\k]l@example.com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('just"not"right@example.com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('this is"not\allowed@example.com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('this is"not\allowed@example.com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('test..test@gmail.com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('test.test@gmail..com'),'')
+        self.assertEqual(False,validate_email.validate_email_address('test test@gmail.com'),'')
+        self.assertEqual(True,validate_email.validate_email_address('"/C=NL/A=400NET/P=XXXXXX/O=XXXXXXXXXXXXXXXXXXXX XXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/"@xgateprod.400net.nl'),'')
+        self.assertEqual(False,validate_email.validate_email_address('/C=NL/A=400NET/P=XXXXX/O=XXXXXXXXXX XXXXXXXXXXXXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/@xgateprod.400net.nl'),'')
+        self.assertEqual(True,validate_email.validate_email_address('/C=NL/A=400NET/P=XXXXX/O=XXXXXXXXXXXXXXXXXXXXXXXXXXXX/S=XXXXXXXXXXXXXXXXXXX/@xgateprod.400net.nl'),'')
+
 
 if __name__ == '__main__':
     botsinit.generalinit('config')

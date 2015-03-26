@@ -1,12 +1,18 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
 import os
 import atexit
 import glob
 import logging
-import botsinit
-import botslib
-import grammar
-import botsglobal
+#Bots-modules
+from . import botsinit
+from . import botslib
+from . import grammar
+from . import botsglobal
+from .botsconfig import *
 
 
 def startmulti(grammardir,editype):
@@ -32,10 +38,9 @@ def startmulti(grammardir,editype):
         try:
             grammar.grammarread(editype,filename_noextension)
         except:
-            print botslib.txtexc()
-            print '\n'
+            print(botslib.txtexc(),end='\n\n')
         else:
-            print 'OK - no error found in grammar',filename,'\n'
+            print('OK - no error found in grammar',filename,end='\n\n')
 
 
 def start():
@@ -62,10 +67,10 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Error: configuration directory indicated, but no directory name.'
+                print('Error: configuration directory indicated, but no directory name.')
                 sys.exit(1)
-        elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
-            print usage
+        elif arg in ['?', '/?','-h', '--help'] or arg.startswith('-'):
+            print(usage)
             sys.exit(0)
         else:
             if os.path.isfile(arg):
@@ -73,13 +78,13 @@ def start():
                 editype = os.path.basename(p1)
                 messagetype,ext = os.path.splitext(p2)
                 messagetype = unicode(messagetype)
-                print 'grammarcheck',editype,messagetype
+                print('grammarcheck',editype,messagetype)
             elif not editype:
                 editype = arg
             else:
                 messagetype = arg
     if not (editype and messagetype):
-        print 'Error: both editype and messagetype, or a file path, are required.'
+        print('Error: both editype and messagetype, or a file path, are required.')
         sys.exit(1)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
@@ -90,10 +95,10 @@ def start():
     try:
         grammar.grammarread(editype,messagetype)
     except:
-        print 'Found error in grammar: ',botslib.txtexc()
+        print('Found error in grammar: ',botslib.txtexc())
         sys.exit(1)
     else:
-        print 'OK - no error found in grammar'
+        print('OK - no error found in grammar')
         sys.exit(0)
 
 

@@ -1,13 +1,17 @@
+from __future__ import unicode_literals
+import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
 from django.utils.translation import ugettext as _
 #bots-modules
-import automaticmaintenance
-import botslib
-import botsglobal
-import communication
-import envelope
-import preprocess
-import transform
-from botsconfig import *
+from . import automaticmaintenance
+from . import botslib
+from . import botsglobal
+from . import communication
+from . import envelope
+from . import preprocess
+from . import transform
+from .botsconfig import *
 
 @botslib.log_session
 def rundispatcher(command,routestorun):
@@ -18,7 +22,7 @@ def rundispatcher(command,routestorun):
     if botsglobal.currentrun.run():
         return botsglobal.currentrun.evaluate()      #return result of evaluation of run: nr of errors, 0 (no error)
     else:
-        botsglobal.logger.info(_(u'Nothing to do in run.'))
+        botsglobal.logger.info(_('Nothing to do in run.'))
         return 0      #return 0 (no error) 
 
 class new(object):
@@ -73,13 +77,13 @@ class new(object):
             routedict = dict(row)   #convert to real dictionary (as self.command is added to routedict)
             routedict['command'] = self.command     #this way command is passed to ohter functions.
             foundroute = True
-            botsglobal.logger.info(_(u'Running route %(idroute)s %(seq)s'),routedict)
+            botsglobal.logger.info(_('Running route %(idroute)s %(seq)s'),routedict)
             self.routepart(routedict)
             #handle deferred-logic: mark if channel is deffered, umark if run
             self.keep_track_if_outchannel_deferred[routedict['tochannel']] = routedict['defer']
-            botsglobal.logger.debug(u'Finished route %(idroute)s %(seq)s',routedict)
+            botsglobal.logger.debug('Finished route %(idroute)s %(seq)s',routedict)
         if not foundroute:
-            botsglobal.logger.warning(_(u'There is no (active) route "%(route)s".'),{'route':route})
+            botsglobal.logger.warning(_('There is no (active) route "%(route)s".'),{'route':route})
         
     @botslib.log_session
     def routepart(self,routedict):
@@ -96,7 +100,7 @@ class new(object):
         if botslib.tryrunscript(self.userscript,self.scriptname,'main',routedict=routedict):
             return  #so: if function ' main' : communication.run only the routescript, nothing else.
         if not (self.userscript or routedict['fromchannel'] or routedict['tochannel'] or routedict['translateind']):
-            raise botslib.ScriptError(_(u'Route "%(idroute)s" is empty: no routescript, not enough parameters.'),routedict)
+            raise botslib.ScriptError(_('Route "%(idroute)s" is empty: no routescript, not enough parameters.'),routedict)
 
         botslib.tryrunscript(self.userscript,self.scriptname,'start',routedict=routedict)
 
@@ -160,8 +164,8 @@ class new(object):
                         'messagetype':routedict['tomessagetype'],
                         'testindicator':routedict['testindicator'],
                         }
-            towhere = dict((key, value) for key,value in towhere.iteritems() if value)   #remove nul-values from dict
-            wherestring = ' AND '.join([key+'=%('+key+')s ' for key in towhere])
+            towhere = dict((key, value) for key,value in towhere.items() if value)   #remove nul-values from dict
+            wherestring = ' AND '.join(key+'=%('+key+')s ' for key in towhere)
             if routedict['frompartner_tochannel_id']:   #use frompartner_tochannel in where-clause of query (partner/group dependent outchannel
                 towhere['frompartner_tochannel_id'] = routedict['frompartner_tochannel_id']
                 wherestring += ''' AND (frompartner=%(frompartner_tochannel_id)s
@@ -212,7 +216,7 @@ class new(object):
         try:
             return automaticmaintenance.evaluate(self.command,self.get_minta4query())
         except:
-            botsglobal.logger.exception(_(u'Error in automatic maintenance.'))
+            botsglobal.logger.exception(_('Error in automatic maintenance.'))
             return 1
 
     def get_minta4query(self):
@@ -241,7 +245,7 @@ class crashrecovery(new):
                                     WHERE idta < %(rootidta_of_current_run)s
                                     AND script = 0 ''',
                                     {'rootidta_of_current_run':self.minta4query}):
-            self.minta4query_crash = row['crashed_idta']
+            self.minta4query_crash = row[str('crashed_idta')]
         if not self.minta4query_crash:
             return False    #no run
         
@@ -260,7 +264,7 @@ class crashrecovery(new):
                                     AND status != %(status)s
                                     AND child != 0 ''',
                                     {'rootofcrashedrun':rootofcrashedrun.idta,'status':PROCESS,'statust':OK}):
-            mergedidtatodelete.add(row['child'])
+            mergedidtatodelete.add(row[str('child')])
         for idta in mergedidtatodelete:
             ta_object = botslib.OldTransaction(idta)
             ta_object.delete()
@@ -271,7 +275,7 @@ class crashrecovery(new):
                                     AND status != %(status)s
                                     AND child = 0 ''',
                                     {'rootofcrashedrun':rootofcrashedrun.idta,'status':PROCESS,'statust1':OK,'statust2':ERROR}):
-            ta_object = botslib.OldTransaction(row['idta'])
+            ta_object = botslib.OldTransaction(row[str('idta')])
             ta_object.deletechildren()
         
         return super(crashrecovery, self).run()
@@ -291,7 +295,7 @@ class crashrecovery(new):
                                     AND script = %(rootidta_of_current_run)s
                                     AND idroute = %(idroute)s ''',
                                     {'rootidta_of_current_run':self.get_minta4query(),'idroute':botslib.getrouteid()}):
-            return row['route_idta']
+            return row[str('route_idta')]
 
     def get_minta4query_routepart(self):
         ''' as seq is not logged, use start-point for whole route.
@@ -315,7 +319,7 @@ class automaticretrycommunication(new):
                                     WHERE idta > %(idta_lastretry)s
                                     AND statust = %(statust)s ''',
                                     {'statust':ERROR,'idta_lastretry':idta_lastretry}):
-            startidta = row['min_idta']
+            startidta = row[str('min_idta')]
         if not startidta:
             return False    #no run
         do_retransmit = False
@@ -326,11 +330,11 @@ class automaticretrycommunication(new):
                                     AND statust = %(statust)s ''',
                                     {'statust':ERROR,'status':EXTERNOUT,'startidta':startidta}):
             do_retransmit = True
-            ta_outgoing = botslib.OldTransaction(row['idta'])
+            ta_outgoing = botslib.OldTransaction(row[str('idta')])
             ta_outgoing.update(retransmit=False,statust=RESEND)     #set retransmit back to False
-            ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
+            ta_resend = botslib.OldTransaction(row[str('parent')])  #parent ta with status RAWOUT; this is where the outgoing file is kept
             ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE) #inject; status is DONE so this ta is not used further
-            ta_externin.copyta(status=FILEOUT,statust=OK,numberofresends=row['numberofresends'])  #reinjected file is ready as new input
+            ta_externin.copyta(status=FILEOUT,statust=OK,numberofresends=row[str('numberofresends')])  #reinjected file is ready as new input
 
         if do_retransmit:
             return super(automaticretrycommunication, self).run()
@@ -351,11 +355,11 @@ class resend(new):
                                     AND status = %(status)s''',
                                     {'retransmit':True,'status':EXTERNOUT}):
             do_retransmit = True
-            ta_outgoing = botslib.OldTransaction(row['idta'])
+            ta_outgoing = botslib.OldTransaction(row[str('idta')])
             ta_outgoing.update(retransmit=False,statust=RESEND)     #set retransmit back to False
-            ta_resend = botslib.OldTransaction(row['parent'])  #parent ta with status RAWOUT; this is where the outgoing file is kept
+            ta_resend = botslib.OldTransaction(row[str('parent')])  #parent ta with status RAWOUT; this is where the outgoing file is kept
             ta_externin = ta_resend.copyta(status=EXTERNIN,statust=DONE) #inject; status is DONE so this ta is not used further
-            ta_externin.copyta(status=FILEOUT,statust=OK,numberofresends=row['numberofresends'])  #reinjected file is ready as new input
+            ta_externin.copyta(status=FILEOUT,statust=OK,numberofresends=row[str('numberofresends')])  #reinjected file is ready as new input
             
         if do_retransmit:
             return super(resend, self).run()
@@ -376,12 +380,12 @@ class rereceive(new):
             botslib.changeq('''UPDATE filereport
                               SET retransmit = %(retransmit)s
                               WHERE idta = %(idta)s ''',
-                              {'idta':row['idta'],'retransmit':0})
+                              {'idta':row[str('idta')],'retransmit':0})
             for row2 in botslib.query('''SELECT idta
                                         FROM ta
                                         WHERE parent = %(parent)s ''',
-                                        {'parent':row['idta']}):
-                ta_rereceive = botslib.OldTransaction(row2['idta'])
+                                        {'parent':row[str('idta')]}):
+                ta_rereceive = botslib.OldTransaction(row2[str('idta')])
                 ta_externin = ta_rereceive.copyta(status=EXTERNIN,statust=DONE,parent=0) #inject; status is DONE so this ta is not used further
                 ta_externin.copyta(status=FILEIN,statust=OK)  #reinjected file is ready as new input
 

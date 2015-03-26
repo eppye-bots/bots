@@ -1,4 +1,7 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import os
+import sys
 import unittest
 import shutil
 import filecmp 
@@ -22,6 +25,11 @@ import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
 import bots.inmessage as inmessage
 import bots.outmessage as outmessage
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+    b = lambda my_str: my_str
+else:
+    b = lambda my_str: str(my_str)
 
 ''' 
 pluging unitinisout.zip
@@ -522,8 +530,8 @@ class TestInmessage(unittest.TestCase):
             self.failUnless(utilsunit.comparenode(in1node.root,in2node.root),'compare')
             self.failUnless(utilsunit.comparenode(in1node.root,in3node.root),'compare')
         
-        #~ self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi')  #needs UNOA regular
-        in1= inmessage.parse_edi_file(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi') #needs UNOA extended; add (and delete later)
+        self.assertRaises(botslib.MessageError,inmessage.parse_edi_file,editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi')  #needs UNOA regular
+        #~ in1= inmessage.parse_edi_file(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040305.edi') #needs UNOA extended; add (and delete later)
         
         in7= inmessage.parse_edi_file(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/040304.edi')  #UNOB-regular
         in5= inmessage.parse_edi_file(editype='edifact',messagetype='edifact',filename='botssys/infile/unitinmessageedifact/0403/T0000000008.edi') #UNOB regular

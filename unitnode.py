@@ -1,4 +1,7 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import os
+import sys
 import unittest
 import shutil
 import filecmp 
@@ -8,6 +11,11 @@ import bots.botslib as botslib
 import bots.node as node
 import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+    b = lambda my_str: my_str
+else:
+    b = lambda my_str: str(my_str)
 
 '''plugin unitnode.zip
 not an acceptance tst

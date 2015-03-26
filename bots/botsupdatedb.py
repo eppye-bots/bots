@@ -1,19 +1,23 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
 import os
 import atexit
 import logging
 import socket
 from django.utils.translation import ugettext as _
 #bots-modules
-import botslib
-import botsinit
-import botsglobal
+from . import botslib
+from . import botsinit
+from . import botsglobal
 
 
 def sqlite_database_is_version3():
     for row in botslib.query('''PRAGMA table_info(routes)'''):
-        if row['name'] == 'translateind':
-            if row['type'] == 'bool':
+        if row[str('name')] == 'translateind':
+            if row[str('type')] == 'bool':
                 return False
             else:
                 return True
@@ -55,10 +59,10 @@ PRAGMA writable_schema = 0;
 
 def sqlite3():
     if sqlite_database_is_version3():
-        print 'Database sqlite3 is already bots version 3. No action is taken.'
+        print('Database sqlite3 is already bots version 3. No action is taken.')
         return 2
 
-    print 'Start changing sqlite3 database to bots version 3.'
+    print('Start changing sqlite3 database to bots version 3.')
     cursor = botsglobal.db.cursor()
     try:
         #channel ****************************************
@@ -107,7 +111,7 @@ def sqlite3():
         txt = botslib.txtexc()
         botsglobal.db.rollback()
         cursor.close()
-        print 'Error in adding fields to sqlite3 database: "%s".'%(txt)
+        print('Error in adding fields to sqlite3 database: "%s".'%(txt))
         return 1
     else:
         botsglobal.db.commit()
@@ -120,19 +124,19 @@ def sqlite3():
         txt = botslib.txtexc()
         botsglobal.db.rollback()
         cursor.close()
-        print 'Error in changing sqlite3 database-schema "routes": "%s".'%(txt)
+        print('Error in changing sqlite3 database-schema "routes": "%s".'%(txt))
         return 1
     else:
         botsglobal.db.commit()
         cursor.close()
         
-    print 'Succesful changed sqlite3 database to bots version 3.'
+    print('Succesful changed sqlite3 database to bots version 3.')
     return 0
             
 
 
 def postgresql_psycopg2():
-    print 'Start changing postgresql database to bots version 3.'
+    print('Start changing postgresql database to bots version 3.')
     cursor = botsglobal.db.cursor()
     try:
         #channel ****************************************
@@ -195,18 +199,18 @@ def postgresql_psycopg2():
         txt = botslib.txtexc()
         botsglobal.db.rollback()
         cursor.close()
-        print 'Error in changing postgresql database: "%s".'%(txt)
+        print('Error in changing postgresql database: "%s".'%(txt))
         return 1
     else:
         botsglobal.db.commit()
         cursor.close()
         
-    print 'Succesful changed postgresql database to bots version 3.'
+    print('Succesful changed postgresql database to bots version 3.')
     return 0
 
 
 def mysql():
-    print 'Start changing mysql database to bots version 3.'
+    print('Start changing mysql database to bots version 3.')
     cursor = botsglobal.db.cursor()
     try:
         #channel ****************************************
@@ -268,13 +272,13 @@ def mysql():
         txt = botslib.txtexc()
         botsglobal.db.rollback()
         cursor.close()
-        print 'Error in changing mysql database: "%s".'%(txt)
+        print('Error in changing mysql database: "%s".'%(txt))
         return 1
     else:
         botsglobal.db.commit()
         cursor.close()
         
-    print 'Succesful changed mysql database to bots version 3.'
+    print('Succesful changed mysql database to bots version 3.')
     return 0
 
 
@@ -295,10 +299,10 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Error: configuration directory indicated, but no directory name.'
+                print('Error: configuration directory indicated, but no directory name.')
                 sys.exit(3)
         else:   #pick up names of routes to run
-            print usage
+            print(usage)
             sys.exit(0)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
@@ -316,22 +320,22 @@ def start():
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
     for key,value in botslib.botsinfo():    #log info about environement, versions, etc
-        botsglobal.logger.info(u'%(key)s: "%(value)s".',{'key':key,'value':value})
+        botsglobal.logger.info('%(key)s: "%(value)s".',{'key':key,'value':value})
 
     #**************connect to database**********************************
     try:
         botsinit.connect()
     except Exception as msg:
-        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
+        botsglobal.logger.exception(_('Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(3)
     else:
-        botsglobal.logger.info(_(u'Connected to database.'))
+        botsglobal.logger.info(_('Connected to database.'))
         atexit.register(botsglobal.db.close)
 
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
     if not botslib.set_database_lock():
-        warn =  _(u'!Bots database is locked!\n'\
+        warn =  _('!Bots database is locked!\n'\
                     'Bots-engine has ended in an unexpected way during the last run.\n'\
                     'Most likely causes: sudden power-down, system crash, problems with disk I/O, bots-engine terminated by user, etc.')
         botsglobal.logger.critical(warn)

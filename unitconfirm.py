@@ -1,8 +1,11 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import unittest
 import filecmp 
 import glob
 import shutil
 import os
+import sys
 import subprocess
 import logging
 import utilsunit
@@ -10,6 +13,12 @@ import bots.botslib as botslib
 import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
 from bots.botsconfig import *
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+    b = lambda my_str: my_str
+else:
+    b = lambda my_str: str(my_str)
+
 
 '''
 plugin unitconfirm.zip
@@ -42,8 +51,9 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':220,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(row['confirmed'])
-            self.failUnless(row['confirmidta']!=0)
+            print(row[b('idta')],row[b('confirmed')],row[b('confirmidta')])
+            self.failUnless(row[b('confirmed')])
+            self.failUnless(row[b('confirmidta')]!=0)
         else:
             self.failUnless(nr_rows==1)
             
@@ -60,8 +70,8 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':500,'statust':DONE,'idroute':'testmdn','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(row['confirmed'])
-            self.failUnless(row['confirmidta']!=0)
+            self.failUnless(row[b('confirmed')])
+            self.failUnless(row[b('confirmidta')]!=0)
         else:
             self.failUnless(nr_rows==1)
         
@@ -82,8 +92,8 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':500,'statust':DONE,'idroute':'testmdn2','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(not row['confirmed'])
-            self.failUnless(row['confirmidta']==0)
+            self.failUnless(not row[b('confirmed')])
+            self.failUnless(row[b('confirmidta')]==0)
         else:
             self.failUnless(nr_rows==1)
 
@@ -120,11 +130,11 @@ class TestMain(unittest.TestCase):
                                 {'status':400,'statust':DONE,'idroute':'test997','confirmtype':'ask-x12-997','confirmasked':True}):
             counter += 1
             if counter == 1:
-                self.failUnless(not row['confirmed'])
-                self.failUnless(row['confirmidta']==0)
+                self.failUnless(not row[b('confirmed')])
+                self.failUnless(row[b('confirmidta')]==0)
             elif counter == 2:
-                self.failUnless(row['confirmed'])
-                self.failUnless(row['confirmidta']!=0)
+                self.failUnless(row[b('confirmed')])
+                self.failUnless(row[b('confirmidta')]!=0)
             else:
                 break
         else:
@@ -141,8 +151,8 @@ class TestMain(unittest.TestCase):
                                 {'status':310,'statust':DONE,'idroute':'test997','confirmtype':'send-x12-997','confirmasked':True}):
             counter += 1
             if counter <= 2:
-                self.failUnless(row['confirmed'])
-                self.failUnless(row['confirmidta']!=0)
+                self.failUnless(row[b('confirmed')])
+                self.failUnless(row[b('confirmidta')]!=0)
             else:
                 break
         else:
@@ -177,11 +187,11 @@ class TestMain(unittest.TestCase):
                                 {'status':400,'statust':DONE,'idroute':'testcontrl','confirmtype':'ask-edifact-CONTRL','confirmasked':True}):
             counter += 1
             if counter == 1:
-                self.failUnless(not row['confirmed'])
-                self.failUnless(row['confirmidta']==0)
+                self.failUnless(not row[b('confirmed')])
+                self.failUnless(row[b('confirmidta')]==0)
             elif counter == 2:
-                self.failUnless(row['confirmed'])
-                self.failUnless(row['confirmidta']!=0)
+                self.failUnless(row[b('confirmed')])
+                self.failUnless(row[b('confirmidta')]!=0)
             else:
                 break
         else:
@@ -198,8 +208,8 @@ class TestMain(unittest.TestCase):
                                 {'status':310,'statust':DONE,'idroute':'testcontrl','confirmtype':'send-edifact-CONTRL','confirmasked':True}):
             counter += 1
             if counter <= 2:
-                self.failUnless(row['confirmed'])
-                self.failUnless(row['confirmidta']!=0)
+                self.failUnless(row[b('confirmed')])
+                self.failUnless(row[b('confirmidta')]!=0)
             else:
                 break
         else:
@@ -222,16 +232,16 @@ class TestMain(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    pythoninterpreter = 'python'
+    pythoninterpreter = 'python2.7'
     newcommand = [pythoninterpreter,'bots-engine.py',]
     shutil.rmtree(os.path.join(botssys, 'outfile'),ignore_errors=True)    #remove whole output directory
     subprocess.call(newcommand)
-    print '''expect:
+    print('''expect:
     21 files received/processed in run.
     17 files without errors,
     4 files with errors,
     30 files send in run.
-    '''
+    ''')
     #connect to database etc
     #check nrs confirmed etc.
     botsinit.generalinit('config')

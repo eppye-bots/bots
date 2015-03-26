@@ -1,15 +1,22 @@
 #!/usr/bin/env python
+from __future__ import print_function
+from __future__ import unicode_literals
 import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+    import xmlrpc.client as xmlrpclib
+else:
+    import xmlrpclib
 import os
-import xmlrpclib
 import socket
-import botsinit
-import botsglobal
+#Bots-modules
+from . import botsinit
+from . import botsglobal
 
 JOBQUEUEMESSAGE2TXT = {
-    0: u'OK, job is added to queue',
-    1: u'Error, job not to jobqueue. Can not contact jobqueue-server',
-    4: u'Duplicate job, not added.',
+    0: 'OK, job is added to queue',
+    1: 'Error, job not to jobqueue. Can not contact jobqueue-server',
+    4: 'Duplicate job, not added.',
     }
 
 
@@ -22,10 +29,10 @@ def send_job_to_jobqueue(task_args,priority=5):
         4 = job is a duplicate of job already in the queue
     '''
     try:
-        remote_server = xmlrpclib.ServerProxy(u'http://localhost:' + unicode(botsglobal.ini.getint('jobqueue','port',28082)))
+        remote_server = xmlrpclib.ServerProxy('http://localhost:' + unicode(botsglobal.ini.getint('jobqueue','port',28082)))
         return remote_server.addjob(task_args,priority)
     except socket.error as msg:
-        print 'socket.error',msg
+        print('socket.error',msg)
         return 1    #jobqueueserver server not active
 
 
@@ -56,7 +63,7 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Error: configuration directory indicated, but no directory name.'
+                print('Error: configuration directory indicated, but no directory name.')
                 sys.exit(1)
             if task_args:
                 task_args.append(arg)
@@ -64,21 +71,21 @@ def start():
             try:
                 priority =  int(arg[2:])
             except:
-                print 'Error: priority should be numeric (1=highest, 9=lowest).'
+                print('Error: priority should be numeric (1=highest, 9=lowest).')
                 sys.exit(1)
-        elif arg in ["?", "/?",'-h', '--help']:
-            print usage
+        elif arg in ['?', '/?','-h', '--help']:
+            print(usage)
             sys.exit(0)
         else:
             task_args.append(arg)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)         #needed to read config
     if not botsglobal.ini.getboolean('jobqueue','enabled',False):
-        print 'Error: bots jobqueue cannot start; not enabled in %s/bots.ini' % configdir
+        print('Error: bots jobqueue cannot start; not enabled in %s/bots.ini'%(configdir))
         sys.exit(1)
         
     terug = send_job_to_jobqueue(task_args,priority)
-    print JOBQUEUEMESSAGE2TXT[terug]
+    print(JOBQUEUEMESSAGE2TXT[terug])
     sys.exit(terug)
 
 

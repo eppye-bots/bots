@@ -1,9 +1,10 @@
+from __future__ import unicode_literals
 import django
 from django.utils.translation import ugettext as _
 #***********
-import models
-import viewlib
-#~ import botsglobal
+from . import models
+from . import viewlib
+from . import botsglobal
 
 HIDDENINPUT = django.forms.widgets.HiddenInput
 
@@ -24,7 +25,7 @@ class View(django.forms.Form):
 class SelectReports(Select):
     template = 'bots/selectform.html'
     action = '/reports/'
-    status = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1',"Error"),('0',"Done")],required=False,initial='')
+    status = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1','Error'),('0','Done')],required=False,initial='')
 
 class ViewReports(View):
     template = 'bots/reports.html'
@@ -34,7 +35,7 @@ class ViewReports(View):
 class SelectIncoming(Select):
     template = 'bots/selectform.html'
     action = '/incoming/'
-    statust = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1',"Error"),('3',"Done")],required=False,initial='')
+    statust = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1','Error'),('3','Done')],required=False,initial='')
     idroute = django.forms.ChoiceField([],required=False,initial='')
     fromchannel = django.forms.ChoiceField([],required=False)
     frompartner = django.forms.ChoiceField([],required=False)
@@ -72,7 +73,7 @@ class ViewIncoming(View):
 class SelectDocument(Select):
     template = 'bots/selectform.html'
     action = '/document/'
-    status = django.forms.TypedChoiceField([(0,"---------"),(320,_(u'Document-in')),(330,_(u'Document-out'))],required=False,initial=0,coerce=int)
+    status = django.forms.TypedChoiceField([(0,'---------'),(320,_('Document-in')),(330,_('Document-out'))],required=False,initial=0,coerce=int)
     idroute = django.forms.ChoiceField([],required=False,initial='')
     frompartner = django.forms.ChoiceField([],required=False)
     topartner = django.forms.ChoiceField([],required=False)
@@ -102,7 +103,7 @@ class ViewDocument(View):
 class SelectOutgoing(Select):
     template = 'bots/selectform.html'
     action = '/outgoing/'
-    statust = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1',"Error"),('3',"Done"),('4',"Resend")],required=False,initial='')
+    statust = django.forms.ChoiceField([models.DEFAULT_ENTRY,('1','Error'),('3','Done'),('4','Resend')],required=False,initial='')
     idroute = django.forms.ChoiceField([],required=False,initial='')
     tochannel = django.forms.ChoiceField([],required=False)
     frompartner = django.forms.ChoiceField([],required=False)
@@ -151,7 +152,7 @@ class SelectConfirm(Select):
     template = 'bots/selectform.html'
     action = '/confirm/'
     confirmtype = django.forms.ChoiceField(models.CONFIRMTYPELIST,required=False,initial='0')
-    confirmed = django.forms.ChoiceField([('0',"All runs"),('1',"Current run"),('2',"Last run")],required=False,initial='0')
+    confirmed = django.forms.ChoiceField([('0','All runs'),('1','Current run'),('2','Last run')],required=False,initial='0')
     idroute = django.forms.ChoiceField([],required=False,initial='')
     editype = django.forms.ChoiceField(models.EDITYPESLIST,required=False)
     messagetype = django.forms.ChoiceField([],required=False)

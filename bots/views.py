@@ -1,4 +1,7 @@
+from __future__ import unicode_literals
 import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
 import os
 import time
 import shutil
@@ -8,24 +11,23 @@ import socket
 import django
 from django.utils.translation import ugettext as _
 from django.contrib import messages
-import forms
-import models
-import viewlib
-import botslib
-import pluglib
-import botsglobal
-import py2html
-from botsconfig import *
+from . import forms
+from . import models
+from . import viewlib
+from . import botslib
+from . import pluglib
+from . import botsglobal
+from . import py2html
+from .botsconfig import *
 
 
 def server_error(request, template_name='500.html'):
     ''' the 500 error handler.
         Templates: `500.html`
         Context: None
-        str().decode(): bytes->unicode
     '''
-    exc_info = traceback.format_exc(None).decode('utf-8','ignore')
-    botsglobal.logger.info(_(u'Ran into server error: "%(error)s"'),{'error':exc_info})
+    exc_info = traceback.format_exc(None)
+    botsglobal.logger.info(_('Ran into server error: "%(error)s"'),{'error':exc_info})
     temp = django.template.loader.get_template(template_name)  #You need to create a 500.html template.
     return django.http.HttpResponseServerError(temp.render(django.template.Context({'exc_info':exc_info})))
     
@@ -119,7 +121,7 @@ def incoming(request,*kw,**kwargs):
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'delete' in request.POST:        #from ViewIncoming form using star delete
                 if request.user.is_staff or request.user.is_superuser:
-                    idta = viewlib.save_int(request.POST[u'delete'])
+                    idta = viewlib.save_int(request.POST['delete'])
                     #delete from filereport
                     models.filereport.objects.filter(idta=idta).delete()
                     #get ta_object
@@ -127,11 +129,11 @@ def incoming(request,*kw,**kwargs):
                     #delete as much as possible in ta table
                     viewlib.delete_from_ta(ta_object)
                 else:
-                    notification = _(u'No rights for this operation.')
+                    notification = _('No rights for this operation.')
                     botsglobal.logger.info(notification)
                     messages.add_message(request, messages.INFO, notification)
             elif 'retransmit' in request.POST:        #from ViewIncoming form using star rereceive
-                idta = request.POST[u'retransmit']
+                idta = request.POST['retransmit']
                 filereport = models.filereport.objects.get(idta=viewlib.save_int(idta))
                 if filereport.fromchannel:   #for resend files fromchannel has no value. (do not rereceive resend items)
                     filereport.retransmit = not filereport.retransmit
@@ -183,7 +185,7 @@ def outgoing(request,*kw,**kwargs):
                 form = forms.SelectOutgoing(formin.cleaned_data)
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'retransmit' in request.POST:  #from ViewOutgoing form using star resend
-                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST[u'retransmit']))
+                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST['retransmit']))
                 if ta_object.statust != RESEND:     #can only resend last file
                     ta_object.retransmit = not ta_object.retransmit
                     ta_object.save()
@@ -196,7 +198,7 @@ def outgoing(request,*kw,**kwargs):
                         outgoingfile.retransmit = not outgoingfile.retransmit
                         outgoingfile.save()
             elif 'noautomaticretry' in request.POST:        #from ViewOutgoing form using star 'no automaticretry'
-                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST[u'noautomaticretry']))
+                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST['noautomaticretry']))
                 if ta_object.statust == ERROR:
                     ta_object.statust = NO_RETRY
                     ta_object.save()
@@ -233,7 +235,7 @@ def document(request,*kw,**kwargs):
                 form = forms.SelectDocument(formin.cleaned_data)
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'retransmit' in request.POST:        #coming from ViewDocument, no reportidta
-                idta = request.POST[u'retransmit']
+                idta = request.POST['retransmit']
                 filereport = models.filereport.objects.get(idta=viewlib.save_int(idta))
                 filereport.retransmit = not filereport.retransmit
                 filereport.save()
@@ -320,14 +322,14 @@ def confirm(request,*kw,**kwargs):
             request.POST = viewlib.changepostparameters(request.POST,soort='confirm2out')
             return outgoing(request)
         elif 'confirm' in request.POST:        #coming ViewConfirm, using star 'Manual confirm'
-            ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST[u'confirm']))
+            ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST['confirm']))
             if ta_object.confirmed == False and ta_object.confirmtype.startswith('ask'):
                 ta_object.confirmed = True
                 ta_object.confirmidta = '-1'   # to indicate a manual confirmation
                 ta_object.save()
-                messages.add_message(request, messages.INFO, _(u'Manual confirmed.'))
+                messages.add_message(request, messages.INFO, _('Manual confirmed.'))
             else:
-                messages.add_message(request, messages.INFO, _(u'Manual confirm not possible.'))
+                messages.add_message(request, messages.INFO, _('Manual confirm not possible.'))
             # then just refresh the current view
             formin = forms.ViewConfirm(request.POST)
             if not formin.is_valid():
@@ -365,7 +367,7 @@ def filer(request,*kw,**kwargs):
                     dispositiontype = 'attachment'
                 response['Content-Disposition'] = dispositiontype + '; filename=' + currentta.filename + '.txt'
                 #~ response['Content-Length'] = os.path.getsize(absfilename)
-                response.write(botslib.readdata(currentta.filename))
+                response.write(botslib.readdata_bin(currentta.filename))
                 return response
             elif request.GET['action'] == 'previous':
                 if currentta.parent:    #has a explicit parent
@@ -398,7 +400,7 @@ def filer(request,*kw,**kwargs):
                         ta_object.content = viewlib.indent_edifact(ta_object.content)
                 else:
                     ta_object.has_file = False
-                    ta_object.content = _(u'No file available for display.')
+                    ta_object.content = _('No file available for display.')
                 #determine has previous:
                 if ta_object.parent or ta_object.status == MERGED:
                     ta_object.has_previous = True
@@ -411,7 +413,7 @@ def filer(request,*kw,**kwargs):
                     ta_object.has_next = True
             return django.shortcuts.render(request,'bots/filer.html',{'idtas': talijst})
         except:
-            return django.shortcuts.render(request,'bots/filer.html',{'error_content': _(u'No such file.')})
+            return django.shortcuts.render(request,'bots/filer.html',{'error_content': _('No such file.')})
 
 def srcfiler(request,*kw,**kwargs):
     ''' handles bots source file viewer. display grammar, mapping, userscript etc.'''
@@ -419,15 +421,16 @@ def srcfiler(request,*kw,**kwargs):
         try:
             src = request.GET['src']
             if botsglobal.ini.get('directories','usersys') in src and src.endswith('.py'): # only python source in usersys!
+                
                 with open(src) as f:
                     source = f.read()
                 classified_text = py2html.analyze_python(source)
                 html_source = py2html.html_highlight(classified_text)
                 return django.shortcuts.render(request,'bots/srcfiler.html',{'src':src, 'html_source':html_source})
             else:
-                return django.shortcuts.render(request,'bots/srcfiler.html',{'error_content': _(u'File %s not allowed.' %src)})
+                return django.shortcuts.render(request,'bots/srcfiler.html',{'error_content': _('File %s not allowed.' %src)})
         except:
-            return django.shortcuts.render(request,'bots/srcfiler.html',{'error_content': _(u'No such file.')})
+            return django.shortcuts.render(request,'bots/srcfiler.html',{'error_content': _('No such file.')})
 
 def plugin(request,*kw,**kwargs):
     if request.method == 'GET':
@@ -442,19 +445,19 @@ def plugin(request,*kw,**kwargs):
                 #read the plugin
                 try:
                     if pluglib.read_plugin(request.FILES['file'].temporary_file_path()):
-                        messages.add_message(request, messages.INFO, _(u'Overwritten existing files.'))
+                        messages.add_message(request, messages.INFO, _('Overwritten existing files.'))
                 except Exception as msg:
-                    notification = _(u'Error reading plugin: "%s".')%unicode(msg)
+                    notification = _('Error reading plugin: "%s".')%unicode(msg)
                     botsglobal.logger.error(notification)
                     messages.add_message(request, messages.INFO, notification)
                 else:
-                    notification = _(u'Plugin "%s" is read successful.')%request.FILES['file'].name
+                    notification = _('Plugin "%s" is read successful.')%request.FILES['file'].name
                     botsglobal.logger.info(notification)
                     messages.add_message(request, messages.INFO, notification)
                 finally:
                     request.FILES['file'].close()   #seems to be needed according to django docs.
             else:
-                messages.add_message(request, messages.INFO, _(u'No plugin read.'))
+                messages.add_message(request, messages.INFO, _('No plugin read.'))
         return django.shortcuts.redirect('/home')
 
 def plugin_index(request,*kw,**kwargs):
@@ -468,11 +471,11 @@ def plugin_index(request,*kw,**kwargs):
             try:
                 pluglib.read_index('index')
             except Exception as msg:
-                notification = _(u'Error reading configuration index file: "%s".')%unicode(msg)
+                notification = _('Error reading configuration index file: "%s".')%unicode(msg)
                 botsglobal.logger.error(notification)
                 messages.add_message(request, messages.INFO, notification)
             else:
-                notification = _(u'Configuration index file is read successful.')
+                notification = _('Configuration index file is read successful.')
                 botsglobal.logger.info(notification)
                 messages.add_message(request, messages.INFO, notification)
         return django.shortcuts.redirect('/home')
@@ -480,16 +483,16 @@ def plugin_index(request,*kw,**kwargs):
 def plugout_index(request,*kw,**kwargs):
     if request.method == 'GET':
         filename = botslib.join(botsglobal.ini.get('directories','usersysabs'),'index.py')
-        botsglobal.logger.info(_(u'Start writing configuration index file "%(file)s".'),{'file':filename})
+        botsglobal.logger.info(_('Start writing configuration index file "%(file)s".'),{'file':filename})
         try:
             dummy_for_cleaned_data = {'databaseconfiguration':True,'umlists':botsglobal.ini.getboolean('settings','codelists_in_plugin',True),'databasetransactions':False}
             pluglib.make_index(dummy_for_cleaned_data,filename)
         except Exception as msg:
-            notification = _(u'Error writing configuration index file: "%s".')%unicode(msg)
+            notification = _('Error writing configuration index file: "%s".')%unicode(msg)
             botsglobal.logger.error(notification)
             messages.add_message(request, messages.INFO, notification)
         else:
-            notification = _(u'Configuration index file "%s" is written successful.')%filename
+            notification = _('Configuration index file "%s" is written successful.')%filename
             botsglobal.logger.info(notification)
             messages.add_message(request, messages.INFO, notification)
         return django.shortcuts.redirect('/home')
@@ -501,7 +504,7 @@ def plugout_backup(request,*kw,**kwargs):
         
 def plugout_backup_core(request,*kw,**kwargs):
     filename = botslib.join(botsglobal.ini.get('directories','botssys'),'backup_plugin_%s.zip'%time.strftime('%Y%m%d%H%M%S'))
-    botsglobal.logger.info(_(u'Start writing backup plugin "%(file)s".'),{'file':filename})
+    botsglobal.logger.info(_('Start writing backup plugin "%(file)s".'),{'file':filename})
     try:
         dummy_for_cleaned_data = {'databaseconfiguration':True,
                                     'umlists':botsglobal.ini.getboolean('settings','codelists_in_plugin',True),
@@ -516,11 +519,11 @@ def plugout_backup_core(request,*kw,**kwargs):
                                     }
         pluglib.make_plugin(dummy_for_cleaned_data,filename)
     except Exception as msg:
-        notification = u'Error writing backup plugin: "%s".'%unicode(msg)
+        notification = 'Error writing backup plugin: "%s".'%unicode(msg)
         botsglobal.logger.error(notification)
         messages.add_message(request, messages.INFO, notification)
     else:
-        notification = _(u'Backup plugin "%s" is written successful.')%filename
+        notification = _('Backup plugin "%s" is written successful.')%filename
         botsglobal.logger.info(notification)
         messages.add_message(request, messages.INFO, notification)
         
@@ -533,14 +536,14 @@ def plugout(request,*kw,**kwargs):
             form = forms.PlugoutForm(request.POST)
             if form.is_valid():
                 filename = botslib.join(botsglobal.ini.get('directories','botssys'),'plugin_temp.zip')
-                botsglobal.logger.info(_(u'Start writing plugin "%(file)s".'),{'file':filename})
+                botsglobal.logger.info(_('Start writing plugin "%(file)s".'),{'file':filename})
                 try:
                     pluglib.make_plugin(form.cleaned_data,filename)
                 except botslib.PluginError as msg:
                     botsglobal.logger.error(unicode(msg))
                     messages.add_message(request,messages.INFO,unicode(msg))
                 else:
-                    botsglobal.logger.info(_(u'Plugin "%(file)s" created successful.'),{'file':filename})
+                    botsglobal.logger.info(_('Plugin "%(file)s" created successful.'),{'file':filename})
                     response = django.http.HttpResponse(open(filename, 'rb').read(), content_type='application/zip')
                     # response['Content-Length'] = os.path.getsize(filename)
                     response['Content-Disposition'] = 'attachment; filename=' + 'plugin' + time.strftime('_%Y%m%d') + '.zip'
@@ -559,21 +562,21 @@ def delete(request,*kw,**kwargs):
                 if form.cleaned_data['delconfiguration'] or form.cleaned_data['delcodelists'] or form.cleaned_data['deluserscripts']:
                     #write backup plugin first
                     plugout_backup_core(request,*kw,**kwargs)        
-                botsglobal.logger.info(_(u'Start deleting in configuration.'))
+                botsglobal.logger.info(_('Start deleting in configuration.'))
                 if form.cleaned_data['deltransactions']:
                     #while testing with very big loads, deleting gave error. Using raw SQL solved this.
                     cursor = connection.cursor()
-                    cursor.execute("DELETE FROM ta")
-                    cursor.execute("DELETE FROM filereport")
-                    cursor.execute("DELETE FROM report")
+                    cursor.execute('''DELETE FROM ta''')
+                    cursor.execute('''DELETE FROM filereport''')
+                    cursor.execute('''DELETE FROM report''')
                     transaction.commit_unless_managed()
-                    messages.add_message(request, messages.INFO, _(u'Transactions are deleted.'))
-                    botsglobal.logger.info(_(u'Transactions are deleted.'))
+                    messages.add_message(request, messages.INFO, _('Transactions are deleted.'))
+                    botsglobal.logger.info(_('Transactions are deleted.'))
                     #clean data files
                     deletefrompath = botsglobal.ini.get('directories','data','botssys/data')
                     shutil.rmtree(deletefrompath,ignore_errors=True)
                     botslib.dirshouldbethere(deletefrompath)
-                    notification = _(u'Data files are deleted.')
+                    notification = _('Data files are deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 elif form.cleaned_data['delacceptance']:
@@ -585,7 +588,7 @@ def delete(request,*kw,**kwargs):
                             report_idta_lowest = acc_report.idta
                         max_report_idta = models.report.objects.filter(idta__gt=acc_report.idta).aggregate(Min('idta'))['idta__min'] #select 'next' report...
                         if not max_report_idta: #if report is report of last run, there is no next report
-                            max_report_idta = sys.maxint
+                            max_report_idta = sys.maxsize
                         #we have a idta-range now: from (and including) acc_report.idta till (and excluding) max_report_idta
                         list_file += models.ta.objects.filter(idta__gte=acc_report.idta,idta__lt=max_report_idta).exclude(status=1).values_list('filename', flat=True).distinct()
                         models.ta.objects.filter(idta__gte=acc_report.idta,idta__lt=max_report_idta).delete()   #delete ta in range 
@@ -595,7 +598,7 @@ def delete(request,*kw,**kwargs):
                         for filename in list_file:      #delete all files in data directory geenrated during acceptance testing
                             if filename.isdigit():
                                 botslib.deldata(filename)
-                    notification = _(u'Transactions from acceptance-testing deleted.')
+                    notification = _('Transactions from acceptance-testing deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['delconfiguration']:
@@ -605,35 +608,35 @@ def delete(request,*kw,**kwargs):
                     models.chanpar.objects.all().delete()
                     models.translate.objects.all().delete()
                     models.partner.objects.all().delete()
-                    notification = _(u'Database configuration is deleted.')
+                    notification = _('Database configuration is deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['delcodelists']:
                     #while testing with very big loads, deleting gave error. Using raw SQL solved this.
                     cursor = connection.cursor()
-                    cursor.execute("DELETE FROM ccode")
-                    cursor.execute("DELETE FROM ccodetrigger")
+                    cursor.execute('''DELETE FROM ccode''')
+                    cursor.execute('''DELETE FROM ccodetrigger''')
                     transaction.commit_unless_managed()
-                    notification = _(u'User code lists are deleted.')
+                    notification = _('User code lists are deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['delpersist']:
                     cursor = connection.cursor()
-                    cursor.execute("DELETE FROM persist")
+                    cursor.execute('''DELETE FROM persist''')
                     transaction.commit_unless_managed()
-                    notification = _(u'Persist data is deleted.')
+                    notification = _('Persist data is deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['delinfile']:
                     deletefrompath = botslib.join(botsglobal.ini.get('directories','botssys','botssys'),'infile')
                     shutil.rmtree(deletefrompath,ignore_errors=True)
-                    notification = _(u'Files in botssys/infile are deleted.')
+                    notification = _('Files in botssys/infile are deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['deloutfile']:
                     deletefrompath = botslib.join(botsglobal.ini.get('directories','botssys','botssys'),'outfile')
                     shutil.rmtree(deletefrompath,ignore_errors=True)
-                    notification = _(u'Files in botssys/outfile are deleted.')
+                    notification = _('Files in botssys/outfile are deleted.')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
                 if form.cleaned_data['deluserscripts']:
@@ -646,10 +649,10 @@ def delete(request,*kw,**kwargs):
                         for bestand in files:
                             if bestand != '__init__.py':
                                 os.remove(os.path.join(root,bestand))
-                    notification = _(u'User scripts are deleted (in usersys).')
+                    notification = _('User scripts are deleted (in usersys).')
                     messages.add_message(request, messages.INFO, notification)
                     botsglobal.logger.info(notification)
-                botsglobal.logger.info(_(u'Finished deleting in configuration.'))
+                botsglobal.logger.info(_('Finished deleting in configuration.'))
     return django.shortcuts.redirect('/home')
 
 
@@ -675,12 +678,12 @@ def runengine(request,*kw,**kwargs):
             messages.add_message(request, messages.INFO, job2queue.JOBQUEUEMESSAGE2TXT[terug])
             botsglobal.logger.info(job2queue.JOBQUEUEMESSAGE2TXT[terug])
         else:                                                       #run bots-engine direct.; reports back if bots-engien is started succesful. **not reported: problems with running.
-            botsglobal.logger.info(_(u'Run bots-engine with parameters: "%(parameters)s"'),{'parameters':unicode(lijst)})
+            botsglobal.logger.info(_('Run bots-engine with parameters: "%(parameters)s"'),{'parameters':unicode(lijst)})
             #first check if another instance of bots-engine is running/if port is free
             try:
                 engine_socket = botslib.check_if_other_engine_is_running()
             except socket.error:
-                notification = _(u'Trying to run "bots-engine", but another instance of "bots-engine" is running. Please try again later.')
+                notification = _('Trying to run "bots-engine", but another instance of "bots-engine" is running. Please try again later.')
                 messages.add_message(request, messages.INFO, notification)
                 botsglobal.logger.info(notification)
                 return django.shortcuts.redirect('/home')
@@ -690,11 +693,11 @@ def runengine(request,*kw,**kwargs):
             try:
                 terug = subprocess.Popen(lijst).pid
             except Exception as msg:
-                notification = _(u'Errors while trying to run bots-engine: "%s".')%msg
+                notification = _('Errors while trying to run bots-engine: "%s".')%msg
                 messages.add_message(request, messages.INFO, notification)
                 botsglobal.logger.info(notification)
             else:
-                messages.add_message(request, messages.INFO, _(u'Bots-engine is started.'))
+                messages.add_message(request, messages.INFO, _('Bots-engine is started.'))
     return django.shortcuts.redirect('/home')
 
 def sendtestmailmanagers(request,*kw,**kwargs):
@@ -703,20 +706,20 @@ def sendtestmailmanagers(request,*kw,**kwargs):
     except botslib.BotsError:
         sendornot = False
     if not sendornot:
-        notification = _(u'Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".')
+        notification = _('Trying to send test mail, but in bots.ini, section [settings], "sendreportiferror" is not "True".')
         botsglobal.logger.info(notification)
         messages.add_message(request, messages.INFO, notification)
         return django.shortcuts.redirect('/home')
 
     from django.core.mail import mail_managers
     try:
-        mail_managers(_(u'testsubject'), _(u'test content of report'))
+        mail_managers(_('testsubject'), _('test content of report'))
     except:
         txt = botslib.txtexc()
-        messages.add_message(request, messages.INFO, _(u'Sending test mail failed.'))
-        botsglobal.logger.info(_(u'Sending test mail failed, error:\n%(txt)s'), {'txt':txt})
+        messages.add_message(request, messages.INFO, _('Sending test mail failed.'))
+        botsglobal.logger.info(_('Sending test mail failed, error:\n%(txt)s'), {'txt':txt})
         return django.shortcuts.redirect('/home')
-    notification = _(u'Sending test mail succeeded.')
+    notification = _('Sending test mail succeeded.')
     messages.add_message(request, messages.INFO, notification)
     botsglobal.logger.info(notification)
     return django.shortcuts.redirect('/home')

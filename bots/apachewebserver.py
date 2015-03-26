@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
+#bots-modules
+from . import botsglobal
+from . import botsinit
 ''' This source file starts up bots monitor when using apache2 as webserver.
 
 WSGI SCRIPT EXAMPLE (outside bots directory, imports and starts this script apachewebserver.py):
@@ -26,13 +30,8 @@ WSGIDaemonProcess config user=xxxxx
 WSGIProcessGroup config
 </VirtualHost>
 '''
-import botsglobal
-import botsinit
-
 
 def start(configdir):
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
     process_name = 'apache_webserver_' + configdir
     botsglobal.logger = botsinit.initserverlogging(process_name)    #initialise file-logging for web-server. This logging only contains the logging from bots-webserver.
-
-

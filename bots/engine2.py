@@ -1,19 +1,22 @@
 #!/usr/bin/env python
+from __future__ import print_function
+from __future__ import unicode_literals
+import sys
+if sys.version_info[0] > 2:
+    basestring = unicode = str
+import os
+import atexit
+import logging
+import warnings
+from django.utils.translation import ugettext as _
+#bots-modules
+from . import botslib
+from . import botsglobal
+from . import botsinit
 ''' Start bots-engine2: do not use database for logging and configuration. (so: no GUI).
     Parameters are hard-coded for now (inpath, infilename, outpath, outfilename, editype, messagetype)
     Translation information (as from translation table: mapping script, outgoing editype etc) is eithr hard-coded now, or via translate table.
 '''
-
-import sys
-import os
-import atexit
-import logging
-from django.utils.translation import ugettext as _
-#bots-modules
-import botslib
-import botsglobal
-import botsinit
-import warnings
 
 def abspathdata(filename):
     ''' abspathdata if filename incl dir: return absolute path; else (only filename): return absolute path (datadir).
@@ -49,10 +52,10 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print 'Error: configuration directory indicated, but no directory name.'
+                print('Error: configuration directory indicated, but no directory name.')
                 sys.exit(1)
-        elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
-            print usage
+        elif arg in ['?', '/?','-h', '--help'] or arg.startswith('-'):
+            print(usage)
             sys.exit(0)
     #***********end handling command line arguments**************************
     
@@ -65,16 +68,16 @@ def start():
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
     for key,value in botslib.botsinfo():    #log info about environement, versions, etc
-        botsglobal.logger.info(u'%(key)s: "%(value)s".',{'key':key,'value':value})
+        botsglobal.logger.info('%(key)s: "%(value)s".',{'key':key,'value':value})
 
     #**************connect to database**********************************
     try:
         botsinit.connect()
     except Exception as msg:
-        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
+        botsglobal.logger.exception(_('Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(1)
     else:
-        botsglobal.logger.info(_(u'Connected to database.'))
+        botsglobal.logger.info(_('Connected to database.'))
         atexit.register(botsglobal.db.close)
 
     warnings.simplefilter('error', UnicodeWarning)
@@ -87,11 +90,11 @@ def start():
     #***acceptance tests: initialiase acceptance user script******************************
     acceptance_userscript = acceptance_scriptname = None
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-        botsglobal.logger.info(_(u'This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
+        botsglobal.logger.info(_('This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
         try:
             acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','bots_acceptancetest')
         except botslib.BotsImportError:
-            botsglobal.logger.info(_(u'In acceptance test there is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
+            botsglobal.logger.info(_('In acceptance test there is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
 
     try:
         #~ botslib.prepare_confirmrules()
@@ -100,7 +103,7 @@ def start():
         botslib.tryrunscript(userscript,scriptname,'pre')
         errorinrun = engine2_run()
     except Exception as msg:
-        botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':unicode(msg)})    #of course this 'should' not happen.
+        botsglobal.logger.exception(_('Severe error in bots system:\n%(msg)s'),{'msg':unicode(msg)})    #of course this 'should' not happen.
         sys.exit(1)
     else:
         if errorinrun:
@@ -114,15 +117,10 @@ import glob
 import shutil
 import datetime
 try:
-    import cElementTree as ET
+    from xml.etree import cElementTree as ET
 except ImportError:
-    try:
-        import elementtree.ElementTree as ET
-    except ImportError:
-        try:
-            from xml.etree import cElementTree as ET
-        except ImportError:
-            from xml.etree import ElementTree as ET
+    from xml.etree import ElementTree as ET
+#bots-modules
 import inmessage
 import outmessage
 import transform
@@ -134,7 +132,7 @@ data_storage = 'botssys/data2'
 
 def engine2_run():
     #~ botsglobal.ini.set('directories','data',botslib.join(data_storage))
-    print datetime.datetime.now()
+    print(datetime.datetime.now())
     botslib.dirshouldbethere(data_storage)
     run = get_control_information()
     read_incoming(run)
@@ -144,7 +142,7 @@ def engine2_run():
     trace(run)
     report(run)
     cleanup(run)
-    print datetime.datetime.now()
+    print(datetime.datetime.now())
     return run.errorinrun
 
 class Run(object):
@@ -173,8 +171,7 @@ def get_control_information():
 
 def read_incoming(run):
     outputdir = botslib.join(run.inpath,run.infilename)
-    filelist = [filename for filename in glob.iglob(outputdir) if os.path.isfile(filename)]
-    filelist.sort()
+    filelist = sorted(filename for filename in glob.iglob(outputdir) if os.path.isfile(filename))
     for infilename in filelist:
         try:
             filename = transform.unique('bots_file_name')
@@ -213,7 +210,7 @@ def translate(run):
                 try:
                     #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
                     number_of_loops_with_same_alt = 0
-                    while 1:    #continue as long as there are (alt-)translations
+                    while True:    #continue as long as there are (alt-)translations
                         #lookup the translation************************
                         tscript,toeditype,tomessagetype = 'orders_edifact2xml' ,'xml','orders'
                         if 'tscript' in run.translation:
@@ -236,12 +233,12 @@ def translate(run):
                                                                     statust=OK,
                                                                     divtext=tscript)    #make outmessage object
                         
-                        #~ botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
+                        #~ botsglobal.logger.debug(_('Mappingscript "%(tscript)s" translates messagetype "%(messagetype)s" to messagetype "%(tomessagetype)s".'),
                                                 #~ {'tscript':tscript,'messagetype':inn_splitup.ta_info['messagetype'],'tomessagetype':out_translated.ta_info['messagetype']})
                         translationscript,scriptfilename = botslib.botsimport('mappings',inn_splitup.ta_info['editype'],tscript)    #import mappingscript
                         alt_from_previous_run = inn_splitup.ta_info['alt']      #needed to check for infinite loop
                         doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
-                        botsglobal.logger.debug(_(u'Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
+                        botsglobal.logger.debug(_('Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
                         
                         #manipulate for some attributes after mapping script
                         if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from run......
@@ -265,12 +262,12 @@ def translate(run):
                         elif isinstance(doalttranslation,dict):
                             #some extended cases; a dict is returned that contains 'instructions' for some type of chained translations
                             if 'type' not in doalttranslation or 'alt' not in doalttranslation:
-                                raise botslib.BotsError(_(u"Mappingscript returned '%(alt)s'. This dict should not have 'type' and 'alt'."),{'alt':doalttranslation})
+                                raise botslib.BotsError(_('Mappingscript returned "%(alt)s". This dict should not have "type" and "alt".'),{'alt':doalttranslation})
                             if alt_from_previous_run == doalttranslation['alt']:
                                 number_of_loops_with_same_alt += 1
                             else:
                                 number_of_loops_with_same_alt = 0
-                            if doalttranslation['type'] == u'out_as_inn':
+                            if doalttranslation['type'] == 'out_as_inn':
                                 #do chained translation: use the out-object as inn-object, new out-object
                                 #use case: detected error in incoming file; use out-object to generate warning email
                                 handle_out_message(out_translated,ta_translated)
@@ -283,7 +280,7 @@ def translate(run):
                                 if not 'topartner' in inn_splitup.ta_info:
                                     inn_splitup.ta_info['topartner'] = ''
                                 inn_splitup.ta_info.pop('statust')
-                            elif doalttranslation['type'] == u'no_check_on_infinite_loop':
+                            elif doalttranslation['type'] == 'no_check_on_infinite_loop':
                                 #do chained translation: allow many loops wit hsame alt-value.
                                 #mapping script will have to handle this correctly.
                                 number_of_loops_with_same_alt = 0
@@ -291,7 +288,7 @@ def translate(run):
                                 del out_translated
                                 inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
                             else:   #there is nothing else
-                                raise botslib.BotsError(_(u'Mappingscript returned dict with an unknown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
+                                raise botslib.BotsError(_('Mappingscript returned dict with an unknown "type": "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
                         else:  #note: this includes alt '' (empty string)
                             if alt_from_previous_run == doalttranslation:
                                 number_of_loops_with_same_alt += 1
@@ -302,28 +299,27 @@ def translate(run):
                             del out_translated
                             inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chained translation
                         if number_of_loops_with_same_alt > 10:
-                            raise botslib.BotsError(_(u'Mappingscript returns same alt value over and over again (infinite loop?). Alt: "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
+                            raise botslib.BotsError(_('Mappingscript returns same alt value over and over again (infinite loop?). Alt: "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
                     #end of while-loop (trans**********************************************************************************
                 #exceptions file_out-level: exception in mappingscript or writing of out-file
                 except:
                     #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mappingscript/outfile only affect that branche
                     txt = botslib.txtexc()
-                    print txt
+                    print(txt)
                     messagedict['error'] += txt.strip()
                 else:
                     pass
-                    #~ print 'succes'
         #exceptions file_in-level
         except botslib.GotoException:   #edi-file is OK, file is passed-through after parsing.
             #~ edifile.handleconfirm(ta_fromfile,error=False)
-            #~ botsglobal.logger.debug(_(u'Parse & passthrough for input file "%(filename)s".'),row)
+            #~ botsglobal.logger.debug(_('Parse & passthrough for input file "%(filename)s".'),row)
             txt = botslib.txtexc()
-            print txt
+            print(txt)
         except:
             txt = botslib.txtexc()
             messagedict['error'] += txt.strip()
             #~ edifile.handleconfirm(ta_fromfile,error=True)
-            #~ botsglobal.logger.debug(u'Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
+            #~ botsglobal.logger.debug('Error in translating input file "%(filename)s":\n%(msg)s',{'filename':row['filename'],'msg':txt})
         else:
             pass
 
@@ -350,7 +346,7 @@ def mergemessages(run):
             ta_info['nrmessages'] = nrmessages
             merge_no.append((ta_info, [filename],[infilename]))
     #envelope
-    for env_criteria,rest_of_info in merge_yes.iteritems():
+    for env_criteria,rest_of_info in merge_yes.items():
         ta_info = dict(zip(names_envelope_criteria,env_criteria))
         ta_info['filename'] = transform.unique('bots_file_name')   #create filename for enveloped message
         ta_info['nrmessages'] = rest_of_info[2]
@@ -405,13 +401,13 @@ def filename_formatter(filename_mask,ta_info):
                 return ext 
             if format_spec == 'name':
                 return name 
-            raise botslib.CommunicationOutError(_(u'Error in format of "{filename}": unknown format: "%(format)s".'),
+            raise botslib.CommunicationOutError(_('Error in format of "{filename}": unknown format: "%(format)s".'),
                                                 {'format':format_spec})
     unique = unicode(botslib.unique('bots_outgoing_file_name'))   #create unique part for filename
     tofilename = filename_mask.replace('*',unique)           #filename_mask is filename in channel where '*' is replaced by idta
     if '{' in tofilename :
         if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-            datetime_object = datetime.datetime.strptime("2013-01-23 01:23:45", "%Y-%m-%d %H:%M:%S")
+            datetime_object = datetime.datetime.strptime('2013-01-23 01:23:45', '%Y-%m-%d %H:%M:%S')
         else:
             datetime_object = datetime.datetime.now()
         infilename = infilestr(os.path.basename(ta_info['infilename'][0])) #there is always an infile!
@@ -469,14 +465,14 @@ def dict2xml(d):
     botslib.indent_xml(node)
     return ET.tostring(node)
 
-def filter(lijst,names):
+def filterlist(lijst,names):
     return [dict((k,v) for k,v in d.items() if k in names) for d in lijst]
     
 def report(run):
     in_filter = ('infilename','error','editype','messagetype')
     out_filter = ('outfilename','editype','messagetype','frompartner','topartner','infilename','nrmessages')
-    xml_string = dict2xml({'root':{'nr_errors':run.errorinrun,'incoming':filter(run.incoming,in_filter),'outgoing':filter(run.outgoing,out_filter)}})
-    print xml_string
+    xml_string = dict2xml({'root':{'nr_errors':run.errorinrun,'incoming':filterlist(run.incoming,in_filter),'outgoing':filterlist(run.outgoing,out_filter)}})
+    print(xml_string)
 
 def cleanup(run):
     shutil.rmtree(data_storage,ignore_errors=True)
@@ -484,8 +480,8 @@ def cleanup(run):
 '''
 experiment with translation rule:
 
-l = [{'alt': u'', 'fromeditype': u'edifact', 'frommessagetype': u'ORDERSD96AUNEAN008', 'frompartner': None, 'topartner': None, 'toeditype': u'xml', 'tomessagetype': u'orders', 'tscript': u'orders_edifact2xml'},
-    {'alt': u'', 'fromeditype': u'edifact', 'frommessagetype': u'ORDERSD96AUNEAN008', 'frompartner': None, 'topartner': None, 'toeditype': u'xml', 'tomessagetype': u'orders', 'tscript': u'orders_edifact2xml'},
+l = [{'alt': '', 'fromeditype': 'edifact', 'frommessagetype': 'ORDERSD96AUNEAN008', 'frompartner': None, 'topartner': None, 'toeditype': 'xml', 'tomessagetype': 'orders', 'tscript': 'orders_edifact2xml'},
+    {'alt': '', 'fromeditype': 'edifact', 'frommessagetype': 'ORDERSD96AUNEAN008', 'frompartner': None, 'topartner': None, 'toeditype': 'xml', 'tomessagetype': 'orders', 'tscript': 'orders_edifact2xml'},
     ]
 
 #first step: selecting for fromeditype,frommessagetype (active)

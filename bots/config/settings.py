@@ -1,6 +1,7 @@
-# Django settings for bots project.
+from __future__ import unicode_literals
 import os
 import bots
+# Django settings for bots project.
 PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 
 #*******settings for sending bots error reports via email**********************************
@@ -122,7 +123,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'bots.persistfilters.FilterPersistMiddleware',
+    #~ 'bots.persistfilters.FilterPersistMiddleware',   #remove, is in django 1.6.
     )
 INSTALLED_APPS = (
     'django.contrib.auth',
