@@ -281,8 +281,8 @@ class _comsession(object):
                         email_datetime = email.utils.formatdate(localtime=True)
                     message.add_header('Message-ID',reference)
                     message.add_header('Date',email_datetime)
-                    ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference)   #update now (in order to use correct & updated ta_to in userscript)
-
+                    ta_to.update(frommail=frommail,tomail=tomail,cc=ccto,reference=reference[:70])  #update now (in order to use correct & updated ta_to in userscript)
+                                                                                                    #20150326  for now field 'reference' is max 70
                     #set Disposition-Notification-To: ask/ask not a a MDN?
                     if botslib.checkconfirmrules('ask-email-MDN',idroute=self.idroute,idchannel=self.channeldict['idchannel'],
                                                                 frompartner=row[str('frompartner')],topartner=row[str('topartner')]):
@@ -512,7 +512,7 @@ class _comsession(object):
                     msg = email.message_from_file(infile)   #read and parse mail
                 infile.close()
                 #******get information from email (sender, receiver etc)***********************************************************
-                reference       = self.checkheaderforcharset(msg['message-id'])
+                reference       = self.checkheaderforcharset(msg['message-id'])  or ''
                 subject = self.checkheaderforcharset(msg['subject'])
                 contenttype     = self.checkheaderforcharset(msg.get_content_type())
                 #frompartner (incl autorization)
@@ -542,7 +542,7 @@ class _comsession(object):
                 #update transaction of mail with information found in mail
                 ta_from.update(frommail=frommail,   #why save now not later: when saving the attachments need the amil-header-info to be in ta (copyta)
                                 tomail=tomail,
-                                reference=reference,
+                                reference=reference[:70],  #20150326  for now field 'reference' is max 70
                                 contenttype=contenttype,
                                 frompartner=frompartner,
                                 topartner=topartner,
