@@ -651,7 +651,7 @@ class _comsession(object):
             Any ta value can be used
               eg. {botskey}, {alt}, {editype}, {messagetype}, {topartner}
             Next to the value in ta you can use:
-            -   * : an unique number (per outchannel) using an asterisk
+            -   * : an unique number (per outchannel) using an asterisk; since bots3.3: {unique}
             -   {datetime}  use datetime with a valid strftime format: 
                 eg. {datetime:%Y%m%d}, {datetime:%H%M%S}
             -   {infile} use the original incoming filename; use name and extension, or either part separately:
@@ -659,19 +659,19 @@ class _comsession(object):
             -   {overwrite}  if file wit hfielname exists: overwrite it (instead of appending)
             
             Exampels of usage:
-                {botskey}_*.idoc        use incoming order number, add unique number, use extension '.idoc'
-                *_{infile}              passthrough incoming filename & extension, prepend with unique number
-                {infile:name}_*.txt     passthrough incoming filename, add unique number but change extension to .txt
-                {editype}-{messagetype}-{datetime:%Y%m%d}-*.{infile:ext}
+                {botskey}_{unique}.idoc        use incoming order number, add unique number, use extension '.idoc'
+                {unique}_{infile}              passthrough incoming filename & extension, prepend with unique number
+                {infile:name}_{unique}.txt     passthrough incoming filename, add unique number but change extension to .txt
+                {editype}-{messagetype}-{datetime:%Y%m%d}-{unique}.{infile:ext}
                                         use editype, messagetype, date and unique number with extension from the incoming file
-                {topartner}/{messagetype}/*.edi
+                {topartner}/{messagetype}/{unique}.edi
                                         Usage of subdirectories in the filename, they must already exist. In the example:
                                         sort into folders by partner and messagetype.
                         
             Note1: {botskey} can only be used if merge is False for that messagetype
         '''
         class infilestr(str):
-            ''' class for the infile-string that handles the specific format-options'''
+            ''' class for the {infile} parameter '''
             def __format__(self, format_spec):
                 if not format_spec:
                     return unicode(self)
@@ -684,28 +684,29 @@ class _comsession(object):
                     return name 
                 raise botslib.CommunicationOutError(_('Error in format of "{filename}": unknown format: "%(format)s".'),
                                                     {'format':format_spec})
-        unique = unicode(botslib.unique(self.channeldict['idchannel'])) #create unique part for attachment-filename
-        tofilename = filename_mask.replace('*',unique)           #filename_mask is filename in channel where '*' is replaced by idta
-        if '{' in tofilename:    #only for python 2.6/7
-            ta.synall()
-            if '{infile' in tofilename:
-                ta_list = botslib.trace_origin(ta=ta,where={'status':EXTERNIN})
-                if ta_list:
-                    infilename = infilestr(os.path.basename(ta_list[-1].filename))
-                else:
-                    infilename = ''
+        #handling of the 'unique' part in the filename
+        #this was astriks ('*') in bots<-3.2, is now {unique}. Reason for change: more options in format via python formatstrings
+        #old way (asteriks) will keep working 
+        ta.unique = unicode(botslib.unique(self.channeldict['idchannel']))  #create unique part for attachment-filename; stoe in ta-obejct so is assesible for {unique}
+        tofilename = filename_mask.replace('*','{unique}')                  #replace 'old' way of making filenames unique by new way.
+        ta.synall()
+        if '{infile' in tofilename:
+            ta_list = botslib.trace_origin(ta=ta,where={'status':EXTERNIN})
+            if ta_list:
+                ta.infilename = infilestr(os.path.basename(ta_list[-1].filename))
             else:
-                infilename = ''
-            try:
-                if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-                    datetime_object = datetime.datetime.strptime('2013-01-23 01:23:45', '%Y-%m-%d %H:%M:%S')
-                else:
-                    datetime_object = datetime.datetime.now()
-                tofilename = tofilename.format(infile=infilename,datetime=datetime_object,**ta.__dict__)
-            except:
-                txt = botslib.txtexc()
-                raise botslib.CommunicationOutError(_('Error in formatting outgoing filename "%(filename)s". Error: "%(error)s".'),
-                                                        {'filename':tofilename,'error':txt})
+                ta.infilename = ''
+        if '{datetime' in tofilename:
+            if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
+                ta.datetime = datetime.datetime.strptime('2013-01-23 01:23:45', '%Y-%m-%d %H:%M:%S')
+            else:
+                ta.datetime = datetime.datetime.now()
+        try:
+            tofilename = tofilename.format(**ta.__dict__)   #do the actual formatting 
+        except:
+            txt = botslib.txtexc()
+            raise botslib.CommunicationOutError(_('Error in formatting outgoing filename "%(filename)s". Error: "%(error)s".'),
+                                                    {'filename':tofilename,'error':txt})
         if self.userscript and hasattr(self.userscript,'filename'):
             return botslib.runscript(self.userscript,self.scriptname,'filename',channeldict=self.channeldict,filename=tofilename,ta=ta)
         else:
