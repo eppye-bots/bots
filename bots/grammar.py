@@ -298,15 +298,13 @@ class Grammar(object):
         if len(self.structure) != 1:                        #every structure has only 1 root!!
             raise botslib.GrammarError(_('Grammar "%(grammar)s", in structure: only one root record allowed.'),{'grammar':self.grammarname})
         #check if structure is read & checked earlier in this run. If so, we can skip all checks.
-        if 'error' in self.structure[0]:
-            pass        # grammar has been read before, but there are errors. Do nothing here, same errors will be raised again.
-        elif MPATH in self.structure[0]:
-            return      # grammar has been read before, with no errors. Do no checks.
-        self._checkstructure(self.structure,[])
-        if self._get_fromsyntax_or_defaultsyntax('checkcollision'):
-            self._checkbackcollision(self.structure)
-            self._checknestedcollision(self.structure)
-        self._checkbotscollision(self.structure)
+        if 'error' in self.structure[0] or MPATH not in self.structure[0]:
+            self._checkstructure(self.structure,[])
+            if self._get_fromsyntax_or_defaultsyntax('checkcollision'):
+                self._checkbackcollision(self.structure)
+                self._checknestedcollision(self.structure)
+            self._checkbotscollision(self.structure)
+        #always link recordsdefs to structure
         self._linkrecorddefs2structure(self.structure)
 
     def _checkstructure(self,structure,mpath):
