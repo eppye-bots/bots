@@ -907,7 +907,7 @@ class edifact(var):
             has_una_string = False
 
         #**************expect UNB
-        #loop over rawinput to extract segmenttag, used seperators, etc. 
+        #loop over rawinput to extract segmenttag, used separators, etc. 
         count2 = 0
         found_tag = ''
         found_charset = ''
@@ -932,7 +932,7 @@ class edifact(var):
             #if arrive here: to many <cr/lf>?  
             raise botslib.InMessageError(_('[A55]: Problems with UNB-segment; encountered too many <CR/LF>.'))
         
-        #set and/or verify seperators
+        #set and/or verify separators
         if has_una_string:
             if found_field_sep != self.ta_info['field_sep'] or found_sfield_sep != self.ta_info['sfield_sep']:
                 raise botslib.InMessageError(_('[A56]: Separators used in edifact file differ from values indicated in UNA-segment.'))
@@ -967,7 +967,8 @@ class edifact(var):
         #~ except UnicodeDecodeError as msg:
             #~ raise botslib.InMessageError(_('[A59]: Edifact file has not allowed characters at/after file-position %(content)s.'),
                                             #~ {'content':msg[2]})
-        if self.ta_info['version'] < '4':     #repeat char only for version >= 4
+        if self.ta_info['version'] < '4' or self.ta_info['reserve'] == ' ': # repetition separator only for version >= 4. 
+                                                                            #if version > 4 and repetition separator is space: assume this is a mistake; use repetition separator 
             self.ta_info['reserve'] = ''
 
 

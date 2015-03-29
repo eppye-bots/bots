@@ -440,7 +440,7 @@ def truncate(maxpos,value):
         return value
 
 def concat(*args,**kwargs):
-    sep = kwargs.get('sep', '')     #default is '': no seperator.
+    sep = kwargs.get('sep', '')     #default is '': no separator.
     terug = sep.join(arg for arg in args if arg)
     return terug if terug else None
 
