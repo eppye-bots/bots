@@ -785,8 +785,8 @@ def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
 
 def updateunlessset(updatedict,fromdict):
-    updatedict.update((key,value) for key, value in fromdict.items() if key not in updatedict) #!!TODO when is this valid? Note: prevents setting charset from gramamr 
-    #~ updatedict.update((key,value) for key, value in fromdict.items() if key not in updatedict or not updatedict[key]) #!!TODO when is this valid? Note: prevents setting charset from gramamr 
+    #~ updatedict.update((key,value) for key, value in fromdict.items() if key not in updatedict) #!!TODO when is this valid? Note: prevents setting charset from gramamr 
+    updatedict.update((key,value) for key, value in fromdict.items() if key not in updatedict or not updatedict[key]) #!!TODO when is this valid? Note: prevents setting charset from gramamr 
 
 def rreplace(org,old,new='',count=1):
     ''' string handling:

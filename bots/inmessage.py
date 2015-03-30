@@ -70,7 +70,6 @@ class Inmessage(message.Message):
         ''' Initialisation from a edi file.
         '''
         self.messagegrammarread()
-        #~ self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
         #**charset errors, lex errors
         self._readcontent_edifile()     #open file. variants: read with charset, read as binary & handled in sniff, only opened and read in _lex.
         self._sniff()           #some hard-coded examination of edi file; ta_info can be overruled by syntax-parameters in edi-file

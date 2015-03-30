@@ -58,8 +58,8 @@ class Message(object):
         self.defmessage = grammar.grammarread(self.ta_info['editype'],self.ta_info['messagetype'],typeofgrammarfile)
         #write values from grammar to self.ta_info - unless these values are already set (eg by mappingscript)
         botslib.updateunlessset(self.ta_info,self.defmessage.syntax)
-        if not self.ta_info['charset']:
-            self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
+        #~ if not self.ta_info['charset']:
+            #~ self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
 
     @staticmethod
     def display(lex_records):

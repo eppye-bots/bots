@@ -395,7 +395,6 @@ class _comsession(object):
                 nrmimesaved += 1
                 ta_file.update(statust=OK,
                                 contenttype=contenttype,
-                                charset=charset,
                                 filename=outfilename,
                                 filesize=filesize)
             return nrmimesaved
