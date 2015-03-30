@@ -1,5 +1,5 @@
-# this module is not longer used; django 1.6 does same thing by default.
-# code found at code.djangoproject.com/ticket/3777
+#this module is not longer used; django 1.6 does same thing by default.
+#keep for complatibility
 from django import http
 
 
