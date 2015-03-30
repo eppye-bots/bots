@@ -37,7 +37,7 @@ def translate(startstatus,endstatus,routedict,rootidta):
     except botslib.BotsImportError:       #userscript is not there; other errors like syntax errors are not catched
         userscript = scriptname = None
     #select edifiles to translate
-    for rawrow in botslib.query('''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,filesize
+    for rawrow in botslib.query('''SELECT idta,frompartner,topartner,filename,messagetype,testindicator,editype,charset,alt,fromchannel,filesize,frommail,tomail
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
@@ -71,6 +71,8 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
                                             charset=row['charset'],
                                             alt=row['alt'],
                                             fromchannel=row['fromchannel'],
+                                            frommail=row['frommail'],
+                                            tomail=row['tomail'],
                                             idroute=routedict['idroute'],
                                             command=routedict['command'])
         edifile.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
