@@ -99,7 +99,7 @@ class Inmessage(message.Message):
                 self.ta_info.update(childnode.queries)
                 break
 
-    def handleconfirm(self,ta_fromfile,error):
+    def handleconfirm(self,ta_fromfile,routedict,error):
         ''' end of edi file handling: writing of confirmations, etc.
         '''
         pass
@@ -1026,7 +1026,7 @@ class edifact(var):
                         self.add2errorlist(_('[E12]: Count of segments in UNT is invalid: "%(count)s".\n')%{'count':untcount})
             botsglobal.logmap.debug('Parsing edifact envelopes is OK')
 
-    def handleconfirm(self,ta_fromfile,error):
+    def handleconfirm(self,ta_fromfile,routedict,error):
         ''' done at end of edifact file handling.
             generates CONTRL messages (or not)
         '''
@@ -1072,7 +1072,7 @@ class edifact(var):
             out.ta_info['frompartner'] = receiver   #reverse!
             out.ta_info['topartner'] = sender       #reverse!
             if translationscript and hasattr(translationscript,'main'):
-                botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out)
+                botslib.runscript(translationscript,scriptfilename,'main',inn=self,out=out,routedict=routedict,ta_fromfile=ta_fromfile)
             else:
                 #default mapping script for CONTRL
                 #write UCI for UNB (envelope)
@@ -1100,7 +1100,7 @@ class edifact(var):
                 out.put({'BOTSID':'UNH'},{'BOTSID':'UNT','0074':out.getcount()+1,'0062':reference})  #last line (counts the segments produced in out-message)
                 #try to run the user mapping script fuction 'change' (after the default mapping); 'chagne' fucntion recieves the tree as written by default mapping, function can change tree.
                 if translationscript and hasattr(translationscript,'change'):
-                    botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out)
+                    botslib.runscript(translationscript,scriptfilename,'change',inn=self,out=out,routedict=routedict,ta_fromfile=ta_fromfile)
             #write tomessage (result of translation)
             out.writeall()
             botsglobal.logger.debug('Send edifact confirmation (CONTRL) route "%(route)s" fromchannel "%(fromchannel)s" frompartner "%(frompartner)s" topartner "%(topartner)s".',
@@ -1249,7 +1249,7 @@ class x12(var):
                             return
                     return
 
-    def handleconfirm(self,ta_fromfile,error):
+    def handleconfirm(self,ta_fromfile,routedict,error):
         ''' at end of edi file handling:
             send 997 messages (or not)
         '''
@@ -1284,11 +1284,11 @@ class x12(var):
             #check if there is a user mappingscript
             tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=editype,frommessagetype='997',frompartner=receiver,topartner=sender,alt='')
             if not tscript:
-                tomessagetype = '997004010'  #default messagetype for CONTRL
+                tomessagetype = '997004010'  #default messagetype for 997
                 translationscript = None
             else:
                 translationscript,scriptfilename = botslib.botsimport('mappings',editype,tscript)  #import the mappingscript
-            #generate CONTRL-message. One received interchange->one CONTRL-message
+            #generate 997. For each GS-GE->one 997
             reference = unicode(botslib.unique('messagecounter')).zfill(4)    #20120411: use zfill as messagescounter can be <1000, ST02 field is min 4 positions
             ta_confirmation = ta_fromfile.copyta(status=TRANSLATED)
             filename = unicode(ta_confirmation.idta)
@@ -1296,9 +1296,9 @@ class x12(var):
             out.ta_info['frompartner'] = receiver   #reverse!
             out.ta_info['topartner'] = sender       #reverse!
             if translationscript and hasattr(translationscript,'main'):
-                botslib.runscript(translationscript,scriptfilename,'main',inn=nodegs,out=out)
+                botslib.runscript(translationscript,scriptfilename,'main',inn=nodegs,out=out,routedict=routedict,ta_fromfile=ta_fromfile)
             else:
-                #default mapping script for CONTRL
+                #default mapping script for 997
                 #write AK1/AK9 for GS (envelope)
                 out.put({'BOTSID':'ST','ST01':'997','ST02':reference})
                 out.put({'BOTSID':'ST'},{'BOTSID':'AK1','AK101':nodegs.get({'BOTSID':'GS','GS01':None}),'AK102':nodegs.get({'BOTSID':'GS','GS06':None})})
@@ -1312,7 +1312,7 @@ class x12(var):
                 out.put({'BOTSID':'ST'},{'BOTSID':'SE','SE01':out.getcount()+1,'SE02':reference})  #last line (counts the segments produced in out-message)
                 #try to run the user mapping script fuction 'change' (after the default mapping); 'chagne' fucntion recieves the tree as written by default mapping, function can change tree.
                 if translationscript and hasattr(translationscript,'change'):
-                    botslib.runscript(translationscript,scriptfilename,'change',inn=nodegs,out=out)
+                    botslib.runscript(translationscript,scriptfilename,'change',inn=nodegs,out=out,routedict=routedict,ta_fromfile=ta_fromfile)
             #write tomessage (result of translation)
             out.writeall()   #write tomessage (result of translation)
             botsglobal.logger.debug('Send x12 confirmation (997) route "%(route)s" fromchannel "%(fromchannel)s" frompartner "%(frompartner)s" topartner "%(topartner)s".',
