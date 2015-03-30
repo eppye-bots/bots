@@ -317,7 +317,7 @@ class _comsession(object):
                         message.add_header('Content-Disposition','attachment',filename=attachmentfilename)
 
                     #set Content-Type and charset
-                    charset = self.convertcodecformime(row[str('charset')])
+                    charset = self.convertcodecformime(charset)
                     message.add_header('Content-Type',row[str('contenttype')].lower(),charset=charset)          #contenttype is set in grammar.syntax
 
                     #set attachment/payload; the Content-Transfer-Encoding is set by python encoder
