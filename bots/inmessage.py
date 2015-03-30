@@ -165,9 +165,9 @@ class Inmessage(message.Message):
             value = value.replace(self.ta_info['triad'],'')     #strip triad-separators
             value = value.replace(self.ta_info['decimaal'],'.',1) #replace decimal sign by canonical decimal sign
             if 'E' in value or 'e' in value:
-                self.add2errorlist(_('[F09]%(linpos)s: Record "%(record)s" field "%(field)s" contains exponent: "%(content)s".\n')%
+                self.add2errorlist(_('[F09]%(linpos)s: Record "%(record)s" field "%(field)s" has non-numerical content: "%(content)s".\n')%
                                     {'linpos':node_instance.linpos(),'record':self.mpathformat(structure_record[MPATH]),'field':field_definition[ID],'content':value})
-            if field_definition[BFORMAT] == 'R':
+            elif field_definition[BFORMAT] == 'R':
                 lendecimal = len(value.partition('.')[2])
                 try:    #convert to float in order to check validity
                     valuedecimal = float(value)
