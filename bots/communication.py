@@ -26,10 +26,6 @@ if os.name == 'nt':
     import msvcrt
 elif os.name == 'posix':
     import fcntl
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 from django.utils.translation import ugettext as _
 #bots-modules
 from . import botslib
@@ -1689,9 +1685,7 @@ class db(_comsession):
                 ta_to = ta_from.copyta(status=FILEIN)
                 remove_ta = True
                 tofilename = unicode(ta_to.idta)
-                tofile = botslib.opendata_bin(tofilename,'wb')
-                pickle.dump(db_object, tofile)
-                tofile.close()
+                botslib.writedata_pickled(tofilename,db_object)
                 filesize = os.path.getsize(botslib.abspathdata(tofilename))
             except:
                 txt = botslib.txtexc()
@@ -1722,9 +1716,7 @@ class db(_comsession):
             try:
                 ta_from = botslib.OldTransaction(row[str('idta')])
                 ta_to = ta_from.copyta(status=EXTERNOUT)
-                fromfile = botslib.opendata_bin(row[str('filename')], 'rb')
-                db_object = pickle.load(fromfile)
-                fromfile.close()
+                db_object = botslib.readdata_pickled(filename=self.ta_info['filename'])
                 botslib.runscript(self.userscript,self.scriptname,'outcommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection,db_object=db_object)
             except:
                 txt = botslib.txtexc()

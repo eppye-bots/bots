@@ -9,11 +9,15 @@ import traceback
 import socket
 import platform
 import collections
-import django
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 try:
     import importlib
 except:
     from . import bots_importlib as importlib   #for python 2.6
+import django
 from django.utils.translation import ugettext as _
 #bots-modules (no code)
 from . import botsglobal
@@ -521,10 +525,21 @@ def opendata_bin(filename,mode):
 
 def readdata_bin(filename):
     ''' read internal data file in memory as binary.'''
-    filehandler = opendata_bin(filename,'rb')
+    filehandler = opendata_bin(filename,mode='rb')
     content = filehandler.read()
     filehandler.close()
     return content
+
+def readdata_pickled(filename):
+    filehandler = opendata_bin(filename,mode='rb') #pickle is a binary/byte stream
+    content = pickle.load(filehandler)
+    filehandler.close()
+    return content
+
+def writedata_pickled(filename,content):
+    filehandler = opendata_bin(filename,mode='wb') #pickle is a binary/byte stream
+    pickle.dump(content,filehandler)
+    filehandler.close()
 
 #**********************************************************/**
 #*************************calling modules, programs***********************/**

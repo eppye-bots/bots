@@ -5,10 +5,6 @@ if sys.version_info[0] > 2:
     long = int
 import time
 try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-try:
     from xml.etree import cElementTree as ET
 except ImportError:
     from xml.etree import ElementTree as ET
@@ -1558,9 +1554,7 @@ class db(Inmessage):
     '''
     def initfromfile(self):
         botsglobal.logger.debug('Read edi file "%(filename)s".',self.ta_info)
-        filehandler = botslib.opendata_bin(filename=self.ta_info['filename'],mode='rb') #pickle is a binary/byte stream
-        self.root = pickle.load(filehandler)
-        filehandler.close()
+        self.root = botslib.readdata_pickled(filename=self.ta_info['filename'])
 
     def nextmessage(self):
         yield self
@@ -1572,9 +1566,7 @@ class raw(Inmessage):
     '''
     def initfromfile(self):
         botsglobal.logger.debug('Read edi file "%(filename)s".',self.ta_info)
-        filehandler = botslib.opendata_bin(filename=self.ta_info['filename'],mode='rb') #raw data is byte stream; handled by mapping script
-        self.root = filehandler.read()
-        filehandler.close()
+        self.root = botslib.readdata_bin(filename=self.ta_info['filename'])
 
     def nextmessage(self):
         yield self

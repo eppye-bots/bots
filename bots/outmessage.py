@@ -4,10 +4,6 @@ if sys.version_info[0] > 2:
     basestring = unicode = str
 import time
 try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-try:
     import cdecimal as decimal
 except ImportError:
     import decimal
@@ -881,9 +877,7 @@ class db(Outmessage):
         if self.root is None:
             raise botslib.OutMessageError(_('No outgoing message'))    #then there is nothing to write...
         botsglobal.logger.debug('Start writing to file "%(filename)s".',self.ta_info)
-        self._outstream = botslib.opendata_bin(self.ta_info['filename'],'wb')
-        pickle.dump(self.root,self._outstream)
-        self._outstream.close()
+        botslib.writedata_pickled(self.ta_info['filename'],self.root)
         botsglobal.logger.debug('End writing to file "%(filename)s".',self.ta_info)
         self.ta_info['envelope'] = 'db'
         self.ta_info['merge'] = False
