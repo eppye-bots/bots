@@ -178,9 +178,12 @@ class Node(object):
             if not isinstance(key,basestring):
                 raise botslib.MappingFormatError(_('Keys in "change" must be strings: change(where=%(where)s,change=%(change)s)'),
                                                     {'where':where,'change':change})
-            if not isinstance(value,basestring) and value is not None:     #if None, item is deleted
-                raise botslib.MappingFormatError(_('Values in "change" must be strings or "None": change(where=%(where)s,change=%(change)s)'),
-                                                    {'where':where,'change':change})
+            if value is None:     #if None, item is deleted
+                pass
+            elif isinstance(value,list):    #for now, just pass lists
+                pass
+            else:
+                change[key] = unicode(value).strip()  #leading and trailing spaces are stripped from the values
         terug =  self._changecore(where,change)
         botsglobal.logmap.debug('"%(terug)s" for change(where=%(where)s,change=%(change)s)',{'terug':terug,'where':unicode(where),'change':unicode(change)})
         return terug
