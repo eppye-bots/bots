@@ -868,8 +868,10 @@ class templatehtml(Outmessage):
 
         
 class db(Outmessage):
-    ''' For database connector. 
-        out.root is pickled, and saved.
+    ''' For database connector: writing to database.
+        Mapping script delevers an object (class, dict) in out.root.
+        Object is pickled and saved.
+        Communication script picks up the pickle, 
     '''
     def __init__(self,ta_info):
         super(db,self).__init__(ta_info)
@@ -888,7 +890,8 @@ class db(Outmessage):
 
 
 class raw(Outmessage):
-    ''' out.root is just saved.
+    ''' Mapping script delivers a raw bytestream in out.root.
+        Bytestream is saved.
     '''
     def __init__(self,ta_info):
         super(raw,self).__init__(ta_info)

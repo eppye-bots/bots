@@ -1666,12 +1666,12 @@ class db(_comsession):
     @botslib.log_session
     def incommunicate(self):
         ''' read data from database.
-            userscript should return a 'db_objects'.
+            communication user script return 'db_objects'.
             This can be one edi-message or several edi-messages.
-            if a list or tuple is passed: each element of list/tuple is treated as seperate edi-message.
-            if this is None, do nothing
-            if this is a list/tuple, each member of the list is send as a separate 'message'
-            if you want all information from userscript to be passed as one edi message: pass as dict, eg {'data': <list of queries>}
+            if db_objects is a list or tuple is passed: each element of list/tuple is treated as seperate edi-message; each message is pickled and saved.
+            if db_objects is None, nothing is done
+            else: one message; the object is pickled and saved.
+            So if you want all information from userscript to be passed as one edi message: pass as dict, eg {'data': <list of queries>}
         '''
         db_objects = botslib.runscript(self.userscript,self.scriptname,'incommunicate',channeldict=self.channeldict,dbconnection=self.dbconnection)
         if not db_objects:      #there should be a useful db_objects; if not just return (do nothing)
@@ -1710,7 +1710,7 @@ class db(_comsession):
 
     @botslib.log_session
     def outcommunicate(self):
-        ''' write data to database.
+        ''' read file; pass unpickled object to user script.
         '''
         for row in botslib.query('''SELECT idta,filename,numberofresends
                                     FROM ta

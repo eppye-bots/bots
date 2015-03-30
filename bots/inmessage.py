@@ -1552,8 +1552,9 @@ class jsonnocheck(json):
 
 
 class db(Inmessage):
-    ''' For database connector.
-        the database-object is unpickled, and passed to the mappingscript.
+    ''' For database connector: reading from database.
+        Communication script delivers a file with a pickled object; 
+        File is read, object is unpickled, object is passed to the mapping script as inn.root.
     '''
     def initfromfile(self):
         botsglobal.logger.debug('Read edi file "%(filename)s".',self.ta_info)
@@ -1566,7 +1567,8 @@ class db(Inmessage):
 
 
 class raw(Inmessage):
-    ''' the file object is just read and passed to the mappingscript.
+    ''' Input file is a raw bytestream.
+        File is read, and passed to mapping script as inn.root
     '''
     def initfromfile(self):
         botsglobal.logger.debug('Read edi file "%(filename)s".',self.ta_info)
