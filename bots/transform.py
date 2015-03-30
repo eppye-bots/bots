@@ -143,8 +143,6 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
                             copy_out_message = copy.deepcopy(out_translated)
                             handle_out_message(copy_out_message,ta_translated)
                             inn_splitup = out_translated    #out-object is now inn-object
-                            #~ if isinstance(inn_splitup,outmessage.fixed):    #for fixed: strip all values in node
-                                #~ inn_splitup.root.stripnode()
                             inn_splitup.ta_info['alt'] = doalttranslation['alt']   #get the alt-value for the next chained translation
                             if not 'frompartner' in inn_splitup.ta_info:
                                 inn_splitup.ta_info['frompartner'] = ''
