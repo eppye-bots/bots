@@ -358,7 +358,7 @@ class _comsession(object):
             -   filter emails/attachments based on contenttype
             -   email-address should be know by bots (can be turned off)
         '''
-        whitelist_multipart = ['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822','multipart/alternative']
+        whitelist_multipart = ['multipart/mixed','multipart/digest','multipart/signed','multipart/report','message/rfc822','multipart/alternative','multipart/related']
         whitelist_major = ['text','application']
         blacklist_contenttype = ['text/html','text/enriched','text/rtf','text/richtext','application/postscript','text/vcard','text/css']
         def savemime(msg):
