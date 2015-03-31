@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _     #django 1.7: have to
 #~ from django.core.validators import validate_email
 from django.core.validators import validate_integer
 from django.core.exceptions import ValidationError
+from django.utils.encoding import python_2_unicode_compatible
 from . import botsglobal
 from . import validate_email
 ''' Declare database tabels. 
@@ -196,6 +197,7 @@ class TextAsInteger(models.CharField):
 #***********************************************************************************
 #******** written by webserver ********************************************************
 #***********************************************************************************
+@python_2_unicode_compatible
 class confirmrule(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
@@ -210,21 +212,23 @@ class confirmrule(models.Model):
     messagetype = StripCharField(max_length=35,blank=True,help_text=_('Eg "850004010" (x12) or "ORDERSD96AUN" (edifact).'))
     rsrv1 = StripCharField(max_length=35,blank=True,null=True)  #added 20100501
     rsrv2 = models.IntegerField(null=True)                        #added 20100501
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.confirmtype) + ' ' + unicode(self.ruletype)
     class Meta:
         db_table = 'confirmrule'
         verbose_name = _('confirm rule')
         ordering = ['confirmtype','ruletype','negativerule','frompartner','topartner','idroute','idchannel','messagetype']
+@python_2_unicode_compatible
 class ccodetrigger(models.Model):
     ccodeid = StripCharField(primary_key=True,max_length=35,verbose_name=_('Type of user code'))
     ccodeid_desc = models.TextField(blank=True,null=True,verbose_name=_('Description'))
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.ccodeid)
     class Meta:
         db_table = 'ccodetrigger'
         verbose_name = _('user code type')
         ordering = ['ccodeid']
+@python_2_unicode_compatible
 class ccode(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     ccodeid = models.ForeignKey(ccodetrigger,on_delete=models.CASCADE,verbose_name=_('Type of user code'))
@@ -238,13 +242,14 @@ class ccode(models.Model):
     attr6 = StripCharField(max_length=35,blank=True)
     attr7 = StripCharField(max_length=35,blank=True)
     attr8 = StripCharField(max_length=35,blank=True)
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.ccodeid) + ' ' + unicode(self.leftcode) + ' ' + unicode(self.rightcode)
     class Meta:
         db_table = 'ccode'
         verbose_name = _('user code')
         unique_together = (('ccodeid','leftcode','rightcode'),)
         ordering = ['ccodeid','leftcode']
+@python_2_unicode_compatible
 class channel(models.Model):
     idchannel = StripCharField(max_length=35,primary_key=True)
     inorout = StripCharField(max_length=35,choices=INOROUT,verbose_name=_('in/out'))
@@ -285,8 +290,9 @@ class channel(models.Model):
     class Meta:
         ordering = ['idchannel']
         db_table = 'channel'
-    def __unicode__(self):
+    def __str__(self):
         return self.idchannel + ' (' + self.type + ')'
+@python_2_unicode_compatible
 class partner(models.Model):
     idpartner = StripCharField(max_length=35,primary_key=True,verbose_name=_('partner identification'))
     active = models.BooleanField(default=False)
@@ -321,7 +327,7 @@ class partner(models.Model):
     class Meta:
         ordering = ['idpartner']
         db_table = 'partner'
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.idpartner) + ' (' + unicode(self.name) + ')'
     def save(self, *args, **kwargs):
         if isinstance(self,partnergroep):
@@ -336,6 +342,7 @@ class partnergroep(partner):
         ordering = ['idpartner']
         db_table = 'partner'
 
+@python_2_unicode_compatible
 class chanpar(models.Model):
     #~ id = models.IntegerField(primary_key=True)     #added 20091221
     idpartner = models.ForeignKey(partner,on_delete=models.CASCADE,verbose_name=_('partner'))
@@ -350,8 +357,9 @@ class chanpar(models.Model):
         db_table = 'chanpar'
         verbose_name = _('email address per channel')
         verbose_name_plural = _('email address per channel')
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.idpartner) + ' ' + unicode(self.idchannel) + ' ' + unicode(self.mail)
+@python_2_unicode_compatible
 class translate(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     active = models.BooleanField(default=False)
@@ -386,10 +394,10 @@ class translate(models.Model):
         db_table = 'translate'
         verbose_name = _('translation rule')
         ordering = ['fromeditype','frommessagetype','frompartner','topartner','alt']
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.fromeditype) + ' ' + unicode(self.frommessagetype) + ' ' + unicode(self.alt) + ' ' + unicode(self.frompartner) + ' ' + unicode(self.topartner)
 
-
+@python_2_unicode_compatible
 class routes(models.Model):
     #~ id = models.IntegerField(primary_key=True)
     idroute = StripCharField(max_length=35,db_index=True,help_text=_('Identification of route; a composite route consists of multiple parts having the same "idroute".'))
@@ -431,7 +439,7 @@ class routes(models.Model):
         verbose_name = _('route')
         unique_together = (('idroute','seq'),)
         ordering = ['idroute','seq']
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.idroute) + ' ' + unicode(self.seq)
     def translt(self):
         if self.translateind == 0:
