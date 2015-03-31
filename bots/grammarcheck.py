@@ -36,7 +36,7 @@ def startmulti(grammardir,editype):
             continue
         filename_noextension = os.path.splitext(filename_basename)[0]
         try:
-            grammar.grammarread(editype,filename_noextension)
+            grammar.grammarread(editype,filename_noextension,typeofgrammarfile='grammars')
         except:
             print(botslib.txtexc(),end='\n\n')
         else:
@@ -93,7 +93,7 @@ def start():
     atexit.register(logging.shutdown)
 
     try:
-        grammar.grammarread(editype,messagetype)
+        grammar.grammarread(editype,messagetype,typeofgrammarfile='grammars')
     except:
         print('Found error in grammar: ',botslib.txtexc())
         sys.exit(1)

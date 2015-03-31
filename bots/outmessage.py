@@ -82,7 +82,7 @@ class Outmessage(message.Message):
         ''' writeall is called for writing all 'real' outmessage objects; but not for envelopes.
             writeall is call from transform.translate()
         '''
-        self.messagegrammarread()
+        self.messagegrammarread(typeofgrammarfile='grammars')
         self.checkmessage(self.root,self.defmessage)
         self.checkforerrorlist()
         self.nrmessagewritten = 0
@@ -556,7 +556,7 @@ class tradacoms(var):
         messagetype = self.ta_info['messagetype']
         for tradacomsmessage in self.root.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
             self.ta_info['messagetype'] = tradacomsmessage.get({'BOTSID':'MHD','TYPE.01':None}) + tradacomsmessage.get({'BOTSID':'MHD','TYPE.02':None})
-            self.messagegrammarread()
+            self.messagegrammarread(typeofgrammarfile='grammars')
             if not self.nrmessagewritten:
                 self._initwrite()
             self.checkmessage(tradacomsmessage,self.defmessage)

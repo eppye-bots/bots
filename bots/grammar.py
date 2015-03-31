@@ -8,9 +8,12 @@ from django.utils.translation import ugettext as _
 from . import botslib
 from .botsconfig import *
 
-def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
+def grammarread(editype,grammarname,typeofgrammarfile):
     ''' reads/imports a grammar (dispatch function for class Grammar and subclasses).
-        either read whole grammar or only syntax (via parameter 'typeofgrammarfile').
+        typeofgrammarfile indicates some variants in reading:
+        - envelope: read whole grammar, get right syntax
+        - grammar: read whole grammar, get right syntax.
+        - partners: only syntax is read
         grammars are imported from usersys/<'typeofgrammarfile'>/<editype>/<grammarname>.
     '''
     try:
@@ -23,7 +26,7 @@ def grammarread(editype,grammarname,typeofgrammarfile='grammars'):
         messagegrammar = classtocall(typeofgrammarfile='grammars',editype=editype,grammarname=grammarname)
         #Get right syntax: 1. start with classtocall.defaultsyntax
         syntax = classtocall.defaultsyntax.copy()
-        #Find out what envlope is used:
+        #Find out what envelope is used:
         envelope = messagegrammar.syntax.get('envelope') or classtocall.defaultsyntax['envelope']
         if envelope and envelope != grammarname:
             try:

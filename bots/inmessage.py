@@ -65,7 +65,7 @@ class Inmessage(message.Message):
     def initfromfile(self):
         ''' Initialisation from a edi file.
         '''
-        self.messagegrammarread()
+        self.messagegrammarread(typeofgrammarfile='grammars')
         #**charset errors, lex errors
         self._readcontent_edifile()     #open file. variants: read with charset, read as binary & handled in sniff, only opened and read in _lex.
         self._sniff()           #some hard-coded examination of edi file; ta_info can be overruled by syntax-parameters in edi-file
@@ -251,14 +251,14 @@ class Inmessage(message.Message):
                                                             {'sub':structure_level[structure_index][SUBTRANSLATION]})
                 messagetype = self._manipulatemessagetype(messagetype,inode)
                 try:
-                    defmessage = grammar.grammarread(self.__class__.__name__,messagetype)
+                    defmessage = grammar.grammarread(self.__class__.__name__,messagetype,typeofgrammarfile='grammars')
                 except botslib.BotsImportError:
                     raisenovalidmapping_error = True
                     if hasattr(self.defmessage.module,'getmessagetype'):
                         messagetype2 = botslib.runscript(self.defmessage.module,self.defmessage.grammarname,'getmessagetype',editype=self.__class__.__name__,messagetype=messagetype)
                         if messagetype2:
                             try:
-                                defmessage = grammar.grammarread(self.__class__.__name__,messagetype2)
+                                defmessage = grammar.grammarread(self.__class__.__name__,messagetype2,typeofgrammarfile='grammars')
                                 raisenovalidmapping_error = False
                             except botslib.BotsImportError:
                                 pass
@@ -785,7 +785,7 @@ class excel(csv):
         except:
             import io as StringIO
         
-        self.messagegrammarread()
+        self.messagegrammarread(typeofgrammarfile='grammars')
         self.ta_info['charset'] = self.defmessage.syntax['charset']      #always use charset of edi file.
         if self.ta_info['escape']:
             doublequote = False
@@ -1384,9 +1384,9 @@ class xml(Inmessage):
             else:
                 raise botslib.InMessageError(_('Could not find right xml messagetype for mailbag.'))
 
-            self.messagegrammarread()
+            self.messagegrammarread(typeofgrammarfile='grammars')
         else:
-            self.messagegrammarread()
+            self.messagegrammarread(typeofgrammarfile='grammars')
             parser = ET.XMLParser()
             for key,value in self.ta_info['extra_character_entity'].items():
                 parser.entity[key] = value
@@ -1466,7 +1466,7 @@ class xmlnocheck(xml):
 
 class json(Inmessage):
     def initfromfile(self):
-        self.messagegrammarread()
+        self.messagegrammarread(typeofgrammarfile='grammars')
         self._readcontent_edifile()
 
         jsonobject = simplejson.loads(self.rawinput)
