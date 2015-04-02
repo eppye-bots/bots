@@ -17,9 +17,6 @@ import bots.transform as transform
 from bots.botsconfig import *
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 '''
 plugin 'unit_multi_1'
@@ -32,7 +29,7 @@ def test_plugin():
                                 FROM    partner
                                 WHERE   isgroup = %(isgroup)s ''',
                                 {'isgroup':False}):
-        if row[b('count')] != 5:
+        if row[str('count')] != 5:
             raise Exception('error partner count')
         break
     else:
@@ -41,7 +38,7 @@ def test_plugin():
                                 FROM    partner
                                 WHERE   isgroup = %(isgroup)s ''',
                                 {'isgroup':True}):
-        if row[b('count')] != 3:
+        if row[str('count')] != 3:
             raise Exception('error partner count')
         break
     else:
@@ -50,7 +47,7 @@ def test_plugin():
                                     FROM partnergroup
                                     WHERE from_partner_id=%(from_partner_id)s  ''',
                                 {'from_partner_id':'plugintest1'}):
-        if row[b('count')] != 3:
+        if row[str('count')] != 3:
             raise Exception('error partner count')
         break
     else:
@@ -59,13 +56,13 @@ def test_plugin():
                                     FROM partnergroup
                                     WHERE from_partner_id=%(from_partner_id)s  ''',
                                 {'from_partner_id':'plugintest2'}):
-        if row[b('to_partner_id')] != 'plugingroup2':
+        if row[str('to_partner_id')] != 'plugingroup2':
             raise Exception('error partner count')
     for row in botslib.query(u'''SELECT COUNT(*) as count
                                     FROM partnergroup
                                     WHERE to_partner_id=%(to_partner_id)s  ''',
                                 {'to_partner_id':'plugingroup2'}):
-        if row[b('count')] != 2:
+        if row[str('count')] != 2:
             raise Exception('error partner count')
         break
     else:
@@ -109,8 +106,8 @@ def test_ccode_with_unicode():
                                         WHERE   ccodeid_id = %(ccodeid)s
                                         AND     leftcode = %(leftcode)s''',
                                         {'ccodeid':domein,'leftcode':key}):
-                print('    ',key, type(row[b('rightcode')]),type(value))
-                if row[b('rightcode')] != value:
+                print('    ',key, type(row[str('rightcode')]),type(value))
+                if row[str('rightcode')] != value:
                     print('failure in test "%s": result "%s" is not equal to "%s"'%(key,row['rightcode'],value))
                 else:
                     print('    OK')
@@ -135,7 +132,7 @@ def test_unique_in_run_counter():
         raise Exception('test_unique_in_run_counter')
 
 def test_partner_lookup():
-    for s in [b('attr1'),b('attr2'),b('attr3'),b('attr4'),b('attr5')]:
+    for s in [str('attr1'),str('attr2'),str('attr3'),str('attr4'),str('attr5')]:
         if transform.partnerlookup('test',s) != s:
             raise Exception('test_partner_lookup')
     #test lookup for not existing partner
@@ -151,10 +148,10 @@ def test_partner_lookup():
     
     #test lookup where no value is in the database
     idpartner = 'test2'
-    if transform.partnerlookup(idpartner,b('attr1')) != 'attr1':
+    if transform.partnerlookup(idpartner,str('attr1')) != 'attr1':
         raise Exception('test_partner_lookup')
     try:
-        transform.partnerlookup(idpartner,b('attr2'))
+        transform.partnerlookup(idpartner,str('attr2'))
     except botslib.CodeConversionError as msg:
         pass
     else:
@@ -181,20 +178,20 @@ if __name__=='__main__':
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','testreference'],
                                     {'status':0,'lastreceived':1,'lasterror':0,'lastdone':1,'lastok':0,'lastopen':0,'send':1,'processerrors':0,'filesize':262})
     ta_externout = utilsunit.getlastta(EXTERNOUT)
-    if ta_externout[b('botskey')] != 'BOTSKEY01':
+    if ta_externout[str('botskey')] != 'BOTSKEY01':
         raise Exception('testreference: botskey not OK')
     ta_externout = utilsunit.getlastta(PARSED)
-    if ta_externout[b('reference')] != 'UNBREF01':
+    if ta_externout[str('reference')] != 'UNBREF01':
         raise Exception('testreference: unb ref not OK')
     ta_externout = utilsunit.getlastta(SPLITUP)
-    if ta_externout[b('reference')] != 'BOTSKEY01':
+    if ta_externout[str('reference')] != 'BOTSKEY01':
         raise Exception('testreference: botskey not OK')
-    if ta_externout[b('botskey')] != 'BOTSKEY01':
+    if ta_externout[str('botskey')] != 'BOTSKEY01':
         raise Exception('testreference: botskey not OK')
     ta_externout = utilsunit.getlastta(TRANSLATED)
-    if ta_externout[b('reference')] != 'BOTSKEY01':
+    if ta_externout[str('reference')] != 'BOTSKEY01':
         raise Exception('testreference: botskey not OK')
-    if ta_externout[b('botskey')] != 'BOTSKEY01':
+    if ta_externout[str('botskey')] != 'BOTSKEY01':
         raise Exception('testreference: botskey not OK')
     #test KECA charset **********************************************************************************************************************
     utilsunit.RunTestCompareResults([pythoninterpreter,'bots-engine.py','testkeca'],

@@ -15,9 +15,6 @@ import bots.botsglobal as botsglobal
 from bots.botsconfig import *
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 
 '''
@@ -51,9 +48,9 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':220,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
             nr_rows += 1
-            print(row[b('idta')],row[b('confirmed')],row[b('confirmidta')])
-            self.failUnless(row[b('confirmed')])
-            self.failUnless(row[b('confirmidta')]!=0)
+            print(row[str('idta')],row[str('confirmed')],row[str('confirmidta')])
+            self.failUnless(row[str('confirmed')])
+            self.failUnless(row[str('confirmidta')]!=0)
         else:
             self.failUnless(nr_rows==1)
             
@@ -70,8 +67,8 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':500,'statust':DONE,'idroute':'testmdn','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(row[b('confirmed')])
-            self.failUnless(row[b('confirmidta')]!=0)
+            self.failUnless(row[str('confirmed')])
+            self.failUnless(row[str('confirmidta')]!=0)
         else:
             self.failUnless(nr_rows==1)
         
@@ -92,8 +89,8 @@ class TestMain(unittest.TestCase):
                                 ''',
                                 {'status':500,'statust':DONE,'idroute':'testmdn2','confirmtype':'ask-email-MDN','confirmasked':True}):
             nr_rows += 1
-            self.failUnless(not row[b('confirmed')])
-            self.failUnless(row[b('confirmidta')]==0)
+            self.failUnless(not row[str('confirmed')])
+            self.failUnless(row[str('confirmidta')]==0)
         else:
             self.failUnless(nr_rows==1)
 
@@ -130,11 +127,11 @@ class TestMain(unittest.TestCase):
                                 {'status':400,'statust':DONE,'idroute':'test997','confirmtype':'ask-x12-997','confirmasked':True}):
             counter += 1
             if counter == 1:
-                self.failUnless(not row[b('confirmed')])
-                self.failUnless(row[b('confirmidta')]==0)
+                self.failUnless(not row[str('confirmed')])
+                self.failUnless(row[str('confirmidta')]==0)
             elif counter == 2:
-                self.failUnless(row[b('confirmed')])
-                self.failUnless(row[b('confirmidta')]!=0)
+                self.failUnless(row[str('confirmed')])
+                self.failUnless(row[str('confirmidta')]!=0)
             else:
                 break
         else:
@@ -151,8 +148,8 @@ class TestMain(unittest.TestCase):
                                 {'status':310,'statust':DONE,'idroute':'test997','confirmtype':'send-x12-997','confirmasked':True}):
             counter += 1
             if counter <= 2:
-                self.failUnless(row[b('confirmed')])
-                self.failUnless(row[b('confirmidta')]!=0)
+                self.failUnless(row[str('confirmed')])
+                self.failUnless(row[str('confirmidta')]!=0)
             else:
                 break
         else:
@@ -187,11 +184,11 @@ class TestMain(unittest.TestCase):
                                 {'status':400,'statust':DONE,'idroute':'testcontrl','confirmtype':'ask-edifact-CONTRL','confirmasked':True}):
             counter += 1
             if counter == 1:
-                self.failUnless(not row[b('confirmed')])
-                self.failUnless(row[b('confirmidta')]==0)
+                self.failUnless(not row[str('confirmed')])
+                self.failUnless(row[str('confirmidta')]==0)
             elif counter == 2:
-                self.failUnless(row[b('confirmed')])
-                self.failUnless(row[b('confirmidta')]!=0)
+                self.failUnless(row[str('confirmed')])
+                self.failUnless(row[str('confirmidta')]!=0)
             else:
                 break
         else:
@@ -208,8 +205,8 @@ class TestMain(unittest.TestCase):
                                 {'status':310,'statust':DONE,'idroute':'testcontrl','confirmtype':'send-edifact-CONTRL','confirmasked':True}):
             counter += 1
             if counter <= 2:
-                self.failUnless(row[b('confirmed')])
-                self.failUnless(row[b('confirmidta')]!=0)
+                self.failUnless(row[str('confirmed')])
+                self.failUnless(row[str('confirmidta')]!=0)
             else:
                 break
         else:

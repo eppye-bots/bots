@@ -13,9 +13,6 @@ from bots.botsconfig import *
 import utilsunit
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 ''' plugin unitformats 
     set bots.ini: max_number_errors = 1

@@ -13,9 +13,6 @@ import bots.transform as transform
 import bots.validate_email as validate_email
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 '''plugin unittranslateutils.zip 
 in bots.ini:  runacceptancetest = False

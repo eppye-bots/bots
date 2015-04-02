@@ -13,9 +13,6 @@ import bots.inmessage as inmessage
 import bots.outmessage as outmessage
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 
 def comparenode(node1,node2org):
@@ -109,7 +106,7 @@ def geterrorlastrun():
                             FROM    filereport
                             ORDER BY idta DESC
                             '''):
-        return row[b('errortext')]
+        return row[str('errortext')]
     raise Exception('no filereport')
     
 def getlastta(status):
@@ -123,7 +120,7 @@ def getlastta(status):
 
 def comparedicts(dict1,dict2):
     for key,value in dict1.items():
-        if value != dict2[b(key)]:
+        if value != dict2[str(key)]:
             raise Exception('error comparing "%s": should be %s but is %s (in db),'%(key,value,dict2[key]))
 
 def removeWS(str):

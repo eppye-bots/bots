@@ -11,9 +11,6 @@ import bots.botsglobal as botsglobal
 import utilsunit
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 ''' plugin unitgrammar.zip 
     not an acceptance test.

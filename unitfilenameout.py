@@ -14,9 +14,6 @@ import bots.communication as communication
 from bots.botsconfig import *
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 '''
 plugin unitfilenameout.zip
@@ -40,7 +37,7 @@ class TestMain(unittest.TestCase):
                                 {'status':520,'statust':DONE,'idroute':'testmdn','confirmtype':'send-email-MDN','confirmasked':True}):
             count += 1
             sub_unique = botslib.unique('dutchic_desadv_out')
-            ta = botslib.OldTransaction(row[b('idta')])
+            ta = botslib.OldTransaction(row[str('idta')])
 
             self.assertEqual(comclass.filename_formatter('*.edi',ta), str(sub_unique+1)+'.edi','')
             self.assertEqual(comclass.filename_formatter('*.edi',ta), str(sub_unique+2)+'.edi','')

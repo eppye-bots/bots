@@ -27,9 +27,6 @@ import bots.inmessage as inmessage
 import bots.outmessage as outmessage
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 ''' 
 pluging unitinisout.zip

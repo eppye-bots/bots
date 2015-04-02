@@ -13,9 +13,6 @@ import bots.botsinit as botsinit
 import bots.botsglobal as botsglobal
 if sys.version_info[0] > 2:
     basestring = unicode = str
-    b = lambda my_str: my_str
-else:
-    b = lambda my_str: str(my_str)
 
 '''plugin unitnode.zip
 not an acceptance tst
