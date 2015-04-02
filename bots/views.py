@@ -432,6 +432,32 @@ def srcfiler(request,*kw,**kwargs):
         except:
             return django.shortcuts.render(request,'bots/srcfiler.html',{'error_content': _('No such file.')})
 
+def logfiler(request,*kw,**kwargs):
+    ''' handles bots log file viewer. display/download any file in logging directory.
+    '''
+    if request.method == 'GET':
+        if 'log' in request.GET:
+            log = request.GET['log']
+        else:
+            log = 'engine.log'
+        logpath = botslib.join(botsglobal.ini.get('directories','botssys'),'logging')
+        logf = botslib.join(logpath,log)
+        try:
+            with open(logf) as f:
+                logdata = f.read()
+        except:
+            logdata =  _(u'No such file %s' %logf)
+
+        if 'action' in request.GET and request.GET['action'] == 'download':
+            response = django.http.HttpResponse(content_type='text/log')
+            response['Content-Disposition'] = 'attachment; filename=' + log
+            response.write(logdata)
+            return response
+        else:
+            logfiles = sorted(os.listdir(logpath), key=lambda s: s.lower())
+            return django.shortcuts.render(request,'bots/logfiler.html',{'log':log, 'logdata':logdata, 'logfiles':logfiles})
+
+
 def plugin(request,*kw,**kwargs):
     if request.method == 'GET':
         form = forms.UploadFileForm()

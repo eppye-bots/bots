@@ -19,7 +19,7 @@
 	<ul>
 		<a {% if not bots_touchscreen %} href="/reports/?lastrun=0" {% endif %} >{% trans 'All runs' %}</a>
 		<li><a href="/reports/?lastrun=0" >{% trans 'Report (per run)' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
-        <li><a href="/incoming/?lastrun=0" >{% trans 'Incoming' %}</a></li>
+		<li><a href="/incoming/?lastrun=0" >{% trans 'Incoming' %}</a></li>
 		<li><a href="/document/?lastrun=0;status=320" >{% trans 'Document-in' %}</a></li>
 		<li><a href="/document/?lastrun=0;status=330" >{% trans 'Document-out' %}</a></li>
 		<li><a href="/outgoing/?lastrun=0" >{% trans 'Outgoing' %}</a></li>
@@ -29,7 +29,7 @@
 	<ul>
 		<a {% if not bots_touchscreen %} href="/document/?select" {% endif %} >{% trans 'Select' %}</a>
 		<li><a href="/reports/?select" >{% trans 'Reports (per run)' %}</a></li>
-        <li><a href="/incoming/?select" >{% trans 'Incoming' %}</a></li>
+		<li><a href="/incoming/?select" >{% trans 'Incoming' %}</a></li>
 		<li><a href="/document/?select" >{% trans 'Document' %}{% if not bots_touchscreen %} *{% endif %}</a></li>
 		<li><a href="/outgoing/?select" >{% trans 'Outgoing' %}</a></li>
 		<li><a href="/processes/?select" >{% trans 'Process Errors' %}</a></li>
@@ -37,54 +37,55 @@
 	</ul>
 	{% if user.is_staff %}
 	<ul>
-		<a>{% trans 'Configuration' %}</a>
+		<a>{% trans 'Config' %}</a>
 		{% if perms.bots.change_routes %}<li><a href="/admin/bots/routes/" >{% trans 'Routes' %}</a></li>{% endif %}
 		{% if perms.bots.change_channel %}<li><a href="/admin/bots/channel/" >{% trans 'Channels' %}</a></li>{% endif %}
 		{% if perms.bots.change_translate %}<li><a href="/admin/bots/translate/" >{% trans 'Translations' %}</a></li>{% endif %}
 		{% if perms.bots.change_partner %}<li><a href="/admin/bots/partner/" >{% trans 'Partners' %}</a></li>{% endif %}
 		{% if perms.bots.change_partner %}<li><a href="/admin/bots/partnergroep/" >{% trans 'Partnergroups' %}</a></li>{% endif %}
 		{% if perms.bots.change_confirmrule %}<li><a href="/admin/bots/confirmrule/" >{% trans 'Confirmrules' %}</a></li>{% endif %}
-        <li><hr/></li>
+		<li><hr/></li>
 		{% if perms.bots.change_ccode %}<li><a href="/admin/bots/ccode/" >{% trans 'User Codes list' %}</a></li>{% endif %}
 		{% if perms.bots.change_ccodetrigger %}<li><a href="/admin/bots/ccodetrigger/" >{% trans 'User Code types' %}</a></li>{% endif %}
 	</ul>
-    {% endif %}
-    {% if user.is_superuser %}
+	{% endif %}
+	{% if user.is_superuser %}
 	<ul>
 		<a>{% trans 'SysTasks' %}</a>
 		<li><a href="/plugin/" >{% trans 'Read plugin' %}</a></li>
 		<li><a href="/plugout/" >{% trans 'Make plugin' %}</a></li>
 		<li><a href="/plugout/backup" >{% trans 'Make backup plugin' %}</a></li>
-        <li><hr/></li>
+		<li><hr/></li>
 		<li><a href="/plugin/index" >{% trans 'Read configuration index' %}</a></li>
 		<li><a href="/plugout/index" >{% trans 'Make configuration index' %}</a></li>
-        <li><hr/></li>
+		<li><hr/></li>
 		<li><a href="/delete/" >{% trans 'Bulk delete' %}</a></li>
-        <li><hr/></li>
+		<li><hr/></li>
 		<li><a href="/admin/auth/user/" >{% trans 'Users' %}</a></li>
 		<li><a href="/admin/auth/group/" >{% trans 'UserGroups' %}</a></li>
-        <li><hr/></li>
+		<li><hr/></li>
 		<li><a href="/admin/bots/uniek/" >{% trans 'View/edit counters' %}</a></li>
 		<li><a href="/sendtestmail/">{% trans 'Send test report' %}</a></li>
+		<li><a href="/logfiler/" target="_blank">{% trans 'View logfiles' %}</a></li>
 	</ul>
-    {% endif %}
+	{% endif %}
 	{% if perms.bots.change_mutex %} <!-- change mutex permission is required to run bots-engine! -->
 	<ul>
 		<a>{% trans 'Run' %}</a>
 		<li><a href="/runengine/?clparameter=--new" >{% trans 'Run (only new)' %}</a></li>
-        <li><hr/></li>
+		<li><hr/></li>
 		<li><a href="/runengine/?clparameter=--rereceive" >{% trans 'Run user-indicated rereceives' %}</a></li>
 		<li><a href="/runengine/?clparameter=--resend" >{% trans 'Run user-indicated resends' %}</a></li>
-        {% if menu_automaticretrycommunication %}
+		{% if menu_automaticretrycommunication %}
 			<li><a href="/runengine/?clparameter=--automaticretrycommunication" >{% trans 'Retry failed out-communications' %}</a></li>
-        {% endif %}
-        {% if menu_all_routes %}
-            <li><hr/></li>
-            {% for route in menu_all_routes %}
-                <li><a href="/runengine/?clparameter={{ route|urlencode:'' }}" >{{ route }}</a></li>
-            {% endfor %}
-        {% endif %}
-    </ul>
+		{% endif %}
+		{% if menu_all_routes %}
+			<li><hr/></li>
+			{% for route in menu_all_routes %}
+				<li><a href="/runengine/?clparameter={{ route|urlencode:'' }}" >{{ route }}</a></li>
+			{% endfor %}
+		{% endif %}
+	</ul>
 	{% endif %}
 	{% if custom_menus %}
 	<ul>
@@ -96,7 +97,7 @@
 				<li><a href="{{ value }}" >{{ key }}</a></li>
 			{% endifequal %}
 		{% endfor %}
-    </ul>
+	</ul>
 	{% endif %}
 
 {% else %}
