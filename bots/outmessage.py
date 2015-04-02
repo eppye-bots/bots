@@ -59,7 +59,7 @@ class Outmessage(message.Message):
         super(Outmessage,self).__init__(ta_info)
         self.root = node.Node(record={})         #message tree; build via put()-interface in mappingscript. Initialise with empty dict
 
-    def messagegrammarread(self,typeofgrammarfile='grammars'):
+    def messagegrammarread(self,typeofgrammarfile):
         ''' read grammar for a message/envelope.
             (try to) read the topartner dependent grammar syntax.
         '''

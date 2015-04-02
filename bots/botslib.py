@@ -938,6 +938,8 @@ class EanError(BotsError):
     pass
 class GrammarError(BotsError):
     pass
+class GrammarPartMissing(BotsError):
+    pass
 class InMessageError(BotsError):
     pass
 class LockedFileError(BotsError):
