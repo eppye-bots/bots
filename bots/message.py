@@ -96,7 +96,7 @@ class Message(object):
         '''
         if not self.ta_info['has_structure']:
             return
-        if node_instance.record:        #root record contains information; write whole tree in one time
+        if node_instance.record:        #root record contains information; so one message
             self._checkonemessage(node_instance,defmessage,subtranslation)
         else:
             for childnode in node_instance.children:
