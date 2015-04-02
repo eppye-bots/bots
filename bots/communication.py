@@ -919,14 +919,7 @@ class pop3(_comsession):
 class pop3s(pop3):
     def connect(self):
         import poplib
-        if self.userscript and hasattr(self.userscript,'keyfile'):
-            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
-        elif self.channeldict['keyfile']:
-            keyfile = self.channeldict['keyfile']
-            certfile = self.channeldict['certfile']
-        else:
-            keyfile = certfile = None
-        self.session = poplib.POP3_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile)
+        self.session = poplib.POP3_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=self.channeldict['keyfile'],certfile=self.channeldict['certfile'])
         self.session.set_debuglevel(botsglobal.ini.getint('settings','pop3debug',0))    #if used, gives information about session (on screen), for debugging pop3
         self.session.user(self.channeldict['username'])
         self.session.pass_(self.channeldict['secret'])
@@ -1017,15 +1010,8 @@ class imap4(_comsession):
 class imap4s(imap4):
     def connect(self):
         import imaplib
-        if self.userscript and hasattr(self.userscript,'keyfile'):
-            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
-        elif self.channeldict['keyfile']:
-            keyfile = self.channeldict['keyfile']
-            certfile = self.channeldict['certfile']
-        else:
-            keyfile = certfile = None
         imaplib.Debug = botsglobal.ini.getint('settings','imap4debug',0)    #if used, gives information about session (on screen), for debugging imap4
-        self.session = imaplib.IMAP4_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile)
+        self.session = imaplib.IMAP4_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=self.channeldict['keyfile'],certfile=self.channeldict['certfile'])
         self.session.login(self.channeldict['username'],self.channeldict['secret'])
 
 
@@ -1092,30 +1078,16 @@ class smtp(_comsession):
 
 class smtps(smtp):
     def connect(self):
-        if self.userscript and hasattr(self.userscript,'keyfile'):
-            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
-        elif self.channeldict['keyfile']:
-            keyfile = self.channeldict['keyfile']
-            certfile = self.channeldict['certfile']
-        else:
-            keyfile = certfile = None
-        self.session = smtplib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=keyfile,certfile=certfile) #make connection
+        self.session = smtplib.SMTP_SSL(host=self.channeldict['host'],port=int(self.channeldict['port']),keyfile=self.channeldict['keyfile'],certfile=self.channeldict['certfile']) #make connection
         self.session.set_debuglevel(botsglobal.ini.getint('settings','smtpdebug',0))    #if used, gives information about session (on screen), for debugging smtp
         self.login()
 
 class smtpstarttls(smtp):
     def connect(self):
-        if self.userscript and hasattr(self.userscript,'keyfile'):
-            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
-        elif self.channeldict['keyfile']:
-            keyfile = self.channeldict['keyfile']
-            certfile = self.channeldict['certfile']
-        else:
-            keyfile = certfile = None
         self.session = smtplib.SMTP(host=self.channeldict['host'],port=int(self.channeldict['port'])) #make connection
         self.session.set_debuglevel(botsglobal.ini.getint('settings','smtpdebug',0))    #if used, gives information about session (on screen), for debugging smtp
         self.session.ehlo()
-        self.session.starttls(keyfile=keyfile,certfile=certfile)
+        self.session.starttls(keyfile=self.channeldict['keyfile'],certfile=self.channeldict['certfile'])
         self.session.ehlo()
         self.login()
 
@@ -1281,15 +1253,8 @@ class ftps(ftp):
     def connect(self):
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_('ftps is not supported by your python version, use >=2.7'))
-        if self.userscript and hasattr(self.userscript,'keyfile'):
-            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
-        elif self.channeldict['keyfile']:
-            keyfile = self.channeldict['keyfile']
-            certfile = self.channeldict['certfile']
-        else:
-            keyfile = certfile = None
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
-        self.session = ftplib.FTP_TLS(keyfile=keyfile,certfile=certfile)
+        self.session = ftplib.FTP_TLS(keyfile=self.channeldict['keyfile'],certfile=self.channeldict['certfile'])
         self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
         self.session.set_pasv(not self.channeldict['ftpactive']) #active or passive ftp
         self.session.connect(host=self.channeldict['host'],port=int(self.channeldict['port']))
@@ -1359,15 +1324,8 @@ class ftpis(ftp):
     def connect(self):
         if not hasattr(ftplib,'FTP_TLS'):
             raise botslib.CommunicationError(_('ftpis is not supported by your python version, use >=2.7'))
-        if self.userscript and hasattr(self.userscript,'keyfile'):
-            keyfile, certfile = botslib.runscript(self.userscript,self.scriptname,'keyfile',channeldict=self.channeldict)
-        elif self.channeldict['keyfile']:
-            keyfile = self.channeldict['keyfile']
-            certfile = self.channeldict['certfile']
-        else:
-            keyfile = certfile = None
         botslib.settimeout(botsglobal.ini.getint('settings','ftptimeout',10))
-        self.session = Ftp_tls_implicit(keyfile=keyfile,certfile=certfile)
+        self.session = Ftp_tls_implicit(keyfile=self.channeldict['keyfile'],certfile=self.channeldict['certfile'])
         if self.channeldict['parameters']:
             self.session.ssl_version = int(self.channeldict['parameters'])
         self.session.set_debuglevel(botsglobal.ini.getint('settings','ftpdebug',0))   #set debug level (0=no, 1=medium, 2=full debug)
