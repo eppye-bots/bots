@@ -632,7 +632,9 @@ class fixed(Grammar):
                     break
                 position_in_record += field[LENGTH]
             #3. calculate record length
-            i[F_LENGTH] = sum(field[LENGTH] for field in i[FIELDS])
+            i[FIXED_RECORD_LENGTH] = sum(field[LENGTH] for field in i[FIELDS])
+            if self.syntax['noBOTSID']:     #correct record-length if noBOTSID 
+                i[FIXED_RECORD_LENGTH] -= - (self.syntax['endrecordID'] - self.syntax['startrecordID'])
             #and go recursive
             if LEVEL in i:
                 self._linkrecorddefs2structure(i[LEVEL])

@@ -427,43 +427,25 @@ class fixed(Inmessage):
         record2build = {} #start with empty dict
         fixedrecord = lex_record[ID][FIXEDLINE]  #shortcut to fixed incoming record
         lenfixed = len(fixedrecord)
-        if self.ta_info['noBOTSID']:    #if read records contain no BOTSID: add it
-            recordlength = record_definition[F_LENGTH] - len(lex_record[ID][VALUE])
-            if recordlength != lenfixed:
-                if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-                    raise botslib.InMessageError(_('[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
-                if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-                    raise botslib.InMessageError(_('[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
-            pos = 0
-            for field_definition in record_definition[FIELDS]:
-                if field_definition[ID] == 'BOTSID':
-                    record2build['BOTSID'] = lex_record[ID][VALUE]
-                    continue
-                value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
-                if value:
-                    record2build[field_definition[ID]] = value
-                pos += field_definition[LENGTH]
-            record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
-            return record2build
-        else:
-            recordlength = record_definition[F_LENGTH]
-            if recordlength != lenfixed:
-                if recordlength > lenfixed and self.ta_info['checkfixedrecordtooshort']:
-                    raise botslib.InMessageError(_('[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
-                if recordlength < lenfixed and self.ta_info['checkfixedrecordtoolong']:
-                    raise botslib.InMessageError(_('[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
-                                                    line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=lenfixed,defpos=recordlength)
-            pos = 0
-            for field_definition in record_definition[FIELDS]:
-                value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
-                if value:
-                    record2build[field_definition[ID]] = value
-                pos += field_definition[LENGTH]
-            record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
-            return record2build
+        recordlength = record_definition[FIXED_RECORD_LENGTH]
+        if record_definition[FIXED_RECORD_LENGTH] != len(fixedrecord):
+            if record_definition[FIXED_RECORD_LENGTH] > len(fixedrecord) and self.ta_info['checkfixedrecordtooshort']:
+                raise botslib.InMessageError(_('[S52] line %(line)s: Record "%(record)s" too short; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=len(fixedrecord),defpos=record_definition[FIXED_RECORD_LENGTH])
+            if record_definition[FIXED_RECORD_LENGTH] < len(fixedrecord) and self.ta_info['checkfixedrecordtoolong']:
+                raise botslib.InMessageError(_('[S53] line %(line)s: Record "%(record)s" too long; is %(pos)s pos, defined is %(defpos)s pos.'),
+                                                line=lex_record[ID][LIN],record=lex_record[ID][VALUE],pos=len(fixedrecord),defpos=record_definition[FIXED_RECORD_LENGTH])
+        pos = 0
+        for field_definition in record_definition[FIELDS]:
+            if field_definition[ID] == 'BOTSID' and self.ta_info['noBOTSID']:
+                record2build['BOTSID'] = lex_record[ID][VALUE]
+                continue
+            value = fixedrecord[pos:pos+field_definition[LENGTH]].strip()   #copy string to avoid memory problem
+            if value:
+                record2build[field_definition[ID]] = value
+            pos += field_definition[LENGTH]
+        record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
+        return record2build
 
     def _formatfield(self,value,field_definition,structure_record,node_instance):
         ''' Format of a field is checked and converted if needed.
