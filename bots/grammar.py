@@ -30,7 +30,7 @@ def grammarread(editype,grammarname,typeofgrammarfile):
         messagegrammar.syntax = classtocall.defaultsyntax.copy()
         #Find out what envelope is used:
         envelope = messagegrammar.original_syntaxfromgrammar.get('envelope') or messagegrammar.syntax['envelope']
-        if envelope and envelope != grammarname:
+        if envelope and envelope != grammarname:    #when reading messagetype 'edifact' envelope will also be edifact->so do not read it.
             try:
                 #read envelope grammar
                 envelopegrammar = classtocall(typeofgrammarfile='grammars',editype=editype,grammarname=envelope)
