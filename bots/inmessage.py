@@ -269,6 +269,8 @@ class Inmessage(message.Message):
                 self.messagetypetxt = _('Message nr %(count)s, type %(type)s, '%{'count':self.messagecount,'type':messagetype})
                 current_lex_record = self._parse(structure_level=defmessage.structure[0][LEVEL],inode=newnode)
                 newnode.queries = {'messagetype':messagetype}       #copy messagetype into 1st segment of subtranslation (eg UNH, ST)
+                newnode.queries.update(defmessage.syntax)
+                #~ newnode.queries = defmessage.syntax.copy()       #if using this line instead of previous 2: gives errors eg in incoming edifact...do not understand why
                 self.checkmessage(newnode,defmessage,subtranslation=True)      #check the results of the subtranslation
                 #~ end SUBTRANSLATION
                 self.messagetypetxt = ''

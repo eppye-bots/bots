@@ -79,7 +79,6 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
 
         if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm.
             raise botslib.GotoException('dummy')    
-        
         #edifile.ta_info contains info: QUERIES, charset etc
         for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile
             try:
@@ -170,8 +169,10 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
                 #end of while-loop (trans**********************************************************************************
             #exceptions file_out-level: exception in mappingscript or writing of out-file
             except:
-                #2 modes: either every error leads to skipping of  whole infile (old  mode) or errors in mappingscript/outfile only affect that branche
-                if botsglobal.ini.getboolean('settings','oldmessageerrors',False):
+                #two ways to handle errors in mapping script or in writing outgoing message: 
+                #1. do process other messages in file/interchange (default in bots 3.*)
+                #2. one error in file/interchange->drop all results (as in bots 2.*)
+                if inn_splitup.ta_info.get('no_results_if_any_error_in_translation_edifile',False):
                     raise
                 txt = botslib.txtexc()
                 ta_splitup.update(statust=ERROR,errortext=txt,**inn_splitup.ta_info)   #update db. inn_splitup.ta_info could be changed by mappingscript. Is this useful?
