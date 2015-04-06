@@ -79,6 +79,9 @@
 		{% if menu_automaticretrycommunication %}
 			<li><a href="/runengine/?clparameter=--automaticretrycommunication" >{% trans 'Retry failed out-communications' %}</a></li>
 		{% endif %}
+		{% if menu_cleanup %}
+			<li><a href="/runengine/?clparameter=--cleanup" >{% trans 'Run cleanup' %}</a></li>
+		{% endif %}
 		{% if menu_all_routes %}
 			<li><hr/></li>
 			{% for route in menu_all_routes %}

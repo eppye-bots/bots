@@ -16,6 +16,7 @@ def set_context(request):
         my_context['bots_touchscreen'] = botsglobal.ini.getboolean('webserver','bots_touchscreen',False)
         my_context['bots_mindate'] = 0 - botsglobal.ini.getint('settings','maxdays',30)
         my_context['menu_automaticretrycommunication'] = botsglobal.ini.getboolean('webserver','menu_automaticretrycommunication',False)
+        my_context['menu_cleanup'] = botsglobal.ini.getboolean('webserver','menu_cleanup',False)
         #in bots.ini it is possible to add custom menus
         if botsglobal.ini.has_section('custommenus'):
             my_context['custom_menuname'] = botsglobal.ini.get('custommenus','menuname','Custom')
