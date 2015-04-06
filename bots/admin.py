@@ -58,7 +58,7 @@ class ChannelAdmin(BotsAdmin):
     list_filter = ('inorout','type')
     ordering = ('idchannel',)
     readonly_fields = ('communicationscript',)
-    search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath')
+    search_fields = ('idchannel', 'inorout', 'type','host', 'username', 'path', 'filename', 'archivepath', 'desc')
     fieldsets = (
         (None,          {'fields':    (('idchannel', 'inorout', 'type'),
                                         ('remove','communicationscript'),
@@ -138,11 +138,11 @@ class PartnerAdmin(BotsAdmin):
     actions = ('activate',)
     filter_horizontal = ('group',)
     inlines = (MailInline,)
-    list_display = ('active','idpartner', 'name','mail','cc','startdate', 'enddate','phone1','phone2','attr1','attr2','attr3','attr4','attr5')
+    list_display = ('active','idpartner', 'name','mail','cc','address1','city','countrysubdivision','countrycode','postalcode','startdate', 'enddate','phone1','phone2','attr1','attr2','attr3','attr4','attr5')
     list_display_links = ('idpartner',)
     list_filter = ('active',)
     ordering = ('idpartner',)
-    search_fields = ('idpartner','name','mail','cc','attr1','attr2','attr3','attr4','attr5','name1','name2','name3')
+    search_fields = ('idpartner','name','mail','cc','address1','city','countrysubdivision','countrycode','postalcode','attr1','attr2','attr3','attr4','attr5','name1','name2','name3')
     fieldsets = (
         (None,          {'fields': ('active', ('idpartner', 'name'), ('mail','cc'),'desc',('startdate', 'enddate')),
                          'classes': ('wide extrapretty',)
@@ -154,7 +154,7 @@ class PartnerAdmin(BotsAdmin):
                          'classes': ('collapse wide extrapretty',)
                         }),
         (_('User defined'),{'fields': ('attr1','attr2','attr3','attr4','attr5'),
-                         'classes': ('collapse wide extrapretty',)
+                         'classes': ('wide extrapretty',)
                         }),
     )
     def queryset(self, request):
@@ -175,7 +175,7 @@ class PartnerGroepAdmin(BotsAdmin):
     list_display_links = ('idpartner',)
     list_filter = ('active',)
     ordering = ('idpartner',)
-    search_fields = ('idpartner','name',)
+    search_fields = ('idpartner','name','desc')
     fieldsets = (
         (None,          {'fields': ('active', 'idpartner', 'name','desc',('startdate', 'enddate')),
                          'classes': ('wide extrapretty',)
@@ -203,7 +203,7 @@ class RoutesAdmin(BotsAdmin):
     list_filter = ('active','notindefaultrun','idroute','fromeditype')
     ordering = ('idroute','seq')
     readonly_fields = ('routescript',)
-    search_fields = ('idroute', 'fromchannel__idchannel','fromeditype', 'frommessagetype', 'alt', 'tochannel__idchannel','toeditype', 'tomessagetype')
+    search_fields = ('idroute', 'fromchannel__idchannel','fromeditype', 'frommessagetype', 'alt', 'tochannel__idchannel','toeditype', 'tomessagetype', 'desc')
     fieldsets = (
         (None,      {'fields':  (('active','notindefaultrun'),'routescript',('idroute', 'seq',),'fromchannel', ('fromeditype', 'frommessagetype'),'translateind','tochannel','desc'),
                      'classes': ('wide extrapretty',)
@@ -239,13 +239,13 @@ class TranslateAdmin(BotsAdmin):
     list_display_links = ('fromeditype',)
     list_filter = ('active','fromeditype','toeditype')
     ordering = ('fromeditype','frommessagetype')
-    search_fields = ('fromeditype', 'frommessagetype', 'alt', 'frompartner__idpartner', 'topartner__idpartner', 'tscript', 'toeditype', 'tomessagetype')
+    search_fields = ('fromeditype', 'frommessagetype', 'alt', 'frompartner__idpartner', 'topartner__idpartner', 'tscript', 'toeditype', 'tomessagetype', 'desc')
     fieldsets = (
         (None,      {'fields': ('active', ('fromeditype', 'frommessagetype'),'tscript', ('toeditype', 'tomessagetype'),'desc'),
                      'classes': ('wide extrapretty',)
                     }),
         (_('Multiple translations per editype/messagetype'),{'fields': ('alt', 'frompartner', 'topartner'),
-                     'classes': ('collapse wide extrapretty',)
+                     'classes': ('wide extrapretty',)
                     }),
     )
 admin.site.register(models.translate,TranslateAdmin)
