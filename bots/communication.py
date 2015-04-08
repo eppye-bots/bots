@@ -316,6 +316,10 @@ class _comsession(object):
                     charset = self.convertcodecformime(charset)
                     message.add_header('Content-Type',row[str('contenttype')].lower(),charset=charset)          #contenttype is set in grammar.syntax
 
+                    #set/change email header in user scripting
+                    if self.userscript and hasattr(self.userscript,'headers'):
+                        botslib.runscript(self.userscript,self.scriptname,'headers',message=message,channeldict=self.channeldict,ta=ta_to,content=content)
+
                     #set attachment/payload; the Content-Transfer-Encoding is set by python encoder
                     message.set_payload(content)   #do not use charset; this lead to unwanted encodings...bots always uses base64
                     if self.channeldict['askmdn'] == 'never':       #channeldict['askmdn'] is the Mime encoding
