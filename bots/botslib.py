@@ -25,7 +25,7 @@ from .botsconfig import *
 '''
 Base library for bots. Botslib should not import code from other Bots-modules.
 '''
-
+MAXINT = (2**31) -1
 #**********************************************************/**
 #**************getters/setters for some globals***********************/**
 #**********************************************************/**
@@ -249,7 +249,7 @@ def unique_runcounter(domain,updatewith=None):
     if updatewith is None:
         nummer += 1
         updatewith = nummer
-        if updatewith > sys.maxsize-2:
+        if updatewith > MAXINT:
             updatewith = 0
     setattr(botsglobal,domain,updatewith)
     return nummer
@@ -272,7 +272,7 @@ def unique(domein,updatewith=None):
             if updatewith is None:
                 nummer += 1
                 updatewith = nummer
-                if updatewith > sys.maxsize-2:
+                if updatewith > MAXINT:
                     updatewith = 0
             cursor.execute('''UPDATE uniek SET nummer=%(nummer)s WHERE domein=%(domein)s''',{'domein':domein,'nummer':updatewith})
         except TypeError: #if domein does not exist, cursor.fetchone returns None, so TypeError
