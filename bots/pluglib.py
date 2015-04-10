@@ -14,7 +14,7 @@ from . import models
 from . import botslib
 from . import botsglobal
 ''' functions for reading and making plugins.
-    Reading an making functions are seperate functions.
+    Reading an making functions are separate functions.
 '''
 
 #******************************************

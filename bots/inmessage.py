@@ -737,6 +737,22 @@ class var(Inmessage):
                     record2build[field_definition[ID]].append({sub_field_in_record_definition[ID]:value})
         record2build['BOTSIDnr'] = record_definition[BOTSIDNR]
         return record2build
+
+    @staticmethod
+    def separatorcheck(separatorstring):
+        '''check if separators are 'reasonable':
+        '''
+        #test uniqueness
+        if len(separatorstring) != len(set(separatorstring)):
+            raise Exception(_('[A64]: Separator problem in edi file: overlapping separators.'))
+        #test if a space
+        if ' ' in separatorstring:
+            raise Exception(_('[A65]: Separator problem in edi file: space is used as an separator.'))
+        #check if separators are alfanumeric
+        for sep in separatorstring:
+            if sep.isalnum():
+                raise Exception(_('[A66]: Separator problem in edi file: found alfanumeric separator.'))
+             
         
 class csv(var):
     ''' class for ediobjects with Comma Separated Values'''
@@ -949,6 +965,7 @@ class edifact(var):
         if self.ta_info['version'] < '4' or self.ta_info['reserve'] == ' ': # repetition separator only for version >= 4. 
                                                                             #if version > 4 and repetition separator is space: assume this is a mistake; use repetition separator 
             self.ta_info['reserve'] = ''
+        self.separatorcheck(self.ta_info['sfield_sep'] + self.ta_info['field_sep'] + self.ta_info['decimaal'] + self.ta_info['escape'] + self.ta_info['reserve'] + self.ta_info['record_sep'])
 
 
     def checkenvelope(self):
@@ -1161,6 +1178,7 @@ class x12(var):
         if version < '00403' or self.ta_info['reserve'].isalnum():
             self.ta_info['reserve'] = ''    
         self.ta_info['skip_char'] = self.ta_info['skip_char'].replace(self.ta_info['record_sep'],'') #if <CR> is segment terminator: cannot be in the skip_char-string!
+        self.separatorcheck(self.ta_info['sfield_sep'] + self.ta_info['field_sep'] + self.ta_info['reserve'] + self.ta_info['record_sep'])
 
     def checkenvelope(self):
         ''' check envelopes, gather information to generate 997 '''

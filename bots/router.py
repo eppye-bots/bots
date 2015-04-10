@@ -346,7 +346,7 @@ class resend(new):
     def run(self):
         ''' prepare the files indicated by user to be resend. Return: indication if files should be resend.
             Resend does not have a good performance. The start query can take some time as whole ta tabel is scanned.
-            AFAIK this can be improved by maintaining seperate list of files to resend.
+            AFAIK this can be improved by maintaining separate list of files to resend.
         '''
         do_retransmit = False
         for row in botslib.query('''SELECT idta,parent,numberofresends
