@@ -545,6 +545,7 @@ class var(Inmessage):
         field_sep   = self.ta_info['field_sep'] + self.ta_info['record_tag_sep']    #for tradacoms; field_sep and record_tag_sep have same function.
         sfield_sep  = self.ta_info['sfield_sep']
         rep_sep     = self.ta_info['reserve']
+        allow_spaces_between_records = self.ta_info.get('allow_spaces_between_records',True)
         sfield      = 0 # 1: subfield, 0: not a subfield, 2:repeat
         quote_char  = self.ta_info['quote_char']  #typical fo csv. example with quote_char ":  ,"1523",TEXT,"123", 
         mode_quote  = 0    #0=not in quote, 1=in quote
@@ -553,7 +554,7 @@ class var(Inmessage):
         mode_escape = 0    #0=not escaping, 1=escaping
         skip_char   = self.ta_info['skip_char']   #chars to ignore/skip/discard. eg edifact: if wrapped to 80pos lines and <CR/LF> at end of segment
         lex_record  = []   #gather the content of a record
-        value       = ''  #gather the content of (sub)field; the current token
+        value       = ''   #gather the content of (sub)field; the current token
         valueline   = 1    #record line of token
         valuepos    = 1    #record position of token in line
         countline   = 1    #count number of lines; start with 1
@@ -590,18 +591,22 @@ class var(Inmessage):
                 else:                       #we are in quote, just append char to token
                     value += char
                     continue
-            if not mode_inrecord:
-                #handle char 'between' records. 
-                if char.isspace():  #if space: ignor char, get next char. note: whitespace = ' \t\n\r\v\f'
-                    #exception for tab-delimited csv files, where first field is not filled: first TAB is ignored. Patch this:
-                    if char in field_sep and isinstance(self,csv):
-                        pass        #do not ignore TAB
-                    else:
-                        continue    #ignore character; continue for-loop with next character
-                mode_inrecord = 1   #not whitespace - a new record has started
             if char in skip_char:
                 #char is skipped. In csv these chars could be in a quote; in eg edifact chars will be skipped, even if after escape sign.
                 continue
+            if not mode_inrecord:
+                #get here after record-separator is found. we are 'between' records.
+                #some special handling for whtiespace characters; for other chars: go on lexing 
+                if char.isspace():  #whitespace = ' \t\n\r\v\f'
+                    if allow_spaces_between_records:    #by default True; False for strict handling of x12/edifact
+                        #exception for tab-delimited csv files. If first field is not filled: first TAB is ignored, which is not OK. Patch this:
+                        if char in field_sep and isinstance(self,csv):
+                            pass        #do not ignore TAB -> go on lexing
+                        else:
+                            continue    #ignore whitespace character; continue for-loop with next character
+                    else:   #for strict checks: no spaces between records
+                        raise botslib.InMessageError(_('[A67]: Found space characters between segments. Line %(countline)s, position %(pos)s, position %(countpos)s.'),{'countline':countline,'countpos':countpos})
+                mode_inrecord = 1   #not whitespace - a new record has started
             if mode_escape:
                 #in escaped_mode: char after escape sign is appended to token 
                 mode_escape = 0
