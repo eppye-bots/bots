@@ -113,7 +113,7 @@ class Node(object):
                 if found:
                     collect += found
             return collect
-        elif hasattr(mpaths, '__call__'):   #was: callable(mpaths)
+        elif callable(mpaths):
             return mpaths(thisnode=self)
         else:
             raise botslib.MappingFormatError(_('Must be dict, list or tuple: enhancedget(%(mpath)s)'),{'mpath':mpaths})
