@@ -162,6 +162,15 @@ class Envelope(object):
         ''' utility function; some classes need absolute filenames eg for xml-including'''
         return [botslib.abspathdata(filename) for filename in self.ta_list]
 
+    def checkpartners(self):
+        ''' check if partners are known.'''
+        if not self.ta_info['frompartner']:
+            raise botslib.OutMessageError(_('In enveloping "frompartner" unknown: "%(ta_info)s".'),
+                                            {'ta_info':self.ta_info})
+        if not self.ta_info['topartner']:
+            raise botslib.OutMessageError(_('In enveloping "topartner" unknown: "%(ta_info)s".'),
+                                            {'ta_info':self.ta_info})
+
 class noenvelope(Envelope):
     ''' Only copies the input files to one output file.'''
     def run(self):
@@ -196,10 +205,7 @@ class csv(noenvelope):
 class edifact(Envelope):
     ''' Generate UNB and UNZ segment; fill with data, write to interchange-file.'''
     def run(self):
-        if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
-            raise botslib.OutMessageError(_('In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
-                                            {'ta_info':self.ta_info})
-
+        self.checkpartners()
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -261,9 +267,7 @@ class edifact(Envelope):
 class tradacoms(Envelope):
     ''' Generate STX and END segment; fill with appropriate data, write to interchange file.'''
     def run(self):
-        if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
-            raise botslib.OutMessageError(_('In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
-                                            {'ta_info':self.ta_info})
+        self.checkpartners()
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -344,9 +348,7 @@ class templatehtml(Envelope):
 class x12(Envelope):
     ''' Generate envelope segments; fill with appropriate data, write to interchange-file.'''
     def run(self):
-        if not self.ta_info['topartner'] or not self.ta_info['frompartner']:
-            raise botslib.OutMessageError(_('In enveloping "frompartner" or "topartner" unknown: "%(ta_info)s".'),
-                                            {'ta_info':self.ta_info})
+        self.checkpartners()
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
