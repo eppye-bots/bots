@@ -381,12 +381,18 @@ class translate(models.Model):
     tscript_link.short_description = 'Mapping Script'
 
     def frommessagetype_link(self):
-        return script_link1(os.path.join(botsglobal.ini.get('directories','usersysabs'),'grammars', self.fromeditype, self.frommessagetype + '.py'),self.frommessagetype)
+        if self.fromeditype in ('db','raw'): # db and raw have no grammar, this is not an error!
+            return self.frommessagetype
+        else:
+            return script_link1(os.path.join(botsglobal.ini.get('directories','usersysabs'),'grammars', self.fromeditype, self.frommessagetype + '.py'),self.frommessagetype)
     frommessagetype_link.allow_tags = True
     frommessagetype_link.short_description = 'Frommessagetype'
 
     def tomessagetype_link(self):
-        return script_link1(os.path.join(botsglobal.ini.get('directories','usersysabs'),'grammars', self.toeditype, self.tomessagetype + '.py'),self.tomessagetype)
+        if self.toeditype in ('db','raw'): # db and raw have no grammar, this is not an error!
+            return self.tomessagetype
+        else:
+            return script_link1(os.path.join(botsglobal.ini.get('directories','usersysabs'),'grammars', self.toeditype, self.tomessagetype + '.py'),self.tomessagetype)
     tomessagetype_link.allow_tags = True
     tomessagetype_link.short_description = 'Tomessagetype'
 
