@@ -90,33 +90,27 @@ class Node(object):
     #*** handling of QUERIES and SUBTRANSLATION *************
     #********************************************************
     def enhancedget(self,mpaths):
-        ''' to get QUERIES or SUBTRANSLATION;
-            mpath can be
-            - dict:     do get(mpath); can not be a mpath with multiple
-            - tuple:    do get(mpath); can be multiple dicts in mapth
-            - list:     for each listmembr do a get(); append the results
-            - function: function should return a value (or None, if not found)
+        ''' to get QUERIES, SUBTRANSLATION or nextmessageblock.
+            mpaths can be
+            - dict:     do one get(mpaths); can not be a mpath quering one level deeper->in that case use a tuple: ({'BOTSID':'ISA'},{'BOTSID':'GS','GS02':None})
+            - tuple:    do one get(mpaths); can be multiple dicts in mpaths
+            - list:     for each list member do a get(); append the results
+            - function: user exit that returns a value (or None, if not found)
+            - string:   return that string
         '''
         if isinstance(mpaths,dict):
             return self.get(mpaths)
         elif isinstance(mpaths,tuple):
             return self.get(*mpaths)
         elif isinstance(mpaths,list):
-            collect = ''
-            for mpath in mpaths:
-                if isinstance(mpath,dict):
-                    found = self.get(mpath)
-                elif isinstance(mpath,tuple):
-                    found = self.get(*mpath)
-                else:
-                    raise botslib.MappingFormatError(_('Member in list %(mpath)s must be dict or tuple (in enhancedget).'),{'mpath':mpaths})
-                if found:
-                    collect += found
-            return collect
+            lijst = [self.enhancedget(mpath) for mpath in mpaths]   #go recursive
+            return ''.join(part.strip() for part in lijst if part is not None)
         elif callable(mpaths):
             return mpaths(thisnode=self)
+        elif isinstance(mpaths,basestring):
+            return mpaths
         else:
-            raise botslib.MappingFormatError(_('Must be dict, list or tuple: enhancedget(%(mpath)s)'),{'mpath':mpaths})
+            raise botslib.MappingFormatError(_('Errors in mpath for QUERIES, SUBTRANSLATION or nextmessageblock; you used %(mpath)s.'),{'mpath':mpaths})
 
     def get_queries_from_edi(self,record_definition):
         ''' extract information from edifile using QUERIES in grammar.structure; information will be placed in ta_info and in db-ta
