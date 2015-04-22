@@ -4,11 +4,12 @@ if sys.version_info[0] > 2:
     basestring = unicode = str
 import os
 import copy
+import collections
+import unicodedata
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
-import collections
 from django.utils.translation import ugettext as _
 #bots-modules
 from . import botslib
@@ -472,22 +473,23 @@ def partnerlookup(value,field,field_where_value_is_searched=str('idpartner'),saf
         raise botslib.CodeConversionError(_('No result found for partner lookup; either partner "%(idpartner)s" does not exist or field "%(field)s" has no value.'),
                                             {'idpartner':value,'field':field})
 
-def dropdiacritics2ascii(content):
-    ''' input should be unicode.
-        1. normalize converts to ascii char + seperate diacritic.
-        2. encode with ignore: non-ascii chars - including the separate diacritics - are dropped
+def dropdiacritics(content,charset='ascii'):
+    ''' input: unicode; output: unicode
+        1. try for each char if char 'fits' into <charset>
+        2. if not: normalize converts to  char + seperate diacritic (or some other sequence...but that is not too interesting).
+        2. encode first char of normalized sequence with ignore: non-ascii chars - including the separate diacritics - are dropped
         3. decode again to return as unicode
-        output is unicode, but only chars in ascii remain; for characters with diacritics the diacritics are dropped.
-    '''
-    return unicodedata.normalize('NFKD', title).encode('ascii','ignore').decode('ascii')
-
-def dropdiacritics2latin(content):
-    ''' input: unicode; output also unicode - with only latin1 characters. If possible diacritics are dropped, else whole char is dropped.
+        Result is:
+        - one char in -> zero or one char out (that is what the [0] does); checked with all unicode
+        - only unicode is produced that 'fits' in indicated charset.
+        - for characters with diacritics the diacritics are dropped.
+        - side-effects: (1) some characters are just dropped; (2) effects like: trademark sign->T. Last one does not happen if 'NFKD' -> 'NFD'
     '''
     lijst = []
     for char in content:
         try:
-            lijst.append(char.encode('latin1'))     #encode to latin1 bytes 
+            lijst.append(char.encode(charset))     #encode to latin1 bytes 
         except:                                     #encoding fails (non-latin1 chars) 
-            lijst.append(unicodedata.normalize('NFKD', char).encode('latin1','ignore'))    #try to convert by dropping diacritic
-    return b''.join(lijst).decode('latin1')
+            lijst.append(unicodedata.normalize('NFKD', char)[0].encode(charset,'ignore'))    #try to convert by dropping diacritic
+    return b''.join(lijst).decode(charset)
+
