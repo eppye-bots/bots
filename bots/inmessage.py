@@ -311,65 +311,95 @@ class Inmessage(message.Message):
         pass
 
     def nextmessage(self):
-        ''' Generates each message as a separate Inmessage.
+        ''' Passes each 'message' to the mapping script.
         '''
-        #~ self.root.display()
         if self.defmessage.nextmessage is not None: #if nextmessage defined in grammar: split up messages
-            first = True
+            #first: count number of messages
+            self.ta_info['total_number_of_messages'] = self.getcountoccurrences(*self.defmessage.nextmessage)
+            #yield the messages, using nextmessage
+            count = 0
+            self.root.processqueries({},len(self.defmessage.nextmessage))
             for eachmessage in self.getloop(*self.defmessage.nextmessage):  #get node of each message
-                if first:
-                    self.root.processqueries({},len(self.defmessage.nextmessage))
-                    first = False
+                count += 1
                 ta_info = self.ta_info.copy()
                 ta_info.update(eachmessage.queries)
+                ta_info['message_number'] = count
                 ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
                 yield self._initmessagefromnode(eachmessage,ta_info)
-            if self.defmessage.nextmessage2 is not None:        #edifact needs nextmessage2...OK
-                first = True
+            if self.defmessage.nextmessage2 is not None:        #edifact uses nextmessage2 for UNB-UNG
+                #first: count number of messages
+                self.ta_info['total_number_of_messages'] = self.getcountoccurrences(*self.defmessage.nextmessage2)
+                #yield the messages, using nextmessage2
+                self.root.processqueries({},len(self.defmessage.nextmessage2))
+                count = 0
                 for eachmessage in self.getloop(*self.defmessage.nextmessage2):
-                    if first:
-                        self.root.processqueries({},len(self.defmessage.nextmessage2))
-                        first = False
+                    count += 1
                     ta_info = self.ta_info.copy()
                     ta_info.update(eachmessage.queries)
+                    ta_info['message_number'] = count
                     ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
                     yield self._initmessagefromnode(eachmessage,ta_info)
-        elif self.defmessage.nextmessageblock is not None:          #for csv/fixed: nextmessageblock indicates which field determines a message (as long as the field is the same, it is one message)
-            #there is only one recordtype (this is checked in grammar.py).
-            first = True
+        elif self.defmessage.nextmessageblock is not None:  #for csv/fixed: nextmessageblock indicates which field(s) determines a message 
+                                                            #--> as long as the field(s) has same value, it is the same message
+                                                            #note there is only one recordtype (as checked in grammar.py)
+            #first: count number of messages
+            count = 0
             for line in self.root.children:
                 kriterium = line.enhancedget(self.defmessage.nextmessageblock)
-                if first:
-                    first = False
-                    newroot = node.Node()  #make new empty root node.
+                if not count:
+                    count += 1
                     oldkriterium = kriterium
                 elif kriterium != oldkriterium:
+                    count += 1
+                    oldkriterium = kriterium
+                #~ else:
+                    #~ pass    #if kriterium is the same
+            self.ta_info['total_number_of_messages'] = count
+            #yield the messages, using nextmessageblock
+            count = 0
+            for line in self.root.children:
+                kriterium = line.enhancedget(self.defmessage.nextmessageblock)
+                if not count:
+                    count += 1
+                    oldkriterium = kriterium
+                    newroot = node.Node()  #make new empty root node.
+                elif kriterium != oldkriterium:
+                    count += 1
+                    oldkriterium = kriterium
                     ta_info = self.ta_info.copy()
                     ta_info.update(oldline.queries)        #update ta_info with information (from previous line) 20100905
-                    ta_info['bots_accessenvelope'] = self.root      #give mappingscript access to envelope
+                    ta_info['message_number'] = count
                     yield self._initmessagefromnode(newroot,ta_info)
                     newroot = node.Node()  #make new empty root node.
-                    oldkriterium = kriterium
                 else:
                     pass    #if kriterium is the same
                 newroot.append(line)
                 oldline = line #save line 20100905
             else:
-                if not first:
+                if count:   #not if count is zero (that is, if there are no lines)
                     ta_info = self.ta_info.copy()
                     ta_info.update(line.queries)        #update ta_info with information (from last line) 20100904
-                    ta_info['bots_accessenvelope'] = self.root       #give mappingscript access to envelope
+                    ta_info['message_number'] = count
                     yield self._initmessagefromnode(newroot,ta_info)
-        else:   #no split up indicated in grammar;
+        else:   #no split up is indicated in grammar. Normally you really would...
             if self.root.record or self.ta_info.get('pass_all',False):    #if contains root-record or explicitly indicated (csv): pass whole tree
                 ta_info = self.ta_info.copy()
                 ta_info.update(self.root.queries)
+                ta_info['total_number_of_messages'] = 1
+                ta_info['message_number'] = 1
                 ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelop
                 yield self._initmessagefromnode(self.root,ta_info)
             else:   #pass nodes under root one by one
+                #first: count number of messages
+                total_number_of_messages = len(self.root.children)
+                #yield the messages
+                count = 0
                 for child in self.root.children:
+                    count += 1
                     ta_info = self.ta_info.copy()
                     ta_info.update(child.queries)
+                    ta_info['total_number_of_messages'] = total_number_of_messages
+                    ta_info['message_number'] = count
                     ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
                     yield self._initmessagefromnode(child,ta_info)
                     
