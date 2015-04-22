@@ -1020,6 +1020,7 @@ class edifact(var):
             except:
                 self.add2errorlist(_('[E03]: Count of messages in UNZ is invalid: "%(count)s".\n')%{'count':unzcount})
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
+                nodeunh.queries.update(nodeunb.record)
                 unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                 untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                 if unhreference and untreference and unhreference != untreference:
@@ -1044,6 +1045,8 @@ class edifact(var):
                 except:
                     self.add2errorlist(_('[E09]: Groupcount in UNE is invalid: "%(count)s".\n')%{'count':unecount})
                 for nodeunh in nodeung.getloop({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
+                    nodeunh.queries.update(nodeung.record)
+                    nodeunh.queries.update(nodeunb.record)
                     unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                     untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                     if unhreference and untreference and unhreference != untreference:
@@ -1231,11 +1234,7 @@ class x12(var):
             except:
                 self.add2errorlist(_('[E15]: Count of messages in IEA is invalid: "%(count)s".\n')%{'count':ieacount})
             for nodegs in nodeisa.getloop({'BOTSID':'ISA'},{'BOTSID':'GS'}):
-                #~ sender = nodegs.get({'BOTSID':'GS','GS02':None})
-                #~ receiver = nodegs.get({'BOTSID':'GS','GS03':None})
-                #~ gsqualifier = nodegs.get({'BOTSID':'GS','GS01':None})
                 gsreference = nodegs.get({'BOTSID':'GS','GS06':None})
-                #~ gsversion = nodegs.get({'BOTSID':'GS','GS08':None})
                 gereference = nodegs.get({'BOTSID':'GS'},{'BOTSID':'GE','GE02':None})
                 if gsreference and gereference and gsreference != gereference:
                     self.add2errorlist(_('[E16]: GS-reference is "%(gsreference)s"; should be equal to GE-reference "%(gereference)s".\n')%{'gsreference':gsreference,'gereference':gereference})
@@ -1247,7 +1246,8 @@ class x12(var):
                 except:
                     self.add2errorlist(_('[E18]: Count of messages in GE is invalid: "%(count)s".\n')%{'count':gecount})
                 for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
-                    #~ stqualifier = nodest.get({'BOTSID':'ST','ST01':None})
+                    nodest.queries.update(nodegs.record)
+                    nodest.queries.update(nodeisa.record)
                     streference = nodest.get({'BOTSID':'ST','ST02':None})
                     sereference = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
                     #referencefields are numerical; should I compare values??
@@ -1365,7 +1365,8 @@ class tradacoms(var):
                 self.add2errorlist(_('[E23]: Count of messages in END is invalid: "%(count)s".\n')%{'count':endcount})
             firstmessage = True
             for nodemhd in nodestx.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
-                if firstmessage:    #
+                nodemhd.queries.update(nodestx.record)
+                if firstmessage:
                     nodestx.queries = {'messagetype':nodemhd.queries['messagetype']}
                     firstmessage = False
                 mtrcount = nodemhd.get({'BOTSID':'MHD'},{'BOTSID':'MTR','NOSG':None})
