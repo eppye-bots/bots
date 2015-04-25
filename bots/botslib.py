@@ -3,7 +3,7 @@ import sys
 if sys.version_info[0] > 2:
     basestring = unicode = str
 import os
-import time
+import datetime as python_datetime
 import codecs
 import traceback
 import socket
@@ -790,11 +790,18 @@ def botsinfo():
             ('DATABASE_OPTIONS',botsglobal.settings.DATABASES['default']['OPTIONS']),
             ]
 
-def strftime(timeformat):
+def datetime():
+    ''' for use in acceptance testing: returns pythons usual datetime - but frozen value for acceptance testing.
+    '''
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-        return time.strftime(timeformat,time.strptime('2013-01-23 01:23:45', '%Y-%m-%d %H:%M:%S'))    #if acceptance test use fixed date/time
+        return python_datetime(2013,01,23,01,23,45)
     else:
-        return time.strftime(timeformat)
+        return python_datetime.datetime.today()
+
+def strftime(timeformat):
+    ''' for use in acceptance testing: returns pythons usual string with date/time - but frozen value for acceptance testing.
+    '''
+    return datetime().strftime(timeformat)
 
 def settimeout(milliseconds):
     socket.setdefaulttimeout(milliseconds)    #set a time-out for TCP-IP connections
