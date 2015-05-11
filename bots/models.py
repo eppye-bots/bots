@@ -554,7 +554,7 @@ class ta(models.Model):
     editype = StripCharField(max_length=35)
     messagetype = StripCharField(max_length=35)
     alt = StripCharField(max_length=35)
-    divtext = StripCharField(max_length=35)             #name of translation script. 
+    divtext = StripCharField(max_length=35)           #name of translation script. 
     merge = models.BooleanField()
     nrmessages = models.IntegerField()
     testindicator = StripCharField(max_length=10)     #0:production; 1:test. Length to 1?
@@ -562,8 +562,8 @@ class ta(models.Model):
     frommail = StripCharField(max_length=256)
     tomail = StripCharField(max_length=256)
     charset = StripCharField(max_length=35)
-    statuse = models.IntegerField()                     #obsolete 20091019
-    retransmit = models.BooleanField()                  #20070831: only retransmit, not rereceive
+    statuse = models.IntegerField()                   #obsolete 20091019
+    retransmit = models.BooleanField()                #20070831: only retransmit, not rereceive
     contenttype = StripCharField(max_length=35)
     errortext = models.TextField()                    #20120921: unlimited length
     ts = models.DateTimeField()
@@ -575,11 +575,11 @@ class ta(models.Model):
     botskey = StripCharField(max_length=35)           #added 20091024
     cc = StripCharField(max_length=512)               #added 20091111
     rsrv1 = StripCharField(max_length=35)             #added 20100501; 20120618: email subject
-    rsrv2 = models.IntegerField(null=True)            #added 20100501;
+    rsrv2 = models.IntegerField(null=True)            #added 20100501
     rsrv3 = StripCharField(max_length=35)             #added 20100501; 20131231: envelopeID to explicitly control enveloping (enveloping criterium)
-    rsrv4 = models.IntegerField(null=True)            #added 20100501; 
+    rsrv4 = models.IntegerField(null=True)            #added 20100501
     rsrv5 = StripCharField(max_length=35)             #added 20121030
-    filesize = models.IntegerField(null=True)         #added 20121030; 
+    filesize = models.IntegerField(null=True)         #added 20121030
     numberofresends = models.IntegerField(null=True)  #added 20121030; if all OK (no resend) this is 0
     class Meta:
         db_table = 'ta'
