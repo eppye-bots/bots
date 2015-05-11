@@ -410,6 +410,7 @@ class Inmessage(message.Message):
         '''
         messagefromnode = cls(ta_info)
         messagefromnode.root = inode
+        messagefromnode.envelope = getattr(inode,'envelope',{})
         return messagefromnode
 
     def _canonicaltree(self,node_instance,structure):
@@ -1020,7 +1021,7 @@ class edifact(var):
             except:
                 self.add2errorlist(_('[E03]: Count of messages in UNZ is invalid: "%(count)s".\n')%{'count':unzcount})
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
-                nodeunh.queries.update(nodeunb.record)
+                nodeunh.envelope = nodeunb.record.copy()
                 unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                 untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                 if unhreference and untreference and unhreference != untreference:
@@ -1045,8 +1046,8 @@ class edifact(var):
                 except:
                     self.add2errorlist(_('[E09]: Groupcount in UNE is invalid: "%(count)s".\n')%{'count':unecount})
                 for nodeunh in nodeung.getloop({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
-                    nodeunh.queries.update(nodeung.record)
-                    nodeunh.queries.update(nodeunb.record)
+                    nodeunh.envelope = nodeung.record.copy()
+                    nodeunh.envelope.update(nodeunb.record)
                     unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                     untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                     if unhreference and untreference and unhreference != untreference:
@@ -1246,8 +1247,8 @@ class x12(var):
                 except:
                     self.add2errorlist(_('[E18]: Count of messages in GE is invalid: "%(count)s".\n')%{'count':gecount})
                 for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
-                    nodest.queries.update(nodegs.record)
-                    nodest.queries.update(nodeisa.record)
+                    nodest.envelope = nodegs.record.copy()
+                    nodest.envelope.update(nodeisa.record)
                     streference = nodest.get({'BOTSID':'ST','ST02':None})
                     sereference = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
                     #referencefields are numerical; should I compare values??
@@ -1365,7 +1366,7 @@ class tradacoms(var):
                 self.add2errorlist(_('[E23]: Count of messages in END is invalid: "%(count)s".\n')%{'count':endcount})
             firstmessage = True
             for nodemhd in nodestx.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
-                nodemhd.queries.update(nodestx.record)
+                nodemhd.envelope = nodestx.record.copy()
                 if firstmessage:
                     nodestx.queries = {'messagetype':nodemhd.queries['messagetype']}
                     firstmessage = False
