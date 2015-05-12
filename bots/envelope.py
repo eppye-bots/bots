@@ -13,16 +13,21 @@ from .botsconfig import *
 
                                 
 def mergemessages(startstatus,endstatus,idroute,rootidta=None):
-    ''' Merges and/or envelopes one or more messages to one file;
-        In db-ta: attribute 'merge' indicates message should be merged with similar messages; 'merge' is generated in translation from messagetype-grammar
-        If merge is False: 1 message per envelope - no merging, else append all similar messages to one file
-        Implementation as separate loops: one for merge&envelope, another for enveloping only
-        db-ta status TRANSLATED---->FILEOUT
+    ''' Merges and/or envelopes one or more messages to one file (status TRANSLATED---->MERGED).
+        Attribute 'merge' indicates message should be merged with similar messages (or not).
+        If merge is False: 1 message per envelope - no merging
+        'merge' comes from db-ta; added in translation via from syntax of outgoing message (envelope, message, partner).
+        Merge/not merge is implemented as separate loops: one for merge&envelope, another for enveloping only
     '''
     if rootidta is None:
         rootidta = botsglobal.currentrun.get_minta4query()
     #**********for messages only to envelope (no merging)
-    for row in botslib.query('''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,nrmessages,idroute,merge,idta,filename,rsrv3
+    #editype,messagetype: needed to get right envelope
+    #envelope: envelope to use 
+    #frompartner,topartner,testindicator,charset,nrmessages: needed for envelope (edifact, x12)
+    #idta: ID of the db-ta
+    #filename: file to envelope
+    for row in botslib.query('''SELECT editype,messagetype,envelope,frompartner,topartner,testindicator,charset,nrmessages,idta,filename
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
@@ -34,12 +39,13 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
                                 {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':False,'idroute':idroute}):
         try:
             ta_info = dict(row)
-            ta_fromfile = botslib.OldTransaction(ta_info['idta'])    #edi message to envelope
-            ta_tofile = ta_fromfile.copyta(status=endstatus)  #edifile for enveloped message; attributes of not-enveloped message are copied...
-            ta_info['filename'] = unicode(ta_tofile.idta)   #create filename for enveloped message
+            ta_fromfile = botslib.OldTransaction(ta_info['idta'])
+            ta_tofile = ta_fromfile.copyta(status=endstatus)  #copy db_ta
+            ta_info['filename'] = unicode(ta_tofile.idta)     #create filename for enveloped message
+            ta_info['idroute'] = idroute
             botsglobal.logger.debug('Envelope 1 message editype: %(editype)s, messagetype: %(messagetype)s.',ta_info)
             envelope(ta_info,[row[str('filename')]])
-            ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
+            ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))
         except:
             txt = botslib.txtexc()
             ta_tofile.update(statust=ERROR,errortext=txt)
@@ -49,86 +55,88 @@ def mergemessages(startstatus,endstatus,idroute,rootidta=None):
             ta_fromfile.update(statust=DONE)
 
     #**********for messages to merge & envelope
-    for row in botslib.query('''SELECT editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3,sum(nrmessages) as nrmessages
+    #editype,messagetype: needed to get right envelope
+    #envelope: envelope to use 
+    #rsrv3 : user defined enveloping criterium
+    #frompartner,topartner,testindicator,charset,nrmessages: needed for envelope (edifact, x12)
+    for row in botslib.query('''SELECT editype,messagetype,envelope,rsrv3,frompartner,topartner,testindicator,charset,sum(nrmessages) as nrmessages
                                 FROM ta
                                 WHERE idta>%(rootidta)s
                                 AND status=%(status)s
                                 AND statust=%(statust)s
                                 AND merge=%(merge)s
                                 AND idroute=%(idroute)s
-                                GROUP BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3
-                                ORDER BY editype,messagetype,frompartner,topartner,testindicator,charset,contenttype,envelope,rsrv3
+                                GROUP BY editype,messagetype,envelope,rsrv3,frompartner,topartner,testindicator,charset
+                                ORDER BY editype,messagetype,envelope,rsrv3,frompartner,topartner,testindicator,charset
                                 ''',
                                 {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,'idroute':idroute}):
         try:
             ta_info = dict(row)
-            ta_tofile = botslib.NewTransaction(status=endstatus,idroute=idroute)  #edifile for enveloped messages
-            ta_info.update({'idroute':idroute,'merge':False,'filename':unicode(ta_tofile.idta)})       #SELECT/GROUP BY gives only values that are the grouped
+            ta_info['idroute'] = idroute
+            #do another query to gather individual idta and filenames
             filename_list = []
-            #gather individual idta and filenames
-            #explicitly allow formpartner/topartner to be None/NULL
             for row2 in botslib.query('''SELECT idta, filename
-                                            FROM ta
-                                            WHERE idta>%(rootidta)s
-                                            AND status=%(status)s
-                                            AND statust=%(statust)s
-                                            AND merge=%(merge)s
-                                            AND editype=%(editype)s
-                                            AND messagetype=%(messagetype)s
-                                            AND (frompartner=%(frompartner)s OR frompartner IS NULL)
-                                            AND (topartner=%(topartner)s OR topartner IS NULL)
-                                            AND testindicator=%(testindicator)s
-                                            AND charset=%(charset)s
-                                            ORDER BY idta
-                                            ''',
-                                            {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,
-                                            'editype':ta_info['editype'],'messagetype':ta_info['messagetype'],'frompartner':ta_info['frompartner'],
-                                            'topartner':ta_info['topartner'],'testindicator':ta_info['testindicator'],'charset':ta_info['charset'],
-                                            'rsrv3':ta_info['rsrv3']}):
-                ta_fromfile = botslib.OldTransaction(row2[str('idta')])      #edi message to be merged/envelope
-                ta_fromfile.update(child=ta_tofile.idta,statust=DONE)                #st child because of n->1 relation
+                                        FROM ta
+                                        WHERE idta>%(rootidta)s
+                                        AND status=%(status)s
+                                        AND statust=%(statust)s
+                                        AND merge=%(merge)s
+                                        AND editype=%(editype)s
+                                        AND messagetype=%(messagetype)s
+                                        AND (frompartner=%(frompartner)s OR frompartner IS NULL)
+                                        AND (topartner=%(topartner)s OR topartner IS NULL)
+                                        AND testindicator=%(testindicator)s
+                                        AND envelope=%(envelope)s
+                                        AND charset=%(charset)s
+                                        ORDER BY idta
+                                        ''',
+                                        {'rootidta':rootidta,'status':startstatus,'statust':OK,'merge':True,
+                                        'editype':ta_info['editype'],'messagetype':ta_info['messagetype'],'frompartner':ta_info['frompartner'],
+                                        'topartner':ta_info['topartner'],'testindicator':ta_info['testindicator'],'charset':ta_info['charset'],
+                                        'rsrv3':ta_info['rsrv3'],'envelope':ta_info['envelope']}):
+                ta_fromfile = botslib.OldTransaction(row2[str('idta')])        #edi message to be merged/envelope
+                if not filename_list:                                          #if first time in loop
+                    ta2_tofile = ta_fromfile.copyta(status=endstatus,parent=0) #copy db_ta; parent=0 as enveloping works via child, not parent
+                    ta_info['filename'] = unicode(ta2_tofile.idta)
+                ta_fromfile.update(child=ta2_tofile.idta,statust=DONE)         #add child because of n->1 relation
                 filename_list.append(row2[str('filename')])
             botsglobal.logger.debug('Merge and envelope: editype: %(editype)s, messagetype: %(messagetype)s, %(nrmessages)s messages',ta_info)
             envelope(ta_info,filename_list)
-            ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))    #get filesize
+            ta_info['filesize'] = os.path.getsize(botslib.abspathdata(ta_info['filename']))
         except:
             txt = botslib.txtexc()
-            ta_tofile.update(statust=ERROR,errortext=txt)
+            ta2_tofile.update(statust=ERROR,errortext=txt)
         else:
-            ta_tofile.update(statust=OK,**ta_info)
+            ta2_tofile.update(statust=OK,**ta_info)
 
 
 def envelope(ta_info,ta_list):
     ''' dispatch function for class Envelope and subclasses.
         editype, edimessage and envelope essential for enveloping.
 
-        determine the class for enveloping:
-        1. empty string: no enveloping (class noenvelope); file(s) is/are just copied. No user scripting for envelope.
-        2. if user defined enveloping in usersys/envelope/<editype>/<envelope>.<envelope>, use it (user defined scripting overrides)
-            user exits extends/replaces default enveloping.
-        3. if editype is a class in this module, use it.
-        
-        Complex is how enveloping and grammar/syntax work together for enveloping:
-        1.  no envelope         script: noenvelope
-                                syntax: -
-        2.  user scripted       script: envelopescripts.editype.envelope
-                                syntax: grammar.editype.envelope (alt could be envelopescripts.editype.envelope; but this is inline with incoming)
-                                        grammar.editype.messagetype
-        3.  class editype       script: envelope.editype
-                                syntax: grammar.editype.envelope
-                                        grammar.editype.messagetype
+        How is enveloping determined:
+        1.  no enveloping: ta_info['envelope'] is '' (or None)
+            -   file(s) is/are just copied. 
+            -   no user scripting for envelope.
+        2.  user scripted: there is a file in bots/envelopescripts/ta_info['editype']/ta_info['envelope'].py (and has to have a class ta_info['envelope'])
+            -   user exits extends/replaces default enveloping.
+                syntax: grammar.editype.envelope (alt could be envelopescripts.editype.envelope; but this is inline with incoming)
+                        grammar.editype.messagetype
+        3.  default envelope: if ta_info['editype'] is a class in this module, use it.
+                script: envelope.editype
+                syntax: grammar.editype.envelope
+                        grammar.editype.messagetype
     '''
-    classtocall = userscript = scriptname = None
-    if not ta_info['envelope']:     #used when enveloping is just appending files.
+    userscript = scriptname = None
+    if not ta_info['envelope']:     #1. no enveloping
         classtocall = noenvelope
     else:
-        try:
-            #check for user scripted enveloping
+        try:    #check for user scripted enveloping
             userscript,scriptname = botslib.botsimport('envelopescripts',ta_info['editype'], ta_info['envelope'])
-            #check if there is a user scripted class with name ta_info['envelope'].
-            classtocall = getattr(userscript,ta_info['envelope'],None)
-        except botslib.BotsImportError:     #no user enveloping.
-            pass
+            classtocall = getattr(userscript,ta_info['envelope'],None)  #2. user scripted. If userscript does not have class ta_info['envelope']
+                                                                        #no error is given - file can have other functions in it.
+        except botslib.BotsImportError:
+            classtocall = None      #3. default envelope
         if classtocall is None:
             try:
                 classtocall = globals()[ta_info['editype']]
@@ -147,7 +155,7 @@ class Envelope(object):
 
     def _openoutenvelope(self):
         ''' make an outmessage object; read the grammar.'''
-        #self.ta_info contains information from ta: editype, messagetype,testindicator,charset,envelope, contenttype
+        #self.ta_info contains information from ta: editype, messagetype,testindicator,charset,envelope
         self.out = outmessage.outmessage_init(**self.ta_info)    #make outmessage object.
         #read grammar for envelopesyntax. Remark: self.ta_info is not updated.
         self.out.messagegrammarread(typeofgrammarfile='envelope')
