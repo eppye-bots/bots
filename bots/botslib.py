@@ -794,7 +794,7 @@ def datetime():
     ''' for use in acceptance testing: returns pythons usual datetime - but frozen value for acceptance testing.
     '''
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-        return python_datetime(2013,01,23,01,23,45)
+        return python_datetime.datetime(2013,1,23,1,23,45)
     else:
         return python_datetime.datetime.today()
 
