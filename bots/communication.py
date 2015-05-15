@@ -514,21 +514,20 @@ class _comsession(object):
                 reference       = self.checkheaderforcharset(msg['message-id'])  or ''
                 subject = self.checkheaderforcharset(msg['subject'])
                 contenttype     = self.checkheaderforcharset(msg.get_content_type())
-                #frompartner (incl autorization)
+                
+                #frompartner
                 frommail        = self.checkheaderforcharset(email.utils.parseaddr(msg['from'])[1])
                 frompartner = ''
-                if not self.channeldict['starttls']:    #starttls in channeldict is: 'no check on "from:" email adress'
+                if not self.channeldict['starttls']:    #authorise frompartner or skip authorisation. starttls in channeldict is: 'no check on "from:" email adress'
                     frompartner = self.mailaddress2idpartner(frommail)
                     if frompartner is None:
                         raise botslib.CommunicationInError(_('"From" emailaddress(es) %(email)s not authorised/unknown for channel "%(idchannel)s".'),
                                                             {'email':frommail,'idchannel':self.channeldict['idchannel']})
-                #topartner, cc (incl autorization)
+                #topartner, cc
                 list_to_address = [self.checkheaderforcharset(address) for name_not_used_variable,address in email.utils.getaddresses(msg.get_all('to', []))] 
                 list_cc_address = [self.checkheaderforcharset(address) for name_not_used_variable,address in email.utils.getaddresses(msg.get_all('cc', []))] 
-                cc_content      = ','.join(address for address in (list_to_address + list_cc_address))
-                topartner = ''  #initialise topartner
-                tomail = ''     #initialise tomail
-                if not self.channeldict['apop']:    #apop in channeldict is: 'no check on "to:" email adress'
+                cc_content      = ','.join(address for address in (list_to_address + list_cc_address))      #in cc feild geos complete list of addresses.
+                if not self.channeldict['apop']:      #authorise topartner or skip authorisation. 'apop' in channeldict is: 'no check on "to:" email adress'
                     for address in list_to_address:   #all tos-addresses are checked; only one needs to be authorised.
                         topartner =  self.mailaddress2idpartner(address)
                         tomail = address
@@ -537,6 +536,9 @@ class _comsession(object):
                     else:   #if no valid topartner: generate error
                         raise botslib.CommunicationInError(_('"To" emailaddress(es) %(email)s not authorised/unknown for channel "%(idchannel)s".'),
                                                             {'email':list_to_address,'idchannel':self.channeldict['idchannel']})
+                else:
+                    topartner = ''
+                    tomail = list_to_address[0] if list_to_address else ''
  
                 #update transaction of mail with information found in mail
                 ta_from.update(frommail=frommail,   #why save now not later: when saving the attachments need the amil-header-info to be in ta (copyta)
