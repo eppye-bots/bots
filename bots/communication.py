@@ -135,7 +135,6 @@ class _comsession(object):
             self.postcommunicate()
             self.archive()
 
-
     def archive(self):
         ''' after the communication channel has ran, archive received of send files.
             archivepath is the root directory for the archive (for this channel).
@@ -222,7 +221,6 @@ class _comsession(object):
         if archivezip and checkedifarchivepathisthere:
             archivezipfilehandler.close()
 
-
     def postcommunicate(self):
         pass
 
@@ -256,7 +254,7 @@ class _comsession(object):
                     outfilename = row[str('filename')]
                 else:   #assemble message: headers and payload. Bots uses simple MIME-envelope; by default payload is an attachment
                     message = email.message.Message()
-                    #set 'from' header (sender)
+                    #frompartner/sender/'from' header
                     frommail,ccfrom_not_used_variable = self.idpartner2mailaddress(row[str('frompartner')])    #lookup email address for partnerID
                     message.add_header('From', frommail)
 
