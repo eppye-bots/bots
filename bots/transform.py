@@ -81,15 +81,15 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm.
             raise botslib.GotoException('dummy')    
         #edifile.ta_info contains info: QUERIES, charset etc
-        for inn_splitup in edifile.nextmessage():   #splitup messages in parsed edifile
+        for inn_splitup in edifile.nextmessage():   #for each message in parsed edifile (one message might get translation multiple times via 'alt'
             try:
-                ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy PARSED to SPLITUP ta
-                #inn_splitup.ta_info: parameters from inmessage.parse_edi_file(), syntax-information and parse-information
-                inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; used to give idta of 'confirming message'
-                inn_splitup.ta_info['idta'] = ta_splitup.idta     #for confirmations in userscript; used to give idta of 'confirming message'
+                ta_splitup = ta_parsed.copyta(status=SPLITUP,**inn_splitup.ta_info)    #copy db-ta from PARSED
+                #inn_splitup.ta_info contains parameters from inmessage.parse_edi_file(): syntax-information, parse-information
+                inn_splitup.ta_info['idta_fromfile'] = ta_fromfile.idta     #for confirmations in userscript; the idta of incoming file
+                inn_splitup.ta_info['idta'] = ta_splitup.idta               #for confirmations in userscript; the idta of 'confirming message'
                 number_of_loops_with_same_alt = 0
-                while True:    #continue as long as there are (alt-)translations
-                    #lookup the translation************************
+                while True:             #more than one translation can be done via 'alt'; there is an explicit brreak if no more translation need to be done.
+                    #find/lookup the translation************************
                     tscript,toeditype,tomessagetype = botslib.lookup_translation(fromeditype=inn_splitup.ta_info['editype'],
                                                                         frommessagetype=inn_splitup.ta_info['messagetype'],
                                                                         frompartner=inn_splitup.ta_info['frompartner'],
@@ -102,7 +102,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
                             raise botslib.TranslationNotFoundError(_('Translation not found for editype "%(editype)s", messagetype "%(messagetype)s", frompartner "%(frompartner)s", topartner "%(topartner)s", alt "%(alt)s".'),
                                                                         inn_splitup.ta_info)
 
-                    inn_splitup.ta_info['divtext'] = tscript     #ifor reporting used mapping script to database (for display in GUI).
+                    inn_splitup.ta_info['divtext'] = tscript     #store name of mapping script for reporting (used for display in GUI).
                     #initialize new out-object*************************
                     ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
                     filename_translated = unicode(ta_translated.idta)
@@ -116,12 +116,12 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
                     doalttranslation = botslib.runscript(translationscript,scriptfilename,'main',inn=inn_splitup,out=out_translated)
                     botsglobal.logger.debug(_('Mappingscript "%(tscript)s" finished.'),{'tscript':tscript})
                     
-                    #manipulate for some attributes after mapping script
-                    if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......
-                        out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
+                    #~ if 'topartner' not in out_translated.ta_info:    #out_translated does not contain values from ta......#20140516: disable this. suspected since long it does not acutally do soemthing. tested this. 
+                        #~ out_translated.ta_info['topartner'] = inn_splitup.ta_info['topartner']
+                    #manipulate botskey after mapping script:
                     if 'botskey' in inn_splitup.ta_info:
                         inn_splitup.ta_info['reference'] = inn_splitup.ta_info['botskey']
-                    if 'botskey' in out_translated.ta_info:    #out_translated does not contain values from ta......
+                    if 'botskey' in out_translated.ta_info:
                         out_translated.ta_info['reference'] = out_translated.ta_info['botskey']
                         
                     #check the value received from the mappingscript to determine what to do in this while-loop. Handling of chained trasnlations.
@@ -167,7 +167,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
                         inn_splitup.ta_info['alt'] = doalttranslation   #get the alt-value for the next chained translation
                     if number_of_loops_with_same_alt > 10:
                         raise botslib.BotsError(_('Mappingscript returns same alt value over and over again (infinite loop?). Alt: "%(doalttranslation)s".'),{'doalttranslation':doalttranslation})
-                #end of while-loop (trans**********************************************************************************
+                #end of while-loop **********************************************************************************
             #exceptions file_out-level: exception in mappingscript or writing of out-file
             except:
                 #two ways to handle errors in mapping script or in writing outgoing message: 
