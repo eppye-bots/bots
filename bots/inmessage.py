@@ -319,26 +319,26 @@ class Inmessage(message.Message):
             #yield the messages, using nextmessage
             count = 0
             self.root.processqueries({},len(self.defmessage.nextmessage))
-            for eachmessage in self.getloop(*self.defmessage.nextmessage):  #get node of each message
+            for eachmessage in self.getloop_including_mpath(*self.defmessage.nextmessage):  #eachmessage is a list: [mpath,mpath, etc, node]
                 count += 1
                 ta_info = self.ta_info.copy()
-                ta_info.update(eachmessage.queries)
+                ta_info.update(eachmessage[-1].queries)
                 ta_info['message_number'] = count
                 ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
-                yield self._initmessagefromnode(eachmessage,ta_info)
+                yield self._initmessagefromnode(eachmessage[-1],ta_info,eachmessage[:-1])
             if self.defmessage.nextmessage2 is not None:        #edifact uses nextmessage2 for UNB-UNG
                 #first: count number of messages
                 self.ta_info['total_number_of_messages'] = self.getcountoccurrences(*self.defmessage.nextmessage2)
                 #yield the messages, using nextmessage2
                 self.root.processqueries({},len(self.defmessage.nextmessage2))
                 count = 0
-                for eachmessage in self.getloop(*self.defmessage.nextmessage2):
+                for eachmessage in self.getloop_including_mpath(*self.defmessage.nextmessage2):  #eachmessage is a list: [mpath,mpath, etc, node]
                     count += 1
                     ta_info = self.ta_info.copy()
-                    ta_info.update(eachmessage.queries)
+                    ta_info.update(eachmessage.queries[-1])
                     ta_info['message_number'] = count
                     ta_info['bots_accessenvelope'] = self.root   #give mappingscript access to envelope
-                    yield self._initmessagefromnode(eachmessage,ta_info)
+                    yield self._initmessagefromnode(eachmessage[-1],ta_info,eachmessage[:-1])
         elif self.defmessage.nextmessageblock is not None:  #for csv/fixed: nextmessageblock indicates which field(s) determines a message 
                                                             #--> as long as the field(s) has same value, it is the same message
                                                             #note there is only one recordtype (as checked in grammar.py)
@@ -404,13 +404,13 @@ class Inmessage(message.Message):
                     yield self._initmessagefromnode(child,ta_info)
                     
     @classmethod
-    def _initmessagefromnode(cls,inode,ta_info):
+    def _initmessagefromnode(cls,inode,ta_info,envelope=None):
         ''' initialize a inmessage-object from node in tree.
             used in nextmessage.
         '''
         messagefromnode = cls(ta_info)
         messagefromnode.root = inode
-        messagefromnode.envelope = getattr(inode,'envelope',{})
+        messagefromnode.envelope = envelope
         return messagefromnode
 
     def _canonicaltree(self,node_instance,structure):
@@ -1021,7 +1021,6 @@ class edifact(var):
             except:
                 self.add2errorlist(_('[E03]: Count of messages in UNZ is invalid: "%(count)s".\n')%{'count':unzcount})
             for nodeunh in nodeunb.getloop({'BOTSID':'UNB'},{'BOTSID':'UNH'}):
-                nodeunh.envelope = nodeunb.record.copy()
                 unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                 untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                 if unhreference and untreference and unhreference != untreference:
@@ -1046,8 +1045,6 @@ class edifact(var):
                 except:
                     self.add2errorlist(_('[E09]: Groupcount in UNE is invalid: "%(count)s".\n')%{'count':unecount})
                 for nodeunh in nodeung.getloop({'BOTSID':'UNG'},{'BOTSID':'UNH'}):
-                    nodeunh.envelope = nodeung.record.copy()
-                    nodeunh.envelope.update(nodeunb.record)
                     unhreference = nodeunh.get({'BOTSID':'UNH','0062':None})
                     untreference = nodeunh.get({'BOTSID':'UNH'},{'BOTSID':'UNT','0062':None})
                     if unhreference and untreference and unhreference != untreference:
@@ -1247,8 +1244,6 @@ class x12(var):
                 except:
                     self.add2errorlist(_('[E18]: Count of messages in GE is invalid: "%(count)s".\n')%{'count':gecount})
                 for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
-                    nodest.envelope = nodegs.record.copy()
-                    nodest.envelope.update(nodeisa.record)
                     streference = nodest.get({'BOTSID':'ST','ST02':None})
                     sereference = nodest.get({'BOTSID':'ST'},{'BOTSID':'SE','SE02':None})
                     #referencefields are numerical; should I compare values??
@@ -1366,7 +1361,6 @@ class tradacoms(var):
                 self.add2errorlist(_('[E23]: Count of messages in END is invalid: "%(count)s".\n')%{'count':endcount})
             firstmessage = True
             for nodemhd in nodestx.getloop({'BOTSID':'STX'},{'BOTSID':'MHD'}):
-                nodemhd.envelope = nodestx.record.copy()
                 if firstmessage:
                     nodestx.queries = {'messagetype':nodemhd.queries['messagetype']}
                     firstmessage = False

@@ -408,6 +408,17 @@ class Message(object):
                 for terug in childnode.getloop(*mpaths): #search recursive for rest of mpaths
                     yield terug
 
+    def getloop_including_mpath(self,*mpaths):
+        ''' as getloop, but returns a list: [mpath,mpath,etc,,node] ->node is same as returned by getloop()
+        '''
+        if self.root.record:    #self.root is a real root
+            for terug in self.root.getloop_including_mpath(*mpaths): #search recursive for rest of mpaths
+                yield terug
+        else:   #self.root is dummy root
+            for childnode in self.root.children:
+                for terug in childnode.getloop_including_mpath(*mpaths): #search recursive for rest of mpaths
+                    yield terug
+
     def put(self,*mpaths,**kwargs):
         if self.root.record is None and self.root.children:
             raise botslib.MappingRootError(_('put(%(mpath)s): "root" of outgoing message is empty; use out.putloop'),

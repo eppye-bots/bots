@@ -19,7 +19,7 @@ class Node(object):
     '''
     #slots: python optimalisation to preserve memory. Disadv.: no dynamic attr in this class
     #in tests: for normal translations less memory and faster; no effect fo one-on-one translations.
-    __slots__ = ('record','children','_queries','linpos_info','structure','envelope')
+    __slots__ = ('record','children','_queries','linpos_info','structure')
     def __init__(self,record=None,linpos_info=None):
         if record and 'BOTSIDnr' not in record:
             record['BOTSIDnr'] = '1'
@@ -340,6 +340,35 @@ class Node(object):
                 for childnode in self.children:
                     for terug in childnode._getloopcore(mpaths[1:]): #search recursive for rest of mpaths
                         yield terug
+
+    def getloop_including_mpath(self,*mpaths):
+        ''' generator. Returns one by one the nodes as indicated in mpath
+            like getloop(), but returns a list: [mpath,mpath,etc,,node] ->node is same as returned by getloop()
+        '''
+        if Node.checklevel:
+            self._mpath_sanity_check(mpaths)
+        for part in mpaths:
+            if 'BOTSIDnr' not in part:
+                part['BOTSIDnr'] = '1'
+        if Node.checklevel == 2:
+            self._mpath_grammar_check(mpaths)
+        for terug in self._getloopcore_including_mpath(mpaths):
+            botsglobal.logmap.debug('getloop %(mpaths)s returns "%(terug)s".',{'mpaths':mpaths,'terug':terug})
+            yield terug
+
+    def _getloopcore_including_mpath(self,mpaths):
+        ''' recursive part of getloop()
+        '''
+        for key,value in mpaths[0].items():
+            if key not in self.record or value != self.record[key]:
+                return
+        else:   #all items are checked and OK.
+            if len(mpaths) == 1:
+                yield [self]      #found!
+            else:
+                for childnode in self.children:
+                    for terug in childnode._getloopcore_including_mpath(mpaths[1:]): #search recursive for rest of mpaths
+                        yield [self.record] + terug if terug is not None else None
 
     #~ def get_for_sort(self,*mpaths):
         #~ ''' like get, but either returns a value or '' (empty string). If get() delivers None, return as ''.
