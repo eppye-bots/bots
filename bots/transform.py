@@ -104,7 +104,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
 
                     inn_splitup.ta_info['divtext'] = tscript     #store name of mapping script for reporting (used for display in GUI).
                     #initialize new out-object*************************
-                    ta_translated = ta_splitup.copyta(status=endstatus)     #make ta for translated message (new out-ta)
+                    ta_translated = ta_splitup.copyta(status=endstatus,frommail='',tomail='',cc='')     #make ta for translated message (new out-ta); explicitly erase mail-addresses
                     filename_translated = unicode(ta_translated.idta)
                     out_translated = outmessage.outmessage_init(editype=toeditype,messagetype=tomessagetype,filename=filename_translated,reference=unique('messagecounter'),statust=OK,divtext=tscript)    #make outmessage object
                         

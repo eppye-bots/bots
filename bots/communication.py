@@ -233,7 +233,7 @@ class _comsession(object):
             from status FILEOUT to FILEOUT
         '''
         #select files with right statust, status and channel.
-        for row in botslib.query('''SELECT idta,filename,frompartner,topartner,charset,contenttype,editype
+        for row in botslib.query('''SELECT idta,filename,frompartner,topartner,charset,contenttype,editype,frommail,tomail,cc
                                     FROM ta
                                     WHERE idta>%(rootidta)s
                                     AND status=%(status)s
@@ -254,13 +254,18 @@ class _comsession(object):
                     outfilename = row[str('filename')]
                 else:   #assemble message: headers and payload. Bots uses simple MIME-envelope; by default payload is an attachment
                     message = email.message.Message()
-                    #frompartner/sender/'from' header
-                    frommail,ccfrom_not_used_variable = self.idpartner2mailaddress(row[str('frompartner')])    #lookup email address for partnerID
+                    #set frompartner/sender/'from' header
+                    frommail = row[str('frommail')]
+                    if not frommail:
+                        frommail,ccfrom_not_used_variable = self.idpartner2mailaddress(row[str('frompartner')])    #lookup email address for partnerID
                     message.add_header('From', frommail)
 
-                    #set 'to' header (receiver)
+                    #set topartner/receiver/'to' header
                     if self.userscript and hasattr(self.userscript,'getmailaddressforreceiver'):    #user exit to determine to-address/receiver
                         tomail,ccto = botslib.runscript(self.userscript,self.scriptname,'getmailaddressforreceiver',channeldict=self.channeldict,ta=ta_to)
+                    elif row[str('tomail')]:
+                        tomail = row[str('tomail')]
+                        ccto = row[str('cc')]
                     else:
                         tomail,ccto = self.idpartner2mailaddress(row[str('topartner')])          #lookup email address for partnerID
                     message.add_header('To',tomail)

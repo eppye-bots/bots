@@ -98,8 +98,8 @@ class _Transaction(object):
             parameters for new transaction are in ta_info (new transaction is updated with these values).
         '''
         script = _Transaction.processlist[-1]
-        newidta = insertta('''INSERT INTO ta (script,  status,     parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope,rsrv3)
-                                SELECT %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope,rsrv3
+        newidta = insertta('''INSERT INTO ta (script,  status,parent,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope,rsrv3,cc)
+                                SELECT %(script)s,%(newstatus)s,idta,frompartner,topartner,fromchannel,tochannel,editype,messagetype,alt,merge,testindicator,reference,frommail,tomail,charset,contenttype,filename,idroute,nrmessages,botskey,envelope,rsrv3,cc
                                 FROM ta
                                 WHERE idta=%(idta)s''',
                                 {'idta':self.idta,'script':script,'newstatus':status})
