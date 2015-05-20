@@ -116,7 +116,7 @@ class _comsession(object):
                     #max_nr_retry : get this from channel. should be integer, but only textfields where left. so might be ''/None->use 0
                     max_nr_retry = int(self.channeldict['rsrv1']) if self.channeldict['rsrv1'] else 0
                     if max_nr_retry:
-                        domain = 'bots_communication_failure_' + self.channeldict['idchannel']
+                        domain = ('#' + self.channeldict['idchannel'] + '_failure')[:35] 
                         nr_retry = botslib.unique(domain)  #update nr_retry in database
                         if nr_retry >= max_nr_retry:
                             botslib.unique(domain,updatewith=0)    #reset nr_retry to zero
