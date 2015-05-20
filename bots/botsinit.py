@@ -193,10 +193,13 @@ def initenginelogging(logname):
     #initialise file logging: create main logger 'bots'
     logger = logging.getLogger(logname)
     logger.setLevel(convertini2logger[botsglobal.ini.get('settings','log_file_level','INFO')])
-    handler = logging.handlers.RotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),logname+'.log'),backupCount=botsglobal.ini.getint('settings','log_file_number',10))
+    if botsglobal.ini.get('settings','log_file_number',None) == 'daily':
+        handler = logging.handlers.TimedRotatingFileHandler(os.path.join(botsglobal.ini.get('directories','logging'),logname+'.log'),when='midnight',backupCount=10)
+    else:
+        handler = logging.handlers.RotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),logname+'.log'),backupCount=botsglobal.ini.getint('settings','log_file_number',10))
+        handler.doRollover()   #each run a new log file is used; old one is rotated
     fileformat = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s : %(message)s','%Y%m%d %H:%M:%S')
     handler.setFormatter(fileformat)
-    handler.doRollover()   #each run a new log file is used; old one is rotated
     logger.addHandler(handler)
     #initialise file logging: logger for trace of mapping; tried to use filters but got this not to work.....
     botsglobal.logmap = logging.getLogger('engine.map')

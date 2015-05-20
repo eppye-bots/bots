@@ -67,8 +67,9 @@ def start():
     process_name = 'engine2'
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
-    for key,value in botslib.botsinfo():    #log info about environement, versions, etc
-        botsglobal.logger.info('%(key)s: "%(value)s".',{'key':key,'value':value})
+    if botsglobal.ini.get('settings','log_file_number','') != 'daily':
+        for key,value in botslib.botsinfo():    #log info about environement, versions, etc
+            botsglobal.logger.info('%(key)s: "%(value)s".',{'key':key,'value':value})
 
     #**************connect to database**********************************
     try:
