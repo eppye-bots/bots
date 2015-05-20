@@ -494,3 +494,16 @@ def dropdiacritics(content,charset='ascii'):
             lijst.append(unicodedata.normalize('NFKD', char)[0].encode(charset,'ignore'))    #try to convert by dropping diacritic
     return b''.join(lijst).decode(charset)
 
+def chunk(sequence, size):
+    ''' return generator for chunks 
+        input: string, list, tuple.
+        uses cases:
+        print list(chunk([1,2,3,4,5,6,7,8,9,10],3))     #[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]]
+        print list(chunk('a nice example string',5))    #['a nic', 'e exa', 'mple ', 'strin', 'g']
+        print list(chunk(list(chunk('a nice example string',5)),2)) [['a nic', 'e exa'], ['mple ', 'strin'], ['g']]
+        print list(chunk(list(chunk('',5)),2))          #[]
+        print list(chunk(list(chunk(None,5)),2))        #[]
+    '''
+    if sequence:
+        for pos in range(0, len(sequence), size):
+            yield sequence[pos:pos + size]
