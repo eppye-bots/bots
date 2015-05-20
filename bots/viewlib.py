@@ -10,7 +10,7 @@ from . import models
 from . import botsglobal
 from .botsconfig import *
 
-def save_int(value):
+def safe_int(value):
     try:
         return int(value)
     except:

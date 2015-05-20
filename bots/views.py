@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from __future__ import print_function
 import sys
 if sys.version_info[0] > 2:
     basestring = unicode = str
@@ -56,21 +57,21 @@ def reports(request,*kw,**kwargs):
                 return django.shortcuts.render(request, formin.template, {'form': formin})
             #go to default report-query using parameters from select screen
         elif 'report2incoming' in request.POST:       #from ViewReports form using star view incoming
-            request.POST = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2incoming']))
+            request.POST = viewlib.preparereport2view(request.POST,viewlib.safe_int(request.POST['report2incoming']))
             return incoming(request)
         elif 'report2outgoing' in request.POST:       #from ViewReports form using star view outgoing
-            request.POST = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2outgoing']))
+            request.POST = viewlib.preparereport2view(request.POST,viewlib.safe_int(request.POST['report2outgoing']))
             return outgoing(request)
         elif 'report2process' in request.POST:       #from ViewReports form using star view process errors
-            request.POST = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2process']))
+            request.POST = viewlib.preparereport2view(request.POST,viewlib.safe_int(request.POST['report2process']))
             return process(request)
         elif 'report2errors' in request.POST:       #from ViewReports form using star file errors
-            newpost = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2errors']))
+            newpost = viewlib.preparereport2view(request.POST,viewlib.safe_int(request.POST['report2errors']))
             newpost['statust'] = ERROR
             request.POST = newpost
             return incoming(request)
         elif 'report2commerrors' in request.POST:       #from ViewReports form using star communcation errors
-            newpost = viewlib.preparereport2view(request.POST,viewlib.save_int(request.POST['report2commerrors']))
+            newpost = viewlib.preparereport2view(request.POST,viewlib.safe_int(request.POST['report2commerrors']))
             newpost['statust'] = ERROR
             request.POST = newpost
             return outgoing(request)
@@ -96,8 +97,12 @@ def incoming(request,*kw,**kwargs):
             form = forms.SelectIncoming()
             return django.shortcuts.render(request, form.template, {'form': form})    #go to the SelectIncoming form
         else:                                  #from menu:run->incoming
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.save_int(request.GET.get('lastrun',0)))} #go to default incoming-query using these default parameters
+            #~ print('XXXXXX1',repr(request.GET))
+            lastrun = bool(viewlib.safe_int(request.GET.get('lastrun',0)))
+            idroute = request.GET.get('idroute')
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':lastrun,'idroute':idroute} #go to default incoming-query using these default parameters
     else: #request.method == 'POST'
+        print('XXXXXX2')
         if 'fromselect' in request.POST:        #from SelectIncoming form
             formin = forms.SelectIncoming(request.POST)
             if not formin.is_valid():
@@ -121,7 +126,7 @@ def incoming(request,*kw,**kwargs):
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'delete' in request.POST:        #from ViewIncoming form using star delete
                 if request.user.is_staff or request.user.is_superuser:
-                    idta = viewlib.save_int(request.POST['delete'])
+                    idta = viewlib.safe_int(request.POST['delete'])
                     #delete from filereport
                     models.filereport.objects.filter(idta=idta).delete()
                     #get ta_object
@@ -134,7 +139,7 @@ def incoming(request,*kw,**kwargs):
                     messages.add_message(request, messages.INFO, notification)
             elif 'retransmit' in request.POST:        #from ViewIncoming form using star rereceive
                 idta = request.POST['retransmit']
-                filereport = models.filereport.objects.get(idta=viewlib.save_int(idta))
+                filereport = models.filereport.objects.get(idta=viewlib.safe_int(idta))
                 if filereport.fromchannel:   #for resend files fromchannel has no value. (do not rereceive resend items)
                     filereport.retransmit = not filereport.retransmit
                     filereport.save()
@@ -161,7 +166,7 @@ def outgoing(request,*kw,**kwargs):
             form = forms.SelectOutgoing()
             return django.shortcuts.render(request, form.template, {'form': form})
         else:                                  #from menu:run->outgoing
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.save_int(request.GET.get('lastrun',0)))} #go to default outgoing-query using these default parameters
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.safe_int(request.GET.get('lastrun',0)))} #go to default outgoing-query using these default parameters
     else: #request.method == 'POST'
         if 'fromselect' in request.POST:        #from SelectOutgoing form
             formin = forms.SelectOutgoing(request.POST)
@@ -185,7 +190,7 @@ def outgoing(request,*kw,**kwargs):
                 form = forms.SelectOutgoing(formin.cleaned_data)
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'retransmit' in request.POST:  #from ViewOutgoing form using star resend
-                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST['retransmit']))
+                ta_object = models.ta.objects.get(idta=viewlib.safe_int(request.POST['retransmit']))
                 if ta_object.statust != RESEND:     #can only resend last file
                     ta_object.retransmit = not ta_object.retransmit
                     ta_object.save()
@@ -198,7 +203,7 @@ def outgoing(request,*kw,**kwargs):
                         outgoingfile.retransmit = not outgoingfile.retransmit
                         outgoingfile.save()
             elif 'noautomaticretry' in request.POST:        #from ViewOutgoing form using star 'no automaticretry'
-                ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST['noautomaticretry']))
+                ta_object = models.ta.objects.get(idta=viewlib.safe_int(request.POST['noautomaticretry']))
                 if ta_object.statust == ERROR:
                     ta_object.statust = NO_RETRY
                     ta_object.save()
@@ -218,8 +223,8 @@ def document(request,*kw,**kwargs):
             return django.shortcuts.render(request, form.template, {'form': form})
         else:                                   #from menu:run->document
             cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False}
-            cleaned_data['lastrun'] = bool(viewlib.save_int(request.GET.get('lastrun',0)))
-            cleaned_data['status'] = viewlib.save_int(request.GET.get('status',0))
+            cleaned_data['lastrun'] = bool(viewlib.safe_int(request.GET.get('lastrun',0)))
+            cleaned_data['status'] = viewlib.safe_int(request.GET.get('status',0))
              #go to default document-query using these default parameters
     else: #request.method == 'POST'
         if 'fromselect' in request.POST:         #from SelectDocument form
@@ -236,7 +241,7 @@ def document(request,*kw,**kwargs):
                 return django.shortcuts.render(request, form.template, {'form': form})
             elif 'retransmit' in request.POST:        #coming from ViewDocument, no reportidta
                 idta = request.POST['retransmit']
-                filereport = models.filereport.objects.get(idta=viewlib.save_int(idta))
+                filereport = models.filereport.objects.get(idta=viewlib.safe_int(idta))
                 filereport.retransmit = not filereport.retransmit
                 filereport.save()
             else:                                    #coming from ViewDocument, next page etc
@@ -255,7 +260,7 @@ def process(request,*kw,**kwargs):
             form = forms.SelectProcess()
             return django.shortcuts.render(request, form.template, {'form': form})
         else:                                   #from menu:run->process
-            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.save_int(request.GET.get('lastrun',0)))}
+            cleaned_data = {'page':1,'sortedby':'idta','sortedasc':False,'lastrun':bool(viewlib.safe_int(request.GET.get('lastrun',0)))}
              #go to default process-query using these default parameters
     else: #request.method == 'POST'
         if 'fromselect' in request.POST:         #from SelectProcess form
@@ -295,9 +300,9 @@ def detail(request,*kw,**kwargs):
     '''
     if request.method == 'GET':
         if 'inidta' in request.GET: #from incoming screen
-            rootta = models.ta.objects.get(idta=viewlib.save_int(request.GET['inidta']))
+            rootta = models.ta.objects.get(idta=viewlib.safe_int(request.GET['inidta']))
         else:                       #from outgoing screen: trace back to EXTERNIN first
-            rootta = viewlib.django_trace_origin(viewlib.save_int(request.GET['outidta']),{'status':EXTERNIN})[0]
+            rootta = viewlib.django_trace_origin(viewlib.safe_int(request.GET['outidta']),{'status':EXTERNIN})[0]
         viewlib.gettrace(rootta)
         detaillist = viewlib.trace2detail(rootta)
         return django.shortcuts.render(request,'bots/detail.html',{'detaillist':detaillist,'rootta':rootta})
@@ -322,7 +327,7 @@ def confirm(request,*kw,**kwargs):
             request.POST = viewlib.changepostparameters(request.POST,soort='confirm2out')
             return outgoing(request)
         elif 'confirm' in request.POST:        #coming ViewConfirm, using star 'Manual confirm'
-            ta_object = models.ta.objects.get(idta=viewlib.save_int(request.POST['confirm']))
+            ta_object = models.ta.objects.get(idta=viewlib.safe_int(request.POST['confirm']))
             if ta_object.confirmed == False and ta_object.confirmtype.startswith('ask'):
                 ta_object.confirmed = True
                 ta_object.confirmidta = '-1'   # to indicate a manual confirmation
