@@ -42,7 +42,6 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
             _cleanupsession()
             _cleanpersist()
             _cleantransactions()
-            botsglobal.logger.info('Vacuum database')
             _vacuum()
             # postcleanup user exit in botsengine script
             botslib.tryrunscript(userscript,scriptname,'postcleanup',whencleanup=whencleanup)
@@ -55,6 +54,7 @@ def cleanup(do_cleanup_parameter,userscript,scriptname):
 def _vacuum():
     ''' Do VACUUM on sqlite database.'''
     if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+        botsglobal.logger.info('Vacuum database')
         botsglobal.db.execute('''VACUUM''')
 
 
