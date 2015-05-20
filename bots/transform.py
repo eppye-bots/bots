@@ -334,7 +334,8 @@ def getcodeset(ccodeid,leftcode,field=str('rightcode')):
     for row in botslib.query('''SELECT ''' +field+ '''
                                 FROM ccode
                                 WHERE ccodeid_id = %(ccodeid)s
-                                AND leftcode = %(leftcode)s''',
+                                AND leftcode = %(leftcode)s
+                                ORDER BY id''',
                                 {'ccodeid':ccodeid,'leftcode':leftcode}):
         terug.append(row[field])
     return  terug
