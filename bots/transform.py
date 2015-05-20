@@ -243,10 +243,10 @@ def persist_update(domein,botskey,value):
     '''
     content = pickle.dumps(value).decode('iso-8859-1')
     botslib.changeq(''' UPDATE persist
-                        SET content=%(content)s
+                        SET content=%(content)s,ts=%(ts)s
                         WHERE domein=%(domein)s
                         AND botskey=%(botskey)s''',
-                        {'domein':domein,'botskey':botskey,'content':content})
+                        {'domein':domein,'botskey':botskey,'content':content,'ts':strftime('%Y-%m-%d %H:%M:%S')})
 
 def persist_add_update(domein,botskey,value):
     # add the record, or update it if already there.
