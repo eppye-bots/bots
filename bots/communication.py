@@ -515,7 +515,7 @@ class _comsession(object):
                 infile.close()
                 #******get information from email (sender, receiver etc)***********************************************************
                 reference       = self.checkheaderforcharset(msg['message-id'])  or ''
-                subject = self.checkheaderforcharset(msg['subject'])
+                subject = self.checkheaderforcharset(msg['subject']) or ''
                 contenttype     = self.checkheaderforcharset(msg.get_content_type())
                 
                 #frompartner
@@ -551,7 +551,7 @@ class _comsession(object):
                                 frompartner=frompartner,
                                 topartner=topartner,
                                 cc = cc_content,
-                                rsrv1 = subject)
+                                rsrv1 = subject[:35])
                 if contenttype == 'multipart/report':   #process received MDN confirmation
                     mdnreceive()
                 else:
