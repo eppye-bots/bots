@@ -229,7 +229,7 @@ def handle_out_message(out_translated,ta_translated):
 def persist_add(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value).decode('iso-8859-1')
+    content = pickle.dumps(value,0).decode('iso-8859-1')
     try:
         botslib.changeq(''' INSERT INTO persist (domein,botskey,content)
                             VALUES   (%(domein)s,%(botskey)s,%(content)s)''',
@@ -241,7 +241,7 @@ def persist_add(domein,botskey,value):
 def persist_update(domein,botskey,value):
     ''' store persistent values in db.
     '''
-    content = pickle.dumps(value).decode('iso-8859-1')
+    content = pickle.dumps(value,0).decode('iso-8859-1')
     botslib.changeq(''' UPDATE persist
                         SET content=%(content)s,ts=%(ts)s
                         WHERE domein=%(domein)s
@@ -271,7 +271,7 @@ def persist_lookup(domein,botskey):
                                 WHERE domein=%(domein)s
                                 AND botskey=%(botskey)s''',
                                 {'domein':domein,'botskey':botskey}):
-        return pickle.loads(row[str('content')].encode('iso-8859-1'))
+        return pickle.loads(row['content'].encode('iso-8859-1'))
     return None
 
 #*********************************************************************
