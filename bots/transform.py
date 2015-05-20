@@ -79,6 +79,7 @@ def _translate_one_file(row,routedict,endstatus,userscript,scriptname):
         edifile.checkforerrorlist() #no exception if infile has been lexed and parsed OK else raises an error
 
         if int(routedict['translateind']) == 3: #parse & passthrough; file is parsed, partners are known, no mapping, does confirm.
+                                                #partners should be queried from ISA level!
             raise botslib.GotoException('dummy')    
         #edifile.ta_info contains info: QUERIES, charset etc
         for inn_splitup in edifile.nextmessage():   #for each message in parsed edifile (one message might get translation multiple times via 'alt'
