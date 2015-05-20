@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-#~ from __future__ import unicode_literals  #python2: gives problems; this module contains unicode strings; in function ccode ascii strings are needed (for field).
+from __future__ import unicode_literals  #python2: gives problems; this module contains unicode strings; in function ccode ascii strings are needed (for field).
 import sys
 import pickle
 import unittest
 import utilsunit
+import time
 import bots.botsglobal as botsglobal
 import bots.botslib as botslib
 import bots.botsinit as botsinit
@@ -30,6 +31,18 @@ class MyObject(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+def persist_lookup_ts(domein,botskey):
+    ''' lookup persistent values in db.
+    '''
+    for row in botslib.query('''SELECT ts
+                                FROM persist
+                                WHERE domein=%(domein)s
+                                AND botskey=%(botskey)s''',
+                                {'domein':domein,'botskey':botskey}):
+        return row[str('ts')]
+    return None
+
 
 class TestTranslate(unittest.TestCase):
     def setUp(self):
@@ -108,35 +121,28 @@ class TestTranslate(unittest.TestCase):
         transform.persist_add(domein,botskey,myobject)
         self.assertEqual(myobject,transform.persist_lookup(domein,botskey),'basis')
 
-    def testcodeconversion(self):
-        #codeconversion via tabel ccode OLD functionnames: 
-        self.assertEqual('TESTOUT',transform.codetconversion('artikel','TESTIN'),'basis')
-        self.assertEqual('TESTOUT',transform.safecodetconversion('artikel','TESTIN'),'basis')
-        self.assertEqual('TESTINNOT',transform.safecodetconversion('artikel','TESTINNOT'),'basis')
-        self.assertRaises(botslib.CodeConversionError,transform.codetconversion,'artikel','TESTINNOT') 
-        self.assertEqual('TESTIN',transform.rcodetconversion('artikel','TESTOUT'),'basis')
-        self.assertEqual('TESTIN',transform.safercodetconversion('artikel','TESTOUT'),'basis')
-        self.assertEqual('TESTINNOT',transform.safercodetconversion('artikel','TESTINNOT'),'basis')
-        self.assertRaises(botslib.CodeConversionError,transform.rcodetconversion,'artikel','TESTINNOT') 
-        #attributes
-        self.assertEqual('TESTATTR1',transform.codetconversion('artikel','TESTIN','attr1'),'basis')
-        self.assertEqual('TESTATTR1',transform.safecodetconversion('artikel','TESTIN','attr1'),'basis')
-
-        #codeconversion via tabel ccode: 
-        self.assertEqual('TESTOUT',transform.ccode('artikel','TESTIN'),'basis')
-        self.assertEqual('TESTOUT',transform.safe_ccode('artikel','TESTIN'),'basis')
-        self.assertEqual('TESTINNOT',transform.safe_ccode('artikel','TESTINNOT'),'basis')
-        self.assertRaises(botslib.CodeConversionError,transform.ccode,'artikel','TESTINNOT') 
-        self.assertEqual('TESTIN',transform.reverse_ccode('artikel','TESTOUT'),'basis')
-        self.assertEqual('TESTIN',transform.safe_reverse_ccode('artikel','TESTOUT'),'basis')
-        self.assertEqual('TESTINNOT',transform.safe_reverse_ccode('artikel','TESTINNOT'),'basis')
-        self.assertRaises(botslib.CodeConversionError,transform.reverse_ccode,'artikel','TESTINNOT') 
-        #attributes
-        self.assertEqual('TESTATTR1',transform.ccode('artikel','TESTIN','attr1'),'basis')
-        self.assertEqual('TESTATTR1',transform.safe_ccode('artikel','TESTIN','attr1'),'basis')
+    def testpersist_timestamp(self):
+        # inn = inmessage.parse_edi_file(editype='edifact',messagetype='orderswithenvelope',filename='botssys/infile/tests/inisout02.edi')
+        domein='test'
+        botskey='timestamp'
+        value= 'abcdedfgh'
+        value2= 'IEFJUKAHE*FMhrt4hr f.wch shjeriw'
+        value3= '1'*3024
+        transform.persist_delete(domein,botskey)
+        # self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value3)   #content is too long
+        transform.persist_add(domein,botskey,value)
+        ts1 = persist_lookup_ts(domein,botskey)
+        time.sleep(1)
+        self.assertRaises(botslib.PersistError,transform.persist_add,domein,botskey,value)   #is already present
+        self.assertEqual(value,transform.persist_lookup(domein,botskey),'basis')
+        transform.persist_update(domein,botskey,value2)
+        self.assertEqual(value2,transform.persist_lookup(domein,botskey),'basis')
+        ts2 = persist_lookup_ts(domein,botskey)
+        print(ts1,ts2)
 
     def testgetcodeset(self):
         self.assertEqual([u'TESTOUT'],transform.getcodeset('artikel','TESTIN'),'test getcodeset')
+        #print(transform.getcodeset('list','list'))
         self.assertEqual([u'1', u'2', u'4', u'5'],transform.getcodeset('list','list'),'test getcodeset')
         
     def testdatemask(self):
@@ -156,6 +162,7 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(u'test','test' or 'test1' or 'test2','test useoneof')
         self.assertEqual(None,None,'test useoneof')
         self.assertEqual(None,None or None or None or None,'test useoneof')
+        self.assertEqual('t',None or '' or None or 't','test useoneof')
         
     def testdateformat(self):
         self.assertEqual(None,transform.dateformat(''),'test dateformat')
@@ -264,8 +271,8 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(True,validate_email.validate_email_address('''#!$%&'*+-/=?^_`{}|~@example.org'''),'')
         self.assertEqual(True,validate_email.validate_email_address('''"()<>[]:,;@\\\"!#$%&'*+-/=?^_`{}| ~.a"@example.org'''),'')
         self.assertEqual(True,validate_email.validate_email_address('" "@example.org'),'')
-        self.assertEqual(True,validate_email.validate_email_address('üñîçøðé@example.com'),'')  #does work in 3.4, not in 2.7
-        self.assertEqual(True,validate_email.validate_email_address('test@üñîçøðé.com'),'')  #does work in 3.4, not in 2.7
+        #~ self.assertEqual(True,validate_email.validate_email_address('üñîçøðé@example.com'),'')  #does work in 3.4, not in 2.7
+        #~ self.assertEqual(True,validate_email.validate_email_address('test@üñîçøðé.com'),'')  #does work in 3.4, not in 2.7
         self.assertEqual(True,validate_email.validate_email_address('"test@test"@gmail.com'),'')
         
         self.assertEqual(False,validate_email.validate_email_address('test.gmail.com'),'')
@@ -280,6 +287,18 @@ class TestTranslate(unittest.TestCase):
         self.assertEqual(True,validate_email.validate_email_address('"/C=NL/A=400NET/P=XXXXXX/O=XXXXXXXXXXXXXXXXXXXX XXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/"@xgateprod.400net.nl'),'')
         self.assertEqual(False,validate_email.validate_email_address('/C=NL/A=400NET/P=XXXXX/O=XXXXXXXXXX XXXXXXXXXXXXXXXXXX/S=XXXXXXXXXXX XXXXXXXX/@xgateprod.400net.nl'),'')
         self.assertEqual(True,validate_email.validate_email_address('/C=NL/A=400NET/P=XXXXX/O=XXXXXXXXXXXXXXXXXXXXXXXXXXXX/S=XXXXXXXXXXXXXXXXXXX/@xgateprod.400net.nl'),'')
+
+    def testchunk(self):
+        self.assertEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]],list(transform.chunk([1,2,3,4,5,6,7,8,9,10],3)) )
+        self.assertEqual(['a nic', 'e exa', 'mple ', 'strin', 'g'],list(transform.chunk('a nice example string',5)) )
+        self.assertEqual([['a nic', 'e exa'], ['mple ', 'strin'], ['g']],list(transform.chunk(list(transform.chunk('a nice example string',5)),2)) )
+        self.assertEqual([],list(transform.chunk(list(transform.chunk('',5)),2)) )
+        self.assertEqual([],list(transform.chunk(list(transform.chunk(None,5)),2)) )
+
+    def testdiacritics(self):
+        title = 'äáãàâāăąåǻȁªấặắḁÄÁÃÀÂĀĂĄÅǞǠǺȀḀ,çćĉċčÇĆĈĊČ,éëêèêēĕėęěȅềe̊ËÉẼÈÊĒĔĖĘĚȄE̊,ïíìîĩįȉÏÍĨÌÎȈ,öóõòôơỏȍÖÓÕÒÔƠȌ,üúũùûưǖǘǚǜųȕÜÚŨÙÛƯǕǗǛȔ,ḃḋďḟĝġğĞĠĜḥḤķľḷḶṁńñǹňņÑṗ̥r̥̄řŕȑȐR̥R̥̄šŞȘťṫțẘWýÿÝžźż,ðæÆÐØßø,ƎƏƐƆƇƈđłȺⱥʉ,Ĳĳ¼½⁇ǳ™Ⅱ⑴⑩⒜㎝㏒'
+        self.assertEqual('aaaaaaaaaaaaaaaaAAAAAAAAAAAAAA,cccccCCCCC,eeeeeeeeeeeeeEEEEEEEEEEEE,iiiiiiiIIIIII,ooooooooOOOOOOO,uuuuuuuuuuuuUUUUUUUUUU,bddfgggGGGhHkllLmnnnnnNprrrrRRRsSStttwWyyYzzz,,,Ii11?dTI(1(cl',transform.dropdiacritics(title))
+        self.assertEqual('äáãàâaaaåaaªaaaaÄÁÃÀÂAAAÅAAAAA,çccccÇCCCC,éëêèêeeeeeeeeËÉEÈÊEEEEEEE,ïíìîiiiÏÍIÌÎI,öóõòôoooÖÓÕÒÔOO,üúuùûuuuuuuuÜÚUÙÛUUUUU,bddfgggGGGhHkllLmnñnnnÑprrrrRRRsSStttwWýÿÝzzz,ðæÆÐØßø,,Ii¼½?dTI(1(cl',transform.dropdiacritics(title,charset='latin1'))
 
 
 if __name__ == '__main__':
