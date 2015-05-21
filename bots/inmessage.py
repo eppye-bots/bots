@@ -71,6 +71,10 @@ class Inmessage(message.Message):
         self._sniff()           #some hard-coded examination of edi file; ta_info can be overruled by syntax-parameters in edi-file
         #start lexing
         self._lex()
+        #lex preprocessing via user exit indicated in syntax
+        preprocess_lex = self.ta_info.get('preprocess_lex',False)
+        if callable(preprocess_lex):
+            preprocess_lex(lex=self.lex_records,ta_info=self.ta_info)
         if hasattr(self,'rawinput'):
             del self.rawinput
         #**breaking parser errors
@@ -313,6 +317,10 @@ class Inmessage(message.Message):
     def nextmessage(self):
         ''' Passes each 'message' to the mapping script.
         '''
+        #node preprocessing via user exit indicated in syntax
+        preprocess_nodes = self.ta_info.get('preprocess_nodes',False)
+        if callable(preprocess_nodes):
+            preprocess_nodes(thisnode=self)
         if self.defmessage.nextmessage is not None: #if nextmessage defined in grammar: split up messages
             #first: count number of messages
             self.ta_info['total_number_of_messages'] = self.getcountoccurrences(*self.defmessage.nextmessage)
