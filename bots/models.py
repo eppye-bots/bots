@@ -267,7 +267,7 @@ class channel(models.Model):
     lockname = StripCharField(max_length=35,blank=True,verbose_name=_('Lock-file'),help_text=_('Directory locking: if lock-file exists in directory, directory is locked for reading/writing.'))
     syslock = models.BooleanField(default=False,verbose_name=_('System locks'),help_text=_('Use system file locks for reading or writing edi files (windows, *nix).'))
     parameters = StripCharField(max_length=70,blank=True,help_text=_('For use in user communication scripting.'))
-    ftpaccount = StripCharField(max_length=35,blank=True,verbose_name=_('ftp account'),help_text=_('FTP account information; note that few systems implement this.'))
+    ftpaccount = StripCharField(max_length=35,blank=True,verbose_name=_('ftp account'),help_text=_('FTP accounting information; note that few systems implement this.'))
     ftpactive = models.BooleanField(default=False,verbose_name=_('ftp active mode'),help_text=_('Passive mode is used unless this is ticked.'))
     ftpbinary = models.BooleanField(default=False,verbose_name=_('ftp binary transfer mode'),help_text=_('File transfers are ASCII unless this is ticked.'))
     askmdn = StripCharField(max_length=17,blank=True,choices=ENCODE_MIME,verbose_name=_('mime encoding'))     #20100703: used to indicate mime-encoding
