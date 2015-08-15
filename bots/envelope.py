@@ -170,14 +170,47 @@ class Envelope(object):
         ''' utility function; some classes need absolute filenames eg for xml-including'''
         return [botslib.abspathdata(filename) for filename in self.ta_list]
 
-    def checkpartners(self):
+    def check_partners_are_known(self):
         ''' check if partners are known.'''
         if not self.ta_info['frompartner']:
-            raise botslib.OutMessageError(_('In enveloping "frompartner" unknown: "%(ta_info)s".'),
-                                            {'ta_info':self.ta_info})
+            raise botslib.OutMessageError(_('In enveloping "frompartner" unknown: "%(frompartner)s".'),ta_info)
         if not self.ta_info['topartner']:
-            raise botslib.OutMessageError(_('In enveloping "topartner" unknown: "%(ta_info)s".'),
-                                            {'ta_info':self.ta_info})
+            raise botslib.OutMessageError(_('In enveloping "topartner" unknown: "%(topartner)s".'),ta_info)
+
+    def convert_partners(self):
+        ''' convert partnerID's according to syntax parameter IDmode.
+        '''
+        IDmode = self.ta_info.get('IDmode',None)
+        if IDmode is None:
+            self.ta_info['frompartner_outer'] = self.ta_info['frompartner']
+            self.ta_info['frompartner_inner'] = self.ta_info['frompartner']
+            self.ta_info['topartner_outer'] = self.ta_info['topartner']
+            self.ta_info['topartner_inner'] = self.ta_info['topartner']
+            return
+        frompartner = self.ta_info['frompartner'].split('|')
+        topartner = self.ta_info['topartner'].split('|')
+        if IDmode == 'ISA_qualifier_GS':
+            if len(frompartner) != 3:
+                raise botslib.OutMessageError(_('In enveloping "frompartner" is expected to have format "%(IDmode)s", but is "%(frompartner)s".'),ta_info)
+            if len(topartner) != 3:
+                raise botslib.OutMessageError(_('In enveloping "topartner" is expected to have format "%(IDmode)s", but is "%(topartner)s".'),ta_info)
+            self.ta_info['frompartner_outer'] = frompartner[0]
+            self.ta_info['frompartner_qualifier'] = frompartner[1]
+            self.ta_info['frompartner_inner'] = frompartner[2]
+            self.ta_info['topartner_outer'] = topartner[0]
+            self.ta_info['topartner_qualifier'] = topartner[1]
+            self.ta_info['topartner_inner'] = topartner[2]
+        elif IDmode in ['ISA_qualifier','UNB_qualifier']:
+            if len(frompartner) != 2:
+                raise botslib.OutMessageError(_('In enveloping "frompartner" is expected to have format "%(IDmode)s", but is "%(frompartner)s".'),ta_info)
+            if len(topartner) != 2:
+                raise botslib.OutMessageError(_('In enveloping "topartner" is expected to have format "%(IDmode)s", but is "%(topartner)s".'),ta_info)
+            self.ta_info['frompartner_outer'] = frompartner[0]
+            self.ta_info['frompartner_qualifier'] = frompartner[1]
+            self.ta_info['frompartner_inner'] = frompartner[0]
+            self.ta_info['topartner_outer'] = topartner[0]
+            self.ta_info['topartner_qualifier'] = topartner[1]
+            self.ta_info['topartner_inner'] = topartner[0]
 
 class noenvelope(Envelope):
     ''' Only copies the input files to one output file.'''
@@ -213,8 +246,8 @@ class csv(noenvelope):
 class edifact(Envelope):
     ''' Generate UNB and UNZ segment; fill with data, write to interchange-file.'''
     def run(self):
-        self.checkpartners()
-        self._openoutenvelope()
+        self.check_partners_are_known()
+        self._openoutenvelope() 
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
 
@@ -275,7 +308,7 @@ class edifact(Envelope):
 class tradacoms(Envelope):
     ''' Generate STX and END segment; fill with appropriate data, write to interchange file.'''
     def run(self):
-        self.checkpartners()
+        self.check_partners_are_known()
         self._openoutenvelope()
         self.ta_info.update(self.out.ta_info)
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
@@ -356,64 +389,67 @@ class templatehtml(Envelope):
 class x12(Envelope):
     ''' Generate envelope segments; fill with appropriate data, write to interchange-file.'''
     def run(self):
-        self.checkpartners()
-        self._openoutenvelope()
+        self.check_partners_are_known()
+        self._openoutenvelope()         #and read grammar - including partner specific syntax
         self.ta_info.update(self.out.ta_info)
+        self.convert_partners()
         botslib.tryrunscript(self.userscript,self.scriptname,'ta_infocontent',ta_info=self.ta_info)
-        #prepare data for envelope
-        isa09date = botslib.strftime('%y%m%d')
-        #test indicator can either be from configuration (self.ta_info['ISA15']) or by mapping (self.ta_info['testindicator'])
-        #mapping overrules.
+        #test indicator can either be from configuration (self.ta_info['ISA15']) or by mapping (self.ta_info['testindicator']); mapping overrules.
         if self.ta_info['testindicator'] and self.ta_info['testindicator'] != '0':    #'0' is default value (in db)
             testindicator = self.ta_info['testindicator']
         else:
             testindicator = self.ta_info['ISA15']
-        if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
-            self.ta_info['reference'] = unicode(botslib.unique('isacounter_' + self.ta_info['topartner']))
-        else:
-            self.ta_info['reference'] = unicode(botslib.unique('isacounter_' + self.ta_info['frompartner']))
-        #ISA06 and GS02 can be different; eg ISA06 is a service provider.
-        #ISA06 and GS02 can be in the syntax....
-        isa06sender = self.ta_info.get('ISA06',self.ta_info['frompartner'])
+        #frompartner
+        isa06sender = self.ta_info.get('ISA06',self.ta_info['frompartner_outer'])   #use ISA06 if defined in syntax, else frompartner_outer
         isa06sender = isa06sender.ljust(15)    #add spaces; is fixed length
-        gs02sender = self.ta_info.get('GS02',self.ta_info['frompartner'])
-        #also for ISA08 and GS03
-        isa08receiver = self.ta_info.get('ISA08',self.ta_info['topartner'])
+        isa05qualifier = self.ta_info.get('frompartner_qualifier',self.ta_info['ISA05'])
+        gs02sender = self.ta_info.get('GS02',self.ta_info['frompartner_inner'])
+        #topartner
+        isa08receiver = self.ta_info.get('ISA08',self.ta_info['topartner_outer'])   #use ISA06 if defined in syntax, else frompartner_outer
         isa08receiver = isa08receiver.ljust(15)    #add spaces; is fixed length
-        gs03receiver = self.ta_info.get('GS03',self.ta_info['topartner'])
-        #build the envelope segments (that is, the tree from which the segments will be generated)
+        isa07qualifier = self.ta_info.get('topartner_qualifier',self.ta_info['ISA07'])
+        gs03receiver = self.ta_info.get('GS03',self.ta_info['topartner_inner'])
+        #isa_counter
+        if botsglobal.ini.getboolean('settings','interchangecontrolperpartner',False):
+            self.ta_info['reference'] = unicode(botslib.unique('isacounter_' + self.ta_info['topartner_outer']))
+        else:
+            self.ta_info['reference'] = unicode(botslib.unique('isacounter_' + self.ta_info['frompartner_outer']))
+        #date and time
+        senddate = botslib.strftime('%Y%m%d')
+        sendtime = botslib.strftime('%H%M')
+        #build the envelope segments (generate tree from which the segments will be generated)
         self.out.put({'BOTSID':'ISA',
                         'ISA01':self.ta_info['ISA01'],
                         'ISA02':self.ta_info['ISA02'],
                         'ISA03':self.ta_info['ISA03'],
                         'ISA04':self.ta_info['ISA04'],
-                        'ISA05':self.ta_info['ISA05'],
+                        'ISA05':isa05qualifier,
                         'ISA06':isa06sender,
-                        'ISA07':self.ta_info['ISA07'],
+                        'ISA07':isa07qualifier,
                         'ISA08':isa08receiver,
-                        'ISA09':isa09date,
-                        'ISA10':botslib.strftime('%H%M'),
+                        'ISA09':senddate[2:],
+                        'ISA10':sendtime,
                         'ISA11':self.ta_info['ISA11'],      #if ISA version > 00403, replaced by reprtion separator
                         'ISA12':self.ta_info['version'],
                         'ISA13':self.ta_info['reference'],
                         'ISA14':self.ta_info['ISA14'],
-                        'ISA15':testindicator},strip=False)         #MIND: strip=False: ISA fields shoudl not be stripped as it is soemwhat like fixed-length
+                        'ISA15':testindicator},strip=False)         #MIND: strip=False: ISA fields shoudl not be stripped as it is fixed-length
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'IEA','IEA01':'1','IEA02':self.ta_info['reference']})
         gs08messagetype = self.ta_info['messagetype'][3:]
         if gs08messagetype[:6] < '004010':
-            gs04date = botslib.strftime('%y%m%d')
+            pass
         else:
-            gs04date = botslib.strftime('%Y%m%d')
+            senddate = senddate[2:]
         self.out.put({'BOTSID':'ISA'},{'BOTSID':'GS',
                                         'GS01':self.ta_info['functionalgroup'],
                                         'GS02':gs02sender,
                                         'GS03':gs03receiver,
-                                        'GS04':gs04date,
-                                        'GS05':botslib.strftime('%H%M'),
+                                        'GS04':senddate,
+                                        'GS05':sendtime,
                                         'GS06':self.ta_info['reference'],
                                         'GS07':self.ta_info['GS07'],
                                         'GS08':gs08messagetype})
-        self.out.put({'BOTSID':'ISA'},{'BOTSID':'GS'},{'BOTSID':'GE','GE01':self.ta_info['nrmessages'],'GE02':self.ta_info['reference']})  #dummy segment; is not used
+        self.out.put({'BOTSID':'ISA'},{'BOTSID':'GS'},{'BOTSID':'GE','GE01':self.ta_info['nrmessages'],'GE02':self.ta_info['reference']})
         #user exit
         botslib.tryrunscript(self.userscript,self.scriptname,'envelopecontent',ta_info=self.ta_info,out=self.out)
         #convert the tree into segments; here only the UNB is written (first segment)
@@ -423,7 +459,7 @@ class x12(Envelope):
         #start doing the actual writing:
         tofile = botslib.opendata(self.ta_info['filename'],'wb',self.ta_info['charset'])
         isa_string = self.out.record2string(self.out.lex_records[0:1])
-        #ISA has the used separators at certain positions. Normally bots would give errors for this (can not use sep as data) or compress these aways. So this is hardcoded.
+        #ISA has the used separators at certain positions. Bots would give errors for this (can not use sep as data) or compress these away. So this is hardcoded.
         if self.ta_info['version'] < '00403':
             isa_string = isa_string[:103] + self.ta_info['field_sep']+ self.ta_info['sfield_sep'] + isa_string[103:] 
         else:

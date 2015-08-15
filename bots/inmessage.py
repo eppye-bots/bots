@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from __future__ import print_function
 import sys
 if sys.version_info[0] > 2:
     basestring = unicode = str
@@ -1299,10 +1300,11 @@ class x12(var):
         editype = 'x12' #self.__class__.__name__
         AcknowledgeCode = 'A' if not error else 'R'
         for nodegs in self.getloop({'BOTSID':'ISA'},{'BOTSID':'GS'}):
-            sender = nodegs.get({'BOTSID':'GS','GS02':None})
-            receiver = nodegs.get({'BOTSID':'GS','GS03':None})
             if nodegs.get({'BOTSID':'GS','GS01':None}) == 'FA': #do not generate 997 for 997
                 continue
+            #get the partnerID's from received file
+            sender = self.ta_info.get('frompartner',nodegs.get({'BOTSID':'GS','GS02':None}))
+            receiver = self.ta_info.get('topartner',nodegs.get({'BOTSID':'GS','GS03':None}))
             nr_message_to_confirm = 0
             messages_not_confirm = []
             for nodest in nodegs.getloop({'BOTSID':'GS'},{'BOTSID':'ST'}):
