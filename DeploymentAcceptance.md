@@ -1,4 +1,4 @@
-### Isolated acceptance testing (bots>=3.0) ###
+w### Isolated acceptance testing (bots>=3.0) ###
 This is a 'mode' for testing which is **isolated**:
   * no external communication: all I/O is from/to file system
   * system state does not change (eg no increased counters, no test runs in system, etc)

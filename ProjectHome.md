@@ -1,4 +1,4 @@
-![http://wiki.bots.googlecode.com/hg/botslogo_chain.png](http://wiki.bots.googlecode.com/hg/botslogo_chain.png)
+![./botslogo_chain.png](./botslogo_chain.png)
 
 This is the project for Bots open source EDI translator.<br>
 Supports all major EDI formats: edifact, x12, xml, tradacoms etc.<br>

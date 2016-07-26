@@ -10,7 +10,7 @@ Needed for a translation:
 
 <br>
 <blockquote><i>Screenshot of configured translations-rules</i>
-<img src='http://wiki.bots.googlecode.com/hg/TranslationScreenshot1.png' /></blockquote>
+<img src='./TranslationScreenshot1.png' /></blockquote>
 
 Read the 1st translation rule of this screen shot:<br>
 <blockquote>translate edifact-ORDERSD96AUNEAN008 to fixed-myinhouseorder using mapping script ordersedifact2myinhouse.py

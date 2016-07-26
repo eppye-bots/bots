@@ -7,7 +7,7 @@ Examples of channels:<br>
 </li><li>put orders in a file queue for import in your application.</li></ul>
 
 <blockquote>Example of communication channels for bots:<br>
-<img src='http://wiki.bots.googlecode.com/hg/ChannelScheme.png' /></blockquote>
+<img src='./ChannelScheme.png' /></blockquote>
 
 Notes on naming conventions:<br>
 <ul><li>incoming = incoming to bots<br>

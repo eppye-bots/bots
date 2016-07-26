@@ -9,7 +9,7 @@ Route are configured in <i>bots-monitor->Configuration->Routes</i>.<br>
 <br>
 <br>
 <blockquote><i>Schema of a simple route</i><br>
-<img src='http://wiki.bots.googlecode.com/hg/RouteDiagram2.png' />
+<img src='./RouteDiagram2.png' />
 <br>
 <br>
 To get a route like this working the following must be configured:<br>

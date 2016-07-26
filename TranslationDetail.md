@@ -1,7 +1,7 @@
 ## How translations work ##
 
 Best understood by looking at this schema:
-> ![http://wiki.bots.googlecode.com/hg/MappingScheme.png](http://wiki.bots.googlecode.com/hg/MappingScheme.png)
+> ![./MappingScheme.png](./MappingScheme.png)
 <br></li></ul>
 
 Step-by-step:<br>

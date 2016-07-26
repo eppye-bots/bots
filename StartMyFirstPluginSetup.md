@@ -4,7 +4,7 @@
 <h2>Look at the configured route</h2>
 To view the route configured: <i>bots-monitor->Configuration->Routes</i><br>
 This will look like:<br>
-<img src='http://wiki.bots.googlecode.com/hg/StartRoutes.png' />
+<img src='./StartRoutes.png' />
 
 A route tells bots what to do: where to get the edi-files, what type of files these are (this determines the translation done), and where to put the translated edi-files..<br>
 One route is configured, called 'myfirstfoute'.<br>
@@ -17,7 +17,7 @@ The translated edi-files (fixed format) go to communication channel 'myfirstrout
 <h2>View the communication channels</h2>
 To view the communication channels configured: <i>bots-monitor->Configuration->Channels</i><br>
 This will look like:<br>
-<img src='http://wiki.bots.googlecode.com/hg/StartChannels.png' />
+<img src='./StartChannels.png' />
 
 A communications channel communicates edi-files in or out of bots.<br>
 There are different types of channels, eg: file, ftp, smtp, pop3, etc.<br>
@@ -29,7 +29,7 @@ Channels for file-system require a path and a filename.<br>
 <h2>The translations in this configuration</h2>
 To view the translations configured: <i>bots-monitor->Configuration->Translations</i><br>
 This will look like:<br>
-<img src='http://wiki.bots.googlecode.com/hg/StartTranslations.png' />
+<img src='./StartTranslations.png' />
 
 There is one <a href='TranslationIntroduction.md'>translation</a> configured.<br>
 This translation translates edi messages of editype 'edifact' and messagetype 'ORDERSD96AUNEAN008' using mappingscript 'myfirstscriptordersedi2fixed' to edi messages of editype 'fixed' and messagetype 'ordersfixed'.<br>

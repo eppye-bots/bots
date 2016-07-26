@@ -38,7 +38,7 @@ NOTE: if filtering is not specified, all outgoing files in the route are send th
 <br>
 <h2>Schematic</h2>
 Schematic overview of a route consisting of 5 parts:<br>
-<img src='http://wiki.bots.googlecode.com/hg/RouteDiagramComp.png' />
+<img src='./RouteDiagramComp.png' />
 <br>
 <br>
 Note:<br>

@@ -9,11 +9,11 @@ This page contains 3 examples of code conversions:<br>
 <br>
 <h3>Code maintenance in GUI</h3>
 First configure 2 code lists (<i>bots-monitor->Configuration->user codes by type</i>):<br>
-<img src='http://wiki.bots.googlecode.com/hg/CCbytype.png' />
+<img src='./CCbytype.png' />
 
 <br>
 Make the code conversions (<i>bots-monitor->Configuration->user codes as list</i>):<br>
-<img src='http://wiki.bots.googlecode.com/hg/CCaslist.png' />
+<img src='./CCaslist.png' />
 
 <br>
 <h3>Code conversion in mapping script</h3>

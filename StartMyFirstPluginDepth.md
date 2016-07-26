@@ -5,7 +5,7 @@
 
 <br>
 <h2>Detailed explanation</h2>
-<img src='http://wiki.bots.googlecode.com/hg/RouteDiagram.png' />
+<img src='./RouteDiagram.png' />
 
 All actions in the picture take place in the route 'myfirstroute'.<br>
 The route contains:<br>
