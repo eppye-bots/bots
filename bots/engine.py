@@ -1,23 +1,19 @@
 #!/usr/bin/env python
-from __future__ import print_function
-from __future__ import unicode_literals
+''' Start bots-engine.'''
 import sys
-if sys.version_info[0] > 2:
-    basestring = unicode = str
 import os
 import atexit
 import logging
 import socket
 import time
-import warnings
 from django.utils.translation import ugettext as _
 #bots-modules
-from . import botslib
-from . import botsinit
-from . import botsglobal
-from . import router
-from . import cleanup
-''' Start bots-engine.'''
+import botslib
+import botsinit
+import botsglobal
+import router
+import cleanup
+import warnings
 
 
 def start():
@@ -55,14 +51,14 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print('Error: configuration directory indicated, but no directory name.')
+                print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
         elif arg in commandspossible:
             commandstorun.append(arg)
         elif arg == '--cleanup':
             do_cleanup_parameter = True
-        elif arg in ['?', '/?','-h', '--help'] or arg.startswith('-'):
-            print(usage)
+        elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
+            print usage
             sys.exit(0)
         else:   #pick up names of routes to run
             routestorun.append(arg)
@@ -87,18 +83,17 @@ def start():
     process_name = 'engine'
     botsglobal.logger = botsinit.initenginelogging(process_name)
     atexit.register(logging.shutdown)
-    if botsglobal.ini.get('settings','log_file_number','') != 'daily':
-        for key,value in botslib.botsinfo():    #log info about environement, versions, etc
-            botsglobal.logger.info('%(key)s: "%(value)s".',{'key':key,'value':value})
+    for key,value in botslib.botsinfo():    #log info about environement, versions, etc
+        botsglobal.logger.info(u'%(key)s: "%(value)s".',{'key':key,'value':value})
 
     #**************connect to database**********************************
     try:
         botsinit.connect()
     except Exception as msg:
-        botsglobal.logger.exception(_('Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
+        botsglobal.logger.exception(_(u'Could not connect to database. Database settings are in bots/config/settings.py. Error: "%(msg)s".'),{'msg':msg})
         sys.exit(1)
     else:
-        botsglobal.logger.info(_('Connected to database.'))
+        botsglobal.logger.info(_(u'Connected to database.'))
         atexit.register(botsglobal.db.close)
     #************initialise user exits for the whole bots-engine*************************
     try:
@@ -108,11 +103,11 @@ def start():
     #***acceptance tests: initialiase acceptance user script******************************
     acceptance_userscript = acceptance_scriptname = None
     if botsglobal.ini.getboolean('acceptance','runacceptancetest',False):
-        botsglobal.logger.info(_('This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
+        botsglobal.logger.info(_(u'This run is an acceptance test - as indicated in option "runacceptancetest" in bots.ini.'))
         try:
             acceptance_userscript,acceptance_scriptname = botslib.botsimport('routescripts','bots_acceptancetest')
         except botslib.BotsImportError:
-            botsglobal.logger.info(_('In acceptance test there is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
+            botsglobal.logger.info(_(u'In acceptance test there is no script file "bots_acceptancetest.py" to check the results of the acceptance test.'))
 
     #**************handle database lock****************************************
     #set a lock on the database; if not possible, the database is locked: an earlier instance of bots-engine was terminated unexpectedly.
@@ -121,20 +116,20 @@ def start():
         if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
             cursor = botsglobal.db.execute('''PRAGMA integrity_check''')
             result = cursor.fetchone()
-            if result[0] != 'ok':
-                warn =  _('!Bots database is locked!\n'\
+            if result[0] != u'ok':
+                warn =  _(u'!Bots database is locked!\n'\
                             'Bots did an integrity check on the database, but database was not OK.\n'\
                             'Manual action is needed!\n'\
                             'Bots has stopped processing EDI files.')
                 botsglobal.logger.critical(warn)
-                botslib.sendbotserrorreport(_('[Bots severe error]Database is damaged'),warn)
+                botslib.sendbotserrorreport(_(u'[Bots severe error]Database is damaged'),warn)
                 sys.exit(1)
-        warn =  _('!Bots database is locked!\n'\
+        warn =  _(u'!Bots database is locked!\n'\
                     'Bots-engine has ended in an unexpected way during the last run.\n'\
                     'Most likely causes: sudden power-down, system crash, problems with disk I/O, bots-engine terminated by user, etc.\n'
                     'Bots will do an automatic crash recovery now.')
         botsglobal.logger.critical(warn)
-        botslib.sendbotserrorreport(_('[Bots severe error]Database is locked'),warn)
+        botslib.sendbotserrorreport(_(u'[Bots severe error]Database is locked'),warn)
         commandstorun.insert(0,'crashrecovery')         #there is a database lock. Add a crashrecovery as first command to run.
     atexit.register(botslib.remove_database_lock)
 
@@ -155,11 +150,11 @@ def start():
                 first_command_2_run = False
             else:
                 time.sleep(1) 
-            botsglobal.logger.info(_('Run "%(command)s".'),{'command':command})
+            botsglobal.logger.info(_(u'Run "%(command)s".'),{'command':command})
             #************get list of routes to run*******************************
             if routestorun:
                 use_routestorun = routestorun[:]
-                botsglobal.logger.info(_('Run routes from command line: "%(routes)s".'),{'routes':unicode(use_routestorun)})
+                botsglobal.logger.info(_(u'Run routes from command line: "%(routes)s".'),{'routes':unicode(use_routestorun)})
             elif command == 'new':  #fetch all active routes from database unless 'not in default run' or not active.
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
@@ -168,8 +163,8 @@ def start():
                                             AND (notindefaultrun=%(notindefaultrun)s OR notindefaultrun IS NULL)
                                             ORDER BY idroute ''',
                                             {'active':True,'notindefaultrun':False}):
-                    use_routestorun.append(row[str('idroute')])
-                botsglobal.logger.info(_('Run active routes from database that are in default run: "%(routes)s".'),{'routes':unicode(use_routestorun)})
+                    use_routestorun.append(row['idroute'])
+                botsglobal.logger.info(_(u'Run active routes from database that are in default run: "%(routes)s".'),{'routes':unicode(use_routestorun)})
             else:   #for command other than 'new': use all active routes.
                 use_routestorun = []
                 for row in botslib.query('''SELECT DISTINCT idroute
@@ -177,8 +172,8 @@ def start():
                                             WHERE active=%(active)s
                                             ORDER BY idroute ''',
                                             {'active':True}):
-                    use_routestorun.append(row[str('idroute')])
-                botsglobal.logger.info(_('Run all active routes from database: "%(routes)s".'),{'routes':unicode(use_routestorun)})
+                    use_routestorun.append(row['idroute'])
+                botsglobal.logger.info(_(u'Run all active routes from database: "%(routes)s".'),{'routes':unicode(use_routestorun)})
             #************run routes for this command******************************
             botslib.tryrunscript(userscript,scriptname,'pre' + command,routestorun=use_routestorun)
             errorinrun += router.rundispatcher(command,use_routestorun)
@@ -189,11 +184,11 @@ def start():
         try:    #in acceptance tests: run a user script. no good reporting of errors/results in post-test script. Reason: this is after automaticmaintence.
             botslib.tryrunscript(acceptance_userscript,acceptance_scriptname,'posttest',routestorun=use_routestorun)
         except Exception as msg:
-            print(unicode(msg))
+            print unicode(msg)
         
         cleanup.cleanup(do_cleanup_parameter,userscript,scriptname)
     except Exception as msg:
-        botsglobal.logger.exception(_('Severe error in bots system:\n%(msg)s'),{'msg':unicode(msg)})    #of course this 'should' not happen.
+        botsglobal.logger.exception(_(u'Severe error in bots system:\n%(msg)s'),{'msg':unicode(msg)})    #of course this 'should' not happen.
         sys.exit(1)
     else:
         if errorinrun:

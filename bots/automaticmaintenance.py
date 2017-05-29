@@ -1,14 +1,9 @@
-from __future__ import print_function
-from __future__ import unicode_literals
+#bots modules
 import sys
-if sys.version_info[0] > 2:
-    basestring = unicode = str
+import botslib
+import botsglobal
+from botsconfig import *
 from django.utils.translation import ugettext as _
-#bots-modules
-from . import botslib
-from . import botsglobal
-from .botsconfig import *
-
 #ta-fields used in evaluation
 TAVARS = 'idta,statust,divtext,child,ts,filename,status,idroute,fromchannel,tochannel,frompartner,topartner,frommail,tomail,contenttype,nrmessages,editype,messagetype,errortext,script,rsrv1,filesize,numberofresends'
 
@@ -41,7 +36,7 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
                                 AND status=%(status)s
                                 AND statust=%(statust)s ''',
                                 {'status':EXTERNOUT,'rootidtaofrun':rootidtaofrun,'statust':DONE}):
-        send = row[str('count')]
+        send = row['count']
     #count process errors
     for row in botslib.query('''SELECT COUNT(*) as count
                                 FROM ta
@@ -49,7 +44,7 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
                                 AND status=%(status)s
                                 AND statust=%(statust)s''',
                                 {'status':PROCESS,'rootidtaofrun':rootidtaofrun,'statust':ERROR}):
-        processerrors = row[str('count')]
+        processerrors = row['count']
     #generate report (in database)
     rootta = botslib.OldTransaction(rootidtaofrun)
     rootta.syn('ts')    #get the timestamp of this run
@@ -60,8 +55,8 @@ def make_run_report(rootidtaofrun,resultsofrun,command,totalfilesize):
     if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
         commandline = ' '.join(sys.argv)
     else:
-        commandline = ' '.join(arg for arg in sys.argv[1:] if arg!='-cconfig' and not arg.startswith('--'))[:35]
-    botslib.changeq('''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,send,processerrors,
+        commandline = ' '.join([arg for arg in sys.argv[1:] if arg!='-cconfig' and not arg.startswith('--')])[:35]
+    botslib.changeq(u'''INSERT INTO report (idta,lastopen,lasterror,lastok,lastdone,send,processerrors,
                                             ts,lastreceived,status,type,filesize,acceptance,rsrv1)
                             VALUES  (%(rootidtaofrun)s,%(lastopen)s,%(lasterror)s,%(lastok)s,%(lastdone)s,%(send)s,%(processerrors)s,
                                     %(ts)s,%(lastreceived)s,%(status)s,%(type)s,%(totalfilesize)s,%(acceptance)s,%(rsrv1)s) ''',
@@ -83,33 +78,33 @@ def email_error_report(rootidtaofrun):
                                     {'rootidtaofrun':rootidtaofrun}):
         break
     else:
-        raise botslib.PanicError(_('In generate report: could not find report?'))
-    subject = _('[Bots Error Report] %(time)s')%{'time':unicode(results[str('ts')])[:16]}
-    reporttext = _('Bots Report; type: %(type)s, time: %(time)s\n')%{'type':results[str('type')],'time':unicode(results[str('ts')])[:19]}
-    reporttext += _('    %d files received/processed in run.\n')%(results[str('lastreceived')])
-    if results[str('lastdone')]:
-        reporttext += _('    %d files without errors,\n')%(results[str('lastdone')])
-    if results[str('lasterror')]:
-        subject += _('; %d file errors')%(results[str('lasterror')])
-        reporttext += _('    %d files with errors,\n')%(results[str('lasterror')])
-    if results[str('lastok')]:
-        subject += _('; %d files stuck')%(results[str('lastok')])
-        reporttext += _('    %d files got stuck,\n')%(results[str('lastok')])
-    if results[str('lastopen')]:
-        subject += _('; %d system errors')%(results[str('lastopen')])
-        reporttext += _('    %d system errors,\n')%(results[str('lastopen')])
-    if results[str('processerrors')]:
-        subject += _('; %d process errors')%(results[str('processerrors')])
-        reporttext += _('    %d errors in processes.\n')%(results[str('processerrors')])
-    reporttext += _('    %d files send in run.\n')%(results[str('send')])
+        raise botslib.PanicError(_(u'In generate report: could not find report?'))
+    subject = _(u'[Bots Error Report] %(time)s')%{'time':unicode(results['ts'])[:16]}
+    reporttext = _(u'Bots Report; type: %(type)s, time: %(time)s\n')%{'type':results['type'],'time':unicode(results['ts'])[:19]}
+    reporttext += _(u'    %d files received/processed in run.\n')%(results['lastreceived'])
+    if results['lastdone']:
+        reporttext += _(u'    %d files without errors,\n')%(results['lastdone'])
+    if results['lasterror']:
+        subject += _(u'; %d file errors')%(results['lasterror'])
+        reporttext += _(u'    %d files with errors,\n')%(results['lasterror'])
+    if results['lastok']:
+        subject += _(u'; %d files stuck')%(results['lastok'])
+        reporttext += _(u'    %d files got stuck,\n')%(results['lastok'])
+    if results['lastopen']:
+        subject += _(u'; %d system errors')%(results['lastopen'])
+        reporttext += _(u'    %d system errors,\n')%(results['lastopen'])
+    if results['processerrors']:
+        subject += _(u'; %d process errors')%(results['processerrors'])
+        reporttext += _(u'    %d errors in processes.\n')%(results['processerrors'])
+    reporttext += _(u'    %d files send in run.\n')%(results['send'])
 
     botsglobal.logger.info(reporttext)      #log the report texts
     # only send email report if there are errors.
     # sendreportifprocesserror (in bots.ini): no email reports if only process errors
-    if results[str('lasterror')] or results[str('lastopen')] or results[str('lastok')] or (results[str('processerrors')] and botsglobal.ini.getboolean('settings','sendreportifprocesserror',True)):
+    if results['lasterror'] or results['lastopen'] or results['lastok'] or (results['processerrors'] and botsglobal.ini.getboolean('settings','sendreportifprocesserror',True)):
 
         # Include details about process errors in the email report; if debug is True: includes trace
-        if results[str('processerrors')]:
+        if results['processerrors']:
             for row in botslib.query('''SELECT idroute,fromchannel,tochannel,errortext
                                         FROM ta
                                         WHERE idta>=%(rootidtaofrun)s
@@ -120,7 +115,7 @@ def email_error_report(rootidtaofrun):
                 for key in row.keys():
                     reporttext += '%s: %s\n' % (key,row[key])
         # Include details about file errors in the email report; if debug is True: includes trace
-        if results[str('lasterror')] or results[str('lastopen')] or results[str('lastok')]:
+        if results['lasterror'] or results['lastopen'] or results['lastok']:
             for row in botslib.query('''SELECT idroute,frompartner,fromchannel,topartner,tochannel,errortext,infilename
                                         FROM filereport
                                         WHERE idta>%(rootidtaofrun)s
@@ -132,7 +127,7 @@ def email_error_report(rootidtaofrun):
 
         botslib.sendbotserrorreport(subject,reporttext)
 
-    return int(results[str('status')])    #return report status: 0 (no error) or 1 (error)
+    return int(results['status'])    #return report status: 0 (no error) or 1 (error)
 
 
 class Trace(object):
@@ -149,13 +144,13 @@ class Trace(object):
         try:
             self.statust = self._getstatusfortreeoftransactions(self.rootofinfile)
         except Exception as msg:
-            botsglobal.logger.exception(_('Error in automatic maintenance: "%(msg)s".'),{'msg':msg})
+            botsglobal.logger.exception(_(u'Error in automatic maintenance: "%(msg)s".'),{'msg':msg})
             self.statust = OPEN
         self._collectdataforfilereport()
 
     def display(self,currentta,level=0):
         ''' method for debugging.'''
-        print(level*'    ',currentta['idta'],currentta['statust'],currentta['talijst'])
+        print level*'    ',currentta['idta'],currentta['statust'],currentta['talijst']
         for ta_child in currentta['talijst']:
             self.display(ta_child,level+1)
 
@@ -168,7 +163,7 @@ class Trace(object):
                                          WHERE idta=%(child)s
                                          ORDER BY idta ''',
                                         {'child':tacurrent['child']}):
-                tacurrent[str('talijst')] = [dict(row)]    #add next one (a child has only one parent)
+                tacurrent['talijst'] = [dict(row)]    #add next one (a child has only one parent)
         else:   #find successor by using parent-relationship; for one-one-one relation an splitting
             talijst = []
             for row in botslib.query('''SELECT ''' + TAVARS + '''
@@ -206,16 +201,16 @@ class Trace(object):
                 return DONE
         elif tacurrent['statust'] == OK:   #file is stucked. There should be no children
             if tacurrent['talijst']:
-                raise botslib.TraceError(_('Statust OK (stuck) but has child(ren) (idta: %(idta)s).'),tacurrent)
+                raise botslib.TraceError(_(u'Statust OK (stuck) but has child(ren) (idta: %(idta)s).'),tacurrent)
             else:
                 return OK
         elif tacurrent['statust'] == ERROR:    #should be no children. 
             if tacurrent['talijst']:
-                raise botslib.TraceError(_('Statust ERROR but has child(ren) (idta: %(idta)s).'),tacurrent)
+                raise botslib.TraceError(_(u'Statust ERROR but has child(ren) (idta: %(idta)s).'),tacurrent)
             else:
                 return ERROR
         else:   #tacurrent.statust==OPEN: something is very wrong. Raise exception.
-            raise botslib.TraceError(_('Severe error: found statust OPEN for idta: %(idta)s.'),tacurrent)
+            raise botslib.TraceError(_(u'Severe error: found statust OPEN for idta: %(idta)s.'),tacurrent)
 
 
     def _collectdataforfilereport(self):
@@ -354,7 +349,7 @@ class Trace(object):
         #20140116: patch for MySQLdb version 1.2.5. This version seems to check all parameters - not just the ones actually used.
         tmp_dict = self.__dict__.copy()
         tmp_dict.pop('rootofinfile','nep')
-        botslib.changeq('''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
+        botslib.changeq(u'''INSERT INTO filereport (idta,statust,reportidta,retransmit,idroute,fromchannel,ts,
                                                     infilename,tochannel,frompartner,topartner,frommail,
                                                     tomail,ineditype,inmessagetype,outeditype,outmessagetype,
                                                     incontenttype,outcontenttype,nrmessages,outfilename,errortext,

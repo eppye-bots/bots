@@ -1,5 +1,4 @@
-#this module is not longer used; django 1.6 does same thing by default.
-#keep for complatibility
+# code found at code.djangoproject.com/ticket/3777
 from django import http
 
 
@@ -18,7 +17,7 @@ class FilterPersistMiddleware(object):
         if '/admin/' not in request.path or request.method == 'POST':
             return None
 
-        if 'HTTP_REFERER' in request.META:
+        if request.META.has_key('HTTP_REFERER'):
             referrer = request.META['HTTP_REFERER'].split('?')[0]
             referrer = referrer[referrer.find('/admin'):len(referrer)]
         else:
@@ -40,7 +39,7 @@ class FilterPersistMiddleware(object):
         if path == referrer:
             # We are in the same page as before. We assume that filters were changed and update them.
             if query_string == '':     #Filter is empty, delete it
-                if key in session:
+                if session.has_key(key):
                     del session[key]
                 return None
             else:
@@ -54,3 +53,21 @@ class FilterPersistMiddleware(object):
                 return http.HttpResponseRedirect(redirect_to)
             else:
                 return None
+
+#~ Sample default filters:
+#~
+#~ from datetime import date
+#~ def _today():
+    #~ return 'starttime__gte=' + date.today().isoformat()
+#~
+#~ # Default filters. Format: 'key_$url', where $url has slashes replaced
+#~ # with underscores
+#~ # value can either be a function or a string
+#~ ADMIN_DEFAULT_FILTERS= {
+    #~ # display only events starting today
+    #~ 'key_admin_event_calendar_event_': _today,
+    #~ # display active members
+    #~ 'key_admin_users_member_': 'is_active__exact=1',
+    #~ # only show new suggestions
+    #~ 'key_admin_suggestions_suggestion_': 'status__exact=new',
+#~ }

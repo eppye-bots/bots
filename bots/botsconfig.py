@@ -34,7 +34,7 @@ FIELDS = 6
 QUERIES = 7
 SUBTRANSLATION = 8
 BOTSIDNR = 9
-FIXED_RECORD_LENGTH = 10         #length of fixed record
+F_LENGTH = 10         #length of fixed record
 
 #***grammar.recorddefs: dict keys for fields of record eg: record[FIELDS][ID] == 'C124.0034'
 #ID = 0 (is already defined)

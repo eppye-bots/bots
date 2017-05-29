@@ -1,7 +1,6 @@
-from __future__ import unicode_literals
+# Django settings for bots project.
 import os
 import bots
-# Django settings for bots project.
 PROJECT_PATH = os.path.abspath(os.path.dirname(bots.__file__))
 
 #*******settings for sending bots error reports via email**********************************
@@ -18,41 +17,41 @@ EMAIL_HOST_PASSWORD = ''    #Default: ''. PASSWORD to use for the SMTP server de
 
 #*********database settings*************************
 #SQLite database (default bots database)
-#~ DATABASES = {
-    #~ 'default': {
-        #~ 'ENGINE': 'django.db.backends.sqlite3',
-        #~ 'NAME': os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb'),
-        #~ 'USER': '',         #not needed for SQLite
-        #~ 'PASSWORD': '',     #not needed for SQLite
-        #~ 'HOST': '',         #not needed for SQLite
-        #~ 'PORT': '',         #not needed for SQLite
-        #~ 'OPTIONS': {},      #not needed for SQLite
-        #~ }
-    #~ }
-#~ #MySQL:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(PROJECT_PATH, 'botssys/sqlitedb/botsdb'),
+        'USER': '',         #not needed for SQLite
+        'PASSWORD': '',     #not needed for SQLite
+        'HOST': '',         #not needed for SQLite
+        'PORT': '',         #not needed for SQLite
+        'OPTIONS': {},      #not needed for SQLite
+        }
+    }
+#MySQL:
 #~ DATABASES = {
     #~ 'default': {
         #~ 'ENGINE': 'django.db.backends.mysql',
         #~ 'NAME': 'botsdb',
         #~ 'USER': 'bots',
         #~ 'PASSWORD': 'botsbots',
-        #~ 'HOST': '192.168.0.9',
+        #~ 'HOST': '127.0.0.1',
         #~ 'PORT': '3306',
         #~ 'OPTIONS': {'use_unicode':True,'charset':'utf8','init_command': 'SET storage_engine=INNODB'},
         #~ }
     #~ }
 #~ #PostgreSQL:
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'botsdb',
-        'USER': 'bots',
-        'PASSWORD': 'botsbots',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-        'OPTIONS': {},
-        }
-    }
+#~ DATABASES = {
+    #~ 'default': {
+        #~ 'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        #~ 'NAME': 'botsdb',
+        #~ 'USER': 'bots',
+        #~ 'PASSWORD': 'botsbots',
+        #~ 'HOST': '127.0.0.1',
+        #~ 'PORT': '5432',
+        #~ 'OPTIONS': {},
+        #~ }
+    #~ }
 
 #*********setting date/time zone and formats *************************
 # Local time zone for this installation. Choices can be found here:
@@ -123,7 +122,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    #~ 'bots.persistfilters.FilterPersistMiddleware',   #remove, is in django 1.6.
+    'bots.persistfilters.FilterPersistMiddleware',
     )
 INSTALLED_APPS = (
     'django.contrib.auth',

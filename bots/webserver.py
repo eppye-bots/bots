@@ -1,17 +1,13 @@
 #!/usr/bin/env python
-from __future__ import print_function
-from __future__ import unicode_literals
 import sys
-if sys.version_info[0] > 2:
-    basestring = unicode = str
 import os
 import django
 from django.core.handlers.wsgi import WSGIHandler
 from django.utils.translation import ugettext as _
 import cherrypy
 from cherrypy import wsgiserver
-from . import botsglobal
-from . import botsinit
+import botsglobal
+import botsinit
 
 
 def start():
@@ -32,10 +28,10 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print('Error: configuration directory indicated, but no directory name.')
+                print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
         else:
-            print(usage)
+            print usage
             sys.exit(0)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.
@@ -49,15 +45,15 @@ def start():
     conf = {'/': {'tools.staticdir.on' : True,'tools.staticdir.dir' : 'media' ,'tools.staticdir.root': botsglobal.ini.get('directories','botspath')}}
     servestaticfiles = cherrypy.tree.mount(None, '/media', conf)    #None: no cherrypy application (as this only serves static files)
     #cherrypy handling of django
-    servedjango = WSGIHandler()     #was: servedjango = AdminMediaHandler(WSGIHandler())  - django does not need the AdminMediaHandler.
+    servedjango = WSGIHandler()     #was: servedjango = AdminMediaHandler(WSGIHandler())  but django does not need the AdminMediaHandler in this setup. is much faster.
     #cherrypy uses a dispatcher in order to handle the serving of static files and django.
-    dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, str('/media'): servestaticfiles}) #UNICODEPROBLEM: needs to be binary
+    dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': servedjango, '/media': servestaticfiles})
     botswebserver = wsgiserver.CherryPyWSGIServer(bind_addr=('0.0.0.0', botsglobal.ini.getint('webserver','port',8080)), wsgi_app=dispatcher, server_name=botsglobal.ini.get('webserver','name','bots-webserver'))
-    botsglobal.logger.log(25,_('Bots %(process_name)s started.'),
+    botsglobal.logger.log(25,_(u'Bots %(process_name)s started.'),
                                 {'process_name':process_name})
-    botsglobal.logger.log(25,_('Bots %(process_name)s configdir: "%(configdir)s".'),
+    botsglobal.logger.log(25,_(u'Bots %(process_name)s configdir: "%(configdir)s".'),
                                 {'process_name':process_name, 'configdir':botsglobal.ini.get('directories','config')})
-    botsglobal.logger.log(25,_('Bots %(process_name)s serving at port: "%(port)s".'),
+    botsglobal.logger.log(25,_(u'Bots %(process_name)s serving at port: "%(port)s".'),
                                 {'process_name':process_name,'port':botsglobal.ini.getint('webserver','port',8080)})
     #handle ssl: cherrypy < 3.2 always uses pyOpenssl. cherrypy >= 3.2 uses python buildin ssl (python >= 2.6 has buildin support for ssl).
     ssl_certificate = botsglobal.ini.get('webserver','ssl_certificate',None)
@@ -70,9 +66,9 @@ def start():
             #but: pyOpenssl should be there!
             botswebserver.ssl_certificate = ssl_certificate
             botswebserver.ssl_private_key = ssl_private_key
-        botsglobal.logger.log(25,_('Bots %(process_name)s uses ssl (https).'),{'process_name':process_name})
+        botsglobal.logger.log(25,_(u'Bots %(process_name)s uses ssl (https).'),{'process_name':process_name})
     else:
-        botsglobal.logger.log(25,_('Bots %(process_name)s uses plain http (no ssl).'),{'process_name':process_name})
+        botsglobal.logger.log(25,_(u'Bots %(process_name)s uses plain http (no ssl).'),{'process_name':process_name})
 
     #***start the cherrypy webserver.************************************************
     try:

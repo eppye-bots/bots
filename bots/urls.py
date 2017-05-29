@@ -1,8 +1,9 @@
-from __future__ import unicode_literals
-from django.conf.urls import patterns,include,url
+#~ from django.conf.urls.defaults import patterns,include   #depreciated in 1.5
+from django.conf.urls import patterns,include,url           #does not work in django 1.3
 from django.contrib import admin
+#~ from django.views.generic.base import RedirectView
 from django.contrib.auth.decorators import login_required,user_passes_test
-from . import views
+import views
 
 admin.autodiscover()
 staff_required = user_passes_test(lambda u: u.is_staff)
@@ -25,7 +26,6 @@ urlpatterns = patterns('',
     url(r'^confirm.*', login_required(views.confirm)),
     url(r'^filer.*', login_required(views.filer)),
     url(r'^srcfiler.*', login_required(views.srcfiler)),
-    url(r'^logfiler.*', login_required(views.logfiler)),
     #only staff
     url(r'^admin/$', login_required(views.home)),  #do not show django admin root page
     url(r'^admin/bots/$', login_required(views.home)),  #do not show django admin root page

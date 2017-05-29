@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 #Globals used by Bots
 version = '3.2.0'       #bots version
 db = None               #db-object

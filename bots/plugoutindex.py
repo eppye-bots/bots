@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-from __future__ import print_function
-from __future__ import unicode_literals
 import sys
 import os
-from . import botsinit
-from . import botsglobal
+import botsinit
+import botsglobal
 
 
 def start():
@@ -25,10 +23,10 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print('Error: configuration directory indicated, but no directory name.')
+                print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
         else:
-            print(usage)
+            print usage
             sys.exit(0)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.

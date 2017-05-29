@@ -1,30 +1,33 @@
-from __future__ import print_function
-from __future__ import unicode_literals
+''' converts xml file to a bots grammar.
+    Usage: c:\python27\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
+    Try to have a 'completely filled' xml file.
+'''
 import os
 import sys
 import atexit
 import copy
 import logging
 try:
-    from xml.etree import cElementTree as ET
+    import cElementTree as ET
 except ImportError:
-    from xml.etree import ElementTree as ET
+    try:
+        import elementtree.ElementTree as ET
+    except ImportError:
+        try:
+            from xml.etree import cElementTree as ET
+        except ImportError:
+            from xml.etree import ElementTree as ET
 try:
     from collections import OrderedDict
 except:
-    from .bots_ordereddict import OrderedDict    
-#bots-modules
-from . import botslib
-from . import botsinit
-from . import botsglobal
-from . import inmessage
-from . import outmessage
-from . import node
-from .botsconfig import *
-''' converts xml file to a bots grammar.
-    Usage: c:\python27\python  bots-xml2botsgrammar.py  botssys/infile/test.xml   botssys/infile/resultgrammar.py  -cconfig
-    Try to have a 'completely filled' xml file.
-'''
+    from bots_ordereddict import OrderedDict    
+import botslib
+import botsinit
+import botsglobal
+import inmessage
+import outmessage
+import node
+from botsconfig import *
 
 #**************************************************************************************
 #***classes used in inmessage for xml2botsgrammar.
@@ -121,7 +124,7 @@ def map_writefields(node_out,node_in,mpath):
     for key in node_in.record.keys():       
         if key in ['BOTSID','BOTSIDnr']:    #skip these
             continue
-        mpath_with_all_fields[-1][key] = 'dummy'    #add key to the mpath
+        mpath_with_all_fields[-1][key] = u'dummy'    #add key to the mpath
     node_out.put(*mpath_with_all_fields)            #write all fields.
 
 #******************************************************************
@@ -148,7 +151,7 @@ def removedoublesfromlist(orglist):
 #******************************************************************
 #***functions to write grammar to file*****************************
 def recorddefs2string(recorddefs,targetNamespace):
-    result = ''
+    result = ""
     for tag in sorted(recorddefs):
         result += "'%s%s':\n    [\n"%(targetNamespace,tag)
         for field in recorddefs[tag]:
@@ -195,7 +198,7 @@ def grammar2file(botsgrammarfilename,structure,recorddefs,targetNamespace):
     f = open(botsgrammarfilename,'wb')
     f.write(result2)
     f.close()
-    print('grammar file is written:',botsgrammarfilename)
+    print 'grammar file is written:',botsgrammarfilename
 
 
 def start():
@@ -220,12 +223,12 @@ def start():
         if arg.startswith('-c'):
             configdir = arg[2:]
             if not configdir:
-                print('Error: configuration directory indicated, but no directory name.')
+                print 'Error: configuration directory indicated, but no directory name.'
                 sys.exit(1)
         elif arg.startswith('-a'):
             allrecords = True
-        elif arg in ['?', '/?','-h', '--help'] or arg.startswith('-'):
-            print(usage)
+        elif arg in ["?", "/?",'-h', '--help'] or arg.startswith('-'):
+            print usage
             sys.exit(0)
         else:
             if not edifile:
@@ -233,7 +236,7 @@ def start():
             else:
                 botsgrammarfilename = arg
     if not edifile or not botsgrammarfilename:
-        print('Error: both edifile and grammarfile are required.')
+        print 'Error: both edifile and grammarfile are required.'
         sys.exit(0)
     #***end handling command line arguments**************************
     botsinit.generalinit(configdir)     #find locating of bots, configfiles, init paths etc.

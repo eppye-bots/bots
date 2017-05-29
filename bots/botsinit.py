@@ -1,36 +1,31 @@
-from __future__ import unicode_literals
 import sys
-if sys.version_info[0] > 2:
-    basestring = unicode = str
-    import configparser as ConfigParser
-else:
-    import ConfigParser
 import os
 import encodings
 import codecs
+import ConfigParser
 import logging
 import logging.handlers
-#bots-modules
-from . import botsglobal
-from . import botslib
-from . import node
+#Bots-modules
+import botsglobal
+import botslib
+import node
 
 class BotsConfig(ConfigParser.RawConfigParser):
     ''' As ConfigParser, but with defaults.
     '''
-    def get(self,section, option, default='', **kwargs):
+    def get(self,section, option, default=''):
         if self.has_option(section, option):
             return ConfigParser.RawConfigParser.get(self,section, option)
         elif default == '':
-            raise botslib.BotsError('No entry "%(option)s" in section "%(section)s" in "bots.ini".',{'option':option,'section':section})
+            raise botslib.BotsError(u'No entry "%(option)s" in section "%(section)s" in "bots.ini".',{'option':option,'section':section})
         else:
             return default
-    def getint(self,section, option, default, **kwargs):
+    def getint(self,section, option, default):
         if self.has_option(section, option):
             return ConfigParser.RawConfigParser.getint(self,section, option)
         else:
             return default
-    def getboolean(self,section, option, default, **kwargs):
+    def getboolean(self,section, option, default):
         if self.has_option(section, option):
             return ConfigParser.RawConfigParser.getboolean(self,section, option)
         else:
@@ -49,7 +44,7 @@ def generalinit(configdir):
             settings = botslib.botsbaseimport(importnameforsettings)
         except ImportError:     #set pythonpath to config directory first
             if not os.path.exists(configdir):    #check if configdir exists.
-                raise botslib.PanicError('In initilisation: path to configuration does not exists: "%(configdir)s".',{'configdir':configdir})
+                raise botslib.PanicError(u'In initilisation: path to configuration does not exists: "%(configdir)s".',{'configdir':configdir})
             addtopythonpath = os.path.abspath(os.path.dirname(configdir))
             moduletoimport = os.path.basename(configdir)
             sys.path.append(addtopythonpath)
@@ -81,7 +76,7 @@ def generalinit(configdir):
             importedusersys = botslib.botsbaseimport(importnameforusersys)
         except ImportError:     #set pythonpath to usersys directory first
             if not os.path.exists(usersys):    #check if configdir exists.
-                raise botslib.PanicError('In initilisation: path to configuration does not exists: "%(usersys)s".',{'usersys':usersys})
+                raise botslib.PanicError(u'In initilisation: path to configuration does not exists: "%(usersys)s".',{'usersys':usersys})
             addtopythonpath = os.path.abspath(os.path.dirname(usersys))     #????
             moduletoimport = os.path.basename(usersys)
             sys.path.append(addtopythonpath)
@@ -127,7 +122,7 @@ def initbotscharsets():
     #syntax has parameters checkcharsetin or checkcharsetout. These can have value 'botsreplace'
     #eg: 'checkcharsetin':'botsreplace',  #strict, ignore or botsreplace
     #in case of errors: the 'wrong' character is replaced with char as set in bots.ini. Default value in bots.ini is ' ' (space)
-    botsglobal.botsreplacechar = unicode(botsglobal.ini.get('settings','botsreplacechar',' '))
+    botsglobal.botsreplacechar = unicode(botsglobal.ini.get('settings','botsreplacechar',u' '))
     codecs.register_error('botsreplace', botsreplacechar_handler)    #need to register the handler for botsreplacechar
     #set aliases for the charsets in bots.ini
     for key, value in botsglobal.ini.items('charsets'):
@@ -155,8 +150,8 @@ def connect():
     if botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
         #sqlite has some more fiddling; in separate file. Mainly because of some other method of parameter passing.
         if not os.path.isfile(botsglobal.settings.DATABASES['default']['NAME']):
-            raise botslib.PanicError('Could not find database file for SQLite')
-        from . import botssqlite
+            raise botslib.PanicError(u'Could not find database file for SQLite')
+        import botssqlite
         botsglobal.db = botssqlite.connect(database = botsglobal.settings.DATABASES['default']['NAME'])
     elif botsglobal.settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
         import MySQLdb
@@ -181,7 +176,7 @@ def connect():
                                         connection_factory=psycopg2.extras.DictConnection)
         botsglobal.db.set_client_encoding('UNICODE')
     else:
-        raise botslib.PanicError('Unknown database engine "%(engine)s".',{'engine':botsglobal.settings.DATABASES['default']['ENGINE']})
+        raise botslib.PanicError(u'Unknown database engine "%(engine)s".',{'engine':botsglobal.settings.DATABASES['default']['ENGINE']})
 
 #*******************************************************************
 #*** init logging **************************************************
@@ -193,13 +188,10 @@ def initenginelogging(logname):
     #initialise file logging: create main logger 'bots'
     logger = logging.getLogger(logname)
     logger.setLevel(convertini2logger[botsglobal.ini.get('settings','log_file_level','INFO')])
-    if botsglobal.ini.get('settings','log_file_number',None) == 'daily':
-        handler = logging.handlers.TimedRotatingFileHandler(os.path.join(botsglobal.ini.get('directories','logging'),logname+'.log'),when='midnight',backupCount=10)
-    else:
-        handler = logging.handlers.RotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),logname+'.log'),backupCount=botsglobal.ini.getint('settings','log_file_number',10))
-        handler.doRollover()   #each run a new log file is used; old one is rotated
-    fileformat = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s : %(message)s','%Y%m%d %H:%M:%S')
+    handler = logging.handlers.RotatingFileHandler(botslib.join(botsglobal.ini.get('directories','logging'),logname+'.log'),backupCount=botsglobal.ini.getint('settings','log_file_number',10))
+    fileformat = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s : %(message)s",'%Y%m%d %H:%M:%S')
     handler.setFormatter(fileformat)
+    handler.doRollover()   #each run a new log file is used; old one is rotated
     logger.addHandler(handler)
     #initialise file logging: logger for trace of mapping; tried to use filters but got this not to work.....
     botsglobal.logmap = logging.getLogger('engine.map')
@@ -211,7 +203,7 @@ def initenginelogging(logname):
     if botsglobal.ini.getboolean('settings','log_console',True):
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
-        consuleformat = logging.Formatter('%(levelname)-8s %(message)s')
+        consuleformat = logging.Formatter("%(levelname)-8s %(message)s")
         console.setFormatter(consuleformat) # add formatter to console
         logger.addHandler(console)  # add console to logger
     return logger
@@ -221,14 +213,14 @@ def initserverlogging(logname):
     logger = logging.getLogger(logname)
     logger.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_file_level','INFO')])
     handler = logging.handlers.TimedRotatingFileHandler(os.path.join(botsglobal.ini.get('directories','logging'),logname+'.log'),when='midnight',backupCount=10)
-    fileformat = logging.Formatter('%(asctime)s %(levelname)-9s: %(message)s','%Y%m%d %H:%M:%S')
+    fileformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
     handler.setFormatter(fileformat)
     logger.addHandler(handler)
     # initialise console/screen logging
     if botsglobal.ini.getboolean(logname,'log_console',True):
         console = logging.StreamHandler()
         console.setLevel(convertini2logger[botsglobal.ini.get(logname,'log_console_level','STARTINFO')])
-        consoleformat = logging.Formatter('%(asctime)s %(levelname)-9s: %(message)s','%Y%m%d %H:%M:%S')
+        consoleformat = logging.Formatter("%(asctime)s %(levelname)-9s: %(message)s",'%Y%m%d %H:%M:%S')
         console.setFormatter(consoleformat) # add formatter to console
         logger.addHandler(console)  # add console to logger
     return logger
